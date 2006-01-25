@@ -255,6 +255,7 @@ int checkGroup( const char* groupname) {
 
 int isUserInGroup( const char* username, struct group *grp ){
 	int retval = FAILURE;
+    struct passwd *pwd = NULL;
 	char **members = NULL;
 
 	log( "Started!" );
@@ -282,7 +283,23 @@ int isUserInGroup( const char* username, struct group *grp ){
 	if( retval == SUCCESS )
 		log( "User is in group!" );
 	else
-		log( "User is not in group!" );
+	{// Add check for user-gid == group gid.	
+        if( ( pwd = (struct passwd*)getpwnam(username) ) == NULL ) {
+            log("User not found!");
+            errno = ENOENT;
+            return FAILURE;
+        }
+        if( pwd->pw_gid == grp->gr_gid )
+        {
+            // User has GID membership.
+            log( "User has group membership through implicit pgid->gid." );
+            retval = SUCCESS;
+        }
+        else
+        {
+            log( "User is not in group!" );
+        }
+    }
 	return retval;
 }
 
