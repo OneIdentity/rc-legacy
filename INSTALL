@@ -17,12 +17,14 @@ As root:
     ./d2conf.sh sys-auth64.so
     (This sets the plug-in for SRVCON_PW_PLUGIN GROUP_PLUGIN and CLNT_PW_PLUGIN to the library, sys-auth64)
 
+
+
 Making:
     As the instance owner, download and untar/gzip the src package. 
     run ./Config
     make
 
-The scripts assume that the instance is avalaible from ${HOME} when running as the instance owner.
+The library assumes that the instance owner is avalaible from ${DB2INSTANCE} of the runner.
 
 You must pick the right level for the instance, 32 or 64. That information can be received from db2level.
 

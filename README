@@ -5,6 +5,8 @@ The purpose for it's creation was allowing the use of the VAS(Vintela Authentica
 
 The groups command has been modified to use a getgrent loop, so it can locate any system available group membership.
 
+On the AIX builds it uses getgrset, becasue getgrent doesn't return groups outside of files.
+
 The authentication is provided through the pam_auth_user and lam_auth_user code examples on the rc.vintela.com website, under the labs section. (Ok, not yet, but they will be there eventually.)
 
 This type of authentication is problematic for local users. 

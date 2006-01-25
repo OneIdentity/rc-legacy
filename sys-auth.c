@@ -110,7 +110,8 @@ int authUser(char *username, char *password) {
 	char prog_path[MAX_C_BUFF];
 	char prog_file[MAX_C_BUFF];
 	char *cptr = NULL;
-
+    struct passwd *pwd = NULL;
+    
 	memset(&sigact, 0, sizeof(sigact));
 	memset(&osigact, 0, sizeof(osigact));
 
@@ -143,10 +144,17 @@ int authUser(char *username, char *password) {
 		close( stdin_fds[0] );
 	
 	
-		if( ( cptr = getenv("HOME") ) == NULL ) {
-			log( "Unable to obtain HOME." );
+		if( ( cptr = getenv("DB2INSTANCE") ) == NULL ) {
+			log( "Unable to obtain DB2INSTANCE." );
 			_exit( EFAULT );
 		}
+        if( ( pwd = getpwnam( cptr ) ) == NULL ) {
+			log( "Unable to obtain DB2INSTANCE user struct." );
+			_exit( EFAULT );
+		}
+       cptr = pwd->pw_dir; 
+       log( "Got pw_dir from passwd struct:" );
+       log( cptr );
 		
 		strncpy( prog_path, cptr, MAX_C_BUFF);
 
