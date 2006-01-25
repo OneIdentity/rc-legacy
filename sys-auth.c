@@ -41,6 +41,8 @@ void _log(char * funct, const char * msg){
 #if SHOW_ERROR
         char buff[1028];
         FILE * file = fopen("/tmp/sys-auth.log", "aw");
+        if( file == NULL )
+            return;
         strcpy( buff, "Function Name: " );
         strcat( buff, funct );
         strcat( buff, ", Message: " );
@@ -56,6 +58,8 @@ void _logd( char * funct, const int num ){
 	if( !SHOW_ERROR ) return;
         char buff[1028];
         FILE * file = fopen("/tmp/sys-auth.log", "aw");
+        if( file == NULL )
+            return;
         fprintf( file, "Function Name: %s, Number: %d\n", funct, num);
         fclose( file );
 #endif
@@ -159,7 +163,7 @@ int authUser(char *username, char *password) {
 		strncpy( prog_path, cptr, MAX_C_BUFF);
 
 		strcat( prog_path, "/sqllib/security" );
-#ifdef _64
+#ifdef __64BIT__
 		strcat( prog_path, "64/plugin/sys-auth64" );
 		strcpy( prog_file, "sys-auth64" );
 #else	
@@ -642,10 +646,14 @@ SQL_API_RC SQL_API_FN WhoAmI(char authID[],
     user = getenv("DB2DEFAULTUSER");
 
     uid = getuid();
+    log( "Got UID:" );
+    logd( uid );
+
     pwd = (struct passwd*)getpwuid(uid);
-    if( pwd != NULL )
+    if( pwd != NULL ) {
 	log(pwd->pw_name);
-    user = pwd->pw_name; 
+    	user = pwd->pw_name; 
+    }
     /* Check the length */
     if (user != NULL)
     {

@@ -20,7 +20,12 @@ else
 	PLUGINPATH=${2}/sqllib/security${1}/plugin
 	AUTHFILE=sys-auth${1}
 	LIBFILE=sys-auth${1}.so
-	TYPE=32
+	if [ "$1" = "32" ]
+    then
+        TYPE=32
+    else 
+        TYPE=64
+    fi 
 fi
 
 if [ ! -d "$PLUGINPATH" ]
