@@ -1,0 +1,57 @@
+#!/bin/sh
+
+name=`uname -a | awk '{ print $1 }'`
+case $name in
+    "Linux")
+        OS=LINUX
+        cp Makefile.32 Makefile.tmp
+        RES=`uname -p | grep 64` 
+	if [ $? -eq 0 ]
+        then
+            cp Makefile.64 Makefile.tmp
+        else
+            cp Makefile.32 Makefile.tmp
+	fi
+        ;;
+    "SunOS")
+        OS=SOLARIS
+        cp Makefile.64 Makefile.tmp
+        ;;
+    "AIX")
+        OS=AIX
+        cp Makefile.aix Makefile.tmp
+        ;;
+    "HP-UX")
+        OS=HPUX
+        if [ -f /usr/lib/hpux64/libpam.so ]
+        then
+            cp Makefile.64 Makefile.HP
+            sed 's/^CC64 = gcc.*/CC64 = /usr/local/pa20_64/bin/gcc/' < Makefile.HP > Makefile.tmp
+            rm Makefile.HP
+        else
+            cp Makefile.32 Makefile.tmp
+        fi
+        ;;
+    *)
+        echo "Unable to determine platform" 
+        return 1
+        ;;
+esac
+
+if [ -f config.h ]
+then
+    mv config.h config.bak
+fi
+
+echo "#define OS ${OS}" > config.h 
+
+
+if [ ! -z "$1" ] && [ "$1" = "-d" ]
+then 
+   echo "#define SHOW_ERROR 1" >> config.h
+else
+   echo "#define SHOW_ERROR 0" >> config.h
+fi
+
+sed "s/OS = .*/OS = ${OS}/" < Makefile.tmp > Makefile
+rm Makefile.tmp

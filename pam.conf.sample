@@ -1,0 +1,7 @@
+login auth required /usr/lib/security/pam_aix
+
+OTHER auth required /usr/lib/security/pam_aix
+OTHER account required /usr/lib/security/pam_aix
+OTHER session required /usr/lib/security/pam_aix
+OTHER password required /usr/lib/security/pam_aix
+

@@ -1,0 +1,50 @@
+#/********************************************************************
+#* Copyright (c) 2005 Quest Software, Inc.
+#* All rights reserved.
+#*
+#* Author:  Seth Ellsworth
+#*
+#* Company: Quest Software, Inc.
+#*
+#* Purpose: Makefile for DB2 8.2 security plug-in that provides
+#*          PAM 32/64 bit authentication.
+#*
+#* Legal:   This script is provided under the terms of the
+#*          "Vintela Resouce Central License" avaliable in
+#*          the included LICENSE file.
+#********************************************************************/
+
+PLUGINDIR32 = $(HOME)/sqllib/security32/plugin
+# The compile options were made for gcc
+CC = gcc
+COMPLIB =  -fpic -DDB2_PLAT_INIX -D_REENTRANT -g -DUSE_UI_THREADS
+DB2PATH = $(HOME)/sqllib
+INCLUDES = -I$(DB2PATH)/include -I../include
+LINKLIB = -shared -Bsymbolic -lc
+OS = LINUX
+PROG = sys-auth
+PROG32 = $(PROG)32
+
+all : $(PROG32).so
+
+clean: 
+	rm -f *.o 
+
+cleanall: clean
+	rm -f *.so pamAuth32 
+
+distclean: cleanall
+	rm -f Makefile config.bak config.h
+
+$(PROG32).so: $(PROG32).o pamAuth32
+	$(CC) $(LINKLIB) -o $(PROG32).so $(PROG32).o 
+
+$(PROG32).o: $(PROG).c
+	$(CC) $(COMPLIB) $(INCLUDES) -o $(PROG32).o -c $(PROG).c
+
+pamAuth32: pamAuth32.o
+	$(CC) pamAuth32.o -o pamAuth32 -lpam
+
+pamAuth32.o: pamAuth.c
+	$(CC) -D$(OS) -c pamAuth.c -o pamAuth32.o
+

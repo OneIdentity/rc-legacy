@@ -1,0 +1,55 @@
+This work is derived from IBM's combined userid/password authentication and group lookup sample avaliable at:
+http://publib.boulder.ibm.com/infocenter/db2help/topic/com.ibm.db2.udb.doc/ad/samples/sec/s-combined-c.htm
+
+The purpose for it's creation was allowing the use of the VAS(Vintela Authentication Service) for user information/authentication, but it should accept anything that can provide LAM or PAM info/auth.
+
+The groups command has been modified to use a getgrent loop, so it can locate any system available group membership.
+
+The authentication is provided through the pam_auth_user and lam_auth_user code examples on the rc.vintela.com website, under the labs section. (Ok, not yet, but they will be there eventually.)
+
+This type of authentication is problematic for local users. 
+On AIX (and most shadowed systems) only root has the rights to read /etc/system/passwd(/etc/shadow or something else on others), which is where the password hashes are stored.
+
+From:
+http://publib.boulder.ibm.com/infocenter/db2help/index.jsp?topic=/com.ibm.db2.udb.doc/ad/r0012026.htm
+
+Note:
+The plug-in code will be run with the privileges of the client application. 
+The plug-in writer should take this into consideration if authentication 
+requires special privileges (such as root). 
+
+The helper program has to be chown'ed to root and setuid'ed, so when it runs it can do the authentication. This is done when root runs the install.sh script. The file should only be accessable to the instance user, and not pose a large security risk. Since it hits the PAM/LAM interfaces, bad attempts and other access control happens.
+
+WARNING: To work properly, the install.sh script has root do a setuid on the helper program. This is because on AIX, you need root access to do a proper authentication. If this is not done, then the authentication that can work is to VAS through PAM only. And then, no group information can be pulled from the users PAC becasue it can't read /etc/opt/vas/host.keytab to decrypt the service ticket.
+
+If you wish to use PAM, you will need a pam.conf. 
+A sample one from IBM is provided in sample.pam.conf.
+
+On AIX: To then get VAS working with pam, you would need to run
+/opt/vas/bin/vastool configure pam
+to have vas add the neccessary entries to /etc/pam.conf
+
+To install the product, please see the INSTALL file.
+
+On AIX, making will require having IBM's XL C program.
+It will probably work with gcc, but the compiler options for generating the library will be different.
+
+Also would need the Application Development Client for DB2 installed.
+
+The debugging is quite simple, open a file, write a line, close. 
+Mostly used to help track the original code sample, get a feel for how it worked, then later used for debugging.
+
+The file it makes is /tmp/sys-auth.log. 
+
+Not recommended to run the debug version in production due to amount of disk activity, and possible information leak.
+The auth programs of debug definently leak, as they will log passwords.
+
+WARNING: AIX's pam_vas library on 5.2 is 32-bit only. If you have a 64-bit instance, and want to run PAM, you can only do so against VAS/Others of 64-bit, and add similiar to:
+sys-auth64 auth sufficient /opt/vas/lib/security/pam_vas64.so get_tgt create_homedir
+to /etc/pam.conf.
+
+This will hit VAS's 64-bit PAM library.
+
+The pamAuth.c have been changed to use sys-auth32/64 as the service name.
+
+On Linux, pam will by defualt use sshd as its service name, since other goes to pam_deny.

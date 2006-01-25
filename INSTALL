@@ -1,0 +1,31 @@
+Simple setup:
+For this example:
+	On AIX
+        instance owner name: db2inst1
+        instance location: /home/db2inst1/sqllib
+        Package is in /tmp
+        You are installing the 64bit LAM library
+	You understand the setuid'ing of the auth file.
+
+As root:
+cd /tmp
+gzip -c -d DB2_AIX_bin.tar.gz | tar -xvf -
+cd DB2_sys-auth/DB2_AIX_bin
+./install.sh 64 LAM /home/db2inst1
+(This copies the files, and does a setuid on lamAuth64 so authentication can work.)
+su db2inst1
+./d2conf.sh sys-auth64.so
+(This sets the plug-in for SRVCON_PW_PLUGIN GROUP_PLUGIN and CLNT_PW_PLUGIN to the library, sys-auth64)
+
+
+The scripts assume that the instance is avalaible from ${HOME} when running as the instance owner.
+
+You must pick the right level for the instance, 32 or 64. That information can be received from db2level.
+
+If you are on AIX 5.1, and want to use PAM, you will need to install the AIX PAM libraries, namely pam_aix.
+
+Both AIX 5.1 and 5.2 do not provide pam.conf, a sample pam.conf.sample is in this package.
+
+AIX pam_aix is 32-bit only.
+
+The files in debug/ have '#define SHOW_ERROR 1', so they will log to /tmp/sys-auth.log. Not recommended for production due to extra disk usage, and information is logged, like passwords.
