@@ -8,15 +8,19 @@ For this example:
 	You understand the setuid'ing of the auth file.
 
 As root:
-cd /tmp
-gzip -c -d DB2_AIX_bin.tar.gz | tar -xvf -
-cd DB2_sys-auth/DB2_AIX_bin
-./install.sh 64 LAM /home/db2inst1
-(This copies the files, and does a setuid on lamAuth64 so authentication can work.)
-su db2inst1
-./d2conf.sh sys-auth64.so
-(This sets the plug-in for SRVCON_PW_PLUGIN GROUP_PLUGIN and CLNT_PW_PLUGIN to the library, sys-auth64)
+    cd /tmp
+    gzip -c -d DB2_AIX_bin.tar.gz | tar -xvf -
+    cd DB2_sys-auth
+    ./install.sh 64 /home/db2inst1 LAM
+    (This copies the files, and does a setuid on lamAuth64 so authentication can work.)
+    su db2inst1
+    ./d2conf.sh sys-auth64.so
+    (This sets the plug-in for SRVCON_PW_PLUGIN GROUP_PLUGIN and CLNT_PW_PLUGIN to the library, sys-auth64)
 
+Making:
+    As the instance owner, download and untar/gzip the src package. 
+    run ./Config
+    make
 
 The scripts assume that the instance is avalaible from ${HOME} when running as the instance owner.
 
@@ -28,4 +32,4 @@ Both AIX 5.1 and 5.2 do not provide pam.conf, a sample pam.conf.sample is in thi
 
 AIX pam_aix is 32-bit only.
 
-The files in debug/ have '#define SHOW_ERROR 1', so they will log to /tmp/sys-auth.log. Not recommended for production due to extra disk usage, and information is logged, like passwords.
+If you run Config with -d, it will make SHOW_ERROR 1, so debug messages are recorded. This is not advised becasuse this will increase disk activity, and save in a file users passwords.
