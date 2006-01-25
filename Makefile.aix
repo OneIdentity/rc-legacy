@@ -17,13 +17,13 @@
 PLUGINDIR32 = $(HOME)/sqllib/security32/plugin
 PLUGINDIR64 = $(HOME)/sqllib/security64/plugin
 # The compile options were made for gcc
+OS = AIX
 CC = gcc
 CC64 = gcc -maix64
-COMPLIB =  -fpic -DDB2_PLAT_INIX -D_REENTRANT -g -DUSE_UI_THREADS
+COMPLIB =  -fpic -D$(OS) -DDB2_PLAT_INIX -D_REENTRANT -g -DUSE_UI_THREADS
 DB2PATH = $(HOME)/sqllib
 INCLUDES = -I$(DB2PATH)/include -I../include
 LINKLIB = -shared-libgcc -shared -Bsymbolic -lc
-OS = AIX
 PROG = sys-auth
 PROG32 = $(PROG)32
 PROG64 = $(PROG)64
@@ -58,7 +58,7 @@ pamAuth64: pamAuth64.o
 	$(CC64) pamAuth64.o -o pamAuth64 -lpam
 
 pamAuth32.o: pamAuth.c
-	$(CC) -D$(OS) -c pamAuth.c -o pamAuth32.o
+	$(CC)  -D$(OS) -c pamAuth.c -o pamAuth32.o
 
 pamAuth64.o: pamAuth.c
 	$(CC64) -D$(OS) -c pamAuth.c -o pamAuth64.o

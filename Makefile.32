@@ -16,12 +16,12 @@
 
 PLUGINDIR32 = $(HOME)/sqllib/security32/plugin
 # The compile options were made for gcc
+OS = LINUX
 CC = gcc
-COMPLIB =  -fpic -DDB2_PLAT_INIX -D_REENTRANT -g -DUSE_UI_THREADS
+COMPLIB =  -fpic -D$(OS) -DDB2_PLAT_INIX -D_REENTRANT -g -DUSE_UI_THREADS
 DB2PATH = $(HOME)/sqllib
 INCLUDES = -I$(DB2PATH)/include -I../include
 LINKLIB = -shared-libgcc -shared -Bsymbolic -lc
-OS = LINUX
 PROG = sys-auth
 PROG32 = $(PROG)32
 

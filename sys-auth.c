@@ -277,7 +277,11 @@ int isUserInGroup( const char* username, struct group *grp ){
 int FindGroupsForUser( const char* username, char *groups, int *numgroups ) {
 	struct group *grp = NULL;
 	char * cptr = NULL;
+	char *grset = NULL;
+	char *gr = NULL;
+	char delims[] = ",";
 	char userBuffer[MAX_LINE_LENGTH];
+	int gid;
 	int groupcount = 0;
 	int length = 0;
 	memset(userBuffer, '\0', MAX_LINE_LENGTH);
@@ -288,8 +292,36 @@ int FindGroupsForUser( const char* username, char *groups, int *numgroups ) {
 	if( checkUser( userBuffer ) != SUCCESS )
 		return -1;
 
+#ifdef AIX
+	/* Since we are on AIX, we can use getgrset. Get that, tokenize the 
+	 * result, and add to the buffer as the group resolves to names. 
+	 */
+	if( ( grset = getgrset( userBuffer ) ) == NULL ) {
+		return DB2SEC_PLUGIN_UNKNOWNERROR;	
+	} 
+	log( "Found AIX, using getgrset." );
+	log( grset );
+	cptr = groups;
+	gr = strtok( grset, delims );
+	while( gr != NULL ) {
+		if( ( grp = getgrgid( atoi( gr ) ) ) != NULL ) {
+			log( grp->gr_name );
+                        length = strlen( grp->gr_name );
+                        *((unsigned char*)cptr) = (unsigned char)length;
+                        ++cptr;
+                        memcpy(cptr, grp->gr_name, length );
+                        cptr += length;
+                        ++groupcount;
+		}
+		gr = strtok( NULL, delims );
+	}
+	*cptr = '\0';
+	if(grset)
+		free(grset);	
+#else
 	setgrent();
 	cptr = groups;
+	log( "Not AIX, using getgrent cycle." );
 	while( ( grp = getgrent() ) != NULL ) {
 		if( ( isUserInGroup( userBuffer, grp ) ) == SUCCESS ) {
 			length = strlen( grp->gr_name );
@@ -302,7 +334,8 @@ int FindGroupsForUser( const char* username, char *groups, int *numgroups ) {
 	}
 	*cptr = '\0';
 	endgrent();
-	
+#endif
+
 	*numgroups = groupcount;
 	log( groups );
 	log( "Done!" );	
