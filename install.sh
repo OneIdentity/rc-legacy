@@ -1,5 +1,5 @@
 #!/bin/sh
-if [ -z "$1" ] || [ -z "$2" ] || [ -z "$3" ] || [ -n "$4" ]
+if [ -z "$1" ] || [ -z "$2" ] || [ -n "$4" ]
 then
 	echo "Usage: $0 <32|64> <Instance home i.e. /home/db2inst1> [LAM] "
 	exit 1
@@ -35,7 +35,7 @@ then
 	exit 1
 fi
 
-if [ "$3" != "LAM" ]
+if [ "$3" != "LAM" ] && [ -n "$3" ]
 then
 	echo "Third argument must be LAM or blank."
 	exit 1
@@ -81,5 +81,5 @@ cp -p ${LIBFILE} ${PLUGINPATH}/server/.
 cp -p ${LIBFILE} ${PLUGINPATH}/client/.
 cp -p ${LIBFILE} ${PLUGINPATH}/group/.
 cp -p ${AUTH_IN} ${PLUGINPATH}/${AUTHFILE}
-chown root:staff ${PLUGINPATH}/${AUTHFILE} 
+chown root ${PLUGINPATH}/${AUTHFILE} 
 chmod 4755 ${PLUGINPATH}/${AUTHFILE} 
