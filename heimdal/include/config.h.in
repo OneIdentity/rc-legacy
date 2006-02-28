@@ -1150,7 +1150,7 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
 /* Define if you have the krb4 package. */
 #undef KRB4
 
-/* Kerberos v5 */
+/* Enable Kerberos 5 support in applications. */
 #undef KRB5
 
 /* Kerberos 5 init ETS */

@@ -11,14 +11,14 @@ AC_DEFUN([AC_WITH_KRB5],
 DEFAULT_WITH_KRB5=$1
 WITH_KRB5=
 AC_ARG_WITH(krb5,
-	[ --with-krb5=PATH   Enable Kerberos 5 support],
+	AS_HELP_STRING([--with-krb5=dir], [use krb5 in dir]),
 	[ WITH_KRB5=${withval} ],
         [ WITH_KRB5=$DEFAULT_WITH_KRB5 ])
 
 
 KRB5_MSG="no"
 if test "x${WITH_KRB5}" != "xno" ; then
-	if test "x$WITH_KRB5" = "xyes" ; then
+	if test "x$WITH_KRB5" = "xyes" || text "x$WITH_KRB5" = "x" ; then
 		KRB5ROOT="/opt/quest"
 	else
 		KRB5ROOT=${WITH_KRB5}
@@ -33,9 +33,9 @@ if test "x${WITH_KRB5}" != "xno" ; then
 		AC_MSG_RESULT($KRB5CONF)
 
 		AC_MSG_CHECKING(for gssapi support)
-		if $KRB5CONF | grep gssapi >/dev/null ; then
+		if $KRB5CONF | grep -q gssapi; then
 			AC_MSG_RESULT(yes)
-			AC_DEFINE([GSSAPI], 1, [GSSAPI])
+			AC_DEFINE([GSSAPI], 1, [GSSAPI support])
 			k5confopts=gssapi
 		else
 			AC_MSG_RESULT(no)

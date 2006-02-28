@@ -352,7 +352,9 @@ LIB_kafs = $(top_builddir)/lib/kafs/libkafs.la $(AIX_EXTRA_KAFS)
 #if DCE
 #dir_dce = kdfs
 #endif
-SUBDIRS = @DIR_roken@ vers editline kafs des
+
+#SUBDIRS = @DIR_roken@ vers editline kafs des
+SUBDIRS = @DIR_roken@ vers des
 all: all-recursive
 
 .SUFFIXES:

@@ -343,10 +343,8 @@ LIB_kafs = $(top_builddir)/lib/kafs/libkafs.la $(AIX_EXTRA_KAFS)
 #LIB_kdfs = $(top_builddir)/lib/kdfs/libkdfs.la
 @DCE_TRUE@LIB_kdfs = $(top_builddir)/lib/kdfs/libkdfs.la
 SUBDIRS = \
-	  ftp					\
-	  rsh					\
-	  rcp					\
-	  telnet
+	  rsh		\
+	  rcp
 
 all: all-recursive
 
@@ -797,6 +795,10 @@ install-data-hook: install-cat-mans
 	$(COMPILE_ET) $<
 .et.c:
 	$(COMPILE_ET) $<
+#	  ftp					\
+#	  rsh					\
+#	  rcp					\
+#	  telnet
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

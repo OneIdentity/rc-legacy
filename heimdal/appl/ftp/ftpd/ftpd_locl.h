@@ -150,7 +150,7 @@
 #endif
 
 #if defined(KRB4) || defined(KRB5)
-#include <kafs.h>
+/*#include <kafs.h>*/
 #endif
  
 #ifdef OTP

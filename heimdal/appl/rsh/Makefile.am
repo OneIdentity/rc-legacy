@@ -17,7 +17,8 @@ rshd_SOURCES = rshd.c common.c login_access.c rsh_locl.h
 login_access.c:
 	$(LN_S) $(srcdir)/../login/login_access.c .
 
-LDADD = $(LIB_kafs) \
+LDADD = \
+	$(top_builddir)/lib/vers/libvers.la \
 	$(LIB_krb5) \
 	$(LIB_krb4) \
 	$(LIB_des) \

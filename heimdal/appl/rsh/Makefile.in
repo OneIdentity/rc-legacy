@@ -102,8 +102,8 @@ am_rsh_OBJECTS = rsh.$(OBJEXT) common.$(OBJEXT)
 rsh_OBJECTS = $(am_rsh_OBJECTS)
 rsh_LDADD = $(LDADD)
 am__DEPENDENCIES_1 =
-am__DEPENDENCIES_2 = $(top_builddir)/lib/kafs/libkafs.la \
-	$(am__DEPENDENCIES_1)
+#am__DEPENDENCIES_2 = $(top_builddir)/lib/kafs/libkafs.la \
+#	$(am__DEPENDENCIES_1)
 @DCE_TRUE@am__DEPENDENCIES_3 = $(top_builddir)/lib/kdfs/libkdfs.la
 rsh_DEPENDENCIES = $(am__DEPENDENCIES_2) $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
@@ -376,7 +376,8 @@ LIB_kafs = $(top_builddir)/lib/kafs/libkafs.la $(AIX_EXTRA_KAFS)
 man_MANS = rsh.1 rshd.8
 rsh_SOURCES = rsh.c common.c rsh_locl.h
 rshd_SOURCES = rshd.c common.c login_access.c rsh_locl.h
-LDADD = $(LIB_kafs) \
+LDADD = \
+	$(top_builddir)/lib/vers/libvers.la \
 	$(LIB_krb5) \
 	$(LIB_krb4) \
 	$(LIB_des) \
