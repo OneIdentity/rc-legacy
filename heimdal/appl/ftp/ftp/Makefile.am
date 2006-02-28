@@ -38,6 +38,7 @@ man_MANS = ftp.1
 
 LDADD = \
 	../common/libcommon.a \
+	$(top_builddir)/lib/vers/libvers.la \
 	$(LIB_gssapi) \
 	$(LIB_krb5) \
 	$(LIB_krb4) \

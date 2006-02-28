@@ -12,7 +12,7 @@ include $(top_srcdir)/Makefile.am.common
 #dir_dce = kdfs
 #endif
 
-SUBDIRS = @DIR_roken@ vers editline kafs
+SUBDIRS = @DIR_roken@ vers editline kafs des
 
 #SUBDIRS = @DIR_roken@ vers editline @DIR_com_err@ sl asn1 @DIR_des@ krb5 \
 #	kafs hdb kadm5 gssapi auth $(dir_45) $(dir_otp) $(dir_dce)

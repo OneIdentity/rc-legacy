@@ -54,6 +54,9 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
    struct sockaddr*, socklen_t*) */
 #undef GETSOCKNAME_PROTO_COMPATIBLE
 
+/* GSSAPI */
+#undef GSSAPI
+
 /* Define if you have the `altzone' variable. */
 #undef HAVE_ALTZONE
 
@@ -324,6 +327,24 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
 
 /* Define to 1 if you have the <grp.h> header file. */
 #undef HAVE_GRP_H
+
+/* Define to 1 if you have the <gssapi_generic.h> header file. */
+#undef HAVE_GSSAPI_GENERIC_H
+
+/* Define to 1 if you have the <gssapi/gssapi_generic.h> header file. */
+#undef HAVE_GSSAPI_GSSAPI_GENERIC_H
+
+/* Define to 1 if you have the <gssapi/gssapi.h> header file. */
+#undef HAVE_GSSAPI_GSSAPI_H
+
+/* Define to 1 if you have the <gssapi/gssapi_krb5.h> header file. */
+#undef HAVE_GSSAPI_GSSAPI_KRB5_H
+
+/* Define to 1 if you have the <gssapi.h> header file. */
+#undef HAVE_GSSAPI_H
+
+/* Define to 1 if you have the <gssapi_krb5.h> header file. */
+#undef HAVE_GSSAPI_KRB5_H
 
 /* Define to 1 if you have the `hstrerror' function. */
 #undef HAVE_HSTRERROR
@@ -1117,6 +1138,9 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
 /* define if your system declares __progname */
 #undef HAVE___PROGNAME_DECLARATION
 
+/* Heimdal Kerberos */
+#undef HEIMDAL
+
 /* Define if you have the hesiod package. */
 #undef HESIOD
 
@@ -1126,8 +1150,11 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
 /* Define if you have the krb4 package. */
 #undef KRB4
 
-/* Enable Kerberos 5 support in applications. */
+/* Kerberos v5 */
 #undef KRB5
+
+/* Kerberos 5 init ETS */
+#undef KRB5_INIT_ETS
 
 /* Define if krb_mk_req takes const char * */
 #undef KRB_MK_REQ_CONST
@@ -1241,9 +1268,6 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
    *, int, int) */
 #undef OPENLOG_PROTO_COMPATIBLE
 
-/* Define if you want OTP support in applications. */
-#undef OTP
-
 /* Name of package */
 #undef PACKAGE
 
@@ -1294,6 +1318,9 @@ static /**/const char *const rcsid[] = { (const char *)rcsid, "@(#)" msg }
 
 /* Define to 1 if your <sys/time.h> declares `struct tm'. */
 #undef TM_IN_SYS_TIME
+
+/* Use AFS */
+#undef USE_AFS
 
 /* Version number of package */
 #undef VERSION

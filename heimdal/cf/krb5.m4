@@ -19,12 +19,12 @@ AC_ARG_WITH(krb5,
 KRB5_MSG="no"
 if test "x${WITH_KRB5}" != "xno" ; then
 	if test "x$WITH_KRB5" = "xyes" ; then
-		KRB5ROOT="/opt/vas"
+		KRB5ROOT="/opt/quest"
 	else
 		KRB5ROOT=${WITH_KRB5}
 	fi
 
-	AC_DEFINE(KRB5)
+	AC_DEFINE([KRB5], 1, [Kerberos v5])
 	KRB5_MSG="yes"
 
 	AC_MSG_CHECKING(for krb5-config)
@@ -35,7 +35,7 @@ if test "x${WITH_KRB5}" != "xno" ; then
 		AC_MSG_CHECKING(for gssapi support)
 		if $KRB5CONF | grep gssapi >/dev/null ; then
 			AC_MSG_RESULT(yes)
-			AC_DEFINE(GSSAPI)
+			AC_DEFINE([GSSAPI], 1, [GSSAPI])
 			k5confopts=gssapi
 		else
 			AC_MSG_RESULT(no)
@@ -48,7 +48,7 @@ if test "x${WITH_KRB5}" != "xno" ; then
 		AC_TRY_COMPILE([ #include <krb5.h> ],
 			       [ char *tmp = heimdal_version; ],
 			       [ AC_MSG_RESULT(yes)
-				 AC_DEFINE(HEIMDAL) ],
+				 AC_DEFINE([HEIMDAL], 1, [Heimdal Kerberos]) ],
 			         AC_MSG_RESULT(no)
 		)
 	else
@@ -59,23 +59,23 @@ if test "x${WITH_KRB5}" != "xno" ; then
 		AC_TRY_COMPILE([ #include <krb5.h> ],
 			       [ char *tmp = heimdal_version; ],
 			       [ AC_MSG_RESULT(yes)
-				 AC_DEFINE(HEIMDAL)
-				 K5LIBS="-lkrb5 -ldes"
+				 AC_DEFINE([HEIMDAL], 1, [Heimdal Kerberos])
+				 K5LIBS="-lvas -ldes"
 				 K5LIBS="$K5LIBS -lcom_err -lasn1"
 				 AC_CHECK_LIB(roken, net_write, 
 				   [K5LIBS="$K5LIBS -lroken"])
 			       ],
 			       [ AC_MSG_RESULT(no)
-				 K5LIBS="-lkrb5 -lk5crypto -lcom_err"
+				 K5LIBS="-lvas -lk5crypto -lcom_err"
 			       ]
 		)
 		AC_SEARCH_LIBS(dn_expand, resolv)
 
 		AC_CHECK_LIB(gssapi,gss_init_sec_context,
-			[ AC_DEFINE(GSSAPI)
+			[ AC_DEFINE([GSSAPI], 1, [GSSAPI])
 			  K5LIBS="-lgssapi $K5LIBS" ],
 			[ AC_CHECK_LIB(gssapi_krb5,gss_init_sec_context,
-				[ AC_DEFINE(GSSAPI)
+				[ AC_DEFINE([GSSAPI], 1, [GSSAPI])
 				  K5LIBS="-lgssapi_krb5 $K5LIBS" ],
 				AC_MSG_WARN([Cannot find any suitable gss-api library - build may fail]),
 				$K5LIBS)
@@ -110,9 +110,7 @@ AC_CHECK_HEADERS(gssapi_krb5.h gssapi/gssapi_krb5.h)
 AC_CHECK_HEADERS(gssapi_generic.h gssapi/gssapi_generic.h)
 
 LIBS="$LIBS $K5LIBS"
-AC_SEARCH_LIBS(k_hasafs, kafs, AC_DEFINE(USE_AFS))
-AC_SEARCH_LIBS(krb5_init_ets, $K5LIBS, AC_DEFINE(KRB5_INIT_ETS))
+AC_SEARCH_LIBS(k_hasafs, kafs, AC_DEFINE([USE_AFS], 1, [Use AFS]))
+AC_SEARCH_LIBS(krb5_init_ets, $K5LIBS, AC_DEFINE([KRB5_INIT_ETS], 1, [Kerberos 5 init ETS]))
 ]
 )
-
-])
