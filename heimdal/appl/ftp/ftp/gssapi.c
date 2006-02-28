@@ -37,6 +37,7 @@
 #include "ftp_locl.h"
 #endif
 #include <gssapi.h>
+#include <gssapi_krb5.h>
 #include <krb5_err.h>
 
 RCSID("$Id: gssapi.c,v 1.22.2.2 2003/08/20 16:41:24 lha Exp $");

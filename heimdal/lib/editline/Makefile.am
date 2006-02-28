@@ -23,6 +23,7 @@ CHECK_LOCAL =
 
 testit_LDADD = \
 	libeditline.la \
+        ../vers/libvers.la \
 	$(LIB_tgetent) \
 	$(LIB_roken)
 

@@ -41,7 +41,48 @@
 
 RCSID("$Id: login.c,v 1.59.2.1 2004/09/08 09:15:39 joda Exp $");
 
+
+#if 0
+#ifdef SOLARIS
+    #include <crypt.h>
+#endif
+#endif
+
+#ifdef AIX
+   struct aud_rec;
+   #include <usersec.h>
+#endif
+
+/* for Merging, UID conflict checks, etc. */
+#include <libvascache_auth.h>
+#include <libvasauth/libvasauth.h>
+#include <libvascache_merge.h>
+#include <libvas.h>
+
+#include <vers.h>
+
+/* For the crypt stuff to make sure we get the renamed symbols,
+ * this is probably not the best thing... */
+#include <des.h>
+
 static int login_timeout = 60;
+
+static RETSIGTYPE
+sig_handler(int sig)
+{
+    if (sig == SIGALRM)
+    {
+        fprintf(stderr,
+                "Login timed out after %d seconds\n",
+                login_timeout);
+    }
+    else
+    {
+        fprintf(stderr, "Login received signal, exiting\n");
+    }
+
+    exit(0);
+}
 
 static int
 start_login_process(void)
@@ -129,7 +170,9 @@ exec_shell(const char *shell, int fallback)
     err(1, "%s", shell);
 }
 
-static enum { NONE = 0, AUTH_KRB4 = 1, AUTH_KRB5 = 2, AUTH_OTP = 3 } auth;
+static enum {
+    NONE = 0, AUTH_KRB4 = 1, AUTH_KRB5 = 2, AUTH_OTP = 3
+} auth;
 
 #ifdef OTP
 static OtpContext otp_ctx;
@@ -142,12 +185,16 @@ otp_verify(struct passwd *pwd, const char *password)
 #endif /* OTP */
 
 
+#ifdef KRB4
 static int pag_set = 0;
+#endif
 
 #ifdef KRB5
 static krb5_context context;
 static krb5_ccache  id, id2;
 
+/* not used for now... */
+#if 0
 static int
 krb5_verify(struct passwd *pwd, const char *password)
 {
@@ -171,6 +218,500 @@ krb5_verify(struct passwd *pwd, const char *password)
     krb5_free_principal(context, princ);
     return ret;
 }
+#endif
+
+
+#define DBGLOG(x,va...) syslog(LOG_INFO,x,##va)
+#define ERRLOG(x,va...) syslog(LOG_ERR,x,##va)
+
+
+/* This is similar to the pam_vas handle_expired_password code */
+static int
+vas_authhelper_new_password( vascache_userinfo_t *info,
+                             const char *password,
+                             char **new_password_ptr )
+{
+    int                     result = 0;
+    char                    new_password[128] = {'\0'},
+                            *helper_input[] = { NULL, NULL, NULL },
+                            verify_password[128] = {'\0'};
+    vasauth_helperinfo_t    helper_info;
+    vasauth_helperopts_t    helper_opts;
+
+    memset( &helper_info, 0, sizeof(helper_info) );
+    memset( &helper_opts, 0, sizeof(helper_opts) );
+
+    /* Prompt for new password */
+#ifdef UW7
+    fprintf( stderr,
+             "UX:in.login: ERROR: Your password has expired\n" );
+#else
+    fprintf( stdout, 
+             "Your password has expired, please follow the "
+             "prompts to change it.\n" );
+#endif
+
+    switch( read_string( "New Password: ", 
+                         new_password, 
+                         sizeof(new_password), 
+                         0 ) )
+    {
+        case -3:
+            exit( 0 );
+            break;
+        case -2:
+            sig_handler( 0 );
+            break;
+        default:
+            break;
+    }
+
+    switch( read_string( "Verify New Password: ", 
+                         verify_password, 
+                         sizeof(verify_password), 
+                         0 ) )
+    {
+        case -3:
+            exit( 0 );
+            break;
+        case -2:
+            sig_handler( 0 );
+            break;
+        default:
+            break;
+    }
+
+    if( strcmp( new_password, verify_password ) )
+    {
+        fprintf( stderr,
+                 "Sorry, entered passwords do not match.\n" );
+        return( 1 );
+    }
+    
+    helper_input[0] = (char *)password;
+    helper_input[1] = new_password;
+
+    if( (result = libvasauth_launch_helper( &helper_info,
+                                            &helper_opts,
+                                            VASAUTH_HELPER_CMD_CHANGEPW,
+                                            info->krb5PrincipalName,
+                                            0,
+                                            0,
+                                            (const char **) helper_input ))
+          == VASAUTH_HELPER_OPEN_FAILED )
+    {
+        ERRLOG( "Could not execute vasauth_helper" );
+        result = 1;
+        return( result );
+    }
+
+    result = libvasauth_waitfor_helper( &helper_info );
+
+    if( new_password_ptr )
+        *new_password_ptr = strdup( new_password );
+
+    return( result );
+}
+
+/* This function replaces vas_verify --- it passes off all of the
+ * vas authentication, account management( expired passwords, etc )
+ * to the auth_helper application
+ */
+static int
+vas_helper_verify( vascache_t *vascache,
+                   vascache_userinfo_t *info,
+                   const char *password,
+                   int *did_disconnected_auth )
+{
+    char                        *helper_input[] = { NULL, NULL },
+                                *new_password = NULL,
+                                *spn_name = "host/";
+    int                         do_disconnected_auth = 0,
+                                result = 1,         /* Assume failure */
+                                rval = 0;
+    vasauth_helperinfo_t        helper_info;
+    vasauth_helperopts_t        helper_opts;
+
+    memset( &helper_info, 0, sizeof(helper_info) );
+    memset( &helper_opts, 0, sizeof(helper_opts) );
+
+    /* Basically allow the helper to do what it needs to do...*/
+    helper_input[0] = (char *)password;
+
+    /* Set some default values */
+    helper_opts.auth_ad_service_principal = spn_name;
+    helper_opts.auth_ad_write_expiration_days = 1;
+    
+    /* This needs to be cleaned up a bit....Probably need to scan through
+     * the pam settings to set things up properly as far as timeouts,
+     * options, and such....
+     */
+    helper_opts.auth_ad_get_tgt = 1;
+    helper_opts.auth_ad_check_pwdLastSet = 0;
+
+    if( (rval = libvasauth_launch_helper( &helper_info,
+                                           &helper_opts,
+                                           VASAUTH_HELPER_CMD_AUTH,
+                                           info->userPrincipalName,
+                                           0,
+                                           0,
+                                           (const char **) helper_input ))
+          == VASAUTH_HELPER_OPEN_FAILED )
+    {
+        ERRLOG( "%s: could not execute vasauth_helper, error=%d",
+                __FUNCTION__, 
+                rval );
+    }
+    else
+    {
+        /* Let it finish */
+        switch( (rval = libvasauth_waitfor_helper( &helper_info )) )
+        {
+            case VASAUTH_HELPER_KDC_UNREACHABLE:
+            case VASAUTH_HELPER_TIMED_OUT:
+                /* Do a disconnected authication */
+                do_disconnected_auth = 1;
+                break;
+            case VASAUTH_HELPER_TIME_SYNC_ERR:
+                /* Output the message */
+                fprintf( stderr,
+                         "Your system's internal clock is not "
+                         "synchronized with your authentication "
+                         "server.\nPlease notify the system "
+                         "administrator.\n" );
+                break;
+            case VASAUTH_HELPER_POLICY_DENIED:
+            case VASAUTH_HELPER_PERM_DENIED:
+                /* Output message */
+                fprintf( stderr,
+                         "The authentication server policy does "
+                         "not allow you to login at this time.\n" );
+                break;
+            case VASAUTH_HELPER_ACCOUNT_EXPIRED:
+                /* Displaying info here could be a security risk, so don't */
+                ERRLOG( "Account %s: is expired", info->userPrincipalName );
+                break;
+            case VASAUTH_HELPER_NEED_NEW_PASSWORD:
+                /* Allow the user to change their password */
+                if( vas_authhelper_new_password( info,
+                                                 password,
+                                                 &new_password ) == 0)
+                {
+                    result = vas_helper_verify( vascache,
+                                                info,
+                                                new_password,
+                                                did_disconnected_auth );
+                    if( new_password )
+                    {
+                        int         len = strlen( new_password );
+
+                        memset( new_password, 0, len );
+                        free( new_password );
+                    }
+                }
+                else
+                {
+                    ERRLOG( "vas_authhelper_new_password failed." );
+                }
+                break;
+            case VASAUTH_HELPER_AUTH_ERROR:
+                ERRLOG( "Failed authentication attempt for Active "
+                        "Directory user: %s for service login, err = bad password",
+                        info->userPrincipalName );
+                break;
+            case VASAUTH_HELPER_SUCCESS:
+                result = 0;
+                break;
+            case VASAUTH_HELPER_INTERNAL_ERR:
+            default:
+                ERRLOG( "Failed authentication attempt for Active "
+                        "Directory user: %s for service login, "
+                        "err = vas_auth_helper internal failure", 
+                        info->userPrincipalName );
+                break;
+        }
+
+        if( do_disconnected_auth )
+        {
+            if( libvascache_user_disconnected_auth( vascache, info, password ) )
+            {
+                if( errno == EPERM )
+                {
+                }
+                else
+                {
+                }
+            }
+            else
+            {
+               if( did_disconnected_auth )
+                   *did_disconnected_auth = 1;
+               result = 0;
+            }
+        }
+    }
+
+    return( result );
+}
+
+#if 0
+static int
+vas_verify( vascache_t* vascache,
+            vascache_userinfo_t* info, 
+            const char* password, 
+            int no_disconnected_mode,
+            int timed_out )
+{
+    int             rval = 1; /* Assume failure */
+    libvas_t*       libvas = NULL;
+    int             vas_ret;
+    char            current_password[128];
+    char            new_password[128];
+    char            verify_password[128];
+    char            *pretty_name = NULL;
+    libvas_ticket_t ticket;
+
+    /* Initialize locals */
+    memset(&ticket,0,sizeof(ticket));
+
+    /* Quick check up front for disconnected mode */
+    if( !no_disconnected_mode && 
+        (timed_out || !vascache_is_daemon_running( vascache )) )
+    {
+        /* do disconnected authentication */
+        if( libvascache_user_disconnected_auth( vascache, 
+                                                info, 
+                                                password ) )
+        {
+            /* bad password */
+            goto CLEANUP;
+        }
+        else
+        {
+            /* SUCCESS! It's authenticated */
+            goto CLEANUP;  
+        }
+    }
+    
+    /* use a memory ccache until we're finished and we can copy
+     * the tickets to the real creds cache */
+    if( (vas_ret = vas_alloc( (vas_t**) &libvas, 
+                              info->krb5PrincipalName )) )
+    {
+        DBGLOG( "could not allocate libvas structure" );
+        goto CLEANUP;
+    }
+    vas_opt_set( libvas, VAS_OPT_KRB5_USE_MEMCACHE, "1" );
+    
+    /* try to get the TGT */
+    if( (vas_ret = libvas_ticket_get(libvas, NULL, password, 1, NULL )) )
+    {
+        /* do disconnected authentication */
+        if( libvas->err.krb5_err.err == KRB5_KDC_UNREACH )
+        {
+            if( !no_disconnected_mode )
+            {
+                DBGLOG( "vas_verify: trying disconnected auth" );
+                if( (vas_ret = libvascache_user_disconnected_auth( vascache,
+                                                                   info,
+                                                                   password )) )
+                {
+                    DBGLOG( "vas_verify: disconnected authentication failed, "
+                            "err = %d", 
+                            vas_ret );
+                }
+            }
+            else
+            {
+                DBGLOG( "krb5 ticket request timed out, but disconnected "
+                        "mode is disabled" );
+            }
+
+            goto CLEANUP;
+        }
+        else 
+        if( libvas->err.krb5_err.err == KRB5KDC_ERR_KEY_EXPIRED )
+        {
+            /* password is expired, so we ought to try and change it,
+             * prompt for the new password and prompt again to verify
+             * it */
+            DBGLOG( "vas_verify: password has expired, change it!" );
+
+            memset( current_password, 0, sizeof(current_password) );
+            memset( new_password, 0, sizeof(new_password) );
+            memset( verify_password, 0, sizeof(verify_password) );
+
+#ifdef UW7
+            fprintf( stderr,
+                     "UX:in.login: ERROR: Your password has expired\n" );
+#else
+            fprintf( stdout, 
+                     "Your password has expired, please follow the "
+                     "prompts to change it.\n" );
+#endif
+
+            switch( read_string( "Current Password: ", 
+                                 current_password, 
+                                 sizeof(current_password), 
+                                 0 ) )
+            {
+                case -3:
+                    exit( 0 );
+                    break;
+                case -2:
+                    sig_handler( 0 );
+                    break;
+                default:
+                    break;
+            }
+
+            switch( read_string( "New Password: ", 
+                                 new_password, 
+                                 sizeof(new_password), 
+                                 0 ) )
+            {
+                case -3:
+                    exit( 0 );
+                    break;
+                case -2:
+                    sig_handler( 0 );
+                    break;
+                default:
+                    break;
+            }
+
+            switch( read_string( "Verify New Password: ", 
+                                 verify_password, 
+                                 sizeof(verify_password), 
+                                 0 ) )
+            {
+                case -3:
+                    exit( 0 );
+                    break;
+                case -2:
+                    sig_handler( 0 );
+                    break;
+                default:
+                    break;
+            }
+
+            if( strcmp( new_password, verify_password ) )
+            {
+                fprintf( stderr,
+                         "Sorry, entered passwords do not match.\n" );
+                goto CLEANUP;
+            }
+
+            vas_ret = vas_change_password( libvas, 
+                                           current_password, 
+                                           new_password );
+            switch( vas_ret )
+            {
+            case 0:
+                fprintf( stdout, 
+                         "Your password was successfully changed.\n" );
+                if( (vas_ret = libvas_ticket_get( libvas, 
+                                                  NULL,
+                                                  new_password,
+                                                  1,
+                                                  NULL )) )
+                {
+                    DBGLOG( "couldn't get tgt with new changed password, "
+                            "err = %d", 
+                            libvas->err.krb5_err.err );
+                    goto CLEANUP;
+                }
+                break;
+
+            case EACCES:
+                fprintf( stderr,
+                         "You are not allowed to change your password "
+                         "at this time.\n" );
+                goto CLEANUP;
+                break;
+
+            case EFAULT:
+                fprintf( stderr,
+                         "This new password does not meet your "
+                         "domain's password policy requirements.\n"
+                         "Contact your Administrator for information "
+                         "on the minimum password length,\n"
+                         "password complexity, "
+                         "and password history requirements.\n" );
+                goto CLEANUP;
+                break;
+
+            default:
+                fprintf( stderr,
+                         "Password change failed.\n" );
+                DBGLOG( "couldn't change password, err = %d",
+                        vas_ret );
+                goto CLEANUP;
+                break;
+            }
+        }
+        else
+        {
+            DBGLOG( "couldn't get tgt, error = %d", 
+                    libvas->err.krb5_err.err );
+            goto CLEANUP;
+        }
+    }
+
+    /* try to get the host ticket */
+    if( (vas_ret = libvas_beautify_pname( libvas, "host/", 1, &pretty_name )) )
+    {
+        DBGLOG( "could not beautify \"host/\", error = %s",
+                vas_error_str( libvas ) );
+        goto CLEANUP;
+    }
+
+    if( (vas_ret = libvas_ticket_get( libvas, pretty_name, NULL, 1, &ticket )) )
+    {
+        DBGLOG( "could not get a ticket for %s, error = %s, krb5 code = %d", 
+                pretty_name,
+                vas_error_str( libvas ), 
+                libvas->err.krb5_err.err );
+        goto CLEANUP;
+    }
+
+    /* Validate the host ticket */
+    if( (vas_ret = libvas_ticket_validate(libvas,&ticket)) )
+    {
+        DBGLOG( "could not validate ticket for %s, error = %s",
+                pretty_name,
+                vas_error_str( libvas ) );
+    }
+
+    /* Copy the cred cache to the global "id" variable so that it
+     * can be saved upon successful login 
+     */
+    if( krb5_cc_gen_new(context, &krb5_mcc_ops, &id) )
+        goto CLEANUP;
+    
+    krb5_cc_copy_cache(libvas->krb5ctx,libvas->krb5cc,id);
+
+    /* cache the disconnected password */
+    if( !no_disconnected_mode )
+        libvascache_user_store_password( info, password, 1 );
+
+    /* set this so we do the krb5 ticket stuff later */
+    auth = AUTH_KRB5;
+
+    /* SUCCESS */
+    rval = 0;
+
+CLEANUP:
+    memset( new_password, 0, sizeof(new_password) );
+    memset( verify_password, 0, sizeof(verify_password) );
+    libvas_ticket_free(&ticket);
+    
+    if( pretty_name )   free( pretty_name );
+    if( libvas)         vas_free( libvas );
+
+    return rval;
+}
+#endif
 
 #ifdef KRB4
 static krb5_error_code
@@ -181,19 +722,21 @@ krb5_to4 (krb5_ccache id)
 
     int get_v4_tgt;
 
+    get_v4_tgt = krb5_config_get_bool(context, NULL,
+                                      "libdefaults",
+                                      "krb4_get_tickets",
+                                      NULL);
+
     ret = krb5_cc_get_principal(context, id, &princ);
     if(ret == 0) {
-	krb5_appdefault_boolean(context, "login", 
-				krb5_principal_get_realm(context, princ), 
-				"krb4_get_tickets", FALSE, &get_v4_tgt);
+        get_v4_tgt = krb5_config_get_bool_default(context, NULL,
+                                                  get_v4_tgt,
+                                                  "realms",
+                                                  *krb5_princ_realm(context,
+                                                                    princ),
+                                                  "krb4_get_tickets",
+                                                  NULL);
 	krb5_free_principal(context, princ);
-    } else {
-	krb5_realm realm = NULL;
-	krb5_get_default_realm(context, &realm);
-	krb5_appdefault_boolean(context, "login", 
-				realm, 
-				"krb4_get_tickets", FALSE, &get_v4_tgt);
-	free(realm);
     }
 
     if (get_v4_tgt) {
@@ -265,6 +808,7 @@ krb5_finish (void)
     krb5_free_context(context);
 }
 
+#ifdef KRB4
 static void
 krb5_get_afs_tokens (const struct passwd *pwd)
 {
@@ -293,6 +837,7 @@ krb5_get_afs_tokens (const struct passwd *pwd)
 	krb5_cc_close (context, id2);
     }
 }
+#endif /* KRB4 */
 
 #endif /* KRB5 */
 
@@ -364,18 +909,18 @@ static char *remote_host;
 static char *auth_level = NULL;
 
 struct getargs args[] = {
-    { NULL, 'a', arg_string,    &auth_level,    "authentication mode" },
+    { NULL, 'a', arg_string,    &auth_level,    "authentication mode", NULL, },
 #if 0
-    { NULL, 'd' },
+    { NULL, 'd', 0, NULL, NULL, NULL, NULL},
 #endif
-    { NULL, 'f', arg_flag,	&f_flag,	"pre-authenticated" },
+    { NULL, 'f', arg_flag,  &f_flag,    "pre-authenticated", NULL },
     { NULL, 'h', arg_string,	&remote_host,	"remote host", "hostname" },
-    { NULL, 'p', arg_flag,	&p_flag,	"don't purge environment" },
+    { NULL, 'p', arg_flag,  &p_flag,    "don't purge environment", NULL },
 #if 0
-    { NULL, 'r', arg_flag,	&r_flag,	"rlogin protocol" },
+    { NULL, 'r', arg_flag,  &r_flag,    "rlogin protocol", NULL },
 #endif
-    { "version", 0,  arg_flag,	&version_flag },
-    { "help",	 0,  arg_flag,&help_flag, }
+    { "version", 0,  arg_flag,  &version_flag, NULL, NULL },
+    { "help",    0,  arg_flag,&help_flag, NULL, NULL }
 };
 
 int nargs = sizeof(args) / sizeof(args[0]);
@@ -590,10 +1135,9 @@ do_login(const struct passwd *pwd, char *tty, char *ttyn)
 	    krb5_cc_close (context, id);
 	}
     }
-#endif /* KRB4 */
 
     krb5_get_afs_tokens (pwd);
-
+#endif /* KRB4 */
     krb5_finish ();
 #endif /* KRB5 */
 
@@ -627,10 +1171,6 @@ do_login(const struct passwd *pwd, char *tty, char *ttyn)
 		    continue;
 		show_file(buf);
 	    }
-	} else {
-	    str = login_conf_get_string("welcome");
-	    if(str != NULL)
-		show_file(str);
 	}
     }
     add_env("HOME", home_dir);
@@ -640,11 +1180,13 @@ do_login(const struct passwd *pwd, char *tty, char *ttyn)
     exec_shell(pwd->pw_shell, rootlogin);
 }
 
+
 static int
 check_password(struct passwd *pwd, const char *password)
 {
-    if(pwd->pw_passwd == NULL)
+    if (pwd == NULL || pwd->pw_passwd == NULL)
 	return 1;
+
     if(pwd->pw_passwd[0] == '\0'){
 #ifdef ALLOW_NULL_PASSWORD
 	return password[0] != '\0';
@@ -652,8 +1194,15 @@ check_password(struct passwd *pwd, const char *password)
 	return 1;
 #endif
     }
+
+    /* the shadow password is filled in by k_getpwnam from libroken */
     if(strcmp(pwd->pw_passwd, crypt(password, pwd->pw_passwd)) == 0)
 	return 0;
+
+
+/* disable the rest of these since we handle krb5 and we'll do
+ * that before doing the local check */
+#if 0
 #ifdef KRB5
     if(krb5_verify(pwd, password) == 0) {
 	auth = AUTH_KRB5;
@@ -672,8 +1221,11 @@ check_password(struct passwd *pwd, const char *password)
        return 0;
     }
 #endif
+#endif
+    
     return 1;
 }
+
 
 static void
 usage(int status)
@@ -682,29 +1234,35 @@ usage(int status)
     exit(status);
 }
 
-static RETSIGTYPE
-sig_handler(int sig)
-{
-    if (sig == SIGALRM)
-         fprintf(stderr, "Login timed out after %d seconds\n",
-                login_timeout);
-      else
-         fprintf(stderr, "Login received signal, exiting\n");
-    exit(0);
-}
 
 int
 main(int argc, char **argv)
 {
     int max_tries = 5;
-    int try;
-
+    int  curr_try = 0;
+    char *bad_group = NULL;
     char username[32];
     int optind = 0;
-
     int ask = 1;
+    int     did_disconnected_auth = 0,
+            result;
     struct sigaction sa;
     
+    /* VAS variables used */
+    vascache_t*          vascache = NULL;
+    vascache_userinfo_t  vas_userinfo;
+    int                  vas_disconnected_mode = 0; 
+
+    /* options loaded out of config file */
+    int                  vas_show_realm_prompt = 0;
+    int                  vas_create_homedir = 0;
+    int                  vas_nodisconnected_auth = 0;
+    int                  vas_nouid_conflict_check = 0;
+    int                  vas_noaccess_check = 0;
+    int                  vas_do_merge = 0;
+    
+
+    memset( &vas_userinfo, 0, sizeof(vas_userinfo) );
     setprogname(argv[0]);
 
 #ifdef KRB5
@@ -714,6 +1272,51 @@ main(int argc, char **argv)
 	ret = krb5_init_context(&context);
 	if (ret)
 	    errx (1, "krb5_init_context failed: %d", ret);
+
+        /* now load the login options specified in vas.conf */
+        vas_show_realm_prompt =
+            krb5_config_get_bool_default( context,
+                                          NULL,
+                                          FALSE,
+                                          "login",
+                                          "realm_prompt",
+                                          NULL );
+        vas_create_homedir =
+            krb5_config_get_bool_default( context,
+                                          NULL,
+                                          TRUE,
+                                          "login",
+                                          "create_homedir",
+                                          NULL );
+        vas_nodisconnected_auth =
+            krb5_config_get_bool_default( context,
+                                          NULL,
+                                          FALSE,
+                                          "login",
+                                          "no_disconnected",
+                                          NULL );
+        vas_nouid_conflict_check =
+            krb5_config_get_bool_default( context,
+                                          NULL,
+                                          FALSE,
+                                          "login",
+                                          "no_uidconflict_check",
+                                          NULL );
+        vas_noaccess_check =
+            krb5_config_get_bool_default( context,
+                                          NULL,
+                                          FALSE,
+                                          "login",
+                                          "no_access_check",
+                                          NULL );
+        vas_do_merge =
+            krb5_config_get_bool_default( context,
+                                          NULL,
+                                          FALSE,
+                                          "login",
+                                          "do_merge",
+                                          NULL );
+ 
     }
 #endif
 
@@ -766,14 +1369,20 @@ main(int argc, char **argv)
     sigemptyset(&sa.sa_mask);
     sa.sa_flags = 0;
     sigaction(SIGALRM, &sa, NULL);
-    alarm(login_timeout);
+/*    alarm(login_timeout); */
 
-    for(try = 0; try < max_tries; try++){
-	struct passwd *pwd;
+    for (curr_try = 0; curr_try < max_tries; curr_try++) {
+        
+        /* VAS vars we need */
+        int                  is_vas_user = 0;
+        int                  merge_failed = 0;
+
+        struct passwd*       pwd = NULL;
 	char password[128];
 	int ret;
 	char ttname[32];
-	char *tty, *ttyn;
+        char*                tty = NULL;
+        char*                ttyn = NULL;
         char prompt[128];
 #ifdef OTP
         char otp_str[256];
@@ -789,15 +1398,61 @@ main(int argc, char **argv)
 		exit(0);
 	    if(ret == -2)
 		sig_handler(0); /* exit */
+        } else {
+            DBGLOG( "Not prompting for user: %s", username );
+        }
+        
+        vascache_userinfo_free( &vas_userinfo );
+        if( vascache == NULL ) 
+        {
+            if( vascache_init( &vascache, NULL, 0 ) ) {
+                break;
 	}
+        }
+            
+        if( vascache )
+        {
+            is_vas_user = vascache_is_vas_user( vascache, 
+                                                username, 
+                                                VASCACHE_FORCE_UPDATE, 
+                                                &vas_userinfo,
+                                                &vas_disconnected_mode,
+                                                NULL,
+                                                0 );
+        }
+
+        /* If merging is turned on, we want to make sure we merge in this 
+         * user, or get him deleted. We don't need to update the cache 
+         * since we already did it in the vascache_is_vas_user function.
+         * Also- we force the groups to update to make sure we get any group
+         * changes for this user.
+         *
+         * Note -- we want to recommend using vasypserv over merging though! */
+        if( vas_do_merge )
+        {
+            if( is_vas_user )
+            {
+                if( (merge_failed = libvascache_merge_user( vascache,
+                                                            &vas_userinfo,
+                                                            NULL,
+                                                            NULL )) == 0 )
+                    libvascache_merge_groups( vascache, VASCACHE_FORCE_UPDATE );
+            }
+            else
+            {
+                /* make sure this user gets deleted */
+                libvascache_unmerge_user( vascache, username );
+            }
+        }
+
+        /* note that on NSS platforms this will send the update IPC from
+         * the NSS module :) */
         pwd = k_getpwnam(username);
 #ifdef ALLOW_NULL_PASSWORD
         if (pwd != NULL && (pwd->pw_passwd[0] == '\0')) {
             strcpy(password,"");
-        }
-        else
+        } else
 #endif
-
         {
 #ifdef OTP
            if(auth_level && strcmp(auth_level, "otp") == 0 &&
@@ -810,27 +1465,169 @@ main(int argc, char **argv)
                  strncpy(prompt, "Password: ", sizeof(prompt));
 
 	    if (f_flag == 0) {
+                if( is_vas_user && vas_show_realm_prompt ) {
+                    snprintf( prompt,
+                              sizeof(prompt),
+                              "Password for %s: ",
+                              vas_userinfo.userPrincipalName );
+                    ret = read_string( prompt, 
+                                       password, 
+                                       sizeof(password), 
+                                       0 );
+                }
+                else
 	       ret = read_string(prompt, password, sizeof(password), 0);
+
                if (ret == -3) {
                   ask = 1;
                   continue;
                }
+
                if (ret == -2)
                   sig_handler(0);
             }
          }
 	
 	if(pwd == NULL){
-	    fprintf(stderr, "Login incorrect.\n");
+#ifdef UW7
+                fprintf(stderr, "UX:in.login: ERROR: Login incorrect\n");
+#else
+                fprintf(stderr, "Login incorrect\n");
+#endif
+            if( is_vas_user && merge_failed )
+                DBGLOG( "Could not merge user: %s", username );
+            else
+                DBGLOG( "could not get passwd entry for user: %s", username );
+            ask = 1;
+            continue;
+        }
+
+        if( f_flag == 0 ) {
+            if( (is_vas_user && vas_helper_verify( vascache,
+                                                   &vas_userinfo, 
+                                                   password, 
+                                                   &did_disconnected_auth )) ||
+                (!is_vas_user && check_password( pwd, password )) ) 
+            {
+#ifdef UW7
+                fprintf(stderr, "UX:in.login: ERROR: Login incorrect\n");
+#else
+                fprintf(stderr, "Login incorrect\n");
+#endif
 	    ask = 1;
 	    continue;
 	}
+        }
 
-	if(f_flag == 0 && check_password(pwd, password)){
-	    fprintf(stderr, "Login incorrect.\n");
+        /* check these things here in case we've got a kerberized login with no
+         * password prompt */
+        if( is_vas_user )
+        {
+            /* check these things after we successfully validate
+             * the password, just so we know it's them, so we don't
+             * reveal info we shouldn't */
+            if( !vas_nouid_conflict_check && 
+                libvascache_user_has_uidconflict( vascache, 
+                                                  &vas_userinfo ) ) {
+                syslog( LOG_ALERT, 
+                        "Login was rejected for %s due to UID conflict", 
+                        pwd->pw_name );
+
+                /* try to use the same string as what's in the PAM module */
+                fprintf( stderr,
+                         "Your UID conflicts with another user. "
+                        "Please contact your administrator.\n " );
+
             ask = 1;
 	    continue;
 	}
+
+            /* Need to perform the group conflict checking.... */
+            if( !did_disconnected_auth )
+            {
+                vascache_send_groups_for_user_update( vascache,
+                                                      vas_userinfo.userPrincipalName,
+                                                      VASCACHE_FORCE_UPDATE, 
+                                                      1,
+                                                      NULL );
+
+                if( !libvascache_group_gid_is_cached( vascache, 
+                                                      vas_userinfo.gidNumberStr ) )
+                {
+                    char* user_domain = strchr( vas_userinfo.krb5PrincipalName, '@' );
+                    user_domain ++;
+
+                    libvascache_send_group_gid_realm_request( vascache,
+                                                              vas_userinfo.gidNumber,
+                                                              user_domain,
+                                                              VASCACHE_FORCE_UPDATE,
+                                                              NULL );
+                }
+            }
+            if( (result = libvascache_user_has_group_gid_conflict( vascache,
+                                                                   &vas_userinfo,
+                                                                   &bad_group )) )
+            {
+                if( result == -1 )
+                {
+                    syslog( LOG_ALERT,
+                            "group conflict check for user: %s "
+                            "failed due to an internal error, errno=%d.",
+                            vas_userinfo.userPrincipalName,
+                            errno );
+                    ask = 1;
+                    continue;
+                }
+                else
+                {
+                    syslog( LOG_ALERT,
+                            "User: %s belongs to group %s which has a "
+                            "GID conflict.  Login was denied.",
+                            vas_userinfo.userPrincipalName,
+                            bad_group );
+                    fprintf( stderr,
+                             "You belong to a group that has a conflicting "
+                             "gid with another group.\n"
+                             "Please contact your administrator.\n" );
+                    ask = 1;
+                    continue;
+                }
+            }
+                            
+            /* reset this since there was no uid_conflict but we probably
+             * messed up the passwd ptr */
+            pwd = k_getpwnam( username );
+
+            /* Don't authenticate the user if their shell is set to the
+             * magic value we consider disabled. */
+            if( strcmp( pwd->pw_shell, VASCACHE_DISABLED_SHELL ) == 0 )
+            {
+                syslog( LOG_INFO, 
+                        "Attempted login by %s whose shell is /bin/false", 
+                        pwd->pw_name );
+                fprintf( stderr, "Permission denied\n" );
+                ask = 1;
+                continue;
+            }
+
+            /* do users.[allow,deny] check for vas users */
+            if( !vas_noaccess_check &&
+                vascache_user_check_access( vascache, 
+                                            &vas_userinfo,
+                                            NULL ) ) {
+                syslog( LOG_INFO, 
+                        "Attempted login by %s who does not have access", 
+                        pwd->pw_name );
+                fprintf( stderr, "Permission denied\n" );
+                ask = 1;
+                continue;
+            }
+
+            /* make sure the user's home directory exists- we don't care about
+             * return values here */
+            libvascache_create_homedir( &vas_userinfo );
+        }
+
 	ttyn = ttyname(STDIN_FILENO);
 	if(ttyn == NULL){
 	    snprintf(ttname, sizeof(ttname), "%s??", _PATH_TTY);
@@ -856,3 +1653,4 @@ main(int argc, char **argv)
     }
     exit(1);
 }
+

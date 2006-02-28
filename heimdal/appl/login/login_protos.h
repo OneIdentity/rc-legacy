@@ -9,10 +9,12 @@ add_env (
 	const char */*var*/,
 	const char */*value*/);
 
+#ifdef HAVE_GETSPNAM
 void
 check_shadow (
 	const struct passwd */*pw*/,
 	const struct spwd */*sp*/);
+#endif
 
 char *
 clean_ttyname (char */*tty*/);

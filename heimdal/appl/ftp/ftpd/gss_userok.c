@@ -50,8 +50,22 @@ struct gss_data {
     gss_cred_id_t delegated_cred_handle;
 };
 
+/* XXX Dodgy import from Heimdal source. Assumes underlying GSSAPI is
+ * Heimdal or compatible */
+typedef struct gss_cred_id_t_desc_struct {
+  gss_name_t principal;
+  struct krb5_keytab_data *keytab;
+  OM_uint32 lifetime;
+  gss_cred_usage_t usage;
+  gss_OID_set mechanisms;
+  struct krb5_ccache_data *ccache;
+} gss_cred_id_t_desc;
+
+
 int gss_userok(void*, char*); /* to keep gcc happy */
 
+/* XXX Review what this function does. It plays hard and fast with heimdal
+ * internals */
 int
 gss_userok(void *app_data, char *username)
 {
@@ -59,6 +73,7 @@ gss_userok(void *app_data, char *username)
     if(gssapi_krb5_context) {
 	krb5_principal client;
 	krb5_error_code ret;
+        gss_cred_id_t_desc *delegated_cred_handle;
         
 	ret = krb5_parse_name(gssapi_krb5_context, data->client_name, &client);
 	if(ret)
@@ -73,8 +88,10 @@ gss_userok(void *app_data, char *username)
         
         /* more of krb-depend stuff :-( */
 	/* gss_add_cred() ? */
+        delegated_cred_handle = 
+          (gss_cred_id_t_desc *) data->delegated_cred_handle;
         if (data->delegated_cred_handle && 
-            data->delegated_cred_handle->ccache ) {
+            delegated_cred_handle->ccache) {
             
            krb5_ccache ccache = NULL; 
            char* ticketfile;
@@ -96,7 +113,7 @@ gss_userok(void *app_data, char *username)
               goto fail;
            
            ret = gss_krb5_copy_ccache(&minor_status,
-				      data->delegated_cred_handle,
+				      delegated_cred_handle,
 				      ccache);
            if (ret)
               goto fail;
@@ -112,8 +129,8 @@ fail:
            if (ccache)
               krb5_cc_close(gssapi_krb5_context, ccache); 
            krb5_cc_destroy(gssapi_krb5_context, 
-                           data->delegated_cred_handle->ccache);
-           data->delegated_cred_handle->ccache = NULL;
+                           delegated_cred_handle->ccache);
+           delegated_cred_handle->ccache = NULL;
            free(ticketfile);
         }
            

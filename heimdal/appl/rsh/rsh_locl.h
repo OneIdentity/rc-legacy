@@ -102,7 +102,9 @@
 #endif
 #ifdef KRB5
 #include <krb5.h>
+#if 0 /* XXX For now just use implicit prototypes and hope for the best */
 #include <krb5-private.h> /* for _krb5_{get,put}_int */
+#endif 
 #endif
 #include <kafs.h>
 

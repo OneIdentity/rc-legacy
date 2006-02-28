@@ -2,8 +2,8 @@ dnl Process this file with autoconf to produce a configure script.
 AC_REVISION($Revision: 1.331.2.9 $)
 AC_PREREQ(2.53)
 ##test -z "$CFLAGS" && CFLAGS="-g"
-AC_INIT([Heimdal], [0.6.4], [heimdal-bugs@pdc.kth.se])
-AC_CONFIG_SRCDIR([kuser/kinit.c])
+AC_INIT([vas-apps], [0.6.4_1], [rc-vas@vintela.com])
+AC_CONFIG_SRCDIR([appl/telnet/telnet/telnet.c])
 AM_CONFIG_HEADER(include/config.h)
 
 dnl Checks for programs.
@@ -56,6 +56,8 @@ AC_ENABLE_SHARED(no)
 AC_PROG_LIBTOOL
 
 AC_WFLAGS(-Wall -Wmissing-prototypes -Wpointer-arith -Wbad-function-cast -Wmissing-declarations -Wnested-externs)
+
+AC_WITH_KRB5
 
 rk_TEST_PACKAGE(openldap,
 [#include <lber.h>
@@ -164,6 +166,8 @@ AC_SUBST(LIB_kdb)dnl
 
 KRB_CRYPTO
 
+AC_WITH_KRB5(yes)
+
 AC_ARG_ENABLE(dce, 
 	AC_HELP_STRING([--enable-dce],[if you want support for DCE/DFS PAG's]))
 if test "$enable_dce" = yes; then
@@ -190,9 +194,13 @@ rk_DB
 dnl AC_ROKEN(10,[/usr/heimdal /usr/athena],[lib/roken],[$(top_builddir)/lib/roken/libroken.la],[-I$(top_builddir)/lib/roken -I$(top_srcdir)/lib/roken])
 
 rk_ROKEN(lib/roken)
-LIB_roken="\$(top_builddir)/lib/vers/libvers.la $LIB_roken"
 
-rk_OTP
+# XXX Hack so we pick up version and roken from existing kerb libs. We should
+# really be checking for these
+#LIB_roken="\$(top_builddir)/lib/vers/libvers.la $LIB_roken"
+LIB_roken
+
+dnl rk_OTP
 
 AC_CHECK_OSFC2
 
@@ -389,7 +397,8 @@ rk_TELNET
 dnl Some operating systems already have com_err and compile_et
 CHECK_COMPILE_ET
 
-rk_AUTH_MODULES([sia afskauthlib])
+# Dodgy?
+dnl rk_AUTH_MODULES([sia afskauthlib])
 
 rk_DESTDIRS
 
@@ -401,58 +410,79 @@ AH_BOTTOM([#ifdef ROKEN_RENAME
 #include "roken_rename.h"
 #endif])
 
+#AC_CONFIG_FILES(Makefile 		\
+#	include/Makefile		\
+#	include/kadm5/Makefile		\
+#	lib/Makefile			\
+#	lib/45/Makefile			\
+#	lib/auth/Makefile		\
+#	lib/auth/afskauthlib/Makefile	\
+#	lib/auth/pam/Makefile		\
+#	lib/auth/sia/Makefile		\
+#	lib/asn1/Makefile		\
+#	lib/com_err/Makefile		\
+#	lib/des/Makefile		\
+#	lib/editline/Makefile		\
+#	lib/gssapi/Makefile		\
+#	lib/hdb/Makefile		\
+#	lib/kadm5/Makefile		\
+#	lib/kafs/Makefile		\
+#	lib/kdfs/Makefile		\
+#	lib/krb5/Makefile		\
+#	lib/otp/Makefile		\
+#	lib/roken/Makefile		\
+#	lib/sl/Makefile			\
+#	lib/vers/Makefile		\
+#	kuser/Makefile			\
+#	kpasswd/Makefile		\
+#	kadmin/Makefile			\
+#	admin/Makefile			\
+#	kdc/Makefile			\
+#	appl/Makefile			\
+#	appl/afsutil/Makefile		\
+#	appl/ftp/Makefile		\
+#	appl/ftp/common/Makefile	\
+#	appl/ftp/ftp/Makefile		\
+#	appl/ftp/ftpd/Makefile		\
+#	appl/kx/Makefile		\
+#	appl/login/Makefile		\
+#	appl/otp/Makefile		\
+#	appl/popper/Makefile		\
+#	appl/push/Makefile		\
+#	appl/rsh/Makefile		\
+#	appl/rcp/Makefile		\
+#	appl/su/Makefile		\
+#	appl/xnlock/Makefile		\
+#	appl/telnet/Makefile		\
+#	appl/telnet/libtelnet/Makefile	\
+#	appl/telnet/telnet/Makefile	\
+#	appl/telnet/telnetd/Makefile	\
+#	appl/test/Makefile		\
+#	appl/kf/Makefile		\
+#	appl/dceutils/Makefile		\
+#	doc/Makefile			\
+#	tools/Makefile			\
+#)
+
 AC_CONFIG_FILES(Makefile 		\
 	include/Makefile		\
-	include/kadm5/Makefile		\
 	lib/Makefile			\
-	lib/45/Makefile			\
-	lib/auth/Makefile		\
-	lib/auth/afskauthlib/Makefile	\
-	lib/auth/pam/Makefile		\
-	lib/auth/sia/Makefile		\
-	lib/asn1/Makefile		\
-	lib/com_err/Makefile		\
-	lib/des/Makefile		\
-	lib/editline/Makefile		\
-	lib/gssapi/Makefile		\
-	lib/hdb/Makefile		\
-	lib/kadm5/Makefile		\
-	lib/kafs/Makefile		\
-	lib/kdfs/Makefile		\
-	lib/krb5/Makefile		\
-	lib/otp/Makefile		\
 	lib/roken/Makefile		\
-	lib/sl/Makefile			\
-	lib/vers/Makefile		\
-	kuser/Makefile			\
-	kpasswd/Makefile		\
-	kadmin/Makefile			\
-	admin/Makefile			\
-	kdc/Makefile			\
+        lib/editline/Makefile		\
+        lib/kafs/Makefile		\
+        lib/vers/Makefile		\
 	appl/Makefile			\
-	appl/afsutil/Makefile		\
 	appl/ftp/Makefile		\
 	appl/ftp/common/Makefile	\
 	appl/ftp/ftp/Makefile		\
 	appl/ftp/ftpd/Makefile		\
-	appl/kx/Makefile		\
-	appl/login/Makefile		\
-	appl/otp/Makefile		\
-	appl/popper/Makefile		\
-	appl/push/Makefile		\
 	appl/rsh/Makefile		\
 	appl/rcp/Makefile		\
-	appl/su/Makefile		\
-	appl/xnlock/Makefile		\
+	appl/login/Makefile		\
 	appl/telnet/Makefile		\
 	appl/telnet/libtelnet/Makefile	\
 	appl/telnet/telnet/Makefile	\
-	appl/telnet/telnetd/Makefile	\
-	appl/test/Makefile		\
-	appl/kf/Makefile		\
-	appl/dceutils/Makefile		\
-	doc/Makefile			\
-	tools/Makefile			\
+	appl/telnet/telnetd/Makefile
 )
 
 AC_OUTPUT
