@@ -324,3 +324,7 @@ kafs_settoken5(krb5_context context, const char *cell, uid_t uid,
 
     return ret;
 }
+
+/*
+ vim:tabstop=8:shiftwidth=8:
+ */
