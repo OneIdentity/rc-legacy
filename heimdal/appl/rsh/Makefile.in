@@ -102,19 +102,19 @@ am_rsh_OBJECTS = rsh.$(OBJEXT) common.$(OBJEXT)
 rsh_OBJECTS = $(am_rsh_OBJECTS)
 rsh_LDADD = $(LDADD)
 am__DEPENDENCIES_1 =
-#am__DEPENDENCIES_2 = $(top_builddir)/lib/kafs/libkafs.la \
-#	$(am__DEPENDENCIES_1)
-@DCE_TRUE@am__DEPENDENCIES_3 = $(top_builddir)/lib/kdfs/libkdfs.la
-rsh_DEPENDENCIES = $(am__DEPENDENCIES_2) $(am__DEPENDENCIES_1) \
+@DCE_TRUE@am__DEPENDENCIES_2 = $(top_builddir)/lib/kdfs/libkdfs.la
+rsh_DEPENDENCIES = $(top_builddir)/lib/vers/libvers.la \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_3)
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_2)
 am_rshd_OBJECTS = rshd.$(OBJEXT) common.$(OBJEXT) \
 	login_access.$(OBJEXT)
 rshd_OBJECTS = $(am_rshd_OBJECTS)
 rshd_LDADD = $(LDADD)
-rshd_DEPENDENCIES = $(am__DEPENDENCIES_2) $(am__DEPENDENCIES_1) \
+rshd_DEPENDENCIES = $(top_builddir)/lib/vers/libvers.la \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_3)
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_2)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include
 depcomp =
 am__depfiles_maybe =

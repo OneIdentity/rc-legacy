@@ -19,7 +19,7 @@ INCLUDES += $(krb4_am_workaround)
 if KRB5
 #DEPLIB_krb5 = ../krb5/libkrb5.la 
 DEPLIB_krb5  =
-krb5_am_workaround = $(INCLUDE_des) -I$(top_srcdir)/lib/krb5
+#krb5_am_workaround = $(INCLUDE_des) -I$(top_srcdir)/lib/krb5
 else
 DEPLIB_krb5  =
 krb5_am_workaround = 

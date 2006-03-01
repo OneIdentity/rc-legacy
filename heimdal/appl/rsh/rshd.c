@@ -872,7 +872,7 @@ doit (void)
 	    fatal (s, "net_write", "write failed");
     }
 
-#if defined(KRB4) || defined(KRB5)
+#ifdef USE_AFS
     if(k_hasafs()) {
 	char cell[64];
 
@@ -902,7 +902,7 @@ doit (void)
        }
 #endif /* KRB5 */
     }
-#endif /* KRB5 || KRB4 */
+#endif /* USE_AFS */ 
     execle (pwd->pw_shell, pwd->pw_shell, "-c", cmd, NULL, env);
     err(1, "exec %s", pwd->pw_shell);
 }

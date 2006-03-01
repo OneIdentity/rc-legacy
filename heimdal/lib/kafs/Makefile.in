@@ -389,12 +389,12 @@ LIB_kafs = $(top_builddir)/lib/kafs/libkafs.la $(AIX_EXTRA_KAFS)
 @KRB4_TRUE@DEPLIB_krb4 = 
 @KRB4_FALSE@krb4_am_workaround = 
 @KRB4_TRUE@krb4_am_workaround = $(INCLUDE_krb4)
+#krb5_am_workaround = $(INCLUDE_des) -I$(top_srcdir)/lib/krb5
 @KRB5_FALSE@DEPLIB_krb5 = 
 
 #DEPLIB_krb5 = ../krb5/libkrb5.la 
 @KRB5_TRUE@DEPLIB_krb5 = 
 @KRB5_FALSE@krb5_am_workaround = 
-@KRB5_TRUE@krb5_am_workaround = $(INCLUDE_des) -I$(top_srcdir)/lib/krb5
 @AIX_FALSE@AFSL_EXP = 
 #ROKEN=../roken/libroken.la
 @AIX_TRUE@AFSL_EXP = $(srcdir)/afsl.exp

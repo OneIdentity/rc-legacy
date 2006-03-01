@@ -141,7 +141,7 @@ _kafs_fixup_viceid(struct ClearToken *ct, uid_t uid)
     }
 }
 
-
+/*
 int
 _kafs_v4_to_kt(CREDENTIALS *c, uid_t uid, struct kafs_token *kt)
 {
@@ -156,9 +156,11 @@ _kafs_v4_to_kt(CREDENTIALS *c, uid_t uid, struct kafs_token *kt)
     kt->ticket_len = c->ticket_st.length;
     memcpy(kt->ticket, c->ticket_st.dat, kt->ticket_len);
     
+	*/
     /*
      * Build a struct ClearToken
      */
+    /*
     kt->ct.AuthHandle = c->kvno;
     memcpy (kt->ct.HandShakeKey, c->session, sizeof(c->session));
     kt->ct.ViceId = uid;
@@ -169,6 +171,7 @@ _kafs_v4_to_kt(CREDENTIALS *c, uid_t uid, struct kafs_token *kt)
 
     return 0;
 }
+*/
 
 /* Try to get a db-server for an AFS cell from a AFSDB record */
 
