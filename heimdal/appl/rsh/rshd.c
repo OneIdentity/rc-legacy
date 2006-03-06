@@ -1007,7 +1007,8 @@ main(int argc, char **argv)
 			error = getaddrinfo(NULL, portstr, &hints, &ai);
 		    }
 		    if(error) 
-			errx (1, "getaddrinfo: %s", gai_strerror (error));
+			errx (1, "getaddrinfo: %s (ekshell is probably not defined in /etc/services)",
+					gai_strerror (error));
 		} else {
 		    error = getaddrinfo(NULL, "kshell", &hints, &ai);
 		    if(error == EAI_NONAME) {
