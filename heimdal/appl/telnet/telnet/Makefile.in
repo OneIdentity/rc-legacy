@@ -103,7 +103,8 @@ telnet_OBJECTS = $(am_telnet_OBJECTS)
 telnet_LDADD = $(LDADD)
 am__DEPENDENCIES_1 =
 @DCE_TRUE@am__DEPENDENCIES_2 = $(top_builddir)/lib/kdfs/libkdfs.la
-telnet_DEPENDENCIES = ../libtelnet/libtelnet.a $(am__DEPENDENCIES_1) \
+telnet_DEPENDENCIES = ../libtelnet/libtelnet.a \
+	$(top_builddir)/lib/vers/libvers.la $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_2) \
 	$(am__DEPENDENCIES_1)
@@ -371,6 +372,7 @@ telnet_SOURCES = authenc.c commands.c main.c network.c ring.c \
 
 man_MANS = telnet.1
 LDADD = ../libtelnet/libtelnet.a \
+	$(top_builddir)/lib/vers/libvers.la \
 	$(LIB_krb5) \
 	$(LIB_krb4) \
 	$(LIB_des) \

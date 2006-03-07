@@ -15,6 +15,7 @@ man_MANS = telnetd.8
 
 LDADD = \
 	../libtelnet/libtelnet.a \
+	$(top_builddir)/lib/vers/libvers.la \
 	$(LIB_krb5) \
 	$(LIB_krb4) \
 	$(LIB_des) \

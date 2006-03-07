@@ -102,7 +102,8 @@ telnetd_OBJECTS = $(am_telnetd_OBJECTS)
 telnetd_LDADD = $(LDADD)
 am__DEPENDENCIES_1 =
 @DCE_TRUE@am__DEPENDENCIES_2 = $(top_builddir)/lib/kdfs/libkdfs.la
-telnetd_DEPENDENCIES = ../libtelnet/libtelnet.a $(am__DEPENDENCIES_1) \
+telnetd_DEPENDENCIES = ../libtelnet/libtelnet.a \
+	$(top_builddir)/lib/vers/libvers.la $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
@@ -371,7 +372,7 @@ telnetd_SOURCES = telnetd.c state.c termstat.c slc.c sys_term.c \
 man_MANS = telnetd.8
 LDADD = \
 	../libtelnet/libtelnet.a \
-	$(LIB_krb5) \
+	$(top_builddir)/lib/vers/libvers.la \
 	$(LIB_krb4) \
 	$(LIB_des) \
 	$(LIB_tgetent) \

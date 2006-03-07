@@ -99,7 +99,8 @@ am_rcp_OBJECTS = rcp.$(OBJEXT) util.$(OBJEXT)
 rcp_OBJECTS = $(am_rcp_OBJECTS)
 rcp_LDADD = $(LDADD)
 am__DEPENDENCIES_1 =
-rcp_DEPENDENCIES = $(am__DEPENDENCIES_1)
+rcp_DEPENDENCIES = $(am__DEPENDENCIES_1) \
+	$(top_builddir)/lib/vers/libvers.la
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include
 depcomp =
 am__depfiles_maybe =
@@ -355,7 +356,9 @@ LIB_kafs = $(top_builddir)/lib/kafs/libkafs.la $(AIX_EXTRA_KAFS)
 #LIB_kdfs = $(top_builddir)/lib/kdfs/libkdfs.la
 @DCE_TRUE@LIB_kdfs = $(top_builddir)/lib/kdfs/libkdfs.la
 rcp_SOURCES = rcp.c util.c
-LDADD = $(LIB_roken)
+LDADD = $(LIB_roken) \
+		$(top_builddir)/lib/vers/libvers.la
+
 all: all-am
 
 .SUFFIXES:

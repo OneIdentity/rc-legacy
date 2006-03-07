@@ -8,4 +8,5 @@ bin_PROGRAMS = rcp
 
 rcp_SOURCES  = rcp.c util.c
 
-LDADD = $(LIB_roken)
+LDADD = $(LIB_roken) \
+		$(top_builddir)/lib/vers/libvers.la
