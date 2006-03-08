@@ -9,7 +9,7 @@ SSYYNNOOPPSSIISS
      [----vveerrssiioonn] [----hheellpp]
 
 DDEESSCCRRIIPPTTIIOONN
-     kkddeessttrrooyy remove the current set of tickets.
+     kkddeessttrrooyy removes the current set of tickets.
 
      Supported options:
 
@@ -27,4 +27,4 @@ DDEESSCCRRIIPPTTIIOONN
 SSEEEE AALLSSOO
      kinit(1),  klist(1)
 
- HEIMDAL                        August 27, 1997                              1
+ HEIMDAL                       December 8, 2004                              1

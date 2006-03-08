@@ -1,2 +1,2 @@
-const char *heimdal_long_version = "@(#)$Version: vas-apps 0.6.4_1 by @USER@ on @HOST@ (i686-pc-linux-gnu) @DATE@ $";
-const char *heimdal_version = "vas-apps 0.6.4_1";
+const char *heimdal_long_version = "@(#)$Version: vas-apps 0.7.2q1 by @USER@ on @HOST@ (i686-pc-linux-gnu) @DATE@ $";
+const char *heimdal_version = "vas-apps 0.7.2q1";

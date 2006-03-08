@@ -125,10 +125,13 @@ FFIILLEESS
                      to the user's terminal before starting the shell. The
                      string welcome works similarly, but points to a single
                      file.
+             limits  Points to a file containing ulimit settings for various
+                     users. Syntax is inspired by what pam_limits uses, and
+                     the default is _/_e_t_c_/_s_e_c_u_r_i_t_y_/_l_i_m_i_t_s_._c_o_n_f.
+
      /etc/nologin
              If it exists, login is denied to all but root. The contents of
              this file is printed before login exits.
-
 
      Other llooggiinn programs typically print all sorts of information by default,
      such as last time you logged in, if you have mail, and system message
@@ -141,7 +144,15 @@ EEXXAAMMPPLLEESS
      A _l_o_g_i_n_._c_o_n_f file could look like:
 
            default:\
-                   :motd=/etc/motd,/etc/motd.local:
+                   :motd=/etc/motd,/etc/motd.local:\
+                   :limits=/etc/limits.conf:
+
+     The _l_i_m_i_t_s_._c_o_n_f file consists of a table with four whitespace separated
+     fields. First field is a username or a groupname (prefixed with `@'), or
+     `*'. Second field is `soft', `hard', or `-' (the last meaning both soft
+     and hard).  Third field is a limit name (such as `cpu' or `core'). Last
+     field is the limit value (a number or `-' for unlimited). In the case of
+     data sizes, the value is in kilobytes, and cputime is in minutes.
 
 SSEEEE AALLSSOO
      su(1),  login.access(5),  getty(8),  telnetd(8)
@@ -150,4 +161,4 @@ AAUUTTHHOORRSS
      This login program was written for the Heimdal Kerberos 5 implementation.
      The login.access code was written by Wietse Venema.
 
- HEIMDAL                        March 24, 2003                               3
+ HEIMDAL                        April 22, 2005                               3

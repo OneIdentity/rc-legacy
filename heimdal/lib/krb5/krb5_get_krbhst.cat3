@@ -2,8 +2,8 @@
 KRB5_GET_KRBHST(3)         UNIX Programmer's Manual         KRB5_GET_KRBHST(3)
 
 NNAAMMEE
-     kkrrbb55__ggeett__kkrrbbhhsstt kkrrbb55__ggeett__kkrrbb__aaddmmiinn__hhsstt kkrrbb55__ggeett__kkrrbb__cchhaannggeeppww__hhsstt
-     kkrrbb55__ggeett__kkrrbb552244hhsstt kkrrbb55__ffrreeee__kkrrbbhhsstt - lookup Kerberos KDC hosts
+     kkrrbb55__ggeett__kkrrbbhhsstt, kkrrbb55__ggeett__kkrrbb__aaddmmiinn__hhsstt, kkrrbb55__ggeett__kkrrbb__cchhaannggeeppww__hhsstt,
+     kkrrbb55__ggeett__kkrrbb552244hhsstt, kkrrbb55__ffrreeee__kkrrbbhhsstt - lookup Kerberos KDC hosts
 
 LLIIBBRRAARRYY
      Kerberos 5 Library (libkrb5, -lkrb5)
@@ -39,7 +39,7 @@ DDEESSCCRRIIPPTTIIOONN
      list of strings, pointing to the requested Kerberos hosts. These should
      be freed with kkrrbb55__ffrreeee__kkrrbbhhsstt() when done with.
 
-EEXXAAMMPPLLEE
+EEXXAAMMPPLLEESS
      The following code will print the KDCs of the realm ``MY.REALM''.
 
            char **hosts, **p;
@@ -51,4 +51,4 @@ EEXXAAMMPPLLEE
 SSEEEE AALLSSOO
      krb5_krbhst_init(3)
 
- HEIMDAL                         June 17, 2001                               1
+ HEIMDAL                        April 24, 2005                               1

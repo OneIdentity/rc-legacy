@@ -1,4 +1,4 @@
-# $Id: Makefile.am,v 1.33 2002/09/10 19:59:25 joda Exp $
+# $Id: Makefile.am,v 1.34 2004/08/26 11:55:21 joda Exp $
 
 include $(top_srcdir)/Makefile.am.common
 
@@ -7,7 +7,7 @@ include $(top_srcdir)/Makefile.am.common
 noinst_PROGRAMS = bits make_crypto
 CHECK_LOCAL =
 
-INCLUDES += -DHOST=\"$(CANONICAL_HOST)\"
+AM_CPPFLAGS += -DHOST=\"$(CANONICAL_HOST)\"
 
 include_HEADERS = krb5-types.h
 noinst_HEADERS = crypto-headers.h

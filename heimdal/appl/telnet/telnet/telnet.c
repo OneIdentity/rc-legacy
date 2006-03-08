@@ -32,11 +32,8 @@
  */
 
 #include "telnet_locl.h"
-#ifdef HAVE_TERMCAP_H
-#include <termcap.h>
-#endif
 
-RCSID("$Id: telnet.c,v 1.34.8.1 2005/03/28 22:46:54 lha Exp $");
+RCSID("$Id: telnet.c,v 1.40 2005/05/19 11:22:53 lha Exp $");
 
 #define	strip(x) (eight ? (x) : ((x) & 0x7f))
 
@@ -579,11 +576,12 @@ mklist(char *buf, char *name)
 		 * Skip entries with spaces or non-ascii values.
 		 * Convert lower case letters to upper case.
 		 */
+#undef ISASCII
 #define ISASCII(c) (!((c)&0x80))
 		if ((c == ' ') || !ISASCII(c))
 			n = 1;
 		else if (islower((unsigned char)c))
-			*cp = toupper(c);
+			*cp = toupper((unsigned char)c);
 	}
 
 	/*
@@ -2029,6 +2027,8 @@ Scheduler(int block) /* should we block in the select ? */
     return returnValue;
 }
 
+extern int auth_has_failed; /* XXX should be somewhere else */
+
 /*
  * Select from tty and network...
  */
@@ -2082,7 +2082,6 @@ my_telnet(char *user)
      * forever. 
      */
     if (telnetport && wantencryption) {
-	extern int auth_has_failed;
 	time_t timeout = time(0) + 60;
 
 	send_do(TELOPT_ENCRYPT, 1);
@@ -2127,7 +2126,11 @@ my_telnet(char *user)
 		    printf("\nUser interrupt.\n");
 		    Exit(1);
 	    }
-	    telnet_spin();
+	    if (telnet_spin()) {
+		    printf("\nServer disconnected.\n");
+		    Exit(1);
+	    }
+		
 	}
 	if (printed_encrypt) {
 		printf("Encryption negotiated.\n");

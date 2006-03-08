@@ -138,4 +138,4 @@ SSEEEE AALLSSOO
      krb5_build_principal(3),  krb5_free_principal(3),  krb5_parse_name(3),
      krb5_sname_to_principal(3),  krb5_unparse_name(3),  krb5.conf(5)
 
- HEIMDAL                        April 11, 1999                               3
+ HEIMDAL                       September 3, 2003                             3

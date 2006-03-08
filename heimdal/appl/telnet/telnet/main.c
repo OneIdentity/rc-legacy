@@ -38,7 +38,7 @@ static char *copyright[] = {
 };
 
 #include "telnet_locl.h"
-RCSID("$Id: main.c,v 1.38.6.2 2004/09/16 13:39:51 joda Exp $");
+RCSID("$Id: main.c,v 1.40 2004/04/02 21:28:48 lha Exp $");
 
 #if KRB5
 #define FORWARD

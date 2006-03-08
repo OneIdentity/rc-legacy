@@ -8,7 +8,7 @@ NNAAMMEE
      kkrrbb55__ppaarrssee__aaddddrreessss, kkrrbb55__aaddddrreessss__oorrddeerr, kkrrbb55__aaddddrreessss__ccoommppaarree,
      kkrrbb55__aaddddrreessss__sseeaarrcchh, kkrrbb55__ffrreeee__aaddddrreessss, kkrrbb55__ffrreeee__aaddddrreesssseess,
      kkrrbb55__ccooppyy__aaddddrreessss, kkrrbb55__ccooppyy__aaddddrreesssseess, kkrrbb55__aappppeenndd__aaddddrreesssseess,
-     kkrrbb55__mmaakkee__aaddddrrppoorrtt - mange addresses in Kerberos.
+     kkrrbb55__mmaakkee__aaddddrrppoorrtt - mange addresses in Kerberos
 
 LLIIBBRRAARRYY
      Kerberos 5 Library (libkrb5, -lkrb5)
@@ -100,41 +100,41 @@ DDEESSCCRRIIPPTTIIOONN
      _s_a.
 
      kkrrbb55__aaddddrr22ssoocckkaaddddrr() sets the struct sockaddr _s_o_c_k_a_d_d_r from _a_d_d_r and
-     _p_o_r_t. _S_a___s_i_z_e should be initially contain the size of the _s_a, and after
-     the call, it will contain the actual length of the address.
+     _p_o_r_t. The argument _s_a___s_i_z_e should initially contain the size of the _s_a,
+     and after the call, it will contain the actual length of the address.
 
      kkrrbb55__mmaaxx__ssoocckkaaddddrr__ssiizzee() returns the max size of the struct sockaddr that
      the Kerberos library will return.
 
-     kkrrbb55__ssoocckkaaddddrr__uunniinntteerreessttiinngg() returns TRUE for all _s_a that for that the
-     kerberos library thinks are uninteresting.  One example are link local
-     addresses.
+     kkrrbb55__ssoocckkaaddddrr__uunniinntteerreessttiinngg() returns TRUE for all _s_a that the kerberos
+     library thinks are uninteresting.  One example are link local addresses.
 
      kkrrbb55__hh__aaddddrr22ssoocckkaaddddrr() initializes a struct sockaddr _s_a from _a_f and the
-     struct hostent (see gethostbyname(3))  _h___a_d_d_r___l_i_s_t component.  _S_a___s_i_z_e
-     should be initially contain the size of the _s_a, and after the call, it
-     will contain the actual length of the address.  _s_a argument.
-
-     kkrrbb55__hh__aaddddrr22aaddddrr() works like kkrrbb55__hh__aaddddrr22ssoocckkaaddddrr() with the exception
-     that it operates on a krb5_address instead of a struct sockaddr
-
-     kkrrbb55__aannyyaaddddrr() fills in a struct sockaddr _s_a that can be used to to.
-     _S_a___s_i_z_e should be initially contain the size of the _s_a, and after the
+     struct hostent (see gethostbyname(3))  _h___a_d_d_r___l_i_s_t component.  The argu-
+     ment _s_a___s_i_z_e should initially contain the size of the _s_a, and after the
      call, it will contain the actual length of the address.
 
-     kkrrbb55__pprriinntt__aaddddrreessss() prints the address in _a_d_d_r to the a string _s_t_r_i_n_g
-     that have the length _l_e_n. If _r_e_t___l_e_n if not NULL, it will be filled in
-     length of the string.
+     kkrrbb55__hh__aaddddrr22aaddddrr() works like kkrrbb55__hh__aaddddrr22ssoocckkaaddddrr() with the exception
+     that it operates on a krb5_address instead of a struct sockaddr.
 
-     kkrrbb55__ppaarrssee__aaddddrreessss() Returns the resolving a hostname in _s_t_r_i_n_g to the
+     kkrrbb55__aannyyaaddddrr() fills in a struct sockaddr _s_a that can be used to to.  The
+     argument _s_a___s_i_z_e should initially contain the size of the _s_a, and after
+     the call, it will contain the actual length of the address.
+
+     kkrrbb55__pprriinntt__aaddddrreessss() prints the address in _a_d_d_r to the string _s_t_r_i_n_g that
+     have the length _l_e_n. If _r_e_t___l_e_n is not NULL, it will be filled with the
+     length of the string if size where unlimited (not included the final
+     `\0').
+
+     kkrrbb55__ppaarrssee__aaddddrreessss() Returns the resolved a hostname in _s_t_r_i_n_g to the
      krb5_addresses _a_d_d_r_e_s_s_e_s.
 
 
-     kkrrbb55__aaddddrreessss__oorrddeerr() compares to addresses _a_d_d_r_1 and _a_d_d_r_2 so that it can
-     be used for sorting addresses. If the addresses are the same address
-     _k_r_b_5___a_d_d_r_e_s_s___o_r_d_e_r _w_i_l_l _b_e _r_e_t_u_r_n _0_.
+     kkrrbb55__aaddddrreessss__oorrddeerr() compares the addresses _a_d_d_r_1 and _a_d_d_r_2 so that it
+     can be used for sorting addresses. If the addresses are the same address
+     _k_r_b_5___a_d_d_r_e_s_s___o_r_d_e_r will be return 0.
 
-     kkrrbb55__aaddddrreessss__ccoommppaarree() compares the addresses _a_d_d_r_1 and _a_d_d_r_2. returns
+     kkrrbb55__aaddddrreessss__ccoommppaarree() compares the addresses _a_d_d_r_1 and _a_d_d_r_2. Returns
      TRUE if the two addresses are the same.
 
      kkrrbb55__aaddddrreessss__sseeaarrcchh() checks if the address _a_d_d_r is a member of the ad-
@@ -160,4 +160,4 @@ DDEESSCCRRIIPPTTIIOONN
 SSEEEE AALLSSOO
      krb5(3),  krb5.conf(5),  kerberos(8)
 
- HEIMDAL                        March 11, 2002                               3
+ HEIMDAL                        April 24, 2005                               3

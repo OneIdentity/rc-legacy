@@ -81,7 +81,7 @@ DDEESSCCRRIIPPTTIIOONN
      kkrrbb55__aaffsslloogg(), and kkrrbb55__aaffsslloogg__uuiidd() are the Kerberos 5 equivalents of
      kkrrbb__aaffsslloogg(), and kkrrbb__aaffsslloogg__uuiidd().
 
-     kkrrbb55__aaffsslloogg(), kkaaffss__sseettttookkeenn55() can be configured to behave diffrently
+     kkrrbb55__aaffsslloogg(), kkaaffss__sseettttookkeenn55() can be configured to behave differently
      via a kkrrbb55__aappppddeeffaauulltt option afs-use-524 in _k_r_b_5_._c_o_n_f. Possible values
      for afs-use-524 are:
 
@@ -104,13 +104,13 @@ DDEESSCCRRIIPPTTIIOONN
      libkafs will use the libkafs as application name when running the
      kkrrbb55__aappppddeeffaauulltt function call.
 
-     The (uppercased) cellname is used as the realm to the kkrrbb55__aappppddeeffaauulltt
+     The (uppercased) cell name is used as the realm to the kkrrbb55__aappppddeeffaauulltt
      ffuunnccttiioonn..
 
      kk__aaffss__cceellll__ooff__ffiillee() will in _c_e_l_l return the cell of a specified file, no
      more than _l_e_n characters is put in _c_e_l_l.
 
-     kk__ppiiooccttll() does a ppiiooccttll() syscall with the specified arguments. This
+     kk__ppiiooccttll() does a ppiiooccttll() system call with the specified arguments. This
      function is equivalent to llppiiooccttll().
 
      kk__sseettppaagg() initializes a new PAG.

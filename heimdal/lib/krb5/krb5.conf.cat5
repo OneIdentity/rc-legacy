@@ -48,7 +48,8 @@ DDEESSCCRRIIPPTTIIOONN
 
            time
                 values can be a list of year, month, day, hour, min, second.
-                Example: 1 month 2 days 30 min.
+                Example: 1 month 2 days 30 min.  If no unit is given, seconds
+                is assumed.
 
            etypes
                 valid encryption types are: des-cbc-crc, des-cbc-md4, des-cbc-
@@ -63,7 +64,6 @@ DDEESSCCRRIIPPTTIIOONN
            [appdefaults]
                 Specifies the default values to be used for Kerberos applica-
                 tions.  You can specify defaults per application, realm, or a
-
                 combination of these.  The preference order is:
                 1.   _a_p_p_l_i_c_a_t_i_o_n _r_e_a_l_m _o_p_t_i_o_n
                 2.   _a_p_p_l_i_c_a_t_i_o_n _o_p_t_i_o_n
@@ -131,6 +131,12 @@ DDEESSCCRRIIPPTTIIOONN
 
                            This is deprecated, see the capaths section below.
 
+                      default_cc_name = _c_c_n_a_m_e
+                           the default credentials cache name.  The string can
+                           contain variables that are expanded on runtime.
+                           Only support variable now is %{uid} that expands to
+                           the current user id.
+
                       default_etypes = _e_t_y_p_e_s _._._.
                            A list of default encryption types to use.
 
@@ -158,6 +164,11 @@ DDEESSCCRRIIPPTTIIOONN
                       max_retries = _n_u_m_b_e_r
                            The max number of times to try to contact each KDC.
 
+                      large_msg_size = _n_u_m_b_e_r
+                           The threshold where protocols with tiny maximum
+                           message sizes are not considered usable to send
+                           messages to the KDC.
+
                       ticket_lifetime = _t_i_m_e
                            Default ticket lifetime.
 
@@ -183,6 +194,7 @@ DDEESSCCRRIIPPTTIIOONN
 
                       warn_pwexpire = _t_i_m_e
                            How soon to warn for expiring password.  Default is
+
                            seven days.
 
                       http_proxy = _p_r_o_x_y_-_s_p_e_c
@@ -194,7 +206,6 @@ DDEESSCCRRIIPPTTIIOONN
 
                       extra_addresses = _a_d_d_r_e_s_s _._._.
                            A list of addresses to get tickets for along with
-
                            all local addresses.
 
                       time_format = _s_t_r_i_n_g
@@ -237,13 +248,19 @@ DDEESSCCRRIIPPTTIIOONN
 
                 The domain can be either a full name of a host or a trailing
                 component, in the latter case the domain-string should start
-                with a period.  The realm may be the token `dns_locate', in
-                which case the actual realm will be determined using DNS (in-
-                dependently of the setting of the `dns_lookup_realm' option).
+                with a period.  The trailing component only matches hosts that
+                are in the same domain, ie ``.example.com'' matches
+                ``foo.example.com'', but not ``foo.test.example.com''.
+
+                The realm may be the token `dns_locate', in which case the ac-
+                tual realm will be determined using DNS (independently of the
+                setting of the `dns_lookup_realm' option).
 
            [realms]
 
                       _R_E_A_L_M = {
+
+
 
                                  kdc = _[_s_e_r_v_i_c_e_/_]_h_o_s_t_[_:_p_o_r_t_]
                                       Specifies a list of kdcs for this realm.
@@ -259,8 +276,6 @@ DDEESSCCRRIIPPTTIIOONN
                                       Possible services are ``udp'', ``tcp'',
                                       and ``http''. Http can also be written
                                       as ``http://''. Default service is
-
-
                                       ``udp'' and ``tcp''.
 
                                  admin_server = _h_o_s_t_[_:_p_o_r_t_]
@@ -311,6 +326,8 @@ DDEESSCCRRIIPPTTIIOONN
 
                       _}
 
+
+
            [logging]
 
                       _e_n_t_i_t_y = _d_e_s_t_i_n_a_t_i_o_n
@@ -323,12 +340,16 @@ DDEESSCCRRIIPPTTIIOONN
                       database = {
 
                                  dbname = _D_A_T_A_B_A_S_E_N_A_M_E
-                                      Use this database for this realm.
+                                      Use this database for this realm.  See
+                                      the info documetation how to configure
+                                      diffrent database backends.
 
                                  realm = _R_E_A_L_M
                                       Specifies the realm that will be stored
-
-                                      in this database.
+                                      in this database.  It realm isn't set,
+                                      it will used as the default database,
+                                      there can only be one entry that doesn't
+                                      have a realm stanza.
 
                                  mkey_file = _F_I_L_E_N_A_M_E
                                       Use this keytab file for the master key
@@ -369,7 +390,10 @@ DDEESSCCRRIIPPTTIIOONN
 
                       enable-524 = _B_O_O_L
                            Should the Kerberos 524 converting facility be
-                           turned on.  Default is same as _e_n_a_b_l_e_-_k_e_r_b_e_r_o_s_4.
+                           turned on.  Default is the same as _e_n_a_b_l_e_-
+
+
+                           _k_e_r_b_e_r_o_s_4.
 
                       enable-http = _B_O_O_L
                            Should the kdc answer kdc-requests over http.
@@ -378,11 +402,11 @@ DDEESSCCRRIIPPTTIIOONN
                            If this kdc should emulate the AFS kaserver.
 
                       check-ticket-addresses = _B_O_O_L
-                           verify the addresses in the tickets used in tgs re-
+                           Verify the addresses in the tickets used in tgs re-
                            quests.
 
                       allow-null-ticket-addresses = _B_O_O_L
-                           Allow addresses-less tickets.
+                           Allow address-less tickets.
 
                       allow-anonymous = _B_O_O_L
                            If the kdc is allowed to hand out anonymous tick-
@@ -400,8 +424,26 @@ DDEESSCCRRIIPPTTIIOONN
                            What type of logging the kdc should use, see also
                            [logging]/kdc.
 
-                      use_2b = _p_r_i_n_c_i_p_a_l _l_i_s_t
-                           List of principals to use AFS 2b tokens for.
+                      use_2b = {
+
+                                 _p_r_i_n_c_i_p_a_l = _B_O_O_L
+                                      boolean value if the 524 daemon should
+                                      return AFS 2b tokens for _p_r_i_n_c_i_p_a_l.
+
+                                 ...
+
+                      }
+
+                      hdb-ldap-structural-object _s_t_r_u_c_t_u_r_a_l _o_b_j_e_c_t
+                           If the LDAP backend is used for storing principals,
+                           this is the structural object that will be used
+                           when creating and when reading objects.  The de-
+                           fault value is account .
+
+                      hdb-ldap-create-base _c_r_e_a_t_i_o_n _d_n
+                           is the dn that will be appended to the principal
+                           when creating entries.  Default value is the search
+                           dn.
 
            [kadmin]
 
@@ -409,8 +451,13 @@ DDEESSCCRRIIPPTTIIOONN
                            If pre-authentication is required to talk to the
                            kadmin server.
 
+                      password_lifetime = _t_i_m_e
+                           If a principal already have its password set for
+                           expiration, this is the time it will be valid for
+                           after a change.
+
                       default_keys = _k_e_y_t_y_p_e_s_._._.
-                           for each entry in _d_e_f_a_u_l_t___k_e_y_s try to parse it as a
+                           For each entry in _d_e_f_a_u_l_t___k_e_y_s try to parse it as a
                            sequence of _e_t_y_p_e_:_s_a_l_t_t_y_p_e_:_s_a_l_t syntax of this if
                            something like:
 
@@ -473,4 +520,4 @@ SSEEEE AALLSSOO
      kinit(1),  krb5_425_conv_principal(3),  krb5_openlog(3),  strftime(3),
      verify_krb5_conf(8)
 
- HEIMDAL                         March 9, 2004                               8
+ HEIMDAL                          May 4, 2005                                8

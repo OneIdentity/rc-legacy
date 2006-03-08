@@ -2,7 +2,7 @@
 KRB5_ANAME_TO_LOCALNAME(3) UNIX Programmer's Manual KRB5_ANAME_TO_LOCALNAME(3)
 
 NNAAMMEE
-     kkrrbb55__aannaammee__ttoo__llooccaallnnaammee - converts a principal to a system local name.
+     kkrrbb55__aannaammee__ttoo__llooccaallnnaammee - converts a principal to a system local name
 
 LLIIBBRRAARRYY
      Kerberos 5 Library (libkrb5, -lkrb5)
@@ -17,10 +17,10 @@ DDEESSCCRRIIPPTTIIOONN
      (using kkrrbb55__ggeett__ddeeffaauulltt__rreeaallmmss()) and then returns the local name of the
      principal.
 
-     If _n_a_m_e isn't in one of the local realms and error is returned.
+     If _n_a_m_e isn't in one of the local realms an error is returned.
 
-     If size (_l_n_s_i_z_e) of the local name (_l_n_a_m_e) is to small, an error is re-
-     turned.
+     If the size (_l_n_s_i_z_e) of the local name (_l_n_a_m_e) is to small, an error is
+     returned.
 
      kkrrbb55__aannaammee__ttoo__llooccaallnnaammee() should only be use by application that imple-
      ments protocols that doesn't transport the login name and thus needs to
@@ -34,4 +34,4 @@ DDEESSCCRRIIPPTTIIOONN
 SSEEEE AALLSSOO
      krb5_get_default_realms(3),  krb5_kuserok(3)
 
- HEIMDAL                        March 17, 2003                               1
+ HEIMDAL                        April 24, 2005                               1

@@ -14,6 +14,9 @@ DDEESSCCRRIIPPTTIIOONN
      to connect securely to your X server. If _p_o_r_t is given, that port will be
      used instead of the default.
 
+     If setting up the X forwarding failes, rrxxtteellnneett will still telnet in to
+     the remote host, but without X forwarding.
+
      The supported options are:
 
      --ll      Log in on the remote host as user _u_s_e_r_n_a_m_e.
@@ -46,4 +49,4 @@ EEXXAAMMPPLLEE
 SSEEEE AALLSSOO
      kx(1),  rxterm(1),  telnet(1),  tenletxr(1),  kxd(8)
 
- KTH_KRB                      September 27, 1996                             1
+ KTH_KRB                         March 7, 2004                               1

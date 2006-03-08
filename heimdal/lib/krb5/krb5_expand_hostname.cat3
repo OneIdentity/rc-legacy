@@ -1,0 +1,34 @@
+
+KRB5_EXPAND_HOSTNAME(3)    UNIX Programmer's Manual    KRB5_EXPAND_HOSTNAME(3)
+
+NNAAMMEE
+     kkrrbb55__eexxppaanndd__hhoossttnnaammee, kkrrbb55__eexxppaanndd__hhoossttnnaammee__rreeaallmmss - kerberos 5 host name
+     canonicalization functions.
+
+LLIIBBRRAARRYY
+     Kerberos 5 Library (libkrb5, -lkrb5)
+
+SSYYNNOOPPSSIISS
+     _k_r_b_5___e_r_r_o_r___c_o_d_e
+     kkrrbb55__eexxppaanndd__hhoossttnnaammee(_k_r_b_5___c_o_n_t_e_x_t _c_o_n_t_e_x_t, _c_o_n_s_t _c_h_a_r _*_o_r_i_g___h_o_s_t_n_a_m_e,
+             _c_h_a_r _*_*_n_e_w___h_o_s_t_n_a_m_e)
+
+     _k_r_b_5___e_r_r_o_r___c_o_d_e
+     kkrrbb55__eexxppaanndd__hhoossttnnaammee__rreeaallmmss(_k_r_b_5___c_o_n_t_e_x_t _c_o_n_t_e_x_t,
+             _c_o_n_s_t _c_h_a_r _*_o_r_i_g___h_o_s_t_n_a_m_e, _c_h_a_r _*_*_n_e_w___h_o_s_t_n_a_m_e, _c_h_a_r _*_*_*_r_e_a_l_m_s)
+
+DDEESSCCRRIIPPTTIIOONN
+     kkrrbb55__eexxppaanndd__hhoossttnnaammee() tries to make _o_r_i_g___h_o_s_t_n_a_m_e into a more canonical
+     one in the newly allocated space returned in _n_e_w___h_o_s_t_n_a_m_e. Caller must
+     free the hostname with free(3).
+
+     kkrrbb55__eexxppaanndd__hhoossttnnaammee__rreeaallmmss() expands _o_r_i_g___h_o_s_t_n_a_m_e to a name we believe
+     to be a hostname in newly allocated space in _n_e_w___h_o_s_t_n_a_m_e and return the
+     realms _n_e_w___h_o_s_t_n_a_m_e is belive to belong to in _r_e_a_l_m_s. _R_e_a_l_m_s is a array
+     terminated with NULL. Caller must free the _r_e_a_l_m_s with
+     kkrrbb55__ffrreeee__hhoosstt__rreeaallmm() and _n_e_w___h_o_s_t_n_a_m_e with free(3).
+
+SSEEEE AALLSSOO
+     krb5(3),  krb5_free_host_realm(3),  krb5_get_host_realm(3),  kerberos(8)
+
+ HEIMDAL                        March 21, 2004                               1

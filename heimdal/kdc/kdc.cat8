@@ -7,9 +7,9 @@ NNAAMMEE
 SSYYNNOOPPSSIISS
      kkddcc [--cc _f_i_l_e | ----ccoonnffiigg--ffiillee==_f_i_l_e] [--pp | ----nnoo--rreeqquuiirree--pprreeaauutthh]
      [----mmaaxx--rreeqquueesstt==_s_i_z_e] [--HH | ----eennaabbllee--hhttttpp] [----nnoo--552244] [----kkeerrbbeerrooss44]
-     [----kkeerrbbeerrooss44--ccrroossss--rreeaallmm] [--rr _s_t_r_i_n_g | ----vv44--rreeaallmm==_s_t_r_i_n_g] [--KK |
-     ----kkaasseerrvveerr] [--PP _p_o_r_t_s_p_e_c | ----ppoorrttss==_p_o_r_t_s_p_e_c] [----ddeettaacchh] [----aaddddrreesssseess==_l_i_s_t
-     _o_f _a_d_d_r_e_s_s_e_s]
+     [----kkeerrbbeerrooss44--ccrroossss--rreeaallmm] [--rr _s_t_r_i_n_g | ----vv44--rreeaallmm==_s_t_r_i_n_g]
+     [--KK | ----kkaasseerrvveerr] [--PP _p_o_r_t_s_p_e_c | ----ppoorrttss==_p_o_r_t_s_p_e_c] [----ddeettaacchh]
+     [----ddiissaabbllee--DDEESS] [----aaddddrreesssseess==_l_i_s_t _o_f _a_d_d_r_e_s_s_e_s]
 
 DDEESSCCRRIIPPTTIIOONN
      kkddcc serves requests for tickets.  When it starts, it first checks the
@@ -75,6 +75,12 @@ DDEESSCCRRIIPPTTIIOONN
              a subset is desired, or the automatic detection fails, this op-
              tion might be used.
 
+     ----ddeettaacchh
+             detach from pty and run as a daemon.
+
+     ----ddiissaabbllee--DDEESS
+             disable add des encryption types, makes the kdc not use them.
+
      All activities are logged to one or more destinations, see krb5.conf(5),
      and krb5_openlog(3).  The entity used for logging is kkddcc.
 
@@ -95,7 +101,7 @@ CCOONNFFIIGGUURRAATTIIOONN FFIILLEE
 
            check-ticket-addresses = _b_o_o_l_e_a_n
                 Check the addresses in the ticket when processing TGS re-
-                quests.  The default is FALSE.
+                quests.  The default is TRUE.
 
            allow-null-ticket-addresses = _b_o_o_l_e_a_n
                 Permit tickets with no addresses.  This option is only rele-
@@ -123,6 +129,7 @@ CCOONNFFIIGGUURRAATTIIOONN FFIILLEE
                            lease, it will be possible to force a check per
                            principal.
 
+
            encode_as_rep_as_tgs_rep = _b_o_o_l_e_a_n
                 Encode AS-Rep as TGS-Rep to be bug-compatible with old DCE
                 code.  The Heimdal clients allow both.
@@ -140,7 +147,6 @@ CCOONNFFIIGGUURRAATTIIOONN FFIILLEE
            [kdc]
                    require-preauth = no
                    v4-realm = FOO.SE
-                   key-file = /key-file
 
 BBUUGGSS
      If the machine running the KDC has new addresses added to it, the KDC
@@ -160,4 +166,4 @@ BBUUGGSS
 SSEEEE AALLSSOO
      kinit(1),  krb5.conf(5)
 
- HEIMDAL                       October 22, 2003                              3
+ HEIMDAL                       December 17, 2004                             3

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997-2004 Kungliga Tekniska Högskolan
+ * Copyright (c) 1997-2006 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden). 
  * All rights reserved. 
  *
@@ -32,7 +32,7 @@
  */
 
 #include "rsh_locl.h"
-RCSID("$Id: rshd.c,v 1.51.2.2 2004/09/21 14:42:46 joda Exp $");
+RCSID("$Id: rshd.c,v 1.60.2.2 2006/02/03 14:48:10 lha Exp $");
 
 int
 login_access( struct passwd *user, char *from);
@@ -73,13 +73,6 @@ static int do_addr_verify = 0;
 static int do_keepalive = 1;
 static int do_version;
 static int do_help = 0;
-
-#if defined(KRB5) && defined(DCE)
-int dfsk5ok = 0;
-int dfspag = 0;
-int dfsfwd = 0;
-krb5_ticket *user_ticket;
-#endif
 
 static void
 syslog_and_die (const char *m, ...)
@@ -263,15 +256,25 @@ static void
 krb5_start_session (void)
 {
     krb5_error_code ret;
+    char *estr;
 
     ret = krb5_cc_resolve (context, tkfile, &ccache2);
     if (ret) {
+	estr = krb5_get_error_string(context);
+	syslog(LOG_WARNING, "resolve cred cache %s: %s", 
+	       tkfile, 
+	       estr ? estr : krb5_get_err_text(context, ret));
+	free(estr);
 	krb5_cc_destroy(context, ccache);
 	return;
     }
 
     ret = krb5_cc_copy_cache (context, ccache, ccache2);
     if (ret) {
+	estr = krb5_get_error_string(context);
+	syslog(LOG_WARNING, "storing credentials: %s", 
+	       estr ? estr : krb5_get_err_text(context, ret));
+	free(estr);
 	krb5_cc_destroy(context, ccache);
 	return ;
     }
@@ -376,6 +379,8 @@ recv_krb5_auth (int s, u_char *buf,
 				  ntohs(socket_get_port (thisaddr)),
 				  *cmd,
 				  *server_username);
+    if (cksum_data.length == -1)
+	syslog_and_die ("asprintf: out of memory");
 
     status = krb5_verify_authenticator_checksum(context, 
 						auth_context,
@@ -401,12 +406,16 @@ recv_krb5_auth (int s, u_char *buf,
 	if (strncmp (*client_username + 3, "FILE:", 5) == 0) {
 	    temp_tkfile = tkfile;
 	} else {
-	    strcpy (tkfile, "FILE:");
+	    strlcpy (tkfile, "FILE:", sizeof(tkfile));
 	    temp_tkfile = tkfile + 5;
 	}
 	end = strchr(*client_username + 3,' ');
-	strncpy(temp_tkfile, *client_username + 3, end - *client_username - 3);
-	temp_tkfile[end - *client_username - 3] = '\0';
+	if (end == NULL)
+	    syslog_and_die("missing argument after -U");
+	snprintf(temp_tkfile, sizeof(tkfile) - (temp_tkfile - tkfile),
+		 "%.*s",
+		 (int)(end - *client_username - 3),
+		 *client_username + 3);
 	memmove (*client_username, end + 1, strlen(end+1)+1);
     }
 
@@ -448,23 +457,20 @@ recv_krb5_auth (int s, u_char *buf,
 	}
     }	   
 
-#if defined(DCE)
-    user_ticket = ticket;
-#endif
-
     return 0;
 }
 #endif /* KRB5 */
 
 static void
-loop (int from0, int to0,
-      int to1,   int from1,
-      int to2,   int from2,
-      int have_errsock)
+rshd_loop (int from0, int to0,
+	   int to1,   int from1,
+	   int to2,   int from2,
+	   int have_errsock)
 {
     fd_set real_readset;
     int max_fd;
     int count = 2;
+    char *buf;
 
     if(from0 >= FD_SETSIZE || from1 >= FD_SETSIZE || from2 >= FD_SETSIZE)
 	errx (1, "fd too large");
@@ -479,10 +485,14 @@ loop (int from0, int to0,
     FD_SET(from1, &real_readset);
     FD_SET(from2, &real_readset);
     max_fd = max(from0, max(from1, from2)) + 1;
+
+    buf = malloc(max(RSHD_BUFSIZ, RSH_BUFSIZ));
+    if (buf == NULL)
+	syslog_and_die("out of memory");
+
     for (;;) {
 	int ret;
 	fd_set readset = real_readset;
-	char buf[RSH_BUFSIZ];
 
 	ret = select (max_fd, &readset, NULL, NULL, NULL);
 	if (ret < 0) {
@@ -492,7 +502,7 @@ loop (int from0, int to0,
 		syslog_and_die ("select: %m");
 	}
 	if (FD_ISSET(from0, &readset)) {
-	    ret = do_read (from0, buf, sizeof(buf), ivec_in[0]);
+	    ret = do_read (from0, buf, RSHD_BUFSIZ, ivec_in[0]);
 	    if (ret < 0)
 		syslog_and_die ("read: %m");
 	    else if (ret == 0) {
@@ -503,7 +513,7 @@ loop (int from0, int to0,
 		net_write (to0, buf, ret);
 	}
 	if (FD_ISSET(from1, &readset)) {
-	    ret = read (from1, buf, sizeof(buf));
+	    ret = read (from1, buf, RSH_BUFSIZ);
 	    if (ret < 0)
 		syslog_and_die ("read: %m");
 	    else if (ret == 0) {
@@ -516,7 +526,7 @@ loop (int from0, int to0,
 		do_write (to1, buf, ret, ivec_out[0]);
 	}
 	if (FD_ISSET(from2, &readset)) {
-	    ret = read (from2, buf, sizeof(buf));
+	    ret = read (from2, buf, RSH_BUFSIZ);
 	    if (ret < 0)
 		syslog_and_die ("read: %m");
 	    else if (ret == 0) {
@@ -581,7 +591,7 @@ setup_copier (int have_errsock)
 	if (net_write (STDOUT_FILENO, "", 1) != 1)
 	    fatal (STDOUT_FILENO, "net_write", "Write failure.");
 
-	loop (STDIN_FILENO, p0[1],
+	rshd_loop (STDIN_FILENO, p0[1],
 	      STDOUT_FILENO, p1[0],
 	      STDERR_FILENO, p2[0],
 	      have_errsock);
@@ -623,20 +633,20 @@ setup_environment (char ***env, const struct passwd *pwd)
     e = *env;
     e = realloc(e, (i + 7) * sizeof(char *));
 
-    asprintf (&e[i++], "USER=%s",  pwd->pw_name);
-    asprintf (&e[i++], "HOME=%s",  pwd->pw_dir);
-    asprintf (&e[i++], "SHELL=%s", pwd->pw_shell);
+    if (asprintf (&e[i++], "USER=%s",  pwd->pw_name) == -1)
+	syslog_and_die ("asprintf: out of memory");
+    if (asprintf (&e[i++], "HOME=%s",  pwd->pw_dir) == -1)
+	syslog_and_die ("asprintf: out of memory");
+    if (asprintf (&e[i++], "SHELL=%s", pwd->pw_shell) == -1)
+	syslog_and_die ("asprintf: out of memory");
     if (! path) {
-	asprintf (&e[i++], "PATH=%s",  _PATH_DEFPATH);
+	if (asprintf (&e[i++], "PATH=%s",  _PATH_DEFPATH) == -1)
+	    syslog_and_die ("asprintf: out of memory");
     }
     asprintf (&e[i++], "SSH_CLIENT=only_to_make_bash_happy");
-#if defined(DCE)
-    if (getenv("KRB5CCNAME"))
-	asprintf (&e[i++], "KRB5CCNAME=%s",  getenv("KRB5CCNAME"));
-#else
     if (do_unique_tkfile)
-	asprintf (&e[i++], "KRB5CCNAME=%s", tkfile);
-#endif
+	if (asprintf (&e[i++], "KRB5CCNAME=%s", tkfile) == -1)
+	    syslog_and_die ("asprintf: out of memory");
     e[i++] = NULL;
     *env = e;
 }
@@ -655,7 +665,7 @@ doit (void)
     socklen_t thisaddr_len, thataddr_len;
     int port;
     int errsock = -1;
-    char *client_user, *server_user, *cmd;
+    char *client_user = NULL, *server_user = NULL, *cmd = NULL;
     struct passwd *pwd;
     int s = STDIN_FILENO;
     char **env;
@@ -762,9 +772,8 @@ doit (void)
 	    syslog_and_die("recv_bsd_auth failed");
     }
 
-#if defined(DCE) && defined(_AIX)
-    esetenv("AUTHSTATE", "DCE", 1);
-#endif
+    if (client_user == NULL || server_user == NULL || cmd == NULL)
+	syslog_and_die("mising client/server/cmd");
 
     pwd = getpwnam (server_user);
     if (pwd == NULL)
@@ -805,33 +814,6 @@ doit (void)
 #endif
     
 
-#ifdef KRB5
-    {
-	int fd;
- 
-	if (!do_unique_tkfile)
-	    snprintf(tkfile,sizeof(tkfile),"FILE:/tmp/krb5cc_%u",pwd->pw_uid);
-	else if (*tkfile=='\0') {
-	    snprintf(tkfile,sizeof(tkfile),"FILE:/tmp/krb5cc_XXXXXX");
-	    fd = mkstemp(tkfile+5);
-	    close(fd);
-	    unlink(tkfile+5);
-	}
- 
-	if (kerberos_status)
-	    krb5_start_session();
-    }
-    chown(tkfile + 5, pwd->pw_uid, -1);
-
-#if defined(DCE)
-    if (kerberos_status) {
-	esetenv("KRB5CCNAME", tkfile, 1);
-	dfspag = krb5_dfs_pag(context, kerberos_status, user_ticket->client, server_user);
-    }
-#endif
-
-#endif
-
 #ifdef HAVE_SETLOGIN
     if (setlogin(pwd->pw_name) < 0)
 	syslog(LOG_ERR, "setlogin() failed: %m");
@@ -862,6 +844,25 @@ doit (void)
 	if (dup2 (STDOUT_FILENO, STDERR_FILENO) < 0)
 	    fatal (s, "dup2", "Cannot dup stderr.");
     }
+
+#ifdef KRB5
+    {
+	int fd;
+ 
+	if (!do_unique_tkfile)
+	    snprintf(tkfile,sizeof(tkfile),"FILE:/tmp/krb5cc_%lu",
+		     (unsigned long)pwd->pw_uid);
+	else if (*tkfile=='\0') {
+	    snprintf(tkfile,sizeof(tkfile),"FILE:/tmp/krb5cc_XXXXXX");
+	    fd = mkstemp(tkfile+5);
+	    close(fd);
+	    unlink(tkfile+5);
+	}
+ 
+	if (kerberos_status)
+	    krb5_start_session();
+    }
+#endif
 
     setup_environment (&env, pwd);
 

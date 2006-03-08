@@ -32,7 +32,7 @@
  */
 
 #include "rsh_locl.h"
-RCSID("$Id: common.c,v 1.16.4.1 2004/09/21 14:38:43 joda Exp $");
+RCSID("$Id: common.c,v 1.17 2004/09/21 11:32:54 joda Exp $");
 
 #if defined(KRB4) || defined(KRB5)
 

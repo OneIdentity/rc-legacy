@@ -31,7 +31,7 @@
  * SUCH DAMAGE. 
  */
 
-/* $Id: rsh_locl.h,v 1.33.2.1 2004/09/21 14:43:32 joda Exp $ */
+/* $Id: rsh_locl.h,v 1.37.2.1 2005/12/28 18:00:05 lha Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -103,10 +103,17 @@
 #ifdef KRB5
 #include <krb5.h>
 #if 0 /* XXX For now just use implicit prototypes and hope for the best */
+struct krb5_pk_identity;
+struct krb5_pk_cert;
+struct ContentInfo;
+struct _krb5_krb_auth_data;
+struct krb5_dh_moduli;
 #include <krb5-private.h> /* for _krb5_{get,put}_int */
 #endif 
 #endif
-/*#include <kafs.h>*/
+#ifdef USE_AFS
+#include <kafs.h>
+#endif
 
 #ifndef _PATH_NOLOGIN
 #define _PATH_NOLOGIN   "/etc/nologin"
@@ -155,6 +162,7 @@ extern des_cblock iv;
 #endif
 
 #define RSH_BUFSIZ (5 * 1024) /* MIT kcmd can't handle larger buffers */
+#define RSHD_BUFSIZ (16 * 1024) /* Old maxize for Heimdal 0.4 rsh */
 
 #define PATH_RSH BINDIR "/rsh"
 

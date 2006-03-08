@@ -1,0 +1,57 @@
+
+KRB5_TICKET(3)             UNIX Programmer's Manual             KRB5_TICKET(3)
+
+NNAAMMEE
+     kkrrbb55__ttiicckkeett, kkrrbb55__ffrreeee__ttiicckkeett, kkrrbb55__ccooppyy__ttiicckkeett,
+     kkrrbb55__ttiicckkeett__ggeett__aauutthhoorriizzaattiioonn__ddaattaa__ttyyppee, kkrrbb55__ttiicckkeett__ggeett__cclliieenntt,
+     kkrrbb55__ttiicckkeett__ggeett__sseerrvveerr - kerberos 5 ticket access and handling functions.
+
+LLIIBBRRAARRYY
+     Kerberos 5 Library (libkrb5, -lkrb5)
+
+SSYYNNOOPPSSIISS
+     krb5_ticket;
+
+     _k_r_b_5___e_r_r_o_r___c_o_d_e
+     kkrrbb55__ffrreeee__ttiicckkeett(_k_r_b_5___c_o_n_t_e_x_t _c_o_n_t_e_x_t, _k_r_b_5___t_i_c_k_e_t _*_t_i_c_k_e_t)
+
+     _k_r_b_5___e_r_r_o_r___c_o_d_e
+     kkrrbb55__ccooppyy__ttiicckkeett(_k_r_b_5___c_o_n_t_e_x_t _c_o_n_t_e_x_t, _c_o_n_s_t _k_r_b_5___t_i_c_k_e_t _*_f_r_o_m,
+             _k_r_b_5___t_i_c_k_e_t _*_*_t_o)
+
+     _k_r_b_5___e_r_r_o_r___c_o_d_e
+     kkrrbb55__ttiicckkeett__ggeett__aauutthhoorriizzaattiioonn__ddaattaa__ttyyppee(_k_r_b_5___c_o_n_t_e_x_t _c_o_n_t_e_x_t,
+             _k_r_b_5___t_i_c_k_e_t _*_t_i_c_k_e_t, _i_n_t _t_y_p_e, _k_r_b_5___d_a_t_a _*_d_a_t_a)
+
+     _k_r_b_5___e_r_r_o_r___c_o_d_e
+     kkrrbb55__ttiicckkeett__ggeett__cclliieenntt(_k_r_b_5___c_o_n_t_e_x_t _c_o_n_t_e_x_t, _c_o_n_s_t _k_r_b_5___t_i_c_k_e_t _*_t_i_c_k_e_t,
+             _k_r_b_5___p_r_i_n_c_i_p_a_l _*_c_l_i_e_n_t)
+
+     _k_r_b_5___e_r_r_o_r___c_o_d_e
+     kkrrbb55__ttiicckkeett__ggeett__sseerrvveerr(_k_r_b_5___c_o_n_t_e_x_t _c_o_n_t_e_x_t, _c_o_n_s_t _k_r_b_5___t_i_c_k_e_t _*_t_i_c_k_e_t,
+             _k_r_b_5___p_r_i_n_c_i_p_a_l _*_s_e_r_v_e_r)
+
+DDEESSCCRRIIPPTTIIOONN
+     krb5_ticket holds a kerberos ticket.  The internals of the structure
+     should never be accessed directly, functions exist for extracting infor-
+     mation.
+
+     kkrrbb55__ffrreeee__ttiicckkeett() frees the _t_i_c_k_e_t and its content .  Used to free the
+     result of kkrrbb55__ccooppyy__ttiicckkeett() and kkrrbb55__rreeccvvaauutthh().
+
+     kkrrbb55__ccooppyy__ttiicckkeett() copies the content of the ticket _f_r_o_m to the ticket
+     _t_o. The result _t_o should be freed with kkrrbb55__ffrreeee__ttiicckkeett().
+
+     kkrrbb55__ttiicckkeett__ggeett__aauutthhoorriizzaattiioonn__ddaattaa__ttyyppee() fetches the authorization data
+     of the type _t_y_p_e from the _t_i_c_k_e_t. If there isn't any authorization data
+     of type _t_y_p_e, ENOENT is returned.  _d_a_t_a needs to be freed with
+     kkrrbb55__ddaattaa__ffrreeee() on success.
+
+     kkrrbb55__ttiicckkeett__ggeett__cclliieenntt() and kkrrbb55__ttiicckkeett__ggeett__sseerrvveerr() returns a copy of
+     the client/server principal from the ticket.  The principal returned
+     should be free using krb5_free_principal(3).
+
+SSEEEE AALLSSOO
+     krb5(3)
+
+ HEIMDAL                        August 12, 2004                              1

@@ -128,8 +128,8 @@ DDEESSCCRRIIPPTTIIOONN
                         sane value.
 
                         The collect function should return one of
-                        ARG_ERR_NO_MATCH, ARG_ERR_BAD_ARG, ARG_ERR_NO_ARG on
-                        error, zero otherwise.
+                        ARG_ERR_NO_MATCH, ARG_ERR_BAD_ARG, ARG_ERR_NO_ARG,
+                        ENOMEM on error, zero otherwise.
 
                         For your convenience there is a function,
                         ggeettaarrgg__ooppttaarrgg(), that returns the traditional argument

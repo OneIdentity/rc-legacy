@@ -1,0 +1,44 @@
+
+KRB5_COMPARE_CREDS(3)      UNIX Programmer's Manual      KRB5_COMPARE_CREDS(3)
+
+NNAAMMEE
+     kkrrbb55__ccoommppaarree__ccrreeddss - compare Kerberos 5 credentials
+
+LLIIBBRRAARRYY
+     Kerberos 5 Library (libkrb5, -lkrb5)
+
+SSYYNNOOPPSSIISS
+     _k_r_b_5___b_o_o_l_e_a_n
+     kkrrbb55__ccoommppaarree__ccrreeddss(_k_r_b_5___c_o_n_t_e_x_t _c_o_n_t_e_x_t, _k_r_b_5___f_l_a_g_s _w_h_i_c_h_f_i_e_l_d_s,
+             _c_o_n_s_t _k_r_b_5___c_r_e_d_s _*_m_c_r_e_d_s, _c_o_n_s_t _k_r_b_5___c_r_e_d_s _*_c_r_e_d_s)
+
+DDEESSCCRRIIPPTTIIOONN
+     kkrrbb55__ccoommppaarree__ccrreeddss() compares _m_c_r_e_d_s (usually filled in by the applica-
+     tion) to _c_r_e_d_s (most often from a credentials cache) and return TRUE if
+     they are equal.  Unless _m_c_r_e_d_s_-_>_s_e_r_v_e_r is NULL, the service of the cre-
+     dentials are always compared.  If the client name in _m_c_r_e_d_s is present,
+     the client names are also compared. This function is normally only called
+     indirectly via krb5_cc_retrieve_cred(3).
+
+     The following flags, set in _w_h_i_c_h_f_i_e_l_d_s, affects the comparison:
+           KRB5_TC_MATCH_SRV_NAMEONLY  Consider all realms equal when compar-
+                                       ing the service principal.
+           KRB5_TC_MATCH_KEYTYPE       Compare enctypes.
+           KRB5_TC_MATCH_FLAGS_EXACT   Make sure that the ticket flags are
+                                       identical.
+           KRB5_TC_MATCH_FLAGS         Make sure that all ticket flags set in
+                                       _m_c_r_e_d_s are also present  in _c_r_e_d_s.
+           KRB5_TC_MATCH_TIMES_EXACT   Compares the ticket times exactly.
+           KRB5_TC_MATCH_TIMES         Compares only the expiration times of
+                                       the creds.
+           KRB5_TC_MATCH_AUTHDATA      Compares the authdata fields.
+           KRB5_TC_MATCH_2ND_TKT       Compares the second tickets (used by
+                                       user-to-user authentication).
+           KRB5_TC_MATCH_IS_SKEY       Compares the existance of the second
+                                       ticket.
+
+SSEEEE AALLSSOO
+     krb5(3),  krb5_cc_retrieve_cred(3),  krb5_creds(3),
+     krb5_get_init_creds(3),  kerberos(8)
+
+ HEIMDAL                         May 10, 2005                                1

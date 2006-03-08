@@ -18,12 +18,13 @@ DDEESSCCRRIIPPTTIIOONN
 
      add [--pp _p_r_i_n_c_i_p_a_l] [----pprriinncciippaall==_p_r_i_n_c_i_p_a_l] [--VV _k_v_n_o] [----kkvvnnoo==_k_v_n_o] [--ee
                  _e_n_c_t_y_p_e] [----eennccttyyppee==_e_n_c_t_y_p_e] [--ww _p_a_s_s_w_o_r_d]
-                 [----ppaasssswwoorrdd==_p_a_s_s_w_o_r_d] [--rr] [----rraannddoomm] [--ss] [----nnoo--ssaalltt]
+                 [----ppaasssswwoorrdd==_p_a_s_s_w_o_r_d] [--rr] [----rraannddoomm] [--ss] [----nnoo--ssaalltt] [--HH]
+                 [----hheexx]
                  Adds a key to the keytab. Options that are not specified will
-                 be prompted for. This requires that you know the password of
-                 the principal to add; if what you really want is to add a new
-                 principal to the keytab, you should consider the _g_e_t command,
-                 which talks to the kadmin server.
+                 be prompted for. This requires that you know the password or
+                 the hex key of the principal to add; if what you really want
+                 is to add a new principal to the keytab, you should consider
+                 the _g_e_t command, which talks to the kadmin server.
 
      change [--rr _r_e_a_l_m] [----rreeaallmm==_r_e_a_l_m] [----aa _h_o_s_t] [----aaddmmiinn--sseerrvveerr==_h_o_s_t] [----ss
                  _p_o_r_t] [----sseerrvveerr--ppoorrtt==_p_o_r_t]
@@ -61,9 +62,9 @@ DDEESSCCRRIIPPTTIIOONN
                  _p_r_i_n_c_i_p_a_l to _t_o_-_p_r_i_n_c_i_p_a_l.
 
      purge [----aaggee==_a_g_e]
-                 Removes all old entries (for which there is a newer version)
+                 Removes all old versions of a key for which there is a newer
 
-                 that are older than _a_g_e (default one week).
+                 version that is at least _a_g_e (default one week) old.
 
      srvconvert
 
@@ -84,4 +85,4 @@ DDEESSCCRRIIPPTTIIOONN
 SSEEEE AALLSSOO
      kadmin(8)
 
- HEIMDAL                       December 16, 2000                             2
+ HEIMDAL                        April 14, 2005                               2

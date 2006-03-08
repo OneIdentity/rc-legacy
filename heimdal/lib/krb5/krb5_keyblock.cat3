@@ -1,0 +1,104 @@
+
+KRB5_KEYBLOCK(3)           UNIX Programmer's Manual           KRB5_KEYBLOCK(3)
+
+NNAAMMEE
+     kkrrbb55__kkeeyybblloocckk, kkrrbb55__kkeeyybblloocckk__ggeett__eennccttyyppee, kkrrbb55__ccooppyy__kkeeyybblloocckk,
+     kkrrbb55__ccooppyy__kkeeyybblloocckk__ccoonntteennttss, kkrrbb55__ffrreeee__kkeeyybblloocckk,
+     kkrrbb55__ffrreeee__kkeeyybblloocckk__ccoonntteennttss, kkrrbb55__ggeenneerraattee__rraannddoomm__kkeeyybblloocckk,
+     kkrrbb55__ggeenneerraattee__ssuubbkkeeyy, kkrrbb55__ggeenneerraattee__ssuubbkkeeyy__eexxtteennddeedd, kkrrbb55__kkeeyybblloocckk__iinniitt,
+     kkrrbb55__kkeeyybblloocckk__zzeerroo, kkrrbb55__rraannddoomm__ttoo__kkeeyy - Kerberos 5 key handling func-
+     tions.
+
+LLIIBBRRAARRYY
+     Kerberos 5 Library (libkrb5, -lkrb5)
+
+SSYYNNOOPPSSIISS
+     krb5_keyblock; _k_r_b_5___e_n_c_t_y_p_e
+     kkrrbb55__kkeeyybblloocckk__ggeett__eennccttyyppee(_c_o_n_s_t _k_r_b_5___k_e_y_b_l_o_c_k _*_b_l_o_c_k)
+
+     _k_r_b_5___e_r_r_o_r___c_o_d_e
+     kkrrbb55__ccooppyy__kkeeyybblloocckk(_k_r_b_5___c_o_n_t_e_x_t _c_o_n_t_e_x_t, _k_r_b_5___k_e_y_b_l_o_c_k _*_*_t_o)
+
+     _k_r_b_5___e_r_r_o_r___c_o_d_e
+     kkrrbb55__ccooppyy__kkeeyybblloocckk__ccoonntteennttss(_k_r_b_5___c_o_n_t_e_x_t _c_o_n_t_e_x_t,
+             _c_o_n_s_t _k_r_b_5___k_e_y_b_l_o_c_k _*_i_n_b_l_o_c_k, _k_r_b_5___k_e_y_b_l_o_c_k _*_t_o)
+
+     _v_o_i_d
+     kkrrbb55__ffrreeee__kkeeyybblloocckk(_k_r_b_5___c_o_n_t_e_x_t _c_o_n_t_e_x_t, _k_r_b_5___k_e_y_b_l_o_c_k _*_k_e_y_b_l_o_c_k)
+
+     _v_o_i_d
+     kkrrbb55__ffrreeee__kkeeyybblloocckk__ccoonntteennttss(_k_r_b_5___c_o_n_t_e_x_t _c_o_n_t_e_x_t,
+             _k_r_b_5___k_e_y_b_l_o_c_k _*_k_e_y_b_l_o_c_k)
+
+     _k_r_b_5___e_r_r_o_r___c_o_d_e
+     kkrrbb55__ggeenneerraattee__rraannddoomm__kkeeyybblloocckk(_k_r_b_5___c_o_n_t_e_x_t _c_o_n_t_e_x_t, _k_r_b_5___e_n_c_t_y_p_e _t_y_p_e,
+             _k_r_b_5___k_e_y_b_l_o_c_k _*_k_e_y)
+
+     _k_r_b_5___e_r_r_o_r___c_o_d_e
+     kkrrbb55__ggeenneerraattee__ssuubbkkeeyy(_k_r_b_5___c_o_n_t_e_x_t _c_o_n_t_e_x_t, _c_o_n_s_t _k_r_b_5___k_e_y_b_l_o_c_k _*_k_e_y,
+             _k_r_b_5___k_e_y_b_l_o_c_k _*_*_s_u_b_k_e_y)
+
+     _k_r_b_5___e_r_r_o_r___c_o_d_e
+     kkrrbb55__ggeenneerraattee__ssuubbkkeeyy__eexxtteennddeedd(_k_r_b_5___c_o_n_t_e_x_t _c_o_n_t_e_x_t,
+             _c_o_n_s_t _k_r_b_5___k_e_y_b_l_o_c_k _*_k_e_y, _k_r_b_5___e_n_c_t_y_p_e _e_n_c_t_y_p_e,
+             _k_r_b_5___k_e_y_b_l_o_c_k _*_*_s_u_b_k_e_y)
+
+     _k_r_b_5___e_r_r_o_r___c_o_d_e
+     kkrrbb55__kkeeyybblloocckk__iinniitt(_k_r_b_5___c_o_n_t_e_x_t _c_o_n_t_e_x_t, _k_r_b_5___e_n_c_t_y_p_e _t_y_p_e,
+             _c_o_n_s_t _v_o_i_d _*_d_a_t_a, _s_i_z_e___t _s_i_z_e, _k_r_b_5___k_e_y_b_l_o_c_k _*_k_e_y)
+
+     _v_o_i_d
+     kkrrbb55__kkeeyybblloocckk__zzeerroo(_k_r_b_5___k_e_y_b_l_o_c_k _*_k_e_y_b_l_o_c_k)
+
+     _k_r_b_5___e_r_r_o_r___c_o_d_e
+     kkrrbb55__rraannddoomm__ttoo__kkeeyy(_k_r_b_5___c_o_n_t_e_x_t _c_o_n_t_e_x_t, _k_r_b_5___e_n_c_t_y_p_e _t_y_p_e,
+             _c_o_n_s_t _v_o_i_d _*_d_a_t_a, _s_i_z_e___t _s_i_z_e, _k_r_b_5___k_e_y_b_l_o_c_k _*_k_e_y)
+
+DDEESSCCRRIIPPTTIIOONN
+     krb5_keyblock holds the encryption key for a specific encryption type.
+     There is no component inside krb5_keyblock that is directly referable.
+
+     kkrrbb55__kkeeyybblloocckk__ggeett__eennccttyyppee() returns the encryption type of the keyblock.
+
+     kkrrbb55__ccooppyy__kkeeyybblloocckk() makes a copy the keyblock _i_n_b_l_o_c_k to the output _o_u_t.
+     _o_u_t should be freed by the caller with _k_r_b_5___f_r_e_e___k_e_y_b_l_o_c_k.
+
+
+     kkrrbb55__ccooppyy__kkeeyybblloocckk__ccoonntteennttss() copies the contents of _i_n_b_l_o_c_k to the _t_o
+     keyblock.  The destination keyblock is overritten.
+
+     kkrrbb55__ffrreeee__kkeeyybblloocckk() zeros out and frees the content and the keyblock it-
+     self.
+
+     kkrrbb55__ffrreeee__kkeeyybblloocckk__ccoonntteennttss() zeros out and frees the content of the key-
+     block.
+
+     kkrrbb55__ggeenneerraattee__rraannddoomm__kkeeyybblloocckk() creates a new content of the keyblock _k_e_y
+     of type encrytion type _t_y_p_e. The content of _k_e_y is overwritten and not
+     freed, so the caller should be sure it is freed before calling the func-
+     tion.
+
+     kkrrbb55__ggeenneerraattee__ssuubbkkeeyy() generates a _s_u_b_k_e_y of the same type as _k_e_y. The
+     caller must free the subkey with _k_r_b_5___f_r_e_e___k_e_y_b_l_o_c_k.
+
+     kkrrbb55__ggeenneerraattee__ssuubbkkeeyy__eexxtteennddeedd() generates a _s_u_b_k_e_y of the specified en-
+     cryption type _t_y_p_e. If _t_y_p_e is ETYPE_NULL, of the same type as _k_e_y. The
+     caller must free the subkey with _k_r_b_5___f_r_e_e___k_e_y_b_l_o_c_k.
+
+     kkrrbb55__kkeeyybblloocckk__iinniitt() Fill in _k_e_y with key data of type _e_n_c_t_y_p_e from _d_a_t_a
+     of length _s_i_z_e. Key should be freed using kkrrbb55__ffrreeee__kkeeyybblloocckk__ccoonntteennttss().
+
+     kkrrbb55__kkeeyybblloocckk__zzeerroo() zeros out the keyblock to to make sure no keymateri-
+     al is in memory.  Note that kkrrbb55__ffrreeee__kkeeyybblloocckk__ccoonntteennttss() also zeros out
+     the memory.
+
+     kkrrbb55__rraannddoomm__ttoo__kkeeyy() converts the random bytestring to a protocol key ac-
+     cording to Kerberos crypto frame work.  It the resulting key will be of
+     type _e_n_c_t_y_p_e. It may be assumed that all the bits of the input string are
+     equally random, even though the entropy present in the random source may
+     be limited
+
+SSEEEE AALLSSOO
+     krb5_crypto_init(3),  krb5(3),  krb5.conf(5)
+
+ HEIMDAL                         Apr 14, 2005                                2

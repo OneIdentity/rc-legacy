@@ -33,9 +33,9 @@
 
 #include "krb5_locl.h"
 
-RCSID("$Id: get_in_tkt.c,v 1.107.2.3 2004/11/13 21:08:17 lha Exp $");
+RCSID("$Id: get_in_tkt.c,v 1.115 2004/12/29 18:55:14 lha Exp $");
 
-krb5_error_code
+krb5_error_code KRB5_LIB_FUNCTION
 krb5_init_etype (krb5_context context,
 		 unsigned *len,
 		 krb5_enctype **val,
@@ -133,12 +133,13 @@ _krb5_extract_ticket(krb5_context context,
     krb5_error_code ret;
     krb5_principal tmp_principal;
     int tmp;
+    size_t len;
     time_t tmp_time;
     krb5_timestamp sec_now;
 
-    ret = principalname2krb5_principal (&tmp_principal,
-					rep->kdc_rep.cname,
-					rep->kdc_rep.crealm);
+    ret = _krb5_principalname2krb5_principal (&tmp_principal,
+					      rep->kdc_rep.cname,
+					      rep->kdc_rep.crealm);
     if (ret)
 	goto out;
 
@@ -159,17 +160,19 @@ _krb5_extract_ticket(krb5_context context,
 
     /* extract ticket */
     ASN1_MALLOC_ENCODE(Ticket, creds->ticket.data, creds->ticket.length, 
-		       &rep->kdc_rep.ticket, &creds->ticket.length, ret);
+		       &rep->kdc_rep.ticket, &len, ret);
     if(ret)
 	goto out;
+    if (creds->ticket.length != len)
+	krb5_abortx(context, "internal error in ASN.1 encoder");
     creds->second_ticket.length = 0;
     creds->second_ticket.data   = NULL;
 
     /* compare server */
 
-    ret = principalname2krb5_principal (&tmp_principal,
-					rep->kdc_rep.ticket.sname,
-					rep->kdc_rep.ticket.realm);
+    ret = _krb5_principalname2krb5_principal (&tmp_principal,
+					      rep->kdc_rep.ticket.sname,
+					      rep->kdc_rep.ticket.realm);
     if (ret)
 	goto out;
     if(allow_server_mismatch){
@@ -310,12 +313,11 @@ make_pa_enc_timestamp(krb5_context context, PA_DATA *pa,
     size_t len;
     EncryptedData encdata;
     krb5_error_code ret;
-    int32_t sec, usec;
+    int32_t usec;
     int usec2;
     krb5_crypto crypto;
     
-    krb5_us_timeofday (context, &sec, &usec);
-    p.patimestamp = sec;
+    krb5_us_timeofday (context, &p.patimestamp, &usec);
     usec2         = usec;
     p.pausec      = &usec2;
 
@@ -438,10 +440,10 @@ init_as_req (krb5_context context,
 	krb5_set_error_string(context, "malloc: out of memory");
 	goto fail;
     }
-    ret = krb5_principal2principalname (a->req_body.cname, creds->client);
+    ret = _krb5_principal2principalname (a->req_body.cname, creds->client);
     if (ret)
 	goto fail;
-    ret = krb5_principal2principalname (a->req_body.sname, creds->server);
+    ret = _krb5_principal2principalname (a->req_body.sname, creds->server);
     if (ret)
 	goto fail;
     ret = copy_Realm(&creds->client->realm, &a->req_body.realm);
@@ -516,19 +518,12 @@ init_as_req (krb5_context context,
 	    krb5_set_error_string(context, "malloc: out of memory");
 	    goto fail;
 	}
+	a->padata->val = NULL;
+	a->padata->len = 0;
 	for(i = 0; i < preauth->len; i++) {
 	    if(preauth->val[i].type == KRB5_PADATA_ENC_TIMESTAMP){
 		int j;
-		PA_DATA *tmp = realloc(a->padata->val, 
-				       (a->padata->len + 
-					preauth->val[i].info.len) * 
-				       sizeof(*a->padata->val));
-		if(tmp == NULL) {
-		    ret = ENOMEM;
-		    krb5_set_error_string(context, "malloc: out of memory");
-		    goto fail;
-		}
-		a->padata->val = tmp;
+
 		for(j = 0; j < preauth->val[i].info.len; j++) {
 		    krb5_salt *sp = &salt;
 		    if(preauth->val[i].info.val[j].salttype)
@@ -591,7 +586,7 @@ fail:
 static int
 set_ptypes(krb5_context context,
 	   KRB_ERROR *error, 
-	   krb5_preauthtype **ptypes,
+	   const krb5_preauthtype **ptypes,
 	   krb5_preauthdata **preauth)
 {
     static krb5_preauthdata preauth2;
@@ -630,7 +625,7 @@ set_ptypes(krb5_context context,
     return(1);
 }
 
-krb5_error_code
+krb5_error_code KRB5_LIB_FUNCTION
 krb5_get_in_cred(krb5_context context,
 		 krb5_flags options,
 		 const krb5_addresses *addrs,
@@ -658,7 +653,6 @@ krb5_get_in_cred(krb5_context context,
     krb5_preauthdata *my_preauth = NULL;
     unsigned nonce;
     int done;
-    int send_to_kdc_flags = 0;
 
     opts.i = options;
 
@@ -693,8 +687,7 @@ krb5_get_in_cred(krb5_context context,
 	if(len != req.length)
 	    krb5_abortx(context, "internal error in ASN.1 encoder");
 
-	ret = krb5_sendto_kdc_flags(context, &req, &creds->client->realm,
-				    &resp, send_to_kdc_flags);
+	ret = krb5_sendto_kdc (context, &req, &creds->client->realm, &resp);
 	krb5_data_free(&req);
 	if (ret)
 	    return ret;
@@ -723,13 +716,6 @@ krb5_get_in_cred(krb5_context context,
 		    done = 0;
 		    preauth = my_preauth;
 		    krb5_free_error_contents(context, &error);
-		    krb5_clear_error_string(context);
-		    continue;
-		}
-		if (ret == KRB5KRB_ERR_RESPONSE_TOO_BIG && !(send_to_kdc_flags & KRB5_KRBHST_FLAGS_LARGE_MSG)) {
-		    done = 0;
-            	    send_to_kdc_flags |= KRB5_KRBHST_FLAGS_LARGE_MSG; 
-            	    krb5_free_error_contents(context, &error); 
 		    krb5_clear_error_string(context);
 		    continue;
 		}
@@ -798,7 +784,7 @@ out:
     return ret;
 }
 
-krb5_error_code
+krb5_error_code KRB5_LIB_FUNCTION
 krb5_get_in_tkt(krb5_context context,
 		krb5_flags options,
 		const krb5_addresses *addrs,

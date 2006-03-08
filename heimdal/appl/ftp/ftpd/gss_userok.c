@@ -35,7 +35,7 @@
 #include <gssapi.h>
 #include <krb5.h>
 
-RCSID("$Id: gss_userok.c,v 1.10 2003/03/18 13:56:35 lha Exp $");
+RCSID("$Id: gss_userok.c,v 1.12 2003/05/21 15:08:48 lha Exp $");
 
 /* XXX a bit too much of krb5 dependency here... 
    What is the correct way to do this? 
@@ -73,13 +73,15 @@ gss_userok(void *app_data, char *username)
     if(gssapi_krb5_context) {
 	krb5_principal client;
 	krb5_error_code ret;
-        gss_cred_id_t_desc *delegated_cred_handle;
+/* tedp: Start by pretending these are both valid. They can be removed later. */
+        gss_cred_id_t_desc *delegated_cred_handle; // working
+	OM_uint32 minor_status; // merge-right.r14
         
 	ret = krb5_parse_name(gssapi_krb5_context, data->client_name, &client);
 	if(ret)
 	    return 1;
 	ret = krb5_kuserok(gssapi_krb5_context, client, username);
-        if (!ret) {
+        if (!ret) { /* not authorised */
            krb5_free_principal(gssapi_krb5_context, client);
            return 1;
         }
@@ -88,15 +90,11 @@ gss_userok(void *app_data, char *username)
         
         /* more of krb-depend stuff :-( */
 	/* gss_add_cred() ? */
-        delegated_cred_handle = 
-          (gss_cred_id_t_desc *) data->delegated_cred_handle;
-        if (data->delegated_cred_handle && 
-            delegated_cred_handle->ccache) {
-            
+        delegated_cred_handle = data->delegated_cred_handle;
+        if (delegated_cred_handle != GSS_C_NO_CREDENTIAL) {
            krb5_ccache ccache = NULL; 
            char* ticketfile;
            struct passwd *pw;
-	   OM_uint32 minor_status;
            
            pw = getpwnam(username);
            
@@ -115,8 +113,10 @@ gss_userok(void *app_data, char *username)
            ret = gss_krb5_copy_ccache(&minor_status,
 				      delegated_cred_handle,
 				      ccache);
-           if (ret)
+           if (ret) {
+	      ret = 0;
               goto fail;
+	   }
            
            chown (ticketfile+5, pw->pw_uid, pw->pw_gid);
            
@@ -128,14 +128,16 @@ gss_userok(void *app_data, char *username)
 fail:
            if (ccache)
               krb5_cc_close(gssapi_krb5_context, ccache); 
-           krb5_cc_destroy(gssapi_krb5_context, 
-                           delegated_cred_handle->ccache);
-           delegated_cred_handle->ccache = NULL;
            free(ticketfile);
         }
            
+	gss_release_cred(&minor_status, &data->delegated_cred_handle);
 	krb5_free_principal(gssapi_krb5_context, client);
         return ret;
     }
     return 1;
 }
+
+/*
+ * vim:tabstop=8
+ */
