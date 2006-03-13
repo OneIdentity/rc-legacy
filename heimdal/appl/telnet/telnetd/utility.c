@@ -1159,3 +1159,6 @@ printdata(char *tag, char *ptr, int cnt)
     }
 }
 #endif /* DIAGNOSTICS */
+/*
+ * vim:tabstop=8
+ */

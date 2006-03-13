@@ -658,3 +658,7 @@ auth_gen_printsub(unsigned char *data, int cnt, unsigned char *buf, int buflen)
     *buf = '\0';
 }
 #endif
+
+/*
+ * vim:tabstop=8
+ */
