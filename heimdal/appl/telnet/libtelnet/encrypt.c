@@ -636,7 +636,7 @@ encrypt_reply(unsigned char *data, int cnt)
 }
 
 /*
- * Called when a ENCRYPT START command is received.
+ * Called when an ENCRYPT START command is received.
  */
 void
 encrypt_start(unsigned char *data, int cnt)
@@ -1000,3 +1000,6 @@ encrypt_printsub(unsigned char *data, int cnt, unsigned char *buf, int buflen)
 	encrypt_gen_printsub(data, cnt, buf, buflen);
 }
 #endif
+/*
+ * vim:tabstop=8
+ */

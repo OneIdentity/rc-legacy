@@ -909,7 +909,7 @@ process_rings(int netin,
 		    /*
 		     * Bogosity.  We have to do the read
 		     * to clear the atmark to get out of
-		     * an infinate loop.
+		     * an infinite loop.
 		     */
 		    i = read(net, netiring.supply + c, canread - c);
 		    if (i > 0)

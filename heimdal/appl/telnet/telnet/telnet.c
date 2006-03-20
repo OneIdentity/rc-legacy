@@ -2119,6 +2119,7 @@ my_telnet(char *user)
 		     * Turn on MODE_TRAPSIG and then turn off localchars 
 		     * so that ^C will cause telnet to exit.
 		     */
+		    /* tedp: This doesn't seem to do what it's meant to. ^C doesn't cause SIGINT */
 		    TerminalNewMode(getconnmode()|MODE_TRAPSIG);
 		    intr_waiting = 1;
 	    }
@@ -2418,3 +2419,7 @@ tel_leave_binary(int rw)
     if (rw&2)
 	send_wont(TELOPT_BINARY, 1);
 }
+
+/*
+ * vim:tabstop=8
+ */
