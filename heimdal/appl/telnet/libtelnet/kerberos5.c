@@ -494,6 +494,7 @@ kerberos5_is(Authenticator *ap, unsigned char *data, int cnt)
 			UserNameRequested ? UserNameRequested : "<unknown>",
 			RemoteHostName ? RemoteHostName : "<unknown>");
 
+#ifdef ENCRYPTION /* check this. -tedp */
 	    if(key_block->keytype == ETYPE_DES_CBC_MD5 ||
 	       key_block->keytype == ETYPE_DES_CBC_MD4 ||
 	       key_block->keytype == ETYPE_DES_CBC_CRC) {
@@ -504,6 +505,7 @@ kerberos5_is(Authenticator *ap, unsigned char *data, int cnt)
 		skey.data = key_block->keyvalue.data;
 		encrypt_session_key(&skey, 0);
 	    }
+#endif
 
 	} else {
 	    char *msg;
@@ -611,7 +613,6 @@ kerberos5_reply(Authenticator *ap, unsigned char *data, int cnt)
 	return;
     case KRB_ACCEPT: {
 	krb5_error_code ret;
-	Session_Key skey;
 	krb5_keyblock *keyblock;
 	
 	if ((ap->way & AUTH_HOW_MASK) == AUTH_HOW_MUTUAL &&
@@ -639,10 +640,13 @@ kerberos5_reply(Authenticator *ap, unsigned char *data, int cnt)
 	    return;
 	}
 	      
+#ifdef ENCRYPTION /* check this. -tedp */
+	Session_Key skey;
 	skey.type = SK_DES;
 	skey.length = 8;
 	skey.data = keyblock->keyvalue.data;
 	encrypt_session_key(&skey, 0);
+#endif
 	krb5_free_keyblock_contents (context, keyblock);
 	auth_finished(ap, AUTH_USER);
 	if (forward_flags & OPTS_FORWARD_CREDS)
