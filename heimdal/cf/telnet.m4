@@ -6,10 +6,12 @@ dnl stuff used by telnet
 AC_DEFUN([rk_TELNET],[
 AC_DEFINE(AUTHENTICATION, 1, 
 	[Define if you want authentication support in telnet.])dnl
+if false; then
 AC_DEFINE(ENCRYPTION, 1,
 	[Define if you want encryption support in telnet.])dnl
 AC_DEFINE(DES_ENCRYPTION, 1,
 	[Define if you want to use DES encryption in telnet.])dnl
+fi
 AC_DEFINE(DIAGNOSTICS, 1,
 	[Define this to enable diagnostics in telnet.])dnl
 AC_DEFINE(OLD_ENVIRON, 1,
