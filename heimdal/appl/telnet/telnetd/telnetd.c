@@ -984,9 +984,15 @@ my_telnet(int f, int p, const char *host, const char *utmp_host,
 
 	/* wait for encryption to be turned on, but don't wait
            indefinitely */
-	if(!startslave_called && (!encrypt_delay() || timeout > time(NULL))){
-	    startslave_called = 1;
-	    startslave(host, utmp_host, level, autoname);
+	if(!startslave_called) {
+#ifdef ENCRYPTION
+	    if ((!encrypt_delay() || timeout > time(NULL))){
+#endif
+		startslave_called = 1;
+		startslave(host, utmp_host, level, autoname);
+#ifdef ENCRYPTION
+	    }
+#endif
 	}
 
 	if (ncc < 0 && pcc < 0)
