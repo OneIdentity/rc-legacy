@@ -1336,7 +1336,7 @@ main(int argc, char **argv)
     }
 #endif
 
-    openlog("login", LOG_ODELAY | LOG_PID, LOG_AUTH);
+    openlog("login", LOG_ODELAY | LOG_PID, LOG_AUTHPRIV);
 
     if (getarg (args, sizeof(args) / sizeof(args[0]), argc, argv,
 		&optind))
