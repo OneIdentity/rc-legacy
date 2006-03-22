@@ -50,7 +50,7 @@ LDADD = ../common/libcommon.a \
 	$(LIB_otp) \
 	$(LIB_gssapi) \
 	$(LIB_krb5) \
-	$(LIB_kafs) \
 	$(LIB_krb4) \
 	$(LIB_des) \
-	$(LIB_roken)
+	$(LIB_roken) \
+	$(top_builddir)/lib/vers/libvers.la

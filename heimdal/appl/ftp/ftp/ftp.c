@@ -161,6 +161,9 @@ bad:
     return NULL;
 }
 
+/* Attempt automatic login, prompt user if required.
+ * This function is only called "if (autologin)".
+ */
 int
 login (char *host)
 {
@@ -175,7 +178,7 @@ login (char *host)
     if (pw != NULL)
 	myname = pw->pw_name;
 
-    user = pass = acct = 0;
+    user = pass = acct = NULL;
 
     if(sec_login(host))
 	printf("\n*** Using plaintext user and password ***\n\n");
@@ -187,20 +190,26 @@ login (char *host)
 	code = -1;
 	return (0);
     }
-    while (user == NULL) {
-	if (myname)
-	    printf ("Name (%s:%s): ", host, myname);
-	else
-	    printf ("Name (%s): ", host);
-	*tmp = '\0';
-	if (fgets (tmp, sizeof (tmp) - 1, stdin) != NULL)
-	    tmp[strlen (tmp) - 1] = '\0';
-	if (*tmp == '\0')
-	    user = myname;
-	else
-	    user = tmp;
+
+    if (username[0] == '\0') { /* might already have been set during auth */
+	while (user == NULL) {
+	    if (myname)
+		printf ("Name (%s:%s): ", host, myname);
+	    else
+		printf ("Name (%s): ", host);
+	    *tmp = '\0';
+	    if (fgets (tmp, sizeof (tmp) - 1, stdin) != NULL)
+		tmp[strlen (tmp) - 1] = '\0';
+	    if (*tmp == '\0')
+		user = myname;
+	    else
+		user = tmp;
+	}
+	strlcpy(username, user, sizeof(username));
     }
-    strlcpy(username, user, sizeof(username));
+    else {
+	user = username;
+    }
     n = command("USER %s", user);
     if (n == COMPLETE) 
        n = command("PASS dummy"); /* DK: Compatibility with gssftp daemon */

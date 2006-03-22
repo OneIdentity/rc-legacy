@@ -62,11 +62,40 @@ typedef struct gss_cred_id_t_desc_struct {
 } gss_cred_id_t_desc;
 
 
+/* Nabbed from openssh/gss-serv-krb5.c:72
+ *
+ * Tests that the user principal name yields a VAS account UID
+ * the same as the local user account.
+ *
+ * Workaround for bug 5894: The krb5_kuserok() function did not
+ * always recognise foreign realm users who have valid VAS local user
+ * accounts. This is because it made the assumption that only UPNs
+ * of the form luser@LOCALREALM were allowed access.
+ */
+
+static int
+vas_userok(char *upn, char *luser)
+{
+    uid_t upn_uid, luser_uid;
+    struct passwd *pw;
+
+    if ((pw = getpwnam(upn)) == NULL)
+	return 0;
+    upn_uid = pw->pw_uid;
+
+    if ((pw = getpwnam(luser)) == NULL)
+	return 0;
+    luser_uid = pw->pw_uid;
+
+    return upn_uid == luser_uid;
+}
+
+
 int gss_userok(void*, char*); /* to keep gcc happy */
 
 /* XXX Review what this function does. It plays hard and fast with heimdal
  * internals */
-int
+
 gss_userok(void *app_data, char *username)
 {
     struct gss_data *data = app_data;
@@ -81,10 +110,10 @@ gss_userok(void *app_data, char *username)
 	if(ret)
 	    return 1;
 	ret = krb5_kuserok(gssapi_krb5_context, client, username);
-        if (!ret) { /* not authorised */
-           krb5_free_principal(gssapi_krb5_context, client);
-           return 1;
-        }
+	if (!ret && !vas_userok(username, data->client_name)) {
+	    krb5_free_principal(gssapi_krb5_context, client);
+	    return 1;
+	}
         
         ret = 0;
         

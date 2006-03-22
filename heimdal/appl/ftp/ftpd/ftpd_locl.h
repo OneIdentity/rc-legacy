@@ -149,9 +149,13 @@
 #include <krb.h>
 #endif
 
+#ifdef USE_AFS
 #if defined(KRB4) || defined(KRB5)
-/*#include <kafs.h>*/
+#include <kafs.h>
 #endif
+#else /* USE_AFS */
+#define k_hasafs() 0
+#endif /* USE_AFS */
  
 #ifdef OTP
 #include <otp.h>

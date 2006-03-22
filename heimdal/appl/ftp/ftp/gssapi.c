@@ -64,7 +64,7 @@ gss_init(void *app_data)
 #ifdef KRB5
     return !use_kerberos;
 #else
-    return 0
+    return 0;
 #endif /* KRB5 */
 #endif /* FTP_SERVER */
 }
@@ -468,11 +468,11 @@ gss_auth(void *app_data, char *host)
 	free(input.value);
 
     {
-	gss_name_t targ_name;
+	gss_name_t targ_name, src_name;
 
 	maj_stat = gss_inquire_context(&min_stat,
 				       d->context_hdl,
-				       NULL,
+				       &src_name,
 				       &targ_name,
 				       NULL,
 				       NULL,
@@ -480,20 +480,41 @@ gss_auth(void *app_data, char *host)
 				       NULL,
 				       NULL);
 	if (GSS_ERROR(maj_stat) == 0) {
-	    gss_buffer_desc name;
+	    gss_buffer_desc localname, remotename;
+	    OM_uint32 maj_stat_loclusr;
 	    maj_stat = gss_display_name (&min_stat,
 					 targ_name,
-					 &name,
+					 &remotename,
 					 NULL);
-	    if (GSS_ERROR(maj_stat) == 0) {
-		printf("Authenticated to <%s>\n", (char *)name.value);
-		gss_release_buffer(&min_stat, &name);
+	    maj_stat_loclusr = gss_display_name(&min_stat,
+			    src_name,
+			    &localname,
+			    NULL);
+	    if (!(GSS_ERROR(maj_stat) && GSS_ERROR(maj_stat_loclusr))) {
+		printf("Authenticated");
+		if (GSS_ERROR(maj_stat) == 0) {
+		    printf(" to <%s>", remotename.value);
+		    gss_release_buffer(&min_stat, &remotename);
+		}
+		if (GSS_ERROR(maj_stat_loclusr) == 0) {
+		    printf(" as <%s>", (char *)localname.value);
+		    /* In theory we'd have to do some funny business to
+		     * determine what username to pass, but fortunately
+		     * the gss_display_name func returns a string in
+		     * the format user@DOMAIN, which is understood by
+		     * the server. gss_display_name is only really
+		     * meant to display a meaningful name to the user.
+		     */
+		    strlcpy(username, localname.value, sizeof username);
+		    gss_release_buffer(&min_stat, &localname);
+		}
+		printf(".\n");
 	    }
+	    gss_release_name(&min_stat, &src_name);
 	    gss_release_name(&min_stat, &targ_name);
 	} else
-	    printf("Failed to get gss name of peer.\n");
-    }	    
-
+	    printf("Failed to get gss name of local user or peer.\n");
+    }
 
     return AUTH_OK;
 }

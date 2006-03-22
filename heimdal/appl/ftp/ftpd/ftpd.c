@@ -37,6 +37,7 @@
 #include <krb5.h>
 #endif
 #include "getarg.h"
+#include <version.h> /* for heimdal_version */
 
 RCSID("$Id: ftpd.c,v 1.173 2005/06/02 10:41:28 lha Exp $");
 
