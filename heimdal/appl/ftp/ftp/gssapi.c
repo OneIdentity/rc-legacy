@@ -493,7 +493,7 @@ gss_auth(void *app_data, char *host)
 	    if (!(GSS_ERROR(maj_stat) && GSS_ERROR(maj_stat_loclusr))) {
 		printf("Authenticated");
 		if (GSS_ERROR(maj_stat) == 0) {
-		    printf(" to <%s>", remotename.value);
+		    printf(" to <%s>", (char *)remotename.value);
 		    gss_release_buffer(&min_stat, &remotename);
 		}
 		if (GSS_ERROR(maj_stat_loclusr) == 0) {
