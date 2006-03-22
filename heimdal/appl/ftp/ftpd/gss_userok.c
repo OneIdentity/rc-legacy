@@ -96,6 +96,7 @@ int gss_userok(void*, char*); /* to keep gcc happy */
 /* XXX Review what this function does. It plays hard and fast with heimdal
  * internals */
 
+int
 gss_userok(void *app_data, char *username)
 {
     struct gss_data *data = app_data;
