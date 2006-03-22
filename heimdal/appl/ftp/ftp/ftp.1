@@ -47,11 +47,13 @@ file transfer program
 .Op Fl v
 .Op Fl d
 .Op Fl i
+.Op Fl K
 .Op Fl n
 .Op Fl g
 .Op Fl p
 .Op Fl l
 .Op Fl -no-gss-bindings
+.Op Fl -no-gss-delegate
 .Op Ar host
 .Sh DESCRIPTION
 .Nm ftp
@@ -92,6 +94,8 @@ and an account with which to login.
 .It Fl i
 Turns off interactive prompting during
 multiple file transfers.
+.It Fl K
+Disable kerberos authentication.
 .It Fl p
 Turn on passive mode.
 .It Fl d
@@ -101,6 +105,8 @@ Disables file name globbing.
 .It Fl -no-gss-bindings
 Don't use GSS-API bindings when talking to peer. IP addresses will not
 be checked to ensure they match.
+.It Fl -no-gss-delegate
+Disable delegation of GSSAPI credentials.
 .It Fl l
 Disables command line editing.
 .El
