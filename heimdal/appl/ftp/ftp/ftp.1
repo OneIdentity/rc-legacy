@@ -54,14 +54,14 @@ file transfer program
 .Op Fl -no-gss-bindings
 .Op Ar host
 .Sh DESCRIPTION
-.Nm Ftp
+.Nm ftp
 is the user interface to the
 .Tn ARPANET
 standard File Transfer Protocol.
 The program allows a user to transfer files to and from a
 remote network site.
 .Pp
-Modifications has been made so that it almost follows the ftpsec
+Modifications have been made so that it almost follows the ftpsec
 Internet draft.
 .Pp
 Options may be specified at the command line, or to the
@@ -99,7 +99,8 @@ Enables debugging.
 .It Fl g
 Disables file name globbing.
 .It Fl -no-gss-bindings
-use GSS-API bindings when talking to peer (ie make sure IP addresses match).
+Don't use GSS-API bindings when talking to peer. IP addresses will not
+be checked to ensure they match.
 .It Fl l
 Disables command line editing.
 .El
