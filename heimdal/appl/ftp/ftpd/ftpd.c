@@ -141,7 +141,7 @@ static int	 checkaccess (char *);
 static FILE	*dataconn (const char *, off_t, const char *);
 static void	 dolog (struct sockaddr *sa, int len);
 static void	 end_login (void);
-static FILE	*getdatasock (const char *);
+static FILE	*getdatasock (const char *, int);
 static char	*gunique (char *);
 static RETSIGTYPE	 lostconn (int);
 static int	 receive_data (FILE *, FILE *);
@@ -1208,15 +1208,21 @@ done:
 	LOGBYTES(*mode == 'w' ? "put" : "append", name, byte_count);
 }
 
+
+/* Get a data socket
+ * The domain parameter specifies the type of socket to create.
+ * Use PF_UNSPEC to choose one of the same type as ctrl_addr.
+ */
+
 static FILE *
-getdatasock(const char *mode)
+getdatasock(const char *mode, int domain)
 {
 	int s, t, tries;
 
 	if (data >= 0)
 		return (fdopen(data, mode));
 	seteuid(0);
-	s = socket(ctrl_addr->sa_family, SOCK_STREAM, 0);
+	s = socket((domain == PF_UNSPEC) ? ctrl_addr->sa_family : domain, SOCK_STREAM, 0);
 	if (s < 0)
 		goto bad;
 	socket_set_reuseaddr (s, 1);
@@ -1319,7 +1325,21 @@ dataconn(const char *name, off_t size, const char *mode)
 	if (usedefault)
 		data_dest = his_addr;
 	usedefault = 1;
-	file = getdatasock(mode);
+	int socket_domain;
+	/* This would most likely be optimised. */
+	switch (data_dest->sa_family) {
+#ifdef HAVE_IPV6
+	case AF_INET6:
+	    socket_domain = PF_INET6;
+	    break;
+#endif
+	case AF_INET:
+	    socket_domain = PF_INET;
+	    break;
+	default:
+	    socket_domain = PF_UNSPEC;
+	}
+	file = getdatasock(mode, socket_domain);
 	if (file == NULL) {
 		char data_addr[256];
 
