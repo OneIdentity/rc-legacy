@@ -530,7 +530,6 @@ AC_CONFIG_FILES(Makefile 		\
 	appl/ftp/ftpd/Makefile		\
 	appl/rsh/Makefile		\
 	appl/rcp/Makefile		\
-	appl/login/Makefile		\
 	appl/telnet/Makefile		\
 	appl/telnet/libtelnet/Makefile	\
 	appl/telnet/telnet/Makefile	\
