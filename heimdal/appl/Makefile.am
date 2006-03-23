@@ -5,7 +5,7 @@ include $(top_srcdir)/Makefile.am.common
 SUBDIRS = 					\
 	  rsh					\
 	  rcp					\
-	  telnet
-#	  ftp					\
+	  telnet				\
+	  ftp
 #	  login					\
 #	  su
