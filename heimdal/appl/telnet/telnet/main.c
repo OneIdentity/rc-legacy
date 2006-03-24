@@ -185,7 +185,7 @@ main(int argc, char **argv)
 
 	/* 
 	 * if AUTHENTICATION and ENCRYPTION is set autologin will be
-	 * se to true after the getopt switch; unless the -K option is
+	 * set to true after the getopt switch; unless the -K option is
 	 * passed 
 	 */
 	autologin = -1;
@@ -302,6 +302,11 @@ main(int argc, char **argv)
 			rlogin = '~';
 			break;
 		case 'x':
+			fprintf(stderr, "%s: Error: encryption is broken "
+					"(and thus disabled) in this release.\n",
+					prompt);
+			exit(1);
+#if 0
 #ifdef	ENCRYPTION
 			encrypt_auto(1);
 			decrypt_auto(1);
@@ -312,6 +317,7 @@ main(int argc, char **argv)
 			    "%s: Warning: -x ignored, no ENCRYPT support.\n",
 								prompt);
 #endif
+#endif /* 0 */
 			break;
 
 		case '?':
