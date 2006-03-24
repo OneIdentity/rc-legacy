@@ -184,7 +184,7 @@ char	wtmpf[]	= "/etc/wtmp";
      int really_stream = 0;
 # endif
 
-     const char *new_login = _PATH_LOGIN;
+     const char *new_login = "login";
 
 /*
  * init_termbuf()
@@ -1390,7 +1390,7 @@ start_login(const char *host, int autologin, char *name)
      */
     sleep(1);
 
-    execv(new_login, argv.argv);
+    execvp(new_login, argv.argv);
     save_errno = errno;
     syslog(LOG_ERR, "%s: %m\n", new_login);
     fatalperror_errno(net, new_login, save_errno);
