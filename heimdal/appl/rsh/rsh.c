@@ -1021,9 +1021,9 @@ main(int argc, char **argv)
     if (argindex == argc) {
 	close (priv_socket1);
 	close (priv_socket2);
-	argv[0] = "rlogin";
-	execvp ("rlogin", argv);
-	err (1, "execvp rlogin");
+	argv[0] = "telnet";
+	execvp ("telnet", argv);
+	err (1, "execvp telnet");
     }
 
     local_user = get_default_username ();
