@@ -521,7 +521,6 @@ AC_CONFIG_FILES(Makefile 		\
 	lib/roken/Makefile		\
 	lib/des/Makefile		\
 	lib/editline/Makefile		\
-	lib/kafs/Makefile		\
 	lib/vers/Makefile		\
 	appl/Makefile			\
 	appl/ftp/Makefile		\
