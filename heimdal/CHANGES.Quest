@@ -1,0 +1,10 @@
+vas-apps (0.7.2q1)
+
+  * telnet: Disable encryption -- it seems broken (r21).
+  * ftp: Don't prompt for username when using GSSAPI authentication (r27).
+  * ftp: Document -K and --no-gss-delegate options (r28).
+  * ftp: Fix bug where active-mode transfers failed on Linux (r31).
+  * ftp: Execute the system's login command instead of a non-existent
+         one (r34).
+
+ -- Ted Percival <ted.percival@quest.com>  Thu, 30 Mar 2006 15:37:35 +1000
