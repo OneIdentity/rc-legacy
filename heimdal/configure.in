@@ -557,5 +557,3 @@ else
 	mv -f include/newversion.h.in include/version.h.in
 	sed -e "s/@USER@/$User/" -e "s/@HOST@/$Host/" -e "s/@DATE@/$Date/" include/version.h.in > include/version.h
 fi
-
-dnl vim:tabstop=8

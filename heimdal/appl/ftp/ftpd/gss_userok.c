@@ -167,7 +167,3 @@ fail:
     }
     return 1;
 }
-
-/*
- * vim:tabstop=8
- */

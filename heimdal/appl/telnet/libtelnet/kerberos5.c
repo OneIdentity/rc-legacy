@@ -883,7 +883,3 @@ kerberos5_set_forwardable(int on)
 }
 
 #endif /* KRB5 */
-
-/*
- * vim:tabstop=8
- */

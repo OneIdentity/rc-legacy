@@ -2419,7 +2419,3 @@ tel_leave_binary(int rw)
     if (rw&2)
 	send_wont(TELOPT_BINARY, 1);
 }
-
-/*
- * vim:tabstop=8
- */

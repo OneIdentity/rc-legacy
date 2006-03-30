@@ -1000,6 +1000,3 @@ encrypt_printsub(unsigned char *data, int cnt, unsigned char *buf, int buflen)
 	encrypt_gen_printsub(data, cnt, buf, buflen);
 }
 #endif
-/*
- * vim:tabstop=8
- */

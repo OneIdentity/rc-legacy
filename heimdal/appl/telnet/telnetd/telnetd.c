@@ -1391,7 +1391,3 @@ doeof()
     *pfrontp++ = slctab[SLC_EOF].sptr ?
 	(unsigned char)*slctab[SLC_EOF].sptr : '\004';
 }
-
-/*
- * vim:tabstop=8
- */
