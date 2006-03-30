@@ -1278,8 +1278,7 @@ dataconn(const char *name, off_t size, const char *mode)
 {
 	char sizebuf[32];
 	FILE *file;
-	int retry = 0;
-	int socket_domain;
+	int domain, retry = 0;
 
 	file_size = size;
 	byte_count = 0;
@@ -1326,20 +1325,15 @@ dataconn(const char *name, off_t size, const char *mode)
 	if (usedefault)
 		data_dest = his_addr;
 	usedefault = 1;
-	/* This would most likely be optimised. */
-	switch (data_dest->sa_family) {
-#ifdef HAVE_IPV6
-	case AF_INET6:
-	    socket_domain = PF_INET6;
-	    break;
-#endif
-	case AF_INET:
-	    socket_domain = PF_INET;
-	    break;
-	default:
-	    socket_domain = PF_UNSPEC;
-	}
-	file = getdatasock(mode, socket_domain);
+	/*
+	 * Default to using the same socket type as the ctrl address,
+	 * unless we know the type of the data address.
+	 */
+	domain = data_dest->sa_family;
+	if (domain == PF_UNSPEC)
+	    domain = ctrl_addr->sa_family;
+
+	file = getdatasock(mode, domain);
 	if (file == NULL) {
 		char data_addr[256];
 
