@@ -1279,6 +1279,7 @@ dataconn(const char *name, off_t size, const char *mode)
 	char sizebuf[32];
 	FILE *file;
 	int retry = 0;
+	int socket_domain;
 
 	file_size = size;
 	byte_count = 0;
@@ -1325,7 +1326,6 @@ dataconn(const char *name, off_t size, const char *mode)
 	if (usedefault)
 		data_dest = his_addr;
 	usedefault = 1;
-	int socket_domain;
 	/* This would most likely be optimised. */
 	switch (data_dest->sa_family) {
 #ifdef HAVE_IPV6
