@@ -9,10 +9,36 @@ Group: Applications/Internet
 Packager: Ted Percival <ted.percival@quest.com>
 Prefix: /opt/quest
 Source: vas_apps-@[VERSION].tar.gz
+Requires: libvas.so.4
 
 %description
-VAS-enabled traditional Unix networking tools, including:
-rsh, rshd, rcp, telnet, telnetd, ftp and ftpd.
+VAS-enabled traditional Unix networking tools, including
+rsh, rcp, telnet, ftp, rshd, telnetd, and ftpd.
+
+%package dev
+Summary: VAS-enabled traditional Unix networking tools, development files.
+Group: Development/Libraries
+
+%package clients
+Summary: VAS-enabled traditional Unix networking clients.
+Group: Applications/Internet
+
+%package servers
+Summary: VAS-enabled traditional Unix networking servers.
+Group: Applications/Internet
+
+%description clients
+VAS-enabled traditional Unix networking clients, including
+rsh, rcp, telnet and ftp.
+
+%description servers
+VAS-enabled traditional Unix networking servers, including
+rshd, telnetd and ftpd.
+
+%description dev
+Static libraries from the vas_apps packages, including
+des, editline, and roken.
+Header files and manpages are also included.
 
 %define _prefix /opt/quest
 %define _sysconfdir /etc%{_prefix}
@@ -38,7 +64,7 @@ make
 make install DESTDIR=$RPM_BUILD_ROOT
 
 
-%files
+%files clients
 # Directives to keep in mind:
 # %doc
 # %config
@@ -49,34 +75,30 @@ make install DESTDIR=$RPM_BUILD_ROOT
 %{_bindir}/rcp
 %{_bindir}/rsh
 %{_bindir}/telnet
-%{_libexecdir}/rshd
-%{_libexecdir}/ftpd
-%{_libexecdir}/telnetd
 
 %defattr(0644,root,root)
 %doc %{_mandir}/cat1/ftp.1
 %doc %{_mandir}/cat1/rsh.1
 %doc %{_mandir}/cat1/telnet.1
+%doc %{_mandir}/man1/ftp.1
+%doc %{_mandir}/man1/rsh.1
+%doc %{_mandir}/man1/telnet.1
+
+%files servers
+%defattr(0755,root,root)
+%{_libexecdir}/rshd
+%{_libexecdir}/ftpd
+%{_libexecdir}/telnetd
+
+%defattr(0644,root,root)
 %doc %{_mandir}/cat5/ftpusers.5
 %doc %{_mandir}/cat8/ftpd.8
 %doc %{_mandir}/cat8/rshd.8
 %doc %{_mandir}/cat8/telnetd.8
-%doc %{_mandir}/man1/ftp.1
-%doc %{_mandir}/man1/rsh.1
-%doc %{_mandir}/man1/telnet.1
 %doc %{_mandir}/man5/ftpusers.5
 %doc %{_mandir}/man8/ftpd.8
 %doc %{_mandir}/man8/rshd.8
 %doc %{_mandir}/man8/telnetd.8
-
-%package dev
-Summary: VAS-enabled traditional Unix networking tools, development files.
-Group: Development/Libraries
-
-%description dev
-Static libraries from the vas_apps package, including
-des, editline, and roken.
-Header files and manpages are also included.
 
 %files dev
 %defattr(0755,root,root)
