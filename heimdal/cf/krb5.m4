@@ -33,7 +33,7 @@ if test "x${WITH_KRB5}" != "xno" ; then
 		AC_MSG_RESULT($KRB5CONF)
 
 		AC_MSG_CHECKING(for gssapi support)
-		if $KRB5CONF | grep -q gssapi; then
+		if $KRB5CONF | grep gssapi > /dev/null 2>&1; then
 			AC_MSG_RESULT(yes)
 			AC_DEFINE([GSSAPI], 1, [GSSAPI support])
 			k5confopts=gssapi
