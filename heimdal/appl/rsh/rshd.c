@@ -39,9 +39,7 @@ login_access( struct passwd *user, char *from);
 
 enum auth_method auth_method;
 
-#ifdef HAVE_LIBPAM
-#include <security/pam_appl.h>
-#endif
+#include <pamcheck.h>
 
 #ifdef KRB5
 krb5_context context;
@@ -655,48 +653,6 @@ setup_environment (char ***env, const struct passwd *pwd)
     *env = e;
 }
 
-#ifdef HAVE_LIBPAM
-
-/* Can't really have a meaningful conversation over rsh. */
-static int
-pam_conv_nothing(
-    int num_msg,
-#ifdef SOLARIS
-    struct pam_message** msg,
-#else
-    const struct pam_message **msg,
-#endif
-    struct pam_response **resp,
-    void *appdata_ptr)
-{
-    return PAM_CONV_ERR;
-}
-
-/* Does PAM indicate this user is allowed to log in?
- * returns 1 if allowed, 0 if denied.
- */
-
-static int
-pam_userok(const char* user) {
-    int status;
-    struct pam_conv pam_conv;
-    pam_handle_t* handle;
-
-    pam_conv.conv = pam_conv_nothing;
-    pam_conv.appdata_ptr = NULL;
-
-    if (PAM_SUCCESS != pam_start("rsh", user, &pam_conv, &handle))
-	return 0; /* disallow */
-
-    status = pam_authenticate(handle, 0);
-    if (PAM_SUCCESS != pam_end(handle, status))
-	syslog(LOG_AUTHPRIV | LOG_WARNING, "pam_end() failed.");
-    
-    return status;
-}
-
-#endif /* HAVE_LIBPAM */
-
 static void
 doit (void)
 {
@@ -859,10 +815,23 @@ doit (void)
     }
 #endif
 
-#ifdef HAVE_LIBPAM
-    if (!pam_userok(server_user))
-	fatal (s, "pam_userok", "Permission denied (by PAM).");
-#endif
+    {
+	pam_handle_t* pamhandle;
+	struct pam_conv pamconv;
+	int status;
+
+	pamconv.conv = pamcheck_conv_nothing;
+	if (PAM_SUCCESS != pam_start("rsh", server_user, &pamconv, &pamhandle))
+	    fatal (s, "pam_start", "PAM initialisation failed.");
+	
+	status = pam_acct_mgmt(pamhandle, PAM_SILENT);
+
+	if (PAM_SUCCESS != pam_end(pamhandle, status))
+	    syslog(LOG_AUTHPRIV | LOG_WARNING, "pam_end() failed");
+
+	if (status != PAM_SUCCESS)
+	    fatal(s, NULL, "Permission denied (by PAM).");
+    }
 
 #ifdef HAVE_SETLOGIN
     if (setlogin(pwd->pw_name) < 0)

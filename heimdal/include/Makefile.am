@@ -10,7 +10,7 @@ CHECK_LOCAL =
 AM_CPPFLAGS += -DHOST=\"$(CANONICAL_HOST)\"
 
 include_HEADERS = krb5-types.h
-noinst_HEADERS = crypto-headers.h
+noinst_HEADERS = crypto-headers.h pamcheck.h
 
 krb5-types.h: bits$(EXEEXT)
 	./bits$(EXEEXT) krb5-types.h

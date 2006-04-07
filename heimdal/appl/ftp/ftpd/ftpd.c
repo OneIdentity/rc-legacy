@@ -39,6 +39,10 @@
 #include "getarg.h"
 #include <version.h> /* for heimdal_version */
 
+#include <pamcheck.h>
+
+#define WHINGE(str) syslog(LOG_FTP | LOG_WARNING, str)
+
 RCSID("$Id: ftpd.c,v 1.173 2005/06/02 10:41:28 lha Exp $");
 
 static char version[] = "Version 6.00";
@@ -147,6 +151,8 @@ static RETSIGTYPE	 lostconn (int);
 static int	 receive_data (FILE *, FILE *);
 static void	 send_data (FILE *, FILE *);
 static struct passwd * sgetpwnam (char *);
+
+pam_handle_t* pamhandle = NULL;
 
 static char *
 curdir(void)
@@ -693,7 +699,37 @@ checkaccess(char *name)
     int allowed = ALLOWED;
     char *user, *perm, line[BUFSIZ];
     char *foo;
+    int pamstatus;
+    struct pam_conv pamconv;
     
+    /* check pam before ftpusers, mostly to avoid messing with the
+     * existing code.
+     * This code is horrible. It's times like this I wish for C++.
+     */
+    pamconv.conv = pamcheck_conv_nothing;
+    pamconv.appdata_ptr = NULL;
+    if (PAM_SUCCESS == pam_start("ftp", name, &pamconv, &pamhandle)) { /* good */
+	if (PAM_SUCCESS == (pamstatus = pam_acct_mgmt(pamhandle, PAM_SILENT))) { /* good */
+	}
+	else { /* pam_acct_mgmt says disallowed */
+	    allowed = NOT_ALLOWED;
+	}
+	/* pam_start succeeded, but something might have caused auth failure */
+	if (allowed == NOT_ALLOWED) {
+	    if (PAM_SUCCESS != pam_end(pamhandle, pamstatus))
+		WHINGE("pam_end() failed"); /* whinge, but continue */
+	}
+    }
+    else { /* PAM failure */
+	WHINGE("pam_start() failed");
+	allowed = NOT_ALLOWED;
+    }
+
+    if (allowed == NOT_ALLOWED) {
+	pamhandle = NULL;
+	return NOT_ALLOWED; /* no need to check ftpusers */
+    }
+
     fd = fopen(_PATH_FTPUSERS, "r");
     
     if(fd == NULL)
@@ -714,6 +750,17 @@ checkaccess(char *name)
 	}
     }
     fclose(fd);
+
+    if (allowed == ALLOWED) { /* PAM and ftpusers indicate it's OK */
+	if (PAM_SUCCESS != pam_open_session(pamhandle, PAM_SILENT)) {
+	    WHINGE("pam_open_session() failed");
+	    allowed = NOT_ALLOWED;
+	    if (PAM_SUCCESS != pam_end(pamhandle, pamstatus))
+		WHINGE("pam_end() failed");
+	    pamhandle = NULL;
+	}
+    }
+
     return allowed;
 }
 #undef	ALLOWED
@@ -934,9 +981,8 @@ pass(char *passwd)
 		    if (rval)
 			rval = unix_verify_user(pw->pw_name, passwd);
 		} else {
-		    char *s;
-		    
 #ifdef OTP
+		    char *s;
 		    if ((s = otp_error(&otp_ctx)) != NULL)
 			lreply(530, "OTP: %s", s);
 #endif
@@ -1903,12 +1949,21 @@ dologout(int status)
 {
     transflag = 0;
     urgflag = 0;
+    int pamstatus;
     if (logged_in) {
 	seteuid((uid_t)0);
 	ftpd_logwtmp(ttyline, "", "");
 #ifdef KRB4
 	cond_kdestroy();
 #endif
+	if (pamhandle) {
+	    if (PAM_SUCCESS != (pamstatus = pam_close_session(pamhandle, PAM_SILENT)))
+		WHINGE("pam_close_session() failed");
+	    if (PAM_SUCCESS != pam_end(pamhandle, pamstatus))
+		WHINGE("pam_end() failed");
+	} else {
+	    syslog(LOG_FTP | LOG_DEBUG, "Programmer error: pamhandle is NULL on logout.");
+	}
     }
     /* beware of flushing buffers after a SIGPIPE */
 #ifdef XXX
