@@ -462,61 +462,6 @@ AH_BOTTOM([#ifdef ROKEN_RENAME
 #include "roken_rename.h"
 #endif])
 
-#AC_CONFIG_FILES(Makefile        \
-#	include/Makefile        \
-#	include/kadm5/Makefile      \
-#	lib/Makefile            \
-#	lib/45/Makefile         \
-#	lib/auth/Makefile       \
-#	lib/auth/afskauthlib/Makefile   \
-#	lib/auth/pam/Makefile       \
-#	lib/auth/sia/Makefile       \
-#	lib/asn1/Makefile       \
-#	lib/com_err/Makefile        \
-#	lib/des/Makefile        \
-#	lib/editline/Makefile       \
-#	lib/gssapi/Makefile     \
-#	lib/hdb/Makefile        \
-#	lib/kadm5/Makefile      \
-#	lib/kafs/Makefile       \
-#	lib/kdfs/Makefile       \
-#	lib/krb5/Makefile       \
-#	lib/otp/Makefile        \
-#	lib/roken/Makefile      \
-#	lib/sl/Makefile         \
-#	lib/vers/Makefile       \
-#	kuser/Makefile          \
-#	kpasswd/Makefile        \
-#	kadmin/Makefile         \
-#	admin/Makefile          \
-#	kcm/Makefile            \
-#	kdc/Makefile            \
-#	appl/Makefile           \
-#	appl/afsutil/Makefile       \
-#	appl/ftp/Makefile       \
-#	appl/ftp/common/Makefile    \
-#	appl/ftp/ftp/Makefile       \
-#	appl/ftp/ftpd/Makefile      \
-#	appl/kx/Makefile        \
-#	appl/login/Makefile     \
-#	appl/otp/Makefile       \
-#	appl/popper/Makefile        \
-#	appl/push/Makefile      \
-#	appl/rsh/Makefile       \
-#	appl/rcp/Makefile       \
-#	appl/su/Makefile        \
-#	appl/xnlock/Makefile        \
-#	appl/telnet/Makefile        \
-#	appl/telnet/libtelnet/Makefile  \
-#	appl/telnet/telnet/Makefile \
-#	appl/telnet/telnetd/Makefile    \
-#	appl/test/Makefile      \
-#	appl/kf/Makefile        \
-#	appl/dceutils/Makefile      \
-#	doc/Makefile            \
-#	tools/Makefile          \
-#)
-
 AC_CONFIG_FILES(Makefile 		\
 	include/Makefile		\
 	lib/Makefile			\
