@@ -1947,9 +1947,9 @@ dolog(struct sockaddr *sa, int len)
 void
 dologout(int status)
 {
+    int pamstatus;
     transflag = 0;
     urgflag = 0;
-    int pamstatus;
     if (logged_in) {
 	seteuid((uid_t)0);
 	ftpd_logwtmp(ttyline, "", "");
