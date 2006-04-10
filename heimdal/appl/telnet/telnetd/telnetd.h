@@ -191,9 +191,6 @@ struct hostent  *gethostbyname(const char *);
 #define BINDIR "/usr/athena/bin"
 #endif
 
-#undef _PATH_LOGIN
-#define _PATH_LOGIN	BINDIR "/login"
-
 /* fallbacks */
 
 #ifndef _PATH_DEV
