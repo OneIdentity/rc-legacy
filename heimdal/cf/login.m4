@@ -6,8 +6,7 @@ AC_DEFUN([LOGIN_PATH],
 	AC_PATH_PROG([LOGIN], [login], [not-found])
 
 	if test "$LOGIN" = "not-found"; then
-	    echo 'Cannot find login! Failure!'
-	    exit 1
+	    AC_MSG_ERROR([cannot find login])
 	fi
 
 	AC_DEFINE_UNQUOTED(_PATH_LOGIN, $LOGIN, Path to the login command)

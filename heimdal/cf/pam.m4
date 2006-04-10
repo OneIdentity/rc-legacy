@@ -8,8 +8,7 @@ AC_DEFUN([LIB_PAM],
 	    AC_DEFINE(HAVE_LIBPAM,[],"PAM libraries")
 	],
 	[
-	    echo "PAM not found, quitting."
-	    exit 1
+	   AC_MSG_ERROR([cannot find PAM])
 	]
     )
     ]
