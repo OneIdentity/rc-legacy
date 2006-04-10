@@ -14,8 +14,12 @@ cd $CURDIR
 if [ -f /etc/debian_version ]; then
 	RPMDIR=/usr/src/rpm
 else
-	echo "Unknown platform, can't set RPMDIR"
-	exit 1
+	if [ -f /etc/redhat-release ]; then
+		RPMDIR=/usr/src/redhat
+	else
+		echo "Unknown platform, can't set RPMDIR"
+		exit 1
+	fi
 fi
 
 cp ../$NAME-$VERSION.tar.gz $RPMDIR/SOURCES
