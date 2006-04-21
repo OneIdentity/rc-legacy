@@ -1,7 +1,7 @@
 Name: vas-apps
 Vendor: Quest Software, Inc.
 Version: @[VERSION]
-Release: 1
+Release: 2
 License: BSD
 Summary: VAS-enabled traditional Unix networking tools.
 URL: http://rc.vintela.com/topics/vas-apps/
@@ -14,10 +14,6 @@ Requires: libvas.so.4
 %description
 VAS-enabled traditional Unix networking tools, including
 rsh, rcp, telnet, ftp, rshd, telnetd, and ftpd.
-
-%package dev
-Summary: VAS-enabled traditional Unix networking tools, development files.
-Group: Development/Libraries
 
 %package clients
 Summary: VAS-enabled traditional Unix networking clients.
@@ -34,11 +30,6 @@ rsh, rcp, telnet and ftp.
 %description servers
 VAS-enabled traditional Unix networking servers, including
 rshd, telnetd and ftpd.
-
-%description dev
-Static libraries from the vas_apps packages, including
-des, editline, and roken.
-Header files and manpages are also included.
 
 %define _prefix /opt/quest
 %define _sysconfdir /etc%{_prefix}
@@ -65,11 +56,6 @@ make install DESTDIR=$RPM_BUILD_ROOT
 
 
 %files clients
-# Directives to keep in mind:
-# %doc
-# %config
-# %dir (makes directory owned by pkg. otherwise a dir is included as well as all its contents.)
-# %defattr default attribs
 %defattr(0755,root,root)
 %{_bindir}/ftp
 %{_bindir}/rcp
@@ -77,9 +63,6 @@ make install DESTDIR=$RPM_BUILD_ROOT
 %{_bindir}/telnet
 
 %defattr(0644,root,root)
-%doc %{_mandir}/cat1/ftp.1
-%doc %{_mandir}/cat1/rsh.1
-%doc %{_mandir}/cat1/telnet.1
 %doc %{_mandir}/man1/ftp.1
 %doc %{_mandir}/man1/rsh.1
 %doc %{_mandir}/man1/telnet.1
@@ -91,91 +74,7 @@ make install DESTDIR=$RPM_BUILD_ROOT
 %{_libexecdir}/telnetd
 
 %defattr(0644,root,root)
-%doc %{_mandir}/cat5/ftpusers.5
-%doc %{_mandir}/cat8/ftpd.8
-%doc %{_mandir}/cat8/rshd.8
-%doc %{_mandir}/cat8/telnetd.8
 %doc %{_mandir}/man5/ftpusers.5
 %doc %{_mandir}/man8/ftpd.8
 %doc %{_mandir}/man8/rshd.8
 %doc %{_mandir}/man8/telnetd.8
-
-%files dev
-%defattr(0755,root,root)
-%{_libdir}/libdes.a
-%{_libdir}/libdes.la
-%{_libdir}/libeditline.a
-%{_libdir}/libeditline.la
-%{_libdir}/libroken.a
-%{_libdir}/libroken.la
-
-%defattr(0644,root,root)
-%{_includedir}/aes.h
-%{_includedir}/base64.h
-%{_includedir}/des.h
-%{_includedir}/editline.h
-%{_includedir}/fnmatch.h
-%{_includedir}/getarg.h
-%{_includedir}/hex.h
-%{_includedir}/krb5-types.h
-%{_includedir}/md4.h
-%{_includedir}/md5.h
-%{_includedir}/parse_bytes.h
-%{_includedir}/parse_time.h
-%{_includedir}/parse_units.h
-%{_includedir}/rc2.h
-%{_includedir}/rc4.h
-%{_includedir}/resolve.h
-%{_includedir}/roken-common.h
-%{_includedir}/roken.h
-%{_includedir}/rtbl.h
-%{_includedir}/sha.h
-%{_includedir}/vis.h
-%{_includedir}/xdbm.h
-
-%doc %{_mandir}/cat3/arg_printusage.3
-%doc %{_mandir}/cat3/editline.3
-%doc %{_mandir}/cat3/getarg.3
-%doc %{_mandir}/cat3/parse_time.3
-%doc %{_mandir}/cat3/print_time_table.3
-%doc %{_mandir}/cat3/rtbl.3
-%doc %{_mandir}/cat3/rtbl_add_column.3
-%doc %{_mandir}/cat3/rtbl_add_column_by_id.3
-%doc %{_mandir}/cat3/rtbl_add_column_entry.3
-%doc %{_mandir}/cat3/rtbl_add_column_entry_by_id.3
-%doc %{_mandir}/cat3/rtbl_create.3
-%doc %{_mandir}/cat3/rtbl_destroy.3
-%doc %{_mandir}/cat3/rtbl_format.3
-%doc %{_mandir}/cat3/rtbl_get_flags.3
-%doc %{_mandir}/cat3/rtbl_new_row.3
-%doc %{_mandir}/cat3/rtbl_set_column_affix_by_id.3
-%doc %{_mandir}/cat3/rtbl_set_column_prefix.3
-%doc %{_mandir}/cat3/rtbl_set_flags.3
-%doc %{_mandir}/cat3/rtbl_set_prefix.3
-%doc %{_mandir}/cat3/rtbl_set_separator.3
-%doc %{_mandir}/cat3/unparse_time.3
-%doc %{_mandir}/cat3/unparse_time_approx.3
-
-%doc %{_mandir}/man3/arg_printusage.3
-%doc %{_mandir}/man3/editline.3
-%doc %{_mandir}/man3/getarg.3
-%doc %{_mandir}/man3/parse_time.3
-%doc %{_mandir}/man3/print_time_table.3
-%doc %{_mandir}/man3/rtbl.3
-%doc %{_mandir}/man3/rtbl_add_column.3
-%doc %{_mandir}/man3/rtbl_add_column_by_id.3
-%doc %{_mandir}/man3/rtbl_add_column_entry.3
-%doc %{_mandir}/man3/rtbl_add_column_entry_by_id.3
-%doc %{_mandir}/man3/rtbl_create.3
-%doc %{_mandir}/man3/rtbl_destroy.3
-%doc %{_mandir}/man3/rtbl_format.3
-%doc %{_mandir}/man3/rtbl_get_flags.3
-%doc %{_mandir}/man3/rtbl_new_row.3
-%doc %{_mandir}/man3/rtbl_set_column_affix_by_id.3
-%doc %{_mandir}/man3/rtbl_set_column_prefix.3
-%doc %{_mandir}/man3/rtbl_set_flags.3
-%doc %{_mandir}/man3/rtbl_set_prefix.3
-%doc %{_mandir}/man3/rtbl_set_separator.3
-%doc %{_mandir}/man3/unparse_time.3
-%doc %{_mandir}/man3/unparse_time_approx.3
-
