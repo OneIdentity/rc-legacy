@@ -50,8 +50,8 @@ pkginfo_create "${PWD}/pkginfo.servers.in" pkginfo
 pkgmk -o -r "${OUTPUTDIR}" -d /var/tmp -f "${PWD}/Prototype.clients"
 
 cd /var/tmp
-tar -cf - QSFTvasapps-clients | gzip -9 -c > QSFTvasapps-clients.${PKGVERSION}.${ARCH}.tar.gz
-tar -cf - QSFTvasapps-servers | gzip -9 -c > QSFTvasapps-servers.${PKGVERSION}.${ARCH}.tar.gz
+tar -cf - QSFTvasapps-clients | gzip -9 -c > QSFTvasapps-clients.${PKGVERSION}.${ARCH}.pkg
+tar -cf - QSFTvasapps-servers | gzip -9 -c > QSFTvasapps-servers.${PKGVERSION}.${ARCH}.pkg
 
 test -d "${PACKAGES_DEST}" || mkdir "${PACKAGES_DEST}"
 cp QSFTvasapps-*.${PKGVERSION}.${ARCH}.tar.gz ${PACKAGES_DEST}
