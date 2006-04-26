@@ -1,0 +1,63 @@
+#! /bin/sh
+set -ex
+. ../build.config
+
+PSTAMP=`hostname``date +'%Y%m%d%H%M%S'`
+ARCH=`uname -p`
+PKGVERSION="${VERSION}-${BUILDNO}"
+PWD=`pwd`
+PWD=`dirname ${PWD}/$0`
+BUILDDIR=/var/tmp/vas-apps/build
+# OUTPUTDIR _must_ be the same as the real dir specified in the Prototype files
+OUTPUTDIR=/var/tmp/vas-apps/output
+PACKAGES_DEST="/data/rc/builds/vas-apps/solaris.${ARCH}"
+
+pkginfo_create() {
+    if [ $# -ne 2 ]; then
+	echo 'Wrong number of arguments to pkginfo_create()'
+	return 1
+    fi
+
+    sed \
+	    -e "s/@PSTAMP@/${PSTAMP}/" \
+	    -e "s/@ARCH@/${ARCH}/" \
+	    -e "s/@VERSION@/${PKGVERSION}/" \
+	    $1 > $2
+}
+
+## Begin work
+mkdir -p ${BUILDDIR} ${OUTPUTDIR}
+cd ${BUILDDIR}
+
+gunzip -c "${PWD}/../${NAME}-${VERSION}.tar.gz" | tar -xf -
+cd ${NAME}-${VERSION}
+
+./configure --cache-file=/var/tmp/config.cache --prefix="${OUTPUTDIR}"
+make
+make install
+
+cd ${PWD}
+test -f pkginfo && rm pkginfo
+
+## Servers
+pkginfo_create "${PWD}/pkginfo.clients.in" pkginfo
+
+pkgmk -o -r "${OUTPUTDIR}" -d /var/tmp -f "${PWD}/Prototype.servers"
+
+## Clients
+pkginfo_create "${PWD}/pkginfo.servers.in" pkginfo
+
+pkgmk -o -r "${OUTPUTDIR}" -d /var/tmp -f "${PWD}/Prototype.clients"
+
+cd /var/tmp
+tar -cf - QSFTvasapps-clients | gzip -9 -c > QSFTvasapps-clients.${PKGVERSION}.${ARCH}.tar.gz
+tar -cf - QSFTvasapps-servers | gzip -9 -c > QSFTvasapps-servers.${PKGVERSION}.${ARCH}.tar.gz
+
+test -d "${PACKAGES_DEST}" || mkdir "${PACKAGES_DEST}"
+cp QSFTvasapps-*.${PKGVERSION}.${ARCH}.tar.gz ${PACKAGES_DEST}
+
+echo "Build complete, cleaning up..."
+cd "${PWD}"
+
+test "x${OUTPUTDIR}" = "x/" || rm -rf ${OUTPUTDIR}
+test "x${BUILDDIR}" = "x/" || rm -rf ${BUILDDIR}
