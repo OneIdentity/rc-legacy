@@ -154,8 +154,7 @@ calc (struct md4 *m, u_int32_t *data)
  * From `Performance analysis of MD5' by Joseph D. Touch <touch@isi.edu>
  */
 
-#if defined(WORDS_BIGENDIAN)
-static inline u_int32_t
+static u_int32_t
 swap_u_int32_t (u_int32_t t)
 {
   u_int32_t temp1, temp2;
@@ -167,7 +166,6 @@ swap_u_int32_t (u_int32_t t)
   temp1 <<= 8;
   return temp1 | temp2;
 }
-#endif
 
 struct x32{
   unsigned int a:32;

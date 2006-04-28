@@ -179,7 +179,7 @@ calc (struct md5 *m, u_int32_t *data)
  */
 
 #if defined(WORDS_BIGENDIAN)
-static inline u_int32_t
+static u_int32_t
 swap_u_int32_t (u_int32_t t)
 {
   u_int32_t temp1, temp2;
