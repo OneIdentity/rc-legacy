@@ -287,7 +287,7 @@ main(int argc, char **argv)
 	krb_set_tkt_string(tkfile);
 #endif
     }
-#if defined(KRB4) || defined(KRB5)
+#if defined(USE_AFS) && (defined(KRB4) || defined(KRB5))
     if(k_hasafs())
 	k_setpag();
 #endif
@@ -923,9 +923,11 @@ krb5_verify(struct passwd *pwd, char *passwd)
                          1,
                          NULL);
   krb5_free_principal(context, princ);
+#if defined(USE_AFS)
   if (k_hasafs()) {
       krb5_afslog_uid_home(context, id,NULL, NULL,pwd->pw_uid, pwd->pw_dir);
   }
+#endif
   krb5_cc_destroy(context, id);
   krb5_free_context (context);
   if(ret) 
@@ -973,9 +975,11 @@ pass(char *passwd)
 						   KRB_VERIFY_SECURE, NULL);
 			if (rval == KSUCCESS ) {
 			    chown (tkt_string(), pw->pw_uid, pw->pw_gid);
+#if defined(USE_AFS)
 			    if(k_hasafs())
 				krb_afslog(0, 0);
 			}
+#endif
 		    }
 #endif
 		    if (rval)

@@ -385,8 +385,10 @@ afslog(const char *cell)
 void
 afsunlog(void)
 {
+#if defined(USE_AFS)
     if(k_hasafs())
 	k_unlog();
+#endif
 }
 
 #else
