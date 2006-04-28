@@ -368,7 +368,9 @@ afslog(const char *cell)
 		krb5_free_context(context);
 	}
 	if (ret == 0) {
+#if defined(USE_AFS)
 	    krb5_afslog(context, id, cell, 0);
+#endif
 	    krb5_cc_close (context, id);
 	    krb5_free_context (context);
 	}
