@@ -1,0 +1,107 @@
+vendor
+  tag Quest
+  title "Quest Software, Inc."
+  description "http://www.quest.com/"
+end
+
+product
+  tag @NAME@
+  title "@LONG_NAME@"
+  description "Traditional Unix networking apps; http://rc.vintela.com/topics/vas-apps/"
+  revision "@VERSION@"
+  architecture S700/S800_HPUX_11
+  os_name HP-UX
+  os_release ?.11.*
+  os_version ?
+  directory /
+
+  # TODO
+#  checkinstall @dest@/checkinstall
+#  postinstall @dest@/postinstall
+#  preremove @dest@/preremove
+
+  subproduct
+    tag servers
+    title "Servers"
+    contents telnetd ftpd rshd
+  end
+
+  subproduct
+    tag clients
+    title "Clients"
+    contents telnet rsh ftp
+  end
+
+  fileset
+    tag telnetd
+    title "TELNET server"
+    file_permissions -u 0222 -o root -g sys
+
+    directory @dest@/libexec=/opt/quest/libexec
+      file -m 0755 telnetd
+    directory @dest@/man/man8=/opt/quest/man
+      file telnetd.8
+  end
+
+  fileset
+    tag ftpd
+    title "FTP server"
+    file_permissions -u 0222 -o root -g sys
+
+    directory @dest@/libexec=/opt/quest/libexec
+      file -m 0755 ftpd
+    directory @dest@/man/man8=/opt/quest/man/man8
+      file ftpd.8
+    directory @dest@/man/man5=/opt/quest/man/man5
+      file ftpusers.5
+  end
+
+  fileset
+    tag rshd
+    title "Remote shell server"
+
+    file_permissions -u 0222 -o root -g sys
+
+    directory @dest@/libexec=/opt/quest/libexec
+      file -m 0755 rshd
+    directory @dest@/man/man8=/opt/quest/man/man8
+      file rshd.8
+  end
+
+  fileset
+    tag telnet
+    title "TELNET (client)"
+    file_permissions -u 0222 -o root -g sys
+
+    directory @dest@/bin=/opt/quest/bin
+      file -m 0755 telnet
+    directory @dest@/man/man1=/opt/quest/man
+      file telnet.1
+  end
+
+  fileset
+    tag rsh
+    title "Remote shell and remote copy (clients)"
+    file_permissions -u 0222 -o root -g sys
+
+    directory @dest@/bin=/opt/quest/bin
+      file -m 0755 rsh
+      file -m 0755 rcp
+    directory @dest@/man/man1=/opt/quest/man/man1
+      file rsh.1
+# TODO: Install rcp.1 (needs to be installed by make 'install' target first)
+#      file rcp.1
+  end
+
+  fileset
+    tag ftp
+    title "File Transfer Protocol (FTP) client"
+    file_permissions -u 0222 -o root -g sys
+
+    directory @dest@/bin=/opt/quest/bin
+      file -m 0755 ftp
+    directory @dest@/man/man1=/opt/quest/man/man1
+      file ftp.1
+  end
+
+end product

@@ -1,0 +1,52 @@
+#! /bin/sh
+set -ex
+
+SCRIPTDIR=`pwd`
+SCRIPTDIR=`dirname ${SCRIPTDIR}/$0`
+
+. ../build.config
+
+BUILDNO=1
+
+VERSION=${VERSION}-${BUILDNO}
+
+CC='/usr/local/bin/ccache /usr/bin/cc'
+CFLAGS="$CFLAGS +DAportable"
+export CC CFLAGS
+BUILDDIR=/var/tmp/vas-apps/build
+DESTDIR=/var/tmp/vas-apps/output
+PKGDIR=/data/rc/builds/vas-apps/hpux
+
+mkdir -p "$BUILDDIR" "$DESTDIR" || true
+
+sed \
+	-e "s#@dest@#${DESTDIR}#g" \
+	-e "s/@NAME@/${NAME}/g" \
+	-e "s/@LONG_NAME@/${LONG_NAME}/g" \
+	-e "s/@VERSION@/${VERSION}/g" \
+	< vas-apps.psf.in > $BUILDDIR/vas-apps.psf
+
+# decompress
+cd "$BUILDDIR"
+gunzip -c "$SCRIPTDIR/../$NAME-$VERSION.tar.gz" | tar xf -
+
+# configure
+cd "$NAME-$VERSION"
+./configure --prefix=$DESTDIR
+
+# build
+make
+
+# install
+make install
+
+# package
+VERSION=${VERSION}-${BUILDNO}
+/usr/local/bin/sudo swpackage -s $BUILDDIR/vas-apps.psf -x run_as_superuser=false -x media_type=tape @ $DESTDIR/$NAME-$VERSION.depot
+
+test -d "$PKGDIR" || mkdir -p "$PKGDIR"
+cp $DESTDIR/$NAME-$VERSION.depot $PKGDIR
+
+# cleanup
+cd $SCRIPTDIR
+rm -rf "$BUILDDIR" "$DESTDIR"
