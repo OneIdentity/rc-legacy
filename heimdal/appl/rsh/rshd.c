@@ -39,7 +39,14 @@ login_access( struct passwd *user, char *from);
 
 enum auth_method auth_method;
 
-#include <pamcheck.h>
+#ifdef HAVE_LIBPAM
+# include <pamcheck.h>
+#else
+# ifdef HAVE_LAM
+#   include <usersec.h>
+#   include <login.h>
+# endif
+#endif
 
 #ifdef KRB5
 krb5_context context;
@@ -815,6 +822,7 @@ doit (void)
     }
 #endif
 
+#ifdef HAVE_LIBPAM
     {
 	pam_handle_t* pamhandle;
 	struct pam_conv pamconv;
@@ -832,6 +840,17 @@ doit (void)
 	if (status != PAM_SUCCESS)
 	    fatal(s, NULL, "Permission denied (by PAM).");
     }
+#else /* HAVE_LIBPAM */
+# ifdef HAVE_LAM
+    {
+	char* message = NULL;
+	if (0 != loginrestrictions(server_user, S_RLOGIN, NULL, &message))
+	    fatal(s, "loginrestrictions", "Permission denied: %s", message);
+	if (message)
+	    free(message);
+    }
+# endif
+#endif /* HAVE_LIBPAM */
 
 #ifdef HAVE_SETLOGIN
     if (setlogin(pwd->pw_name) < 0)

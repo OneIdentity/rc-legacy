@@ -39,7 +39,14 @@
 #include "getarg.h"
 #include <version.h> /* for heimdal_version */
 
-#include <pamcheck.h>
+#ifdef HAVE_LIBPAM
+# include <pamcheck.h>
+#else
+# ifdef HAVE_LAM
+#  include <usersec.h>
+#  include <login.h>
+# endif
+#endif
 
 #define WHINGE(str) syslog(LOG_FTP | LOG_WARNING, str)
 
@@ -141,6 +148,7 @@ static void	 ack (char *);
 static void	 myoob (int);
 static int	 handleoobcmd(void);
 static int	 checkuser (char *, char *);
+static int	 start_session (const char *);
 static int	 checkaccess (char *);
 static FILE	*dataconn (const char *, off_t, const char *);
 static void	 dolog (struct sockaddr *sa, int len);
@@ -152,7 +160,9 @@ static int	 receive_data (FILE *, FILE *);
 static void	 send_data (FILE *, FILE *);
 static struct passwd * sgetpwnam (char *);
 
+#ifdef HAVE_LIBPAM
 pam_handle_t* pamhandle = NULL;
+#endif
 
 static char *
 curdir(void)
@@ -690,18 +700,21 @@ match(const char *pattern, const char *string)
     return fnmatch(pattern, string, FNM_NOESCAPE);
 }
 
+#define ALLOWED		0
+#define	NOT_ALLOWED	1
+
 static int
 checkaccess(char *name)
 {
-#define ALLOWED		0
-#define	NOT_ALLOWED	1
     FILE *fd;
     int allowed = ALLOWED;
     char *user, *perm, line[BUFSIZ];
     char *foo;
+    
+#ifdef HAVE_LIBPAM
     int pamstatus;
     struct pam_conv pamconv;
-    
+
     /* check pam before ftpusers, mostly to avoid messing with the
      * existing code.
      * This code is horrible. It's times like this I wish for C++.
@@ -729,6 +742,20 @@ checkaccess(char *name)
 	pamhandle = NULL;
 	return NOT_ALLOWED; /* no need to check ftpusers */
     }
+#else
+# ifdef HAVE_LAM
+    {
+	char* message = NULL;
+	if (0 == loginrestrictions(name, S_RLOGIN, 0, &message))
+	    allowed = ALLOWED;
+	else
+	    allowed = NOT_ALLOWED;
+
+	if (message)
+	    free(message);
+    }
+# endif /* HAVE_LAM */
+#endif /* HAVE_LIBPAM */
 
     fd = fopen(_PATH_FTPUSERS, "r");
     
@@ -751,18 +778,38 @@ checkaccess(char *name)
     }
     fclose(fd);
 
-    if (allowed == ALLOWED) { /* PAM and ftpusers indicate it's OK */
-	if (PAM_SUCCESS != pam_open_session(pamhandle, PAM_SILENT)) {
-	    WHINGE("pam_open_session() failed");
-	    allowed = NOT_ALLOWED;
-	    if (PAM_SUCCESS != pam_end(pamhandle, pamstatus))
-		WHINGE("pam_end() failed");
-	    pamhandle = NULL;
-	}
-    }
+    if (allowed == ALLOWED)
+	allowed = start_session(user);
 
     return allowed;
 }
+
+static int start_session(const char* user) {
+    int allowed = ALLOWED;
+
+#ifdef HAVE_LIBPAM
+    int pamstatus;
+
+    if (PAM_SUCCESS != pam_open_session(pamhandle, PAM_SILENT)) {
+	WHINGE("pam_open_session() failed");
+	allowed = NOT_ALLOWED;
+	if (PAM_SUCCESS != pam_end(pamhandle, pamstatus))
+	    WHINGE("pam_end() failed");
+	pamhandle = NULL;
+    }
+
+#else
+# ifdef HAVE_LAM
+
+    if (0 != loginsuccess(user, remotehost, ttyline))
+	allowed = NOT_ALLOWED;
+    
+# endif /* HAVE_LAM */
+#endif /* HAVE_LIBPAM */
+
+    return allowed;
+}
+
 #undef	ALLOWED
 #undef	NOT_ALLOWED
 
@@ -1960,6 +2007,8 @@ dologout(int status)
 #ifdef KRB4
 	cond_kdestroy();
 #endif
+
+#ifdef HAVE_LIBPAM
 	if (pamhandle) {
 	    if (PAM_SUCCESS != (pamstatus = pam_close_session(pamhandle, PAM_SILENT)))
 		WHINGE("pam_close_session() failed");
@@ -1968,6 +2017,7 @@ dologout(int status)
 	} else {
 	    syslog(LOG_FTP | LOG_DEBUG, "Programmer error: pamhandle is NULL on logout.");
 	}
+#endif /* HAVE_LIBPAM */
     }
     /* beware of flushing buffers after a SIGPIPE */
 #ifdef XXX

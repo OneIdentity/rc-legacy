@@ -6,9 +6,6 @@ AC_DEFUN([LIB_PAM],
 	[
 	    LIBS="-lpam ${LIBS}"
 	    AC_DEFINE(HAVE_LIBPAM,[],"PAM libraries")
-	],
-	[
-	   AC_MSG_ERROR([cannot find PAM])
 	]
     )
     ]
