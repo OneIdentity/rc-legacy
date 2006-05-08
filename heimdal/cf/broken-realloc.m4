@@ -4,7 +4,7 @@ dnl
 dnl Test for realloc that doesn't handle NULL as first parameter
 dnl
 AC_DEFUN([rk_BROKEN_REALLOC], [
-AC_CACHE_CHECK(if realloc if broken, ac_cv_func_realloc_broken, [
+AC_CACHE_CHECK(if realloc is broken, ac_cv_func_realloc_broken, [
 ac_cv_func_realloc_broken=no
 AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #include <stddef.h>
