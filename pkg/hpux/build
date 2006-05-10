@@ -15,7 +15,7 @@ CFLAGS="$CFLAGS +DAportable"
 export CC CFLAGS
 BUILDDIR=/var/tmp/vas-apps/build
 DESTDIR=/var/tmp/vas-apps/output
-PKGDIR=/data/rc/builds/vas-apps/hpux
+PKGDIR="$PKGDIR/hpux"
 
 mkdir -p "$BUILDDIR" "$DESTDIR" || true
 
