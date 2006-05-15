@@ -1,0 +1,11 @@
+man
+man/man8
+man/man8/rshd.8
+man/man8/telnetd.8
+man/man8/ftpd.8
+man/man5
+man/man5/ftpusers.5
+libexec
+libexec/rshd
+libexec/telnetd
+libexec/ftpd

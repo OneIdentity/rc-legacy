@@ -1,0 +1,10 @@
+man
+man/man1
+man/man1/rsh.1
+man/man1/telnet.1
+man/man1/ftp.1
+bin
+bin/rsh
+bin/rcp
+bin/telnet
+bin/ftp
