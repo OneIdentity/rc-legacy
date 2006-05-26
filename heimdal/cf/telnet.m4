@@ -6,7 +6,7 @@ dnl stuff used by telnet
 AC_DEFUN([rk_TELNET],[
 AC_DEFINE(AUTHENTICATION, 1, 
 	[Define if you want authentication support in telnet.])dnl
-if false; then
+if true; then
 AC_DEFINE(ENCRYPTION, 1,
 	[Define if you want encryption support in telnet.])dnl
 AC_DEFINE(DES_ENCRYPTION, 1,

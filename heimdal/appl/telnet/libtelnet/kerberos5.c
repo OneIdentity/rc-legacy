@@ -244,7 +244,7 @@ kerberos5_send(char *name, Authenticator *ap)
 	return(0);
     }
 
-/*    krb5_auth_con_setkeytype (context, auth_context, KEYTYPE_DES); */
+    krb5_auth_con_setkeytype (context, auth_context, KEYTYPE_ARCFOUR);
 
     foo[0] = ap->type;
     foo[1] = ap->way;
@@ -494,10 +494,11 @@ kerberos5_is(Authenticator *ap, unsigned char *data, int cnt)
 			UserNameRequested ? UserNameRequested : "<unknown>",
 			RemoteHostName ? RemoteHostName : "<unknown>");
 
-#ifdef ENCRYPTION /* check this. -tedp */
+#ifdef ENCRYPTION
 	    if(key_block->keytype == ETYPE_DES_CBC_MD5 ||
 	       key_block->keytype == ETYPE_DES_CBC_MD4 ||
-	       key_block->keytype == ETYPE_DES_CBC_CRC) {
+	       key_block->keytype == ETYPE_DES_CBC_CRC ||
+	       key_block->keytype == ETYPE_ARCFOUR_HMAC_MD5) {
 		Session_Key skey;
 
 		skey.type = SK_DES;
