@@ -641,7 +641,7 @@ kerberos5_reply(Authenticator *ap, unsigned char *data, int cnt)
 	    return;
 	}
 	      
-#ifdef ENCRYPTION /* check this. -tedp */
+#ifdef ENCRYPTION
 	Session_Key skey;
 	skey.type = SK_DES;
 	skey.length = 8;
