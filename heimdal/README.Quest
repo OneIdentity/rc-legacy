@@ -7,10 +7,6 @@ The following caveats apply to the current release of vas-apps.
 2. rsh should only be used for executing single commands. For an interactive
    session, use telnet instead.
 
-3. Encryption with telnet is disabled at the moment because it appears to be
-   broken. If you really need an encrypted shell, spawn a remote shell with
-   rsh (eg. `rsh <host> bash`) or use ssh.
-
 
 Project home page: http://rc.vintela.com/topics/vas-apps/
 
