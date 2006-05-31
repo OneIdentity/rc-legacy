@@ -1,11 +1,19 @@
 The following caveats apply to the current release of vas-apps.
 
-1. Users should be aware that an encrypted rsh connection does _not_ encrypt
+RSH
+   Users should be aware that an encrypted rsh connection does _not_ encrypt
    the initial command, only the data transferred once the session has been
    set up.
 
-2. rsh should only be used for executing single commands. For an interactive
+   rsh should only be used for executing single commands. For an interactive
    session, use telnet instead.
+
+TELNET
+   Encrypted telnet to standard Heimdal/MIT telnet servers will fail if you have
+   arcfour kerberos tickets (see `vastool klist -v`). As of 2006-05,
+   discussions are underway to have this corrected. The symptom of this is
+   garbled output. Encrypted telnet works properly when both the client and
+   server are from this VAS Apps release.
 
 
 Project home page: http://rc.vintela.com/topics/vas-apps/
