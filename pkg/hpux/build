@@ -8,8 +8,6 @@ SCRIPTDIR=`dirname ${SCRIPTDIR}/$0`
 
 BUILDNO=1
 
-VERSION=${VERSION}-${BUILDNO}
-
 CC='/usr/local/bin/ccache /usr/bin/cc'
 CFLAGS="$CFLAGS +DAportable"
 export CC CFLAGS
@@ -23,7 +21,7 @@ sed \
 	-e "s#@dest@#${DESTDIR}#g" \
 	-e "s/@NAME@/${NAME}/g" \
 	-e "s/@LONG_NAME@/${LONG_NAME}/g" \
-	-e "s/@VERSION@/${VERSION}/g" \
+	-e "s/@VERSION@/${VERSION}-${BUILDNO}/g" \
 	< vas-apps.psf.in > $BUILDDIR/vas-apps.psf
 
 # decompress
