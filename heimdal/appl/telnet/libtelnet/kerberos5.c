@@ -615,6 +615,9 @@ kerberos5_reply(Authenticator *ap, unsigned char *data, int cnt)
     case KRB_ACCEPT: {
 	krb5_error_code ret;
 	krb5_keyblock *keyblock;
+#ifdef ENCRYPTION
+	Session_Key skey;
+#endif
 	
 	if ((ap->way & AUTH_HOW_MASK) == AUTH_HOW_MUTUAL &&
 	    !mutual_complete) {
@@ -642,7 +645,6 @@ kerberos5_reply(Authenticator *ap, unsigned char *data, int cnt)
 	}
 	      
 #ifdef ENCRYPTION
-	Session_Key skey;
 	skey.type = SK_DES;
 	skey.length = 8;
 	skey.data = keyblock->keyvalue.data;
