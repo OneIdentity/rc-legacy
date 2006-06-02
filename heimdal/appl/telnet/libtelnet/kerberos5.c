@@ -244,7 +244,8 @@ kerberos5_send(char *name, Authenticator *ap)
 	return(0);
     }
 
-    krb5_auth_con_setkeytype (context, auth_context, KEYTYPE_ARCFOUR);
+/* This appears to be unnecessary with libvas. */
+/*    krb5_auth_con_setkeytype (context, auth_context, KEYTYPE_ARCFOUR);*/
 
     foo[0] = ap->type;
     foo[1] = ap->way;
