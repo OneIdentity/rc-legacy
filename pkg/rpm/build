@@ -17,14 +17,19 @@ else
 	if [ -f /etc/redhat-release ]; then
 		RPMDIR=/usr/src/redhat
 	else
-		echo "Unknown platform, can't set RPMDIR"
-		exit 1
+		if [ -f /etc/SuSE-release ]; then
+			RPMDIR=/usr/src/packages
+		else
+			echo "Unknown platform, can't set RPMDIR"
+			exit 1
+		fi
 	fi
 fi
 
 cp ../$NAME-$VERSION.tar.gz $RPMDIR/SOURCES
 
-sed -e "s/@\[VERSION]/$VERSION/g" < vas-apps.spec.in > vas-apps.spec
+sed -e "s/@\[VERSION]/$VERSION/g" \
+    -e "s/@\[BUILDNO]/$BUILDNO/g" < vas-apps.spec.in > vas-apps.spec
 
 # TODO: Include archive signing
 rpmbuild --timecheck 3600 --buildroot /var/tmp/build-vas_apps/buildroot -ba vas-apps.spec

@@ -14,6 +14,7 @@ export CC CFLAGS
 BUILDDIR=/var/tmp/vas-apps/build
 DESTDIR=/var/tmp/vas-apps/output
 PKGDIR="$PKGDIR/hpux"
+PREFIX=/opt/quest
 
 mkdir -p "$BUILDDIR" "$DESTDIR" || true
 
@@ -30,7 +31,7 @@ gunzip -c "$SCRIPTDIR/../$NAME-$VERSION.tar.gz" | tar xf -
 
 # configure
 cd "$NAME-$VERSION"
-./configure --prefix=$DESTDIR
+./configure --cache-file=/var/tmp/config.cache --prefix=$DESTDIR --mandir=$DESTDIR/man
 
 # build
 make
@@ -40,9 +41,9 @@ make install
 
 # package
 VERSION=${VERSION}-${BUILDNO}
-/usr/local/bin/sudo swpackage -s $BUILDDIR/vas-apps.psf -x run_as_superuser=false -x media_type=tape @ $DESTDIR/$NAME-$VERSION.depot
+/usr/local/bin/sudo /usr/sbin/swpackage -s $BUILDDIR/vas-apps.psf -x run_as_superuser=false -x media_type=tape @ $DESTDIR/$NAME-$VERSION.depot
 
-test -d "$PKGDIR" || mkdir -p "$PKGDIR"
+test -d $PKGDIR || mkdir -p $PKGDIR
 cp $DESTDIR/$NAME-$VERSION.depot $PKGDIR
 
 # cleanup

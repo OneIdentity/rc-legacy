@@ -1,7 +1,7 @@
 Name: vas-apps
 Vendor: Quest Software, Inc.
 Version: @[VERSION]
-Release: 2
+Release: @[BUILDNO]
 License: BSD
 Summary: VAS-enabled traditional Unix networking tools.
 URL: http://rc.vintela.com/topics/vas-apps/
@@ -30,6 +30,12 @@ rsh, rcp, telnet and ftp.
 %description servers
 VAS-enabled traditional Unix networking servers, including
 rshd, telnetd and ftpd.
+
+# XXX This is a hack to ignore the unpackaged files that are installed
+# into the includes and man directories (and similar). A warning will
+# still be printed, but the long-term correct fix is to stop the install
+# target installing these useless files. TODO ;)
+%define _unpackaged_files_terminate_build 0
 
 %define _prefix /opt/quest
 %define _sysconfdir /etc%{_prefix}

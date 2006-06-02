@@ -11,6 +11,9 @@ BUILDDIR=/var/tmp/vas-apps/build
 # OUTPUTDIR _must_ be the same as the real dir specified in the Prototype files
 OUTPUTDIR=/var/tmp/vas-apps/output
 PACKAGES_DEST="/data/rc/builds/vas-apps/solaris.${ARCH}"
+CC=/usr/local/bin/gcc
+PATH=/usr/local/bin:$PATH
+export CC PATH
 
 pkginfo_create() {
     if [ $# -ne 2 ]; then
@@ -32,7 +35,7 @@ cd ${BUILDDIR}
 gunzip -c "${PWD}/../${NAME}-${VERSION}.tar.gz" | tar -xf -
 cd ${NAME}-${VERSION}
 
-./configure --cache-file=/var/tmp/config.cache --prefix="${OUTPUTDIR}"
+./configure --cache-file=/var/tmp/config.cache --prefix="${OUTPUTDIR}" --mandir=$OUTPUTDIR/man
 make
 make install
 
@@ -40,12 +43,12 @@ cd ${PWD}
 test -f pkginfo && rm pkginfo
 
 ## Servers
-pkginfo_create "${PWD}/pkginfo.clients.in" pkginfo
+pkginfo_create ${PWD}/pkginfo.clients.in pkginfo
 
 pkgmk -o -r "${OUTPUTDIR}" -d /var/tmp -f "${PWD}/Prototype.servers"
 
 ## Clients
-pkginfo_create "${PWD}/pkginfo.servers.in" pkginfo
+pkginfo_create ${PWD}/pkginfo.servers.in pkginfo
 
 pkgmk -o -r "${OUTPUTDIR}" -d /var/tmp -f "${PWD}/Prototype.clients"
 
@@ -54,7 +57,7 @@ tar -cf - QSFTvasapps-clients | gzip -9 -c > QSFTvasapps-clients.${PKGVERSION}.$
 tar -cf - QSFTvasapps-servers | gzip -9 -c > QSFTvasapps-servers.${PKGVERSION}.${ARCH}.pkg
 
 test -d "${PACKAGES_DEST}" || mkdir "${PACKAGES_DEST}"
-cp QSFTvasapps-*.${PKGVERSION}.${ARCH}.tar.gz ${PACKAGES_DEST}
+cp QSFTvasapps-*.${PKGVERSION}.${ARCH}.pkg ${PACKAGES_DEST}
 
 echo "Build complete, cleaning up..."
 cd "${PWD}"

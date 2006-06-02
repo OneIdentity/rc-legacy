@@ -44,7 +44,7 @@ gunzip -c $SCRIPTDIR/../*.tar.gz | tar -xf -
 
 # configure
 cd $NAME-$VERSION
-./configure --prefix=$OUTPUTDIR$PREFIX
+./configure --cache-file=/var/tmp/config.cache --prefix=$OUTPUTDIR$PREFIX --sysconfdir=$OUTPUTDIR/etc/opt/quest --mandir=$OUTPUTDIR$PREFIX/man
 
 # build
 make
@@ -143,6 +143,7 @@ echo
 cp $OUTPUTDIR/$NAME-$VERSION-$BUILDNO.bff $PKGDIR
 
 # clean up
-sudo rm -r $BUILDDIR $OUTPUTDIR || true
+cd $SCRIPTDIR
+sudo rm -rf $BUILDDIR $OUTPUTDIR
 
 exit 0
