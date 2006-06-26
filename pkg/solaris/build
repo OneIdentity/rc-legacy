@@ -5,8 +5,8 @@ set -ex
 PSTAMP=`hostname``date +'%Y%m%d%H%M%S'`
 ARCH=`uname -p`
 PKGVERSION="${VERSION}-${BUILDNO}"
-PWD=`pwd`
-PWD=`dirname ${PWD}/$0`
+SCRIPTDIR=`pwd`
+SCRIPTDIR=`dirname ${SCRIPTDIR}/$0`
 BUILDDIR=/var/tmp/vas-apps/build
 # OUTPUTDIR _must_ be the same as the real dir specified in the Prototype files
 OUTPUTDIR=/var/tmp/vas-apps/output
@@ -32,35 +32,35 @@ pkginfo_create() {
 mkdir -p ${BUILDDIR} ${OUTPUTDIR}
 cd ${BUILDDIR}
 
-gunzip -c "${PWD}/../${NAME}-${VERSION}.tar.gz" | tar -xf -
+gunzip -c "${SCRIPTDIR}/../${NAME}-${VERSION}.tar.gz" | tar -xf -
 cd ${NAME}-${VERSION}
 
-./configure --cache-file=/var/tmp/config.cache --prefix="${OUTPUTDIR}" --mandir=$OUTPUTDIR/man
+./configure --cache-file=/var/tmp/config.cache --prefix=/opt/quest --mandir=\${prefix}/man
 make
-make install
+make install DESTDIR="$OUTPUTDIR"
 
-cd ${PWD}
+cd ${SCRIPTDIR}
 test -f pkginfo && rm pkginfo
 
 ## Servers
-pkginfo_create ${PWD}/pkginfo.clients.in pkginfo
+pkginfo_create ${SCRIPTDIR}/pkginfo.clients.in pkginfo
 
-pkgmk -o -r "${OUTPUTDIR}" -d /var/tmp -f "${PWD}/Prototype.servers"
+pkgmk -o -r "${OUTPUTDIR}" -d /var/tmp -f "${SCRIPTDIR}/Prototype.servers"
 
 ## Clients
-pkginfo_create ${PWD}/pkginfo.servers.in pkginfo
+pkginfo_create ${SCRIPTDIR}/pkginfo.servers.in pkginfo
 
-pkgmk -o -r "${OUTPUTDIR}" -d /var/tmp -f "${PWD}/Prototype.clients"
+pkgmk -o -r "${OUTPUTDIR}" -d /var/tmp -f "${SCRIPTDIR}/Prototype.clients"
 
 cd /var/tmp
-tar -cf - QSFTvasapps-clients | gzip -9 -c > QSFTvasapps-clients.${PKGVERSION}.${ARCH}.pkg
-tar -cf - QSFTvasapps-servers | gzip -9 -c > QSFTvasapps-servers.${PKGVERSION}.${ARCH}.pkg
+tar -cf - QSFTvasapps-clients | gzip -9 -c > QSFTvasapps-clients.${PKGVERSION}.${ARCH}.tar.gz
+tar -cf - QSFTvasapps-servers | gzip -9 -c > QSFTvasapps-servers.${PKGVERSION}.${ARCH}.tar.gz
 
 test -d "${PACKAGES_DEST}" || mkdir "${PACKAGES_DEST}"
-cp QSFTvasapps-*.${PKGVERSION}.${ARCH}.pkg ${PACKAGES_DEST}
+cp QSFTvasapps-*.${PKGVERSION}.${ARCH}.tar.gz ${PACKAGES_DEST}
 
 echo "Build complete, cleaning up..."
-cd "${PWD}"
+cd "${SCRIPTDIR}"
 
 test "x${OUTPUTDIR}" = "x/" || rm -rf ${OUTPUTDIR}
 test "x${BUILDDIR}" = "x/" || rm -rf ${BUILDDIR}

@@ -1,12 +1,14 @@
 i pkginfo
-d none man 0755 root bin
-d none man/man8 0755 root bin
-f none man/man8/rshd.8 0644 root bin
-f none man/man8/telnetd.8 0644 root bin
-f none man/man8/ftpd.8 0644 root bin
-d none man/man5 0755 root bin
-f none man/man5/ftpusers.5 0644 root bin
-d none libexec 0755 root bin
-f none libexec/rshd 0755 root bin
-f none libexec/telnetd 0755 root bin
-f none libexec/ftpd 0755 root bin
+d none /opt 0755 root bin
+d none /opt/quest 0755 root bin
+d none /opt/quest/man 0755 root bin
+d none /opt/quest/man/man8 0755 root bin
+f none /opt/quest/man/man8/rshd.8 0644 root bin
+f none /opt/quest/man/man8/telnetd.8 0644 root bin
+f none /opt/quest/man/man8/ftpd.8 0644 root bin
+d none /opt/quest/man/man5 0755 root bin
+f none /opt/quest/man/man5/ftpusers.5 0644 root bin
+d none /opt/quest/libexec 0755 root bin
+f none /opt/quest/libexec/rshd 0755 root bin
+f none /opt/quest/libexec/telnetd 0755 root bin
+f none /opt/quest/libexec/ftpd 0755 root bin
