@@ -43,12 +43,12 @@ cd ${SCRIPTDIR}
 test -f pkginfo && rm pkginfo
 
 ## Servers
-pkginfo_create ${SCRIPTDIR}/pkginfo.clients.in pkginfo
+pkginfo_create ${SCRIPTDIR}/pkginfo.servers.in pkginfo
 
 pkgmk -o -r "${OUTPUTDIR}" -d /var/tmp -f "${SCRIPTDIR}/Prototype.servers"
 
 ## Clients
-pkginfo_create ${SCRIPTDIR}/pkginfo.servers.in pkginfo
+pkginfo_create ${SCRIPTDIR}/pkginfo.clients.in pkginfo
 
 pkgmk -o -r "${OUTPUTDIR}" -d /var/tmp -f "${SCRIPTDIR}/Prototype.clients"
 
