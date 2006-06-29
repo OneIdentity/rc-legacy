@@ -184,7 +184,10 @@ int main( int argc, char *argv[] )
 
 	errno = 0;
         if ((pwent = getpwnam(upn)) == NULL) {
-	    err(1, "getpwnam '%.100s'", upn);
+	    if (errno)
+		err(1, "getpwnam '%.100s'", upn);
+	    else
+		errx(1, "getpwnam '%.100s': not found", upn);
         }
 
         printf("%s\n", pwent->pw_name);
@@ -204,8 +207,12 @@ int main( int argc, char *argv[] )
 	/* Convert '-u uid' into a username */
         if (!nflag) {
 	    errno = 0;
-	    if ((pwent = getpwuid(strtougid(str))) == NULL)
-		err(1, "getpwuid '%.100s'", str);
+	    if ((pwent = getpwuid(strtougid(str))) == NULL) {
+		if (errno)
+		    err(1, "getpwuid '%.100s'", str);
+		else
+		    errx(1, "getpwuid '%.100s': not found", str);
+	    }
             id = pwent->pw_name;
 	} else
             id = str;
@@ -255,7 +262,10 @@ int main( int argc, char *argv[] )
         if (!nflag) {
 	    errno = 0;
 	    if ((grent = getgrgid(strtougid(str))) == NULL)
-		err(1, "getpwgid '%.100s'", str);
+		if (errno)
+		    err(1, "getgrgid '%.100s'", str);
+		else
+		    errx(1, "getgrgid '%.100s': not found", str);
             id = grent->gr_name;
         } else
             id = str;
