@@ -22,14 +22,14 @@
 #include <sys/un.h>
 #include <netinet/in.h>
 #include <stdio.h>
-#include <stdarg.h>
 #include <unistd.h>
 #include <errno.h>
 #include <pwd.h>
 #include <grp.h>
-#include "vas.h"
-#include "ber.h"
-#include "ldap.h"
+
+#include <vas.h>
+#include <ber.h>
+#include <ldap.h>
 
 int debug;
 

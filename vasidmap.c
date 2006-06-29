@@ -14,27 +14,15 @@
 #if HAVE_CONFIG_H
 # include <config.h>
 #endif
+
 #include <errno.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <pwd.h>
 #include <grp.h>
-#include <vas.h>
+#include <err.h>
 
-static void display_usage( void )
-{
-    fprintf(stderr, 
-            "Usage: vasidmap [options] <username|uid|gid|sid>\n"
-	    "       options:\n"
-	    "         -u input is a uid\n"
-            "            -n input is a user name\n"
-	    "         -g input is a gid\n"
-            "            -n input is a group name\n"
-	    "         -s input is a sid (requires -U|-G)\n"
-	    "            -U output the uid\n"
-	    "            -G output the gid\n"
-	    "       default output is the unix username (UPM aware)\n");
-}
+#include <vas.h>
 
 #define INPUT_NAME 0
 #define INPUT_UID 1
@@ -44,298 +32,265 @@ static void display_usage( void )
 #define OUTPUT_UID 1
 #define OUTPUT_GID 2
 
+static void usage(const char *progname);
+
+static void usage(const char *progname)
+{
+    fprintf(stderr, 
+            "Usage: %s [-f] [-ugsnUG] identifier\n"
+	    "  Valid option combinations are:\n"
+            "           account\n"
+            "       -u  uid\n"
+            "       -g  gid\n"
+            "       -un user-name\n"
+            "       -gn group-name\n"
+            "       -sU user-sid\n"
+            "       -sG group-sid\n",
+	    progname);
+}
+
+/* Converts a string into a long, exiting on conversion errors */
+long
+strtougid(const char *s)
+{
+    long id;
+    char *endptr = NULL;
+
+    id = strtol(s, &endptr, 0);
+    errno = 0;
+    if (!*s || *endptr || errno == ERANGE)
+	errx(1, "invalid uid/gid '%.100s'", s);
+
+    return id;
+}
+
 int main( int argc, char *argv[] )
 {
     const char *str = NULL;
     vas_err_t vaserr = 0;
     vas_ctx_t *vasctx = NULL;
     vas_id_t *vasid = NULL;
-    vas_user_t *vasuser = NULL;
-    vas_group_t *vasgrp = NULL;
-    struct passwd *pwent = NULL;
-    struct group *grent = NULL;
-    int input = 0, output = 0, force = 0, name = 0;
+    int input = INPUT_NAME, output = 0, fflag = 0, nflag = 0;
+    int ch, opterror = 0;
+    extern int optind;
+    extern char *optarg;
+    int exitcode = 1;
     
     if( vas_library_version_check( VAS_API_VERSION_MAJOR, 
                                    VAS_API_VERSION_MINOR,
-                                   VAS_API_VERSION_MICRO ) ) {
-        fprintf( stderr, 
-                 "ERROR: Version of VAS API library is too old.  This program needs"
-                 VAS_API_VERSION_STR" or newer.\n");
+                                   VAS_API_VERSION_MICRO ) )
+        errx(1, "Requires " VAS_API_VERSION_STR " or newer");
 
-        vaserr = VAS_ERR_FAILURE;
-        goto FINISHED;
-                  
-    }
-
-    if (argc < 2) {
-        goto OPTERROR;
-    } else {
-        int i;
-
-        str = argv[argc-1];
-        for (i = 1; i < argc-1; i++) {
-	    if (argv[i][0] != '-') {
-                goto OPTERROR; 
-            }
-
-            switch (argv[i][1]) {
+    /* Process command line arguments. */
+    while ((ch = getopt(argc, argv, "fGgnsUu")) != -1)
+	switch (ch) {
             case 'f':
-                force = 1;
+                fflag = 1;			/* force */
                 break;
 
             case 'u':
-                if (input) {
-                    fprintf(stderr, "ERROR: -u -g -s are mutually exclusive options.\n");
-                    goto OPTERROR;
-                }
                 input = INPUT_UID;
                 break;
 
             case 'g':
-                if (input) {
-                    fprintf(stderr, "ERROR: -u -g -s are mutually exclusive options.\n");
-                    goto OPTERROR;
-                }
                 input = INPUT_GID;
                 break;
  
             case 's':
-                if (input) {
-                    fprintf(stderr, "ERROR: -u -g -s are mutually exclusive options.\n");
-                    goto OPTERROR;
-                }
                 input = INPUT_SID;
                 break;
 
             case 'U':
-                if (output) {
-                    fprintf(stderr, "ERROR: -U -G are mutually exclusive options.\n");
-                    goto OPTERROR;
-                }
                 output = OUTPUT_UID;
                 break;
 
             case 'G':
-                if (output) {
-                    fprintf(stderr, "ERROR: -U -G are mutually exclusive options.\n");
-                    goto OPTERROR;
-                }
                 output = OUTPUT_GID;
                 break;
 
-            case 'n':
-                name = 1;
+            case 'n':				/* interpret as name */
+                nflag = 1;
                 break;
 
             default:
-                /* no match throw an error */
-                fprintf(stderr, "ERROR: invalid option [%s]\n", argv[i]);
-                goto OPTERROR;
-            }
+		opterror = 1;
         }
 
-        if ( (name && (input == INPUT_SID)) ||
-             (output && (input != INPUT_SID) ||
-             (input == INPUT_SID) && (!output))
-           ) {
-            fprintf(stderr, "ERROR: invalid option combination\n");
-            goto OPTERROR;
-        }
+    /* Check for option inconsistencies */
+    if (nflag && input == INPUT_SID)
+	opterror = 1;
+    if (output && input != INPUT_SID)
+	opterror = 1;
+    if (input == INPUT_SID && !output)
+	opterror = 1;
+
+    if (optind < argc)
+	str = argv[optind++];
+    else
+	opterror = 1;
+
+    if (optind < argc)
+	opterror = 1;
+
+    if (opterror) {
+	usage(argv[0]);
+	exit(1);
     }
 
+    /* Allocate a VAS context */
     if ((vaserr = vas_ctx_alloc(&vasctx))) {
-        fprintf(stderr, 
-                "ERROR: Unable to allocate VAS CTX. %s\n", 
-                vas_err_get_string( vasctx, 1 ) );
-        goto FINISHED;
+	switch (vaserr) {
+	    case VAS_ERR_INVALID_PARAM: 
+		errx(1, "vas_ctx_alloc: invalid parameter");
+	    case VAS_ERR_NO_MEMORY: 
+		errx(1, "vas_ctx_alloc: no memory");
+	    default:
+		errx(1, "vas_ctx_alloc: %u", vaserr);
+	}
     }
 
-    if (force) {
-        if ((vaserr = vas_id_alloc(vasctx, "host/", &vasid))) {
-            fprintf(stderr, 
-                    "ERROR: Unable to allocate VAS ID for 'host/'. %s\n", 
-                    vas_err_get_string(vasctx, 1));
-            goto FINISHED;
-        }
+    /* Use the host's keytab when forcing with the -f option. */
+    if (fflag) {
+        if (vas_id_alloc(vasctx, "host/", &vasid))
+	    errx(1, "vas_id_alloc host/: %s", vas_err_get_string(vasctx, 1));
 
-        if ((vaserr = vas_id_establish_cred_keytab(vasctx,
-                                                   vasid,
-                                                   VAS_ID_FLAG_USE_MEMORY_CCACHE | 
-                                                   VAS_ID_FLAG_KEEP_COPY_OF_CRED,
-                                                    NULL))) {
-            fprintf(stderr, 
-                    "ERROR: Unable to establish credentials for 'host/'. %s\n", 
-                    vas_err_get_string( vasctx, 1 ) );
-            goto FINISHED;
-        }
+	if (vas_id_establish_cred_keytab(vasctx, vasid,
+		   VAS_ID_FLAG_USE_MEMORY_CCACHE |
+		   VAS_ID_FLAG_KEEP_COPY_OF_CRED, NULL))
+	    errx(1, "vas_id_establish_cred_keytab: %s",
+		   vas_err_get_string(vasctx, 1));
     }
     
+    /*
+     * account name => username
+     */
     if ((input == INPUT_NAME)) {
         char *upn;
-        const char *name;
+        const char *backslash;
+	struct passwd *pwent;
 
-        if ((name = strchr(str, '\\')) != NULL) {
-            name++;
-        } else {
-            name = str;
+	/* Strip leading domain from DOMAIN\USER names */
+        if ((backslash = strchr(str, '\\')) != NULL)
+            str = backslash + 1;
+
+        if (vas_name_to_principal(vasctx, str, VAS_NAME_TYPE_USER,
+		    VAS_NAME_FLAG_FOREST_SCOPE, &upn))
+       	{
+            warn("vas_name_to_principal '%.100s': %s", str,
+                    vas_err_get_string(vasctx, 1));
+            printf("UNKNOWN_USER");
+	    exit(0);
         }
 
-        if ((vaserr = vas_name_to_principal(vasctx,
-                                            name,
-                                            VAS_NAME_TYPE_USER,
-                                            VAS_NAME_FLAG_FOREST_SCOPE,
-                                            &upn))) {
-            fprintf(stderr, 
-                    "ERROR: Unable to initalize VAS user: %s. %s\n", 
-                    str, vas_err_get_string(vasctx, 1));
-
-            fprintf(stdout, "UNKNOWN_USER");
-            goto FINISHED;
+	errno = 0;
+        if ((pwent = getpwnam(upn)) == NULL) {
+	    err(1, "getpwnam '%.100s'", upn);
         }
 
-        pwent = getpwnam(upn);
-        if (pwent == NULL) {
-	    fprintf (stderr, "ERROR: User not found! (errno=%d).\n", errno);
-            free(upn);
-	    goto FINISHED;
-        }
-
-        fprintf (stdout, "%s\n", pwent->pw_name);
-        free(upn);
-        vaserr = VAS_ERR_SUCCESS;
+        printf("%s\n", pwent->pw_name);
+	exit(0);
     }
 
-    if ((input == INPUT_UID) ||
-        ((input == INPUT_SID) && (output == OUTPUT_UID))) {
-        char *sidstr;
+    /*
+     * -u uid        => sid
+     * -un username  => sid
+     */
+    if (input == INPUT_UID) {
         const char *id;
+        char *sidstr;
+	struct passwd *pwent;
+	vas_user_t *vasuser;
 
-        if (name || output) {
-            id = str;
-        } else {
-            uid_t uid;
-            errno = 0;
-            uid = strtol(str);
-            if (errno) {
-	        fprintf (stderr, "ERROR: Invalid User UID [%s]! (errno=%d).\n", str, errno);
-	        goto FINISHED;
-            }
-            pwent = getpwuid(uid);
-            if (pwent == NULL) {
-	        fprintf (stderr, "ERROR: UID %s not found! (errno=%d).\n", str, errno);
-	        goto FINISHED;
-            }
+	/* Convert '-u uid' into a username */
+        if (!nflag) {
+	    errno = 0;
+	    if ((pwent = getpwuid(strtougid(str))) == NULL)
+		err(1, "getpwuid '%.100s'", str);
             id = pwent->pw_name;
-        }
-
-        if ((vaserr = vas_user_init(vasctx, 
-                                    vasid, 
-                                    id, 
-                                    VAS_NAME_FLAG_NO_LDAP, 
-                                    &vasuser))) {
-            fprintf(stderr, 
-                    "ERROR: Unable to initalize VAS user with id: %s. %s\n", 
-                    id,
-                    vas_err_get_string(vasctx, 1));
-            goto FINISHED;
-        }
-
-        if (input == INPUT_UID) {
-            if ((vaserr = vas_user_get_sid(vasctx, vasid, vasuser, &sidstr))) {
-                fprintf(stderr, 
-                        "ERROR: Unable to obtain sid for user with id: %s. %s\n", 
-                        id, vas_err_get_string(vasctx, 1));
-                goto FINISHED;
-            }
-
-            fprintf(stdout, "%s\n", sidstr);
-            free(sidstr);
-            vaserr = VAS_ERR_SUCCESS;
-        } else {
-            if ((vaserr = vas_user_get_pwinfo(vasctx, vasid, vasuser, &pwent))) {
-                fprintf(stderr,
-                        "ERROR: Unable to obtain pwinfo for sid: %s. %s\n", 
-                        sidstr, vas_err_get_string(vasctx, 1));
-                goto FINISHED;
-            }
-
-            fprintf(stdout, "%d\n", pwent->pw_uid);
-            vaserr = VAS_ERR_SUCCESS;
-        }
-    }
-
-    if ((input == INPUT_GID) ||
-        ((input == INPUT_SID) && (output == OUTPUT_GID))) {
-        char *sidstr;
-        const char *id;
-
-        if (name || output) {
+	} else
             id = str;
-        } else {
-            gid_t gid;
-            errno = 0;
-            gid = strtol(str);
-            if (errno) {
-	        fprintf (stderr, "ERROR: Invalid Group GID [%s]! (errno=%d).\n", str, errno);
-	        goto FINISHED;
-            }
-            grent = getgrgid(gid);
-            if (grent == NULL) {
-	        fprintf (stderr, "ERROR: GID %s not found! (errno=%d).\n", str, errno);
-	        goto FINISHED;
-            }
-            id = grent->gr_name;
-        }
 
-        if ((vaserr = vas_group_init(vasctx, 
-                                     vasid, 
-                                     id,
-                                     VAS_NAME_FLAG_NO_LDAP, 
-                                     &vasgrp))) {
-            fprintf(stderr, 
-                    "ERROR: Unable to initalize VAS group with id: %s. %s\n", 
-                    id,
-                    vas_err_get_string(vasctx, 1));
-            goto FINISHED;
-        }
+        if (vas_user_init(vasctx, vasid, id, VAS_NAME_FLAG_NO_LDAP, &vasuser))
+	    errx(1, "vas_user_init '%.100s': %s", id, 
+		    vas_err_get_string(vasctx, 1));
 
-        if (input == INPUT_GID) {
-            if ((vaserr = vas_group_get_sid(vasctx, vasid, vasgrp, &sidstr))) {
-                fprintf(stderr, 
-                        "ERROR: Unable to obtain sid for group with id: %s. %s\n", 
-                        id, vas_err_get_string(vasctx, 1));
-                goto FINISHED;
-            }
-
-            fprintf(stdout, "%s\n", sidstr);
-            free(sidstr);
-            vaserr = VAS_ERR_SUCCESS;
-        } else {
-            if ((vaserr = vas_group_get_grinfo(vasctx, vasid, vasgrp, &grent))) {
-                fprintf(stderr,
-                        "ERROR: Unable to obtain grinfo for sid: %s. %s\n", 
-                        sidstr, vas_err_get_string(vasctx, 1));
-                goto FINISHED;
-
-            }
-
-            fprintf(stdout, "%d\n", grent->gr_gid);
-            vaserr = VAS_ERR_SUCCESS;
-        }
+	if (vas_user_get_sid(vasctx, vasid, vasuser, &sidstr))
+	    errx(1, "vas_user_get_sid '%.100s': %s", id, 
+		    vas_err_get_string(vasctx, 1));
+	printf("%s\n", sidstr);
+	exit(0);
     }
 
-FINISHED:
-    if (vasuser) vas_user_free(vasctx, vasuser);
-    if (vasgrp) vas_group_free(vasctx, vasgrp);
-    if (vasid) vas_id_free(vasctx, vasid);
-    if (vasctx) vas_ctx_free(vasctx);
+    /*
+     * -sU sid => uid
+     */
+    if (input == INPUT_SID && output == OUTPUT_UID) {
+        char *sidstr;
+	vas_user_t *vasuser;
+	struct passwd *pwent;
 
-    return vaserr;
+        if (vas_user_init(vasctx, vasid, str, VAS_NAME_FLAG_NO_LDAP, &vasuser))
+	    errx(1, "vas_user_init '%.100s': %s", str, 
+		    vas_err_get_string(vasctx, 1));
 
-OPTERROR:
-    display_usage();
-    vaserr = VAS_ERR_FAILURE;
-    goto FINISHED;
+	if (vas_user_get_pwinfo(vasctx, vasid, vasuser, &pwent)) 
+	    errx(1, "vas_user_get_pwinfo '%.100s': %s", str,
+		    vas_err_get_string(vasctx, 1));
+
+	printf("%d\n", pwent->pw_uid);
+	exit(0);
+    }
+
+    /*
+     * -g gid        => sid
+     * -gn groupname => sid
+     */
+    if (input == INPUT_GID) {
+        const char *id;
+        char *sidstr;
+	vas_group_t *vasgrp;
+	struct group *grent;
+
+	/* Convert '-g gid' into a groupname */
+        if (!nflag) {
+	    errno = 0;
+	    if ((grent = getgrgid(strtougid(str))) == NULL)
+		err(1, "getpwgid '%.100s'", str);
+            id = grent->gr_name;
+        } else
+            id = str;
+
+        if (vas_group_init(vasctx, vasid, id, VAS_NAME_FLAG_NO_LDAP, &vasgrp))
+	    errx(1, "vas_group_init '%.100s': %s", id, 
+		    vas_err_get_string(vasctx, 1));
+
+	if (vas_group_get_sid(vasctx, vasid, vasgrp, &sidstr))
+	    errx(1, "vas_group_get_sid '%.100s': %s", id, 
+		    vas_err_get_string(vasctx, 1));
+	printf("%s\n", sidstr);
+	exit(0);
+    }
+
+    /*
+     * -sG sid => gid
+     */
+    if (input == INPUT_SID && output == OUTPUT_GID) {
+        char *sidstr;
+	vas_group_t *vasgrp;
+	struct group *grent;
+
+        if (vas_group_init(vasctx, vasid, str, VAS_NAME_FLAG_NO_LDAP, &vasgrp))
+	    errx(1, "vas_group_init '%.100s': %s", str, 
+		    vas_err_get_string(vasctx, 1));
+
+	if (vas_group_get_grinfo(vasctx, vasid, vasgrp, &grent)) 
+	    errx(1, "vas_group_get_pwinfo '%.100s': %s", str,
+		    vas_err_get_string(vasctx, 1));
+
+	printf("%d\n", grent->gr_gid);
+	exit(0);
+    }
+
+    errx(1, "internal error: unreachable");
 }
 

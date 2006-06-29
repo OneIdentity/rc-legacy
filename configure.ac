@@ -13,13 +13,16 @@ AC_PREFIX_DEFAULT([/opt/quest])
 AC_PROG_CC
 AC_C_CONST
 AC_HEADER_STDC
-AC_CHECK_HEADERS([grp.h unistd.h pwd.h sys/socket.h sys/un.h errno.h netinet/in.h])
+AC_CHECK_HEADERS([grp.h unistd.h pwd.h sys/socket.h sys/un.h errno.h netinet/in.h err.h])
 
 AC_PATH_PROG([VASCONFIG], [vas-config], [no], [/opt/quest/bin:$PATH])
 if test x"$VASCONFIG" = x"no"; then
     AC_MSG_ERROR([vas-config was not found; is the VAS SDK installed?])
 fi
 AC_SUBST([VASCONFIG])
+
+AC_CHECK_FUNC([getopt], [], [AC_LIBOBJ([getopt])])
+AC_CHECK_FUNC([errx])
 
 AC_SEARCH_LIBS([socket], [socket])
 
