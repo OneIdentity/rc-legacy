@@ -21,10 +21,18 @@ if test x"$VASCONFIG" = x"no"; then
 fi
 AC_SUBST([VASCONFIG])
 
+VAS_CFLAGS=`$VASCONFIG --cflags`
+AC_SUBST([VAS_CFLAGS])
+VAS_LIBS=`$VASCONFIG --libs`
+AC_SUBST([VAS_LIBS])
+
 AC_CHECK_FUNC([getopt], [], [AC_LIBOBJ([getopt])])
-AC_CHECK_FUNC([errx])
+AC_CHECK_FUNC([errx], [], [AC_LIBOBJ([err])])
+AC_CHECK_FUNC([inet_pton], [], [AC_LIBOBJ([inet_pton])])
 
 AC_SEARCH_LIBS([socket], [socket])
+AC_SEARCH_LIBS([setsockopt], [xnet])
+AC_SEARCH_LIBS([inet_addr], [xnet])
 
 AC_CHECK_TYPE([socklen_t],[AC_DEFINE([HAVE_SOCKLEN_T],[1],[socklen_t])],,[
 #if HAVE_SYS_SOCKET_H

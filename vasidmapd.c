@@ -31,6 +31,11 @@
 #include <ber.h>
 #include <ldap.h>
 
+#if !HAVE_SOCKLEN_T
+# undef socklen_t
+# define socklen_t int
+#endif
+
 int debug;
 
 int search_result_ok(ber_int_t msgid, struct berval **reply)
@@ -572,7 +577,7 @@ int vmapd_recv(int sd, struct berval *query)
 		return -2;
 	}
 
-	query->bv_val = buf;
+	query->bv_val = (char *)buf;
 	query->bv_len = skip+len;
 
 	return 0;
@@ -704,7 +709,7 @@ int main (int argc, char *argv[])
 	}
 
 	opt = 1;
-	setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, &opt, 4);
+	setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, (const void *)&opt, 4);
 
 	len = sizeof(sockin);
 	ret = bind(sd, (struct sockaddr *)&sockin, len);
@@ -725,7 +730,7 @@ int main (int argc, char *argv[])
 		socklen_t addrlen;
 		pid_t pid;
 	
-		new = accept(sd, &addr, &addrlen);
+		new = accept(sd, (struct sockaddr *)&addr, &addrlen);
 
 		if (new == -1) {
 			 if (debug) fprintf(stderr, "WARNING: Accept failed!");

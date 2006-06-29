@@ -2,15 +2,15 @@
 
 AUTOMAKE_OPTIONS=       foreign
 
-AM_LDFLAGS = $(shell vas-config --libs)
-AM_CFLAGS =  $(shell vas-config --cflags)
-
+AM_LDFLAGS = $(VAS_LIBS)
+AM_CFLAGS =  $(VAS_CFLAGS)
 
 sbin_PROGRAMS=		vasidmapd
 bin_PROGRAMS=		vasidmap
 dist_bin_SCRIPTS=	vaspass vasmapcron
 
-vasidmap_LDADD =   $(LIBOBJS)
+vasidmap_LDADD  =   $(LIBOBJS)
+vasidmapd_LDADD =   $(LIBOBJS)
 
 EXTRA_DIST=	vasidmapd-rh.init vasidmapd-suse.init
 
