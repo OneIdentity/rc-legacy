@@ -1,4 +1,5 @@
 #!/bin/sh
+# (c) 2006 Quest Software, Inc. All rights reserved.
 #
 # chkconfig: - 91 35
 # description: Starts and stops the vasidmapd daemon

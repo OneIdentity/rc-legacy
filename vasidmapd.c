@@ -11,6 +11,7 @@
  *
  * Description: Main implementation source file
  *=========================================================================*/
+/* (c) 2006 Quest Software, Inc. All rights reserved. */
 
 #include <sys/types.h>
 #include <sys/socket.h>

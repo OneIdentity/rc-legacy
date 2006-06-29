@@ -9,6 +9,7 @@
  *
  * Description: Main implementation source file
  *=========================================================================*/
+/* (c) 2006 Quest Software, Inc. All rights reserved. */
 
 #include <errno.h>
 #include <stdio.h>

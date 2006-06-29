@@ -1,4 +1,5 @@
 #!/bin/bash
+# (c) 2006 Quest Software, Inc. All rights reserved.
 
 # set shell separator to newline only, space is a valid char for us
 IFS=$'\n'

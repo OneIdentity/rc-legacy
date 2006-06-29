@@ -1,4 +1,5 @@
 #!/bin/bash
+# (c) 2006 Quest Software, Inc. All rights reserved.
 
 # Verify vas.conf and smb.conf are configured properly
 SMBCONF=`grep "machine password timeout" /etc/opt/quest/samba/smb.conf > /dev/null && echo 1 || echo 0`

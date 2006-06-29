@@ -1,3 +1,4 @@
+# (c) 2006 Quest Software, Inc. All rights reserved.
 %define _prefix /opt/quest
 %define _mandir /opt/quest/man
 %define _sysconfdir /etc%{_prefix}
