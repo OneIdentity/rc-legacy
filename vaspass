@@ -1,0 +1,46 @@
+#!/bin/bash
+
+# Verify vas.conf and smb.conf are configured properly
+SMBCONF=`grep "machine password timeout" /etc/opt/quest/samba/smb.conf > /dev/null && echo 1 || echo 0`
+if [ $SMBCONF == "0" ]; then
+	#TODO add machine password timeout=0 to smb.conf
+	echo "Please set the parameter 'machine password timeout' to 0 in smb.conf"
+	echo "Failing to do this may result in unexpected behavior regarding domain membership"
+fi
+
+VASCONF=`grep "password-change-interval" /etc/opt/quest/vas/vas.conf > /dev/null && echo 1 || echo 0`
+if [ $VASCONF == "0" ]; then
+	#TODO add password-change-interval=0 to vas.conf
+	echo "Please set the parameter 'password-change-interval' to 0 in vas.conf"
+	echo "Failing to do this may result in unexpected behavior regarding domain membership"
+fi
+
+# Initialize Random
+RANDOM=`date +%s`
+
+# Initialize source array
+CHARS=( abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ 1234567890\@\$\%^\&:\;-+\=_\?\.,~\| )
+
+# Secret is an empty string to start off
+SECRET=""
+
+#Generate the random password
+COUNT=0
+while [ $COUNT -lt 14 ]
+do
+	RD=$(($RANDOM%3))
+	SECRET=$SECRET${CHARS[$RD]:$(($RANDOM%26)):1}
+	let COUNT++
+done
+
+# Change the machine password using vastool
+(echo $SECRET; echo $SECRET) | /opt/quest/bin/vastool -s -q -u host/ passwd
+
+# Set the new machine password into secrets.tdb
+echo $SECRET | /opt/quest/bin/net -f -i changesecretpw
+
+#Set domain SID
+IFS=$'\n'
+DOMUSER=`/opt/quest/bin/vastool list users | head -n 1 |cut -d ':' -f 1`
+DOMSID=`/opt/quest/bin/vasidmap -u -n "$DOMUSER" | cut -d '-' -f 1-7`
+/opt/quest/bin/net setdomainsid $DOMSID
