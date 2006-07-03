@@ -110,9 +110,6 @@ int main(int argc, char* argv[])
 		*cptr = '\0';
 	}
 
-	log( "Password:" );
-	log( password );
-
         /* Run the auth_user function. */
         retval = lam_auth_user( argv[1], password );
 

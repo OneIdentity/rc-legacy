@@ -155,14 +155,9 @@ int main(int argc, char* argv[])
 
         /* Check and trim \n if present. */
         if(  ( cptr = (char *)memchr( password,'\n', strlen(password) ) ) != NULL ) {
-                log( "Found a '\\n'." );
-		log( "Passowrd, before:" );
-		log( password );
                 *cptr = '\0';
         }
 
-        log( "Password:" );
-        log( password );
 
         /* Run the auth_user function. */
         retval = pam_auth_user( argv[1], password );

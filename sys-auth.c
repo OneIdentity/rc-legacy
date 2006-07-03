@@ -88,7 +88,6 @@ db2secLogMessage *logFunc = NULL;
 void lower( char * username ) {
 	char * cptr = NULL;
 	int count = 0;
-	log( username );
 	while( username[count] != '\0' ) {
 		username[count] = tolower(username[count]);
 		++count;
@@ -127,7 +126,6 @@ int authUser(char *username, char *password) {
 
         func_start();
         log( username );
-        log( password );
 
 	if ( pipe( stdin_fds ) != 0 ) { 
 		retval = errno;
@@ -192,10 +190,6 @@ int authUser(char *username, char *password) {
        		stream = fdopen (stdin_fds[1], "w");
 		fprintf( stream, "%s%c", password, '\0' );
 		fflush( stream );
-		log( "Password sent." );
-                log( "Parent proc, waiting for child." );
-                logd( (int)pid );
-                logd( getpid() );
                 while( ( retval = waitpid( pid, &status, 0 ) ) == -1 )  {
 			if( errno == EINTR ) { 
 				if( sigt == 1 )
@@ -204,8 +198,6 @@ int authUser(char *username, char *password) {
 			break;
 		}
 		close( stdin_fds[1] );
-                log( "Parent done." );
-		logd( retval );
 		sigaction(SIGCHLD, &osigact, NULL);
         }
         logd( retval );
@@ -232,7 +224,6 @@ int checkUser( const char* username ) {
 	func_start();
 	log( username );
 	if( ( pwd = (struct passwd*)getpwnam(username) ) == NULL ) {
-		log("User not found!");
 		errno = ENOENT;
 		return FAILURE;
 	}
@@ -246,7 +237,6 @@ int checkGroup( const char* groupname) {
 	func_start();
 	log( groupname );
 	if( ( grp = (struct group*)getgrnam(groupname) ) == NULL ) {
-		log("Group not found!");
 		errno = ENOENT;
 		return FAILURE;
 	}
@@ -262,14 +252,12 @@ int isUserInGroup( const char* username, struct group *grp ){
 	log( username );
 
 	if( grp == NULL ) {
-		log( "Null group!" );
 		return FAILURE;
 	}
 	log( "Group name:" );
 	log( grp->gr_name );
 
 	if( grp->gr_mem == NULL ){
-		log( "Null Members!" );
 		return FAILURE;
 	}
 
