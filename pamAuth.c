@@ -30,16 +30,10 @@
 
 void _log(char * funct, const char * msg){
 #if SHOW_ERROR
-        char buff[1028];
-        FILE * file = fopen("/tmp/sys-auth.log", "aw");
+        FILE * file = fopen("/tmp/sys-auth.log", "a");
         if( file == NULL )
                         return;
-        strcpy( buff, "Function Name: " );
-        strcat( buff, funct );
-        strcat( buff, ", Message: " );
-        strcat( buff, msg );
-        fputs( buff, file );
-        fputc( '\n', file );
+	fprintf( file, "Function Name: %s, Message: %s\n", funct, msg );
         fclose( file );
 #endif
 }
@@ -47,9 +41,7 @@ void _log(char * funct, const char * msg){
 
 void _logd( char * funct, const int num ){
 #if SHOW_ERROR
-        if( !SHOW_ERROR ) return;
-        char buff[1028];
-        FILE * file = fopen("/tmp/sys-auth.log", "aw");
+        FILE * file = fopen("/tmp/sys-auth.log", "a");
         if( file == NULL )
                         return;
         fprintf( file, "Function Name: %s, Number: %d\n", funct, num);
