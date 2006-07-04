@@ -1,0 +1,76 @@
+#/********************************************************************
+#* Copyright (c) 2005 Quest Software, Inc.
+#* All rights reserved.
+#*
+#* Author:  Seth Ellsworth
+#*
+#* Company: Quest Software, Inc.
+#*
+#* Purpose: Makefile for DB2 8.2 security plug-in that provides
+#*          PAM 32/64 bit authentication.
+#*
+#* Legal:   This script is provided under the terms of the
+#*          "Vintela Resouce Central License" avaliable in
+#*          the included LICENSE file.
+#********************************************************************/
+
+PLUGINDIR32 = $(HOME)/sqllib/security32/plugin
+PLUGINDIR64 = $(HOME)/sqllib/security64/plugin
+# The compile options were made for gcc
+OS = AIX
+CC = gcc
+CC64 = gcc -maix64
+COMPLIB =  -fpic -D$(OS) -DDB2_PLAT_INIX -D_REENTRANT -g -DUSE_UI_THREADS
+DB2PATH = $(HOME)/sqllib
+INCLUDES = -I$(DB2PATH)/include -I../include
+LINKLIB = -static-libgcc -shared -Bsymbolic -lc
+PROG = sys-auth
+PROG32 = $(PROG)32
+PROG64 = $(PROG)64
+
+all : $(PROG32).so $(PROG64).so
+
+clean: 
+	rm -f *.o 
+
+cleanall: clean
+	rm -f *.so pamAuth32 pamAuth64 lamAuth32 lamAuth64
+
+distclean: cleanall
+	rm -f config.h config.bak Makefile
+
+$(PROG32).so: $(PROG32).o pamAuth32 lamAuth32
+	$(CC) $(LINKLIB) -o $(PROG32).so $(PROG32).o 
+
+$(PROG32).o: $(PROG).c
+	$(CC) $(COMPLIB) $(INCLUDES) -o $(PROG32).o -c $(PROG).c
+
+$(PROG64).so: $(PROG64).o pamAuth64 lamAuth64
+	$(CC64) $(LINKLIB) -o $(PROG64).so $(PROG64).o 
+
+$(PROG64).o: $(PROG).c
+	$(CC64) $(COMPLIB) $(INCLUDES) -o $(PROG64).o -c $(PROG).c
+
+pamAuth32: pamAuth32.o
+	$(CC) pamAuth32.o -o pamAuth32 -lpam
+
+pamAuth64: pamAuth64.o
+	$(CC64) pamAuth64.o -o pamAuth64 -lpam
+
+pamAuth32.o: pamAuth.c
+	$(CC)  -D$(OS) -c pamAuth.c -o pamAuth32.o
+
+pamAuth64.o: pamAuth.c
+	$(CC64) -D$(OS) -c pamAuth.c -o pamAuth64.o
+
+lamAuth32: lamAuth32.o
+	$(CC) lamAuth32.o -o lamAuth32
+
+lamAuth64: lamAuth64.o
+	$(CC64) lamAuth64.o -o lamAuth64 
+
+lamAuth32.o: lamAuth.c
+	$(CC) -D$(OS) -c lamAuth.c -o lamAuth32.o
+
+lamAuth64.o: lamAuth.c
+	$(CC64) -D$(OS) -c lamAuth.c -o lamAuth64.o
