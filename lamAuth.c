@@ -24,31 +24,7 @@
 #include <usersec.h>
 
 #include "config.h"
-
-void _log(char * funct, const char * msg){
-#if SHOW_ERROR
-        FILE * file = fopen("/tmp/sys-auth.log", "a");
-        if( file == NULL )
-                        return;
-	fprintf( file, "Function Name: %s, Message: %s\n", funct, msg );
-        fclose( file );
-#endif
-}
-
-
-void _logd( char * funct, const int num ){
-#if SHOW_ERROR
-        FILE * file = fopen("/tmp/sys-auth.log", "a");
-        if( file == NULL )
-            return;
-        fprintf( file, "Function Name: %s, Number: %d\n", funct, num);
-        fclose( file );
-#endif
-}
-
-#define logd(num) _logd(__FUNCTION__, num)
-#define log(msg) _log(__FUNCTION__, msg)
-#define func_start() log("Started!")
+#include "log.h"
 
 int lam_auth_user( char *username, char *password ) {
 	int reenter = 0;
@@ -58,7 +34,7 @@ int lam_auth_user( char *username, char *password ) {
 	func_start();
 	do {
 		retval = authenticate( username, password, &reenter, &authmsg );
-		if( authmsg != NULL ) log( authmsg );
+        slog( SLOG_EXTEND, "%s: authenticate returned <%d> for user <%s>", __FUNCTION__, retval, username );
 	} while (reenter);
  	
 	if( retval == 0 )
@@ -69,44 +45,43 @@ int lam_auth_user( char *username, char *password ) {
  
 int main(int argc, char* argv[])
 {
-        int retval;
-        struct passwd *pwd = NULL;
-        char password[128];
+    int retval;
+    struct passwd *pwd = NULL;
+    char password[128];
 	char *cptr = NULL;
 
 	func_start();
 
-        /* Check usage */
-        if( argc != 2 )
-        {
-                fprintf( stderr, "Usage: %s <name> (password will be read from stdin).\n", argv[0]);
-                exit ( 1 );
-        }
+    /* Check usage */
+    if( argc != 2 )
+    {
+        fprintf( stderr, "Usage: %s <name> (password will be read from stdin).\n", argv[0]);
+        exit ( 1 );
+    }
 
-        /* Check for user */
-        if( ( pwd = getpwnam( argv[1] ) ) == NULL ) {
-                fprintf( stderr, "ERROR: Unable to find user name %s!\n", argv[1] );
-                exit( ENOENT );
-        }
-
-	log( "User:" );
-	log( argv[1] );
+    /* Check for user */
+    if( ( pwd = getpwnam( argv[1] ) ) == NULL ) {
+        fprintf( stderr, "ERROR: Unable to find user name %s!\n", argv[1] );
+        slog( SLOG_EXTEND, "%s: unable to find user <%s>", __FUNCTION__, argv[1] );
+        exit( ENOENT );
+    }
 
         /* Read password from stdin */
 	if( read(STDIN_FILENO, password, 128) <= 0 )
-		exit( EIO );
+	{
+        slog( SLOG_EXTEND, "%s: error reading password from std_in for user <%s>, errno <%d>", __FUNCTION__, argv[1], errno );
+        exit( EIO );
+    }
 
 	/* Check and trim \n if present. */
 	if(  ( cptr = (char *)memchr( password,'\n', strlen(password) ) ) != NULL ) { 
-		log( "Found a '\\n'." );
 		*cptr = '\0';
 	}
 
-        /* Run the auth_user function. */
-        retval = lam_auth_user( argv[1], password );
+    /* Run the auth_user function. */
+    retval = lam_auth_user( argv[1], password );
 
-	log( "Return val:" );
-	logd( retval );
-
-        exit( retval );
+//    slog( SLOG_EXTEND, "%s: received return value <%d> from authentication attempt for user <%s>", __FUNCTION__, retval, argv[1] );
+    
+    exit( retval );
 }

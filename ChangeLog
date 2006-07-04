@@ -1,0 +1,48 @@
+4-21-06: Moving to a configure/make/make dist setup. 
+
+5-25-06: Quite a few changes. 
+            Fixed a Solaris seg-fault when debug level was 3 or higher.
+            Now a sys-auth.conf in the users homedir takes precedence.
+            The plug-in will read its logging level every minute for changes.
+
+5-30-06: Not sure where I lost the changes at, but put back in some fixes. 
+            When accessed in client auth mode from an AD machine, the username
+            included @<short domain> which wasn't recognized by the system. Fixed.
+
+            When accessed cross-instance (not sure how, somehow tables are linked),
+            certain things are bypassed, and a get groups happens on the upper
+            cased name, which would fail. Explicitly lower that name.
+           
+5-30-06: Made all internal functions name-safe. Seen where if the authentication
+         through db2sysc, there is possible a name collision against an internal 
+         DB2 function checkUser, that doesn't return what the plugin is expecting, 
+         making users appear to have failed when they shouldn't.  
+
+
+06-05-06: Moving to a versioning of the library, tracked in the syslog output. 
+          Now changelog will work off the version.
+
+1.0.0:
+* Remove the func_start() from PluginTerminate, as the instance is not always valid
+  when called.
+* Log the version number.
+* More debugging around the check_user function.
+
+1.0.1: 
+* Move the check_user function inside the CheckPassword Function.
+* Name-safe ALL functions, even those derived from the example code this came from so long ago. 
+* Now on AIX a combination of getgrset and getgrent is returned for group memberships. This 
+  allows a combination of VAS and local groups to be used for VAS users. 
+* Add more testing, this time for Groups. Modify test.conf with a group the user is a member of,
+  and a group he is not a member of.   
+* Added test for the sys-auth executable before running, fixes pipe errors during the tests in
+  an incomplete enviroment.
+* Better handling of authentication when DB2INSTANCE is not set, as during testing.   
+
+1.0.2 (06-25-06):
+* Add an explicit getuserattr from VAS for user information, this allows users who stradle both VAS
+  and another system, like LDAP, to get complete group info. AIX only. 
+* Added a check for the group name so only unique ones are returned. This will add a little overhead to
+  authentications, should not be noticable unless a user is in multiple systems and has many group 
+  overlaps, at which point it might add a few seconds to just the auth, as DB2 will store the group 
+  membership info for the duration of the connection. AIX only.

@@ -1,0 +1,21 @@
+Setup:
+Modify ./test.conf and set:
+username = <user to test groups and authentication with>
+password = <user's password>
+user_in_group = <name of a group that exists and the user is in>
+user_not_in_group = <name of a group that exists and the user is not in>
+bad_group = <group name that does not exist on the system>
+show_groups = <Set to true if you want an output of the groups found for user tested>
+
+Running:
+./test_all <name of library, defaults to ./sys-auth32.so>
+
+Results:
+Not terribly clear, if there are any failures the source code can be consulted, test_all.c and the line number referenced. 
+
+Notes:
+I am not sure of the results of loading a 64-bit library, it likely will fail quite spectacularly. 
+Once I get back on a 64-bit OS for testing I will give it a spin, and see if anything can be done. 
+
+If DB2INSTANCE is not set, or the instance does not have sys-auth32, pamAuth32 will be looked for in the current directory.
+This can cause issue on AIX if pam.conf is not set up.

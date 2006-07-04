@@ -1,4 +1,5 @@
-login auth required /usr/lib/security/pam_aix
+# This is a default pam.conf for AIX, for machines that have
+# the library installed, but no current /etc/pam.conf
 
 OTHER auth required /usr/lib/security/pam_aix
 OTHER account required /usr/lib/security/pam_aix

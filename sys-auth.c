@@ -1,5 +1,5 @@
 /********************************************************************
-* Copyright (c) 2005 Quest Software, Inc. 
+* Copyright (c) 2006 Quest Software, Inc. 
 * Portions of this code are derived from IBM Sample Programs, 
 * (C) Copyright IBM Corp. 1997-2004.
 * All rights reserved.
@@ -34,80 +34,19 @@
 #include "sqlenv.h"
 #include "db2secPlugin.h"
 
-#include "config.h"
+#include "log.h"
 
 #include <unistd.h>
 #include <sys/types.h>
 
-static const char * const CONF_FILE = "/etc/sys-auth.conf";
+#ifdef AIX
+#include <usersec.h>
+#endif
 
 /* The internal max line length includes room for a line
  * separator (CR/LF on Windows, LF on UNIX) and a NULL byte.
  */
 #define MAX_LINE_LENGTH     1027
-
-// Authentication requests only.
-#define SLOG_NORMAL 1
-
-// Error message from authentications.
-#define SLOG_EXTEND 2
-
-// Function calls starting.
-// Debug stuff.
-#define SLOG_DEBUG  3
-
-// Anything else.
-#define SLOG_ALL    4
-
-static int G_log_init  = -1;
-static int G_log_level = -1;
-static int G_log_to_syslog = -1;
-
-void slog_init( )
-{
-    FILE *f;
-    char buf[MAX_LINE_LENGTH];
-    
-    if( G_log_init != -1 )
-        return;
-    
-    f = fopen( CONF_FILE, "r" );
-    if( f == NULL )
-    {
-        G_log_level = SLOG_NORMAL;
-        G_log_to_syslog = 1;
-        return;
-    }
-
-    while( fgets( buf, MAX_LINE_LENGTH, f ) )
-    {
-        int lvl = 0;
-        if( sscanf( buf, "debug-level = %1i", &lvl ) )
-        {
-            if( lvl < SLOG_NORMAL || lvl > SLOG_ALL )
-                G_log_level = SLOG_NORMAL;
-            else
-                G_log_level = lvl;
-            break;
-        }   
-    }
-    fclose( f );
-
-    if( G_log_to_syslog )
-    {
-        openlog( "sys-auth", LOG_PID, LOG_DAEMON );
-    }
-}
-
-void slog( int level, const char* msg, ... )
-{
-    slog_init();
-    if( level > G_log_level )
-        return;
-    syslog( 0, msg );
-}
-
-#define func_start() slog( SLOG_EXTEND, "%s: starting", __FUNCTION__)
 
 db2secLogMessage *logFunc = NULL;
 
@@ -121,25 +60,29 @@ db2secLogMessage *logFunc = NULL;
  * Helper functions.
  *******************************************************************/
 
-void lower( char *username ) {
+void vas_db2_plugin_lower( char *username ) {
     char * cptr = NULL;
     int count = 0;
-    slog( SLOG_ALL, "%s: lowering <%s>", __FUNCTION__ );
+    slog( SLOG_ALL, "%s: lowering <%s>", __FUNCTION__, username );
     while( username[count] != '\0' ) {
         username[count] = tolower(username[count]);
         ++count;
     }
 }
 
-sig_atomic_t sigt = 0;
+sig_atomic_t vas_db2_plugin_sigt = 0;
 
-void sigHandle( int signo ) {
+sig_atomic_t vas_db2_plugin_sigp = 0;
+
+void vas_db2_plugin_sig_handle( int signo ) {
     if( signo == SIGCHLD )
-        sigt = 1;
+        vas_db2_plugin_sigt = 1;
+    if( signo == SIGPIPE )
+        vas_db2_plugin_sigp = 1;
     return;
 }
 
-int authUser(char *username, char *password) {
+int vas_db2_plugin_auth_user(char *username, char *password) {
     int   retval   = 0;
     int   status   = 0;
     pid_t pid      = 0;
@@ -156,9 +99,10 @@ int authUser(char *username, char *password) {
     memset(&sigact, 0, sizeof(sigact));
     memset(&osigact, 0, sizeof(osigact));
 
-    sigact.sa_handler = sigHandle;
+    sigact.sa_handler = vas_db2_plugin_sig_handle;
 
     sigaction(SIGCHLD, &sigact, &osigact);
+    sigaction(SIGPIPE, &sigact, &osigact);
 
     errno = 0;
 
@@ -183,16 +127,23 @@ int authUser(char *username, char *password) {
         close( stdin_fds[0] );
 
 
-        if( ( cptr = getenv("DB2INSTANCE") ) == NULL ) 
+        if( ( cptr = getenv( "DB2INSTANCE" ) ) == NULL ) 
         {
-            slog( SLOG_NORMAL, "%s: Unable to obtain DB2INSTANCE environment variable", __FUNCTION__ );
+            slog( SLOG_NORMAL, "%s: Unable to obtain DB2INSTANCE environment variable, trying uid <%d>", __FUNCTION__, getuid() );
+            pwd = getpwuid( getuid() );
+        }
+        else
+        { 
+            pwd = getpwnam( cptr );
+        }
+
+        if( pwd == NULL ) 
+        {
+            slog( SLOG_NORMAL, "%s: unable to obtain running user information", __FUNCTION__ );
             _exit( EFAULT );
         }
-        if( ( pwd = getpwnam( cptr ) ) == NULL ) 
-        {
-            slog( SLOG_NORMAL, "%s: unable to obtain DB2INSTANCE <%s> user information", __FUNCTION__, cptr );
-            _exit( EFAULT );
-        }
+        
+        
         cptr = pwd->pw_dir; 
         slog( SLOG_DEBUG, "%s: found directory <%s>", __FUNCTION__, cptr );
         
@@ -207,6 +158,23 @@ int authUser(char *username, char *password) {
         strcpy( prog_file, "sys-auth32" );
 #endif
 
+        if( access( prog_path, X_OK ) != 0 )
+        {
+#ifndef __64BIT__
+            slog( SLOG_NORMAL, "%s: FAILED finding auth program <%s>, trying pamAuth32 in the current directory", __FUNCTION__, prog_path );
+            getcwd( prog_path, MAX_C_BUFF);
+            strcat( prog_path, "/pamAuth32" );
+            if( access( prog_path, X_OK ) != 0 )
+            {
+                slog( SLOG_NORMAL, "%s: FAILED finding auth program <%s>", __FUNCTION__, prog_path );
+                return( FAILURE );
+            }
+#else
+            slog( SLOG_NORMAL, "%s: FAILED finding auth program <%s>", __FUNCTION__, prog_path );
+            return( FAILURE );
+#endif
+        }
+        
         slog( SLOG_DEBUG, "%s: executing program <%s> from path <%s>", __FUNCTION__, prog_file, prog_path );
 
         if( execl( prog_path, prog_file, username, NULL ) == -1 ) 
@@ -235,14 +203,17 @@ int authUser(char *username, char *password) {
         while( ( retval = waitpid( pid, &status, 0 ) ) == -1 )  
         {
             if( errno == EINTR ) { 
-                if( sigt == 1 )
+                if( vas_db2_plugin_sigt == 1 )
                     continue;
+                if( vas_db2_plugin_sigp == 1 )
+                    break;
             } 
             break;
         }
         close( stdin_fds[1] );
         slog( SLOG_DEBUG, "%s: child process returned with value <%d>", __FUNCTION__, retval );
         sigaction(SIGCHLD, &osigact, NULL);
+        sigaction(SIGPIPE, &osigact, NULL);
     }
 
     if( retval == -1 )
@@ -252,31 +223,33 @@ int authUser(char *username, char *password) {
 
 EXIT:
         if( retval == 0 ) {
-                slog( SLOG_NORMAL, "%s: Successful authentication attempt for user <%s>", __FUNCTION__, username );
+//                slog( SLOG_NORMAL, "%s: Successful authentication attempt for user <%s>", __FUNCTION__, username );
                 return SUCCESS;
         } else {
-                if( G_log_level > SLOG_NORMAL )
-                    slog( SLOG_EXTEND, "%s: Failed authentication attempt for user <%s>, error <%d>", __FUNCTION__, username, retval );
+                slog( SLOG_EXTEND, "%s: Failed authentication attempt for user <%s>, error <%d>", __FUNCTION__, username, WEXITSTATUS(status) );
                 return FAILURE;
         }
 }
 
-int checkUser( const char* username ) {
+int vas_db2_plugin_check_user( const char* username ) {
     struct passwd *pwd = NULL;
     int retval = FAILURE;
 
     func_start();
     slog( SLOG_DEBUG, "%s: checking user <%s>", __FUNCTION__, username );
     if( ( pwd = (struct passwd*)getpwnam(username) ) == NULL ) {
-        slog( SLOG_DEBUG, "%s: user <%s> not found", __FUNCTION__, username );
-        errno = ENOENT;
+        slog( SLOG_DEBUG, "%s: user <%s> not found, errno <%d>, msg <%s>",
+                          __FUNCTION__,
+                          username,
+                          errno,
+                          strerror( errno ) );
         return FAILURE;
     }
     slog( SLOG_DEBUG, "%s: found user <%s>", __FUNCTION__, username );
     return SUCCESS;
 }
 
-int checkGroup( const char* groupname) {
+int vas_db2_plugin_check_group( const char* groupname) {
     struct group *grp= NULL;
     int retval = FAILURE;
 
@@ -291,7 +264,7 @@ int checkGroup( const char* groupname) {
     return SUCCESS;
 }
 
-int isUserInGroup( const char* username, struct group *grp ){
+int vas_db2_plugin_is_user_in_group( const char* username, struct group *grp ){
     int retval = FAILURE;
     struct passwd *pwd = NULL;
     char **members = NULL;
@@ -343,9 +316,9 @@ int isUserInGroup( const char* username, struct group *grp ){
     return retval;
 }
 
-int FindGroupsForUser( const char* username, char *groups, int *numgroups ) {
+int vas_db2_plugin_find_groups_for_user( const char* username, char *groups, int *numgroups ) {
     struct group *grp = NULL;
-    char * cptr = NULL;
+    char *cptr = NULL;
     char *grset = NULL;
     char *gr = NULL;
     char delims[] = ",";
@@ -353,17 +326,35 @@ int FindGroupsForUser( const char* username, char *groups, int *numgroups ) {
     int gid;
     int groupcount = 0;
     int length = 0;
+    int rval = 0;
     memset(userBuffer, '\0', MAX_LINE_LENGTH);
     func_start();
     strcpy( userBuffer, username );
-    lower( userBuffer );
-    if( checkUser( userBuffer ) != SUCCESS )
+    vas_db2_plugin_lower( userBuffer );
+
+    if( !username || username[0] == '\0' ||
+        !groups || !numgroups )
+    {
+        slog( SLOG_NORMAL, "%s: called with an invalid paramater", __FUNCTION__ );
         return -1;
+    }
+    
+    if( ( rval = vas_db2_plugin_check_user( userBuffer ) ) != SUCCESS )
+    {
+        slog( SLOG_EXTEND, "%s: vas_db2_plugin_check_user returned <%d> for user <%s>",
+                             __FUNCTION__, 
+                             rval,
+                             userBuffer );
+        return -1;
+    }
 
 #ifdef AIX
     /* Since we are on AIX, we can use getgrset. Get that, tokenize the 
      * result, and add to the buffer as the group resolves to names. 
      */
+    /* New: Fall through to the other function, this combines the groups
+     * so local groups are also considered. 
+    */
     if( ( grset = getgrset( userBuffer ) ) == NULL ) {
         return DB2SEC_PLUGIN_UNKNOWNERROR;    
     } 
@@ -383,15 +374,47 @@ int FindGroupsForUser( const char* username, char *groups, int *numgroups ) {
         }
         gr = strtok( NULL, delims );
     }
-    *cptr = '\0';
+
     if(grset)
         free(grset);    
+    grset = NULL;
+
+    /* Add the VAS specific groups, checking for duplicates. */
+    /* Uses the SEC_LIST attribute:
+     *  The format of the attribute is a series of concatenated strings, each null-terminated.
+     *  The last string in the series is terminated by two successive null characters.
+    */
+    if( setauthdb( "VAS", NULL ) == 0 &&
+        getuserattr( userBuffer, S_GROUPS, (void*)&grset, SEC_LIST ) == 0 ) 
+    {
+        gr = grset;
+        while( *gr != '\0' )
+        {
+            if( strstr( groups, gr ) == NULL )
+            {
+                length = strlen( gr );
+                *((unsigned char*)cptr) = (unsigned char)length;
+                ++cptr;
+                memcpy(cptr, gr, length );
+                cptr += length;
+                ++groupcount;
+            }
+
+            while( *gr != '\0' )
+                ++gr;
+            ++gr;
+        }
+    }
+
+    /* Re-set to default */
+    setauthdb( NULL, NULL );
 #else
-    setgrent();
     cptr = groups;
-    slog( SLOG_ALL, "%s: non-AIX, using getgrent cycle", __FUNCTION__ );
+#endif
+    setgrent();
+    slog( SLOG_ALL, "%s: using getgrent cycle", __FUNCTION__ );
     while( ( grp = getgrent() ) != NULL ) {
-        if( ( isUserInGroup( userBuffer, grp ) ) == SUCCESS ) {
+        if( ( vas_db2_plugin_is_user_in_group( userBuffer, grp ) ) == SUCCESS ) {
             length = strlen( grp->gr_name );
             *((unsigned char*)cptr) = (unsigned char)length;
             ++cptr;
@@ -402,7 +425,6 @@ int FindGroupsForUser( const char* username, char *groups, int *numgroups ) {
     }
     *cptr = '\0';
     endgrent();
-#endif
 
     *numgroups = groupcount;
     slog( SLOG_DEBUG, "%s: returning group string <%s>", __FUNCTION__, groups );
@@ -417,7 +439,7 @@ int FindGroupsForUser( const char* username, char *groups, int *numgroups ) {
  * Plugin functions
  *-------------------------------------------------------*/
 
-/* CheckPassword()
+/* vas_db2_plugin_check_password()
  * Look up a user, check their password.
  *
  * If a domain name ("namespace") is specified it is appended to
@@ -428,7 +450,7 @@ int FindGroupsForUser( const char* username, char *groups, int *numgroups ) {
  * SQL_AUTHID_SZ, since it will be returned as the DB2 Authorization
  * ID later.
  */
-SQL_API_RC SQL_API_FN CheckPassword(const char *userid,
+SQL_API_RC SQL_API_FN vas_db2_plugin_check_password(const char *userid,
                          db2int32 useridLength,
                          const char *domain,
                          db2int32 domainLength,
@@ -463,8 +485,10 @@ SQL_API_RC SQL_API_FN CheckPassword(const char *userid,
         goto exit;
     }
     strncpy(user, userid, useridLength);
+    if( ( cptr = strchr( user, '@' ) ) != NULL )
+        *cptr = '\0';
 
-    slog( SLOG_NORMAL, "%s: Authentication attempt for user %s", __FUNCTION__, user );
+    slog( SLOG_EXTEND, "%s: Authentication attempt for user %s", __FUNCTION__, user );
     /* Was a new password supplied? */
     if (newPassword != NULL && newPasswordLength > 0)
     {
@@ -472,9 +496,29 @@ SQL_API_RC SQL_API_FN CheckPassword(const char *userid,
         rc = DB2SEC_PLUGIN_CHANGEPASSWORD_NOTSUPPORTED;
         goto exit;
     }
+    vas_db2_plugin_lower( user );
 
+    {
+        struct passwd *pwd = NULL;
+        int retval = FAILURE;
 
-    if( ( rc = checkUser( user ) ) != SUCCESS ) {
+        slog( SLOG_EXTEND, "%s: checking user <%s>", __FUNCTION__, user );
+        if( ( pwd = (struct passwd*)getpwnam(user) ) == NULL ) {
+            slog( SLOG_NORMAL, "%s: user <%s> not found, errno <%d>, msg <%s>",
+            __FUNCTION__,
+            user,
+            errno,
+            strerror( errno ) );
+            rc = FAILURE;
+        }
+        else
+        {
+            slog( SLOG_EXTEND, "%s: found user <%s>", __FUNCTION__, user );
+            rc = SUCCESS;
+        }
+    }
+
+    if( rc != SUCCESS ) {
         if( errno == ENOENT )
             rc = DB2SEC_PLUGIN_BADUSER;
         else 
@@ -489,7 +533,7 @@ SQL_API_RC SQL_API_FN CheckPassword(const char *userid,
         char pwdBuf[128];
         memcpy(pwdBuf, password, passwordLength);
         pwdBuf[passwordLength] = '\0';
-        if( authUser( user , pwdBuf ) != SUCCESS )
+        if( vas_db2_plugin_auth_user( user , pwdBuf ) != SUCCESS )
             rc = DB2SEC_PLUGIN_BADPWD;
     }
     else
@@ -497,7 +541,7 @@ SQL_API_RC SQL_API_FN CheckPassword(const char *userid,
         /* No password was supplied.  This is okay as long
          * as the following conditions are true:
          *
-         *  - The username came from WhoAmI(), and
+         *  - The username came from vas_db2_plugin_who_am_i(), and
          *  - If we're on the server side, the connection must
          *    be "local" (originating from the same machine)
          *
@@ -513,7 +557,7 @@ SQL_API_RC SQL_API_FN CheckPassword(const char *userid,
             rc = DB2SEC_PLUGIN_BADPWD;
         }
         else
-            SLOG( SLOG_EXTEND, "%s: user <%s> authenticated without password", __FUNCTION__, user );
+            slog( SLOG_EXTEND, "%s: user <%s> authenticated without password", __FUNCTION__, user );
     }
 
 exit:
@@ -533,12 +577,12 @@ exit:
 }
 
 
-/* GetAuthIDs()
+/* vas_db2_plugin_get_auth_ids()
  * Return the username (possibly with the domain name appended) to
  * DB2 as both the System Authentication ID and the Initial Session
  * Authorization ID.
  */
-SQL_API_RC SQL_API_FN GetAuthIDs(const char *userid,
+SQL_API_RC SQL_API_FN vas_db2_plugin_get_auth_ids(const char *userid,
                       db2int32 useridLength,
                       const char *domain,
                       db2int32 domainLength,
@@ -567,7 +611,9 @@ SQL_API_RC SQL_API_FN GetAuthIDs(const char *userid,
     memset(user, '\0', sizeof(user));
 
     /* Check for a domain name, and make sure the userid length is ok. */
-    if (domain != NULL && domainLength > 0)
+    /* Don't use domain name, DB2 puts in the short name, which would 
+     * not be recognized by VAS */
+    if (domain != NULL && domainLength > 0 && 0 )
     {
         if ( (useridLength + 1 + domainLength) > SQL_AUTHID_SZ )
         {
@@ -603,11 +649,11 @@ exit:
 }
 
 
-/* DoesAuthIDExist()
+/* vas_db2_plugin_does_auth_id_exist()
  * Determine if the supplied DB2 Authorization ID is associated with
  * a valid user.
  */
-SQL_API_RC SQL_API_FN DoesAuthIDExist(const char *authID,
+SQL_API_RC SQL_API_FN vas_db2_plugin_does_auth_id_exist(const char *authID,
                            db2int32 authIDLength,
                            char **errorMessage,
                            db2int32 *errorMessageLength)
@@ -627,13 +673,13 @@ SQL_API_RC SQL_API_FN DoesAuthIDExist(const char *authID,
         memcpy(localAuthID, authID, SQL_AUTHID_SZ);
         localAuthID[SQL_AUTHID_SZ] = '\0';
         snprintf(msg, 512,
-             "DoesAuthIDExist: authID too long (%d bytes): %s... (truncated)",
+             "vas_db2_plugin_does_auth_id_exist: authID too long (%d bytes): %s... (truncated)",
              authIDLength, localAuthID);
 
         msg[511]='\0';            /* ensure NULL terminated */
         logFunc(DB2SEC_LOG_ERROR, msg, strlen(msg));
 
-        *errorMessage = "DoesAuthIDExist: authID too long";
+        *errorMessage = "vas_db2_plugin_does_auth_id_exist: authID too long";
         rc = DB2SEC_PLUGIN_BADUSER;
         goto exit;
     }
@@ -642,7 +688,7 @@ SQL_API_RC SQL_API_FN DoesAuthIDExist(const char *authID,
     localAuthID[authIDLength] = '\0';
 
 
-    if( ( rc = checkUser( localAuthID ) ) != SUCCESS ) {
+    if( ( rc = vas_db2_plugin_check_user( localAuthID ) ) != SUCCESS ) {
         if( errno == ENOENT )
             rc = DB2SEC_PLUGIN_BADUSER;
         else 
@@ -660,7 +706,7 @@ exit:
 }
 
 
-/* WhoAmI()
+/* vas_db2_plugin_who_am_i()
  * Determine the default user identity associated with the current
  * process context.
  *
@@ -670,7 +716,7 @@ exit:
  *
  * Modification: read getuid(), unless DB2DEFAULTUSER is set.
  */
-SQL_API_RC SQL_API_FN WhoAmI(char authID[],
+SQL_API_RC SQL_API_FN vas_db2_plugin_who_am_i(char authID[],
                   db2int32 *authIDLength,
                   char userid[],
                   db2int32 *useridLength,
@@ -714,8 +760,8 @@ SQL_API_RC SQL_API_FN WhoAmI(char authID[],
         pwd = (struct passwd*)getpwuid(uid);
         if( pwd != NULL )
         {
-            slog( SLOG_DEBUG, "%s: got name of <%s> from uid <%d>", __FUNCTION__, user, uid );
             user = pwd->pw_name; 
+            slog( SLOG_DEBUG, "%s: got name of <%s> from uid <%d>", __FUNCTION__, user, uid );
         }
         else
         {
@@ -759,14 +805,14 @@ exit:
 }
 
 
-/* LookupGroups()
+/* vas_db2_plugin_lookup_groups()
  * Return the list of groups to which a user belongs.
  *
  * For this plugin this involves finding the provided authorization
  * ID in the User definition file and returning all fields after
  * the second.
  */
-SQL_API_RC SQL_API_FN LookupGroups(const char *authID,
+SQL_API_RC SQL_API_FN vas_db2_plugin_lookup_groups(const char *authID,
                         db2int32 authIDLength,
                         const char *userid,             /* ignored */
                         db2int32 useridLength,          /* ignored */
@@ -806,19 +852,21 @@ SQL_API_RC SQL_API_FN LookupGroups(const char *authID,
         memcpy(localAuthID, authID, SQL_AUTHID_SZ);
         localAuthID[SQL_AUTHID_SZ] = '\0';
         snprintf(msg, 512,
-             "LookupGroups: authID too long (%d bytes): %s... (truncated)",
+             "vas_db2_plugin_lookup_groups: authID too long (%d bytes): %s... (truncated)",
              authIDLength, localAuthID);
 
         msg[511]='\0';            /* ensure NULL terminated */
         logFunc(DB2SEC_LOG_ERROR, msg, strlen(msg));
 
-        *errorMessage = "LookupGroups: authID too long";
+        *errorMessage = "vas_db2_plugin_lookup_groups: authID too long";
         rc = DB2SEC_PLUGIN_BADUSER;
         goto exit;
     }
 
     memcpy(localAuthID, authID, authIDLength);
     localAuthID[authIDLength] = '\0';
+    if( ( cptr = strchr( localAuthID, '@' ) ) != NULL )
+        *cptr = '\0';
 
     *groupList = malloc(MAX_LINE_LENGTH);
     if (*groupList == NULL)
@@ -828,16 +876,23 @@ SQL_API_RC SQL_API_FN LookupGroups(const char *authID,
         goto exit;
     }
     
-    rc = FindGroupsForUser( localAuthID , *groupList , &ngroups ); 
-    errno = ENOENT;
+    rc = vas_db2_plugin_find_groups_for_user( localAuthID , *groupList , &ngroups ); 
     if (rc == -1)
     {
         if( errno == ENOENT )
             rc = DB2SEC_PLUGIN_BADUSER;
         else
             rc = DB2SEC_PLUGIN_UNKNOWNERROR;
+        slog( SLOG_DEBUG, "%s: vas_db2_plugin_find_groups_for_user failed for user <%s> errno <%d>, ", 
+                      __FUNCTION__, 
+                      localAuthID, 
+                      errno );
         goto exit;
     }
+    slog( SLOG_DEBUG, "%s: vas_db2_plugin_find_groups_for_user for user <%s> returned groups <%s>", 
+                      __FUNCTION__, 
+                      localAuthID, 
+                      (ngroups > 0) ? (char *)*groupList : "None" );
     *groupCount = ngroups;
     
 exit:
@@ -849,10 +904,10 @@ exit:
 }
 
 
-/* FreeGroupList()
- * Free a group list allocated in LookupGroups().
+/* vas_db2_plugin_free_group_list()
+ * Free a group list allocated in vas_db2_plugin_lookup_groups().
  */
-SQL_API_RC SQL_API_FN FreeGroupList(void *ptr,
+SQL_API_RC SQL_API_FN vas_db2_plugin_free_group_list(void *ptr,
                          char **errorMessage,
                          db2int32 *errorMessageLength)
 {
@@ -867,9 +922,9 @@ SQL_API_RC SQL_API_FN FreeGroupList(void *ptr,
 }
 
 
-/* DoesGroupExist
+/* vas_db2_plugin_does_group_exist
  */
-SQL_API_RC SQL_API_FN DoesGroupExist(const char *groupName,
+SQL_API_RC SQL_API_FN vas_db2_plugin_does_group_exist(const char *groupName,
                           db2int32 groupNameLength,
                           char **errorMessage,
                           db2int32 *errorMessageLength)
@@ -900,13 +955,13 @@ SQL_API_RC SQL_API_FN DoesGroupExist(const char *groupName,
         memcpy(localGroupName, groupName, DB2SEC_MAX_AUTHID_LENGTH);
         localGroupName[DB2SEC_MAX_AUTHID_LENGTH] = '\0';
         snprintf(msg, 512,
-             "DoesGroupExist: group name too long (%d bytes): %s... (truncated)",
+             "vas_db2_plugin_does_group_exist: group name too long (%d bytes): %s... (truncated)",
              groupNameLength, localGroupName);
 
         msg[511]='\0';            /* ensure NULL terminated */
         logFunc(DB2SEC_LOG_ERROR, msg, strlen(msg));
 
-        *errorMessage = "DoesGroupExist: group name too long";
+        *errorMessage = "vas_db2_plugin_does_group_exist: group name too long";
         rc = DB2SEC_PLUGIN_BADUSER;
         goto exit;
     }
@@ -915,7 +970,7 @@ SQL_API_RC SQL_API_FN DoesGroupExist(const char *groupName,
     localGroupName[groupNameLength] = '\0';
 
 
-    if ( checkGroup( localGroupName ) == SUCCESS )
+    if ( vas_db2_plugin_check_group( localGroupName ) == SUCCESS )
         rc = DB2SEC_PLUGIN_OK;
     else
         rc = DB2SEC_PLUGIN_INVALIDUSERORGROUP;
@@ -930,11 +985,11 @@ exit:
     return(rc);
 }
 
-/* FreeToken()
+/* vas_db2_plugin_free_token()
  * This plugin does not make use of the "token" parameter,
  * so this function is a no-op.
  */
-SQL_API_RC SQL_API_FN FreeToken(void *token,
+SQL_API_RC SQL_API_FN vas_db2_plugin_free_token(void *token,
                      char **errorMessage,
                      db2int32 *errorMessageLength)
 {
@@ -945,25 +1000,24 @@ SQL_API_RC SQL_API_FN FreeToken(void *token,
 }
 
 
-/* FreeErrorMessage()
+/* vas_db2_plugin_free_error_message()
  * All of the error messages returned by this plugin are
  * literal C strings, so this function is a no-op.
  */
-SQL_API_RC SQL_API_FN FreeErrorMessage(char *msg)
+SQL_API_RC SQL_API_FN vas_db2_plugin_free_error_message(char *msg)
 {
     func_start();
     return(DB2SEC_PLUGIN_OK);
 }
 
-/* PluginTerminate()
+/* vas_db2_plugin_plugin_terminate()
  * There is no cleanup required when this plugin is unloaded.
  */
-SQL_API_RC SQL_API_FN PluginTerminate(char **errorMessage,
+SQL_API_RC SQL_API_FN vas_db2_plugin_plugin_terminate(char **errorMessage,
                            db2int32 *errorMessageLength)
 {
     *errorMessage = NULL;
     *errorMessageLength = 0;
-    func_start();
     return(DB2SEC_PLUGIN_OK);
 }
 
@@ -990,12 +1044,12 @@ SQL_API_RC SQL_API_FN db2secServerAuthPluginInit(
 
     p->version = 1;         /* We're a version 1 plugin */
     p->plugintype = DB2SEC_PLUGIN_TYPE_USERID_PASSWORD;
-    p->db2secValidatePassword = CheckPassword;
-    p->db2secGetAuthIDs = GetAuthIDs;
-    p->db2secDoesAuthIDExist = DoesAuthIDExist;
-    p->db2secFreeToken = FreeToken;
-    p->db2secFreeErrormsg = FreeErrorMessage;
-    p->db2secServerAuthPluginTerm = PluginTerminate;
+    p->db2secValidatePassword = vas_db2_plugin_check_password;
+    p->db2secGetAuthIDs = vas_db2_plugin_get_auth_ids;
+    p->db2secDoesAuthIDExist = vas_db2_plugin_does_auth_id_exist;
+    p->db2secFreeToken = vas_db2_plugin_free_token;
+    p->db2secFreeErrormsg = vas_db2_plugin_free_error_message;
+    p->db2secServerAuthPluginTerm = vas_db2_plugin_plugin_terminate;
 
     logFunc = msgFunc;
 
@@ -1019,11 +1073,11 @@ SQL_API_RC SQL_API_FN db2secClientAuthPluginInit (db2int32 version,
     p->version = 1;         /* We're a version 1 plugin */
     p->plugintype = DB2SEC_PLUGIN_TYPE_USERID_PASSWORD;
     p->db2secRemapUserid = NULL;    /* optional */
-    p->db2secGetDefaultLoginContext = &WhoAmI;
-    p->db2secValidatePassword = &CheckPassword;
-    p->db2secFreeToken = &FreeToken;
-    p->db2secFreeErrormsg = &FreeErrorMessage;
-    p->db2secClientAuthPluginTerm = &PluginTerminate;
+    p->db2secGetDefaultLoginContext = &vas_db2_plugin_who_am_i;
+    p->db2secValidatePassword = &vas_db2_plugin_check_password;
+    p->db2secFreeToken = &vas_db2_plugin_free_token;
+    p->db2secFreeErrormsg = &vas_db2_plugin_free_error_message;
+    p->db2secClientAuthPluginTerm = &vas_db2_plugin_plugin_terminate;
 
     logFunc = msgFunc;
 
@@ -1045,11 +1099,11 @@ SQL_API_RC SQL_API_FN db2secGroupPluginInit(db2int32 version,
 
     p->version = 1;         /* We're a version 1 plugin */
     p->plugintype = DB2SEC_PLUGIN_TYPE_GROUP;
-    p->db2secGetGroupsForUser = &LookupGroups;
-    p->db2secDoesGroupExist = &DoesGroupExist;
-    p->db2secFreeGroupListMemory = &FreeGroupList;
-    p->db2secFreeErrormsg = &FreeErrorMessage;
-    p->db2secPluginTerm = &PluginTerminate;
+    p->db2secGetGroupsForUser = &vas_db2_plugin_lookup_groups;
+    p->db2secDoesGroupExist = &vas_db2_plugin_does_group_exist;
+    p->db2secFreeGroupListMemory = &vas_db2_plugin_free_group_list;
+    p->db2secFreeErrormsg = &vas_db2_plugin_free_error_message;
+    p->db2secPluginTerm = &vas_db2_plugin_plugin_terminate;
 
     logFunc = msgFunc;
     func_start();

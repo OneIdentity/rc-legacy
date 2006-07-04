@@ -22,9 +22,9 @@ requires special privileges (such as root).
 
 The helper program has to be chown'ed to root and setuid'ed, so when it runs it can do the authentication. This is done when root runs the install.sh script. The file should only be accessable to the instance user, and not pose a large security risk. Since it hits the PAM/LAM interfaces, bad attempts and other access control happens.
 
-WARNING: To work properly, the install.sh script has root do a setuid on the helper program. This is because on AIX, you need root access to do a proper authentication. If this is not done, then the authentication that can work is to VAS through PAM only. And then, no group information can be pulled from the users PAC becasue it can't read /etc/opt/vas/host.keytab to decrypt the service ticket.
+WARNING: To work properly, the install.sh script does a setuid on the helper program. This is because on AIX, you need root access to do a proper authentication. If this is not done, then the authentication that can work is to VAS through PAM only. And then, no group information can be pulled from the users PAC becasue it can't read /etc/opt/vas/host.keytab to decrypt the service ticket.
 
-If you wish to use PAM, you will need a pam.conf. 
+If you wish to use PAM on AIX, you will need an /etc/pam.conf. 
 A sample one from IBM is provided in sample.pam.conf.
 
 On AIX: To then get VAS working with pam, you would need to run
@@ -33,18 +33,15 @@ to have vas add the neccessary entries to /etc/pam.conf
 
 To install the product, please see the INSTALL file.
 
-On AIX, making will require having IBM's XL C program.
-It will probably work with gcc, but the compiler options for generating the library will be different.
+The debugging is now to syslog at the auth.notice level. 
+It is controlled by settings in /etc/sys-auth.conf, or the root of the instance home (i.e. /home/db2inst1/sys-auth.conf).
+An entry of debug-level = <1-4> will increase/decrese the debug level. 
+1 is the default, it will log authentications. 
+2 is extended authentication information, including reason for failures.
+3 is debug, shouldn't be needed. 
+4 is everything I could think of. 
 
-Also would need the Application Development Client for DB2 installed.
-
-The debugging is quite simple, open a file, write a line, close. 
-Mostly used to help track the original code sample, get a feel for how it worked, then later used for debugging.
-
-The file it makes is /tmp/sys-auth.log. 
-
-Not recommended to run the debug version in production due to amount of disk activity, and possible information leak.
-The auth programs of debug definently leak, as they will log passwords.
+This plugin will now never record passwords. It should never have, I was doing so when I was working out how to pass them securely from the library to the helper program. 
 
 WARNING: AIX's pam_vas library on 5.2 is 32-bit only. If you have a 64-bit instance, and want to run PAM, you can only do so against VAS/Others of 64-bit, and add similiar to:
 sys-auth64 auth sufficient /opt/vas/lib/security/pam_vas64.so get_tgt create_homedir
@@ -54,4 +51,4 @@ This will hit VAS's 64-bit PAM library.
 
 The pamAuth.c have been changed to use sys-auth32/64 as the service name.
 
-On Linux, pam will by defualt use sshd as its service name, since other goes to pam_deny.
+On Linux, a new /etc/pam.d/sys-auth32 file should be made, otherwise it will use the default other, which on most linux distros is denied by default. 

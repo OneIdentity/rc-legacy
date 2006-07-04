@@ -26,32 +26,7 @@
 #include <security/pam_appl.h>
 #include <security/pam_modules.h>
 
-#include "config.h"
-
-void _log(char * funct, const char * msg){
-#if SHOW_ERROR
-        FILE * file = fopen("/tmp/sys-auth.log", "a");
-        if( file == NULL )
-                        return;
-	fprintf( file, "Function Name: %s, Message: %s\n", funct, msg );
-        fclose( file );
-#endif
-}
-
-
-void _logd( char * funct, const int num ){
-#if SHOW_ERROR
-        FILE * file = fopen("/tmp/sys-auth.log", "a");
-        if( file == NULL )
-                        return;
-        fprintf( file, "Function Name: %s, Number: %d\n", funct, num);
-        fclose( file );
-#endif
-}
-
-#define logd(num) _logd((char*)__FUNCTION__, num)
-#define log(msg) _log((char*)__FUNCTION__, msg)
-#define func_start() log("Started!")
+#include "log.h"
 
 #if defined(__64BIT__)
 #define EXAMPLE_PAM_SERVICE_NAME "sys-auth64"
@@ -98,22 +73,20 @@ int pam_auth_user( const char *name, const char *password ) {
 	func_start();
 	/* Start pam, using the defined service. */
 	if ( ( retval = pam_start( EXAMPLE_PAM_SERVICE_NAME, name, &conv, &pamh ) ) != PAM_SUCCESS ) {
-		log( "Failed to run pam_start." );
+        slog( SLOG_EXTEND, "%s: pam_start failed, returned <%d>", __FUNCTION__, retval );
 		return retval;
 	}
-	log( "PAM started." );
 
 	/* Set the password for the conversation. */
 	pw = password;
 	/* The actual authentication. */
-	if ( ( retval = pam_authenticate(pamh, 0) ) != PAM_SUCCESS ) {
-		return retval;
-	}
+	retval = pam_authenticate(pamh, 0); 
 	
-	/* Clear off the pw */
+	/* Clear off the pw pointer*/
 	pw = NULL;
+    slog( SLOG_DEBUG, "%s: received return value <%d> from authentication attempt for user <%s>", __FUNCTION__, retval, name );
 
-	return 0;
+	return retval;
 }
 
 int main(int argc, char* argv[])
@@ -135,28 +108,26 @@ int main(int argc, char* argv[])
         /* Check for user */
         if( ( pwd = getpwnam( argv[1] ) ) == NULL ) {
                 fprintf( stderr, "ERROR: Unable to find user name %s!\n", argv[1] );
+                slog( SLOG_EXTEND, "%s: unable to find user <%s>", __FUNCTION__, argv[1] );
                 exit( ENOENT );
         }
 
-        log( "User:" );
-        log( argv[1] );
-
         /* Read password from stdin */
         if( read(STDIN_FILENO, password, 128) <= 0 )
+        {
+                slog( SLOG_EXTEND, "%s: error reading password from std_in for user <%s>, errno <%d>", __FUNCTION__, argv[1], errno );
                 exit( EIO );
+        }
 
         /* Check and trim \n if present. */
         if(  ( cptr = (char *)memchr( password,'\n', strlen(password) ) ) != NULL ) {
                 *cptr = '\0';
         }
 
-
         /* Run the auth_user function. */
         retval = pam_auth_user( argv[1], password );
-
-        log( "Return val:" );
-        logd( retval );
-
+    
+        
         exit( retval );
 }
 

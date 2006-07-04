@@ -1,0 +1,6 @@
+No news is good news
+
+Logs to syslog now, with better division of messages. Default logs jsut authentications. 
+
+A basic make test framework is in place. modify test.conf with a username/password to test authentication.
+Run with DB2INSTANCE set to a proper instance name that has the plugin installed.

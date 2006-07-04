@@ -14,37 +14,118 @@
 #*          the included LICENSE file.
 #********************************************************************/
 
-PLUGINDIR32 = $(HOME)/sqllib/security32/plugin
 # The compile options were made for gcc
-OS = LINUX
-CC = gcc
-COMPLIB =  -fpic -D$(OS) -DDB2_PLAT_INIX -D_REENTRANT -g -DUSE_UI_THREADS
+VERSION = @VERSION@
+CC = @CC@
+CC64 = @CC64@
+CFLAGS = @CFLAGS@ @DEFS@ -g -DVERSION=\"$(VERSION)\"
 DB2PATH = $(HOME)/sqllib
-INCLUDES = -I$(DB2PATH)/include -I../include
-LINKLIB = -static-libgcc -shared -Bsymbolic -lc
-PROG = sys-auth
+INCLUDES = -I$(DB2PATH)/include -I../include -I. -I/opt/quest/include
+LDFLAGS = @LDFLAGS@
+PROG = @PACKAGE_NAME@
 PROG32 = $(PROG)32
+PROG64 = $(PROG)64
+MAKE = @MAKE@
 
-all : $(PROG32).so
+@AIX_TRUE@all : $(PROG32).so $(PROG64).so lamAuth32 lamAuth64 pamAuth32 pamAuth64
+@AIX_FALSE@@B64_TRUE@all : $(PROG32).so $(PROG64).so pamAuth32 pamAuth64
+@AIX_FALSE@@B64_FALSE@all : $(PROG32).so pamAuth32
 
-clean: 
-	rm -f *.o 
+check: all test_all
+	./test_all "./sys-auth32.so"
+    
+test_all: ctest.o csuite.o test_all.o log.o
+@HPUX_TRUE@	$(CC) -o test_all test_all.o ctest.o csuite.o log.o vsyslog32.o -ldld
+@HPUX_FALSE@	$(CC) -o test_all test_all.o ctest.o csuite.o log.o vsyslog32.o -ldl 
 
-cleanall: clean
-	rm -f *.so pamAuth32 
+test_all.o: test_all.c
+	$(CC) $(CFLAGS) $(INCLUDES) -o test_all.o -c test_all.c -g
+    
+ctest.o: ctest.h ctest.c bool.h
+	$(CC) -c ctest.c -o ctest.o
 
-distclean: cleanall
-	rm -f Makefile config.bak config.h
+csuite.o: ctest.h ctest.c bool.h csuite.c csuite.h
+	$(CC) -c csuite.c -o csuite.o
 
-$(PROG32).so: $(PROG32).o pamAuth32
-	$(CC) $(LINKLIB) -o $(PROG32).so $(PROG32).o 
+clean:
+	rm -f *.o *.so pamAuth32 pamAuth64 lamAuth32 lamAuth64 test/*.o test_all
+
+distclean: clean
+	rm -rf config.h config.log config.status Makefile install.sh install DB2*
+
+$(PROG32).so: $(PROG32).o log32.o
+	$(CC) $(LDFLAGS) -o $(PROG32).so $(PROG32).o vsyslog32.o log32.o
 
 $(PROG32).o: $(PROG).c
-	$(CC) $(COMPLIB) $(INCLUDES) -o $(PROG32).o -c $(PROG).c
+	$(CC) $(CFLAGS) $(INCLUDES) -o $(PROG32).o -c $(PROG).c
 
-pamAuth32: pamAuth32.o
-	$(CC) pamAuth32.o -o pamAuth32 -lpam
+$(PROG64).so: $(PROG64).o log64.o
+	$(CC64) $(LDFLAGS) -o $(PROG64).so $(PROG64).o vsyslog64.o log64.o
+
+$(PROG64).o: $(PROG).c
+	$(CC64) $(CFLAGS) $(INCLUDES) -o $(PROG64).o -c $(PROG).c 
+
+pamAuth32: pamAuth32.o log32.o
+	$(CC) pamAuth32.o -o pamAuth32 -lpam log32.o vsyslog32.o
+
+pamAuth64: pamAuth64.o log64.o
+	$(CC64) pamAuth64.o -o pamAuth64 -lpam log64.o vsyslog64.o
 
 pamAuth32.o: pamAuth.c
-	$(CC) -D$(OS) -c pamAuth.c -o pamAuth32.o
+	$(CC) $(CFLAGS) $(INCLUDES)  -c pamAuth.c -o pamAuth32.o
 
+pamAuth64.o: pamAuth.c
+	$(CC64) $(CFLAGS) $(INCLUDES) -c pamAuth.c -o pamAuth64.o
+
+lamAuth32: lamAuth32.o
+	$(CC) lamAuth32.o -o lamAuth32 vsyslog32.o log32.o
+
+lamAuth64: lamAuth64.o
+	$(CC64) lamAuth64.o -o lamAuth64 vsyslog64.o log64.o
+
+lamAuth32.o: lamAuth.c
+	$(CC) $(CFLAGS) $(INCLUDES) -c lamAuth.c -o lamAuth32.o
+
+lamAuth64.o: lamAuth.c
+	$(CC64) $(CFLAGS) $(INCLUDES) -c lamAuth.c -o lamAuth64.o
+
+log32.o: log.c log.h vsyslog32.o
+	$(CC) $(CFLAGS) $(INCLUDES) -c log.c -o log32.o
+
+log64.o: log.c log.h vsyslog64.o
+	$(CC64) $(CFLAGS) $(INCLUDES) -c log.c -o log64.o
+
+vsyslog32.o: vsyslog.c vsyslog.h
+	$(CC) $(CFLAGS) $(INCLUDES) -c vsyslog.c -o vsyslog32.o
+
+vsyslog64.o: vsyslog.c vsyslog.h
+	$(CC64) $(CFLAGS) $(INCLUDES) -c vsyslog.c -o vsyslog64.o
+
+bin_dist: all test_all
+	@rm -rf DB2_sys-auth
+	@mkdir DB2_sys-auth
+@AIX_TRUE@	@cp sys-auth32.so sys-auth64.so install.sh INSTALL README LICENSE pamAuth32 pamAuth64 lamAuth32 lamAuth64 NEWS AUTHORS TESTING ChangeLog pam.conf.aix test_all test.conf DB2_sys-auth/ 
+@AIX_FALSE@@B64_TRUE@	@cp sys-auth32.so sys-auth64.so install.sh INSTALL LICENSE README pamAuth32 pamAuth64 NEWS AUTHORS TESTING ChangeLog pam.conf.aix test_all test.conf DB2_sys-auth/
+@AIX_FALSE@@B64_FALSE@	@cp sys-auth32.so install.sh INSTALL README LICENSE pamAuth32 NEWS AUTHORS TESTING ChangeLog pam.conf.aix test_all test.conf DB2_sys-auth/
+	@tar -cvf DB2_sys-auth_@OS@.tar DB2_sys-auth/*
+	@rm -rf DB2_sys-auth
+	@gzip DB2_sys-auth_@OS@.tar
+
+
+src_dist: all
+	@rm -rf DB2_sys-auth
+	@mkdir DB2_sys-auth
+	@cp configure config.h.in log.h log.c vsyslog.c vsyslog.h sys-auth.c install.sh.in Makefile.in INSTALL README LICENSE pamAuth.c lamAuth.c NEWS AUTHORS TESTING ChangeLog pam.conf.aix ctest.c ctest.h csuite.c csuite.h test_all.c test.conf bool.h DB2_sys-auth/ 
+	@tar -cvf DB2_sys-auth_src.tar DB2_sys-auth/*
+	@rm -rf DB2_sys-auth
+	@gzip DB2_sys-auth_src.tar
+
+
+dist: bin_dist src_dist
+
+install: all
+	@echo 
+	@echo 
+	@echo "Please run './install.sh <instance name> [LAM]'"
+	@echo 
+	@echo 

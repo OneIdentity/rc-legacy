@@ -3,14 +3,13 @@
 # Uncomment for debug info.
 # set -x
 
-
 if [ -z "$1" ] || [ -n "$3" ]
 then
-	echo "Usage: $0 <Instance owner, i.e. db2inst1> [LAM] "
+	echo "Usage: $0 <Instance owner, i.e. db2inst1> [LAM]"
 	exit 1
 fi
 
-whoami | grep root
+whoami | grep -q root
 if [ $? -ne 0 ]
 then
 	echo "Must be root to run this!"
@@ -47,15 +46,14 @@ then
 	exit 1
 fi
 
-if [ "$2" = "LAM" ] 
-then
-		AUTH32=lamAuth32
-		AUTH64=lamAuth64
+uname -a | awk '{print $1}' | grep -q AIX
+if [ "$2" = "LAM" -a $? -eq 0  ]; then 
+        AUTH32=lamAuth32
+        AUTH64=lamAuth64
 else
-		AUTH32=pamAuth32
-		AUTH64=pamAuth64
+        AUTH32=pamAuth32
+        AUTH64=pamAuth64
 fi
-
 
 if [ ! -x "${AUTH32}" ]
 then

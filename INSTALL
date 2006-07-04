@@ -2,36 +2,36 @@ Simple setup:
 For this example:
 	On AIX
         instance owner name: db2inst1
-        instance location: /home/db2inst1/sqllib
         Package is in /tmp
-        You are installing the 64bit LAM library
+        You are installing the LAM library
 	You understand the setuid'ing of the auth file.
 
 As root:
     cd /tmp
     gzip -c -d DB2_AIX_bin.tar.gz | tar -xvf -
     cd DB2_sys-auth
-    ./install.sh 64 /home/db2inst1 LAM
+    ./install.sh db2inst1 LAM
     (This copies the files, and does a setuid on lamAuth64 so authentication can work.)
-    su db2inst1
-    ./d2conf.sh sys-auth64.so
-    (This sets the plug-in for SRVCON_PW_PLUGIN GROUP_PLUGIN and CLNT_PW_PLUGIN to the library, sys-auth64)
-
+    su  - db2inst1
+    db2stop
+    db2 update dbm cfg using SRVCON_PW_PLUGIN sys-auth
+    db2 update dbm cfg using GROUP_PLUGIN sys-auth
+    db2 update dbm cfg using CLNT_PW_PLUGIN sys-auth
+    db2start
 
 
 Making:
     As the instance owner, download and untar/gzip the src package. 
-    run ./Config
+    ./configure
     make
 
-The library assumes that the instance owner is avalaible from ${DB2INSTANCE} of the runner.
-
-You must pick the right level for the instance, 32 or 64. That information can be received from db2level.
+Testing:
+    I am still working on the test framework, at the moment its pretty basic. 
+    And have the sys-auth32.so library in the same directory. 
+    If DB2INSTANCE is not set, or it does not have pamAuth32, the test will look for pamAuth32 in the current directory. 
 
 If you are on AIX 5.1, and want to use PAM, you will need to install the AIX PAM libraries, namely pam_aix.
 
-Both AIX 5.1 and 5.2 do not provide pam.conf, a sample pam.conf.sample is in this package.
+Both AIX 5.1 and 5.2 do not provide pam.conf, a sample aix.pam.conf is in this package.
 
-AIX pam_aix is 32-bit only.
-
-If you run Config with -d, it will make SHOW_ERROR 1, so debug messages are recorded. This is not advised becasuse this will increase disk activity, and save in a file users passwords.
+AIX pam_aix is 32-bit only, meaning if you are running a 64-bit instance, do not use PAM if you need to authenticate local users. 

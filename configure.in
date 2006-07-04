@@ -1,0 +1,106 @@
+AC_INIT(sys-auth, 1.0.2)
+VERSION="1.0.2"
+AC_CONFIG_HEADER(config.h)
+
+dnl Find and test the C compiler
+AC_PROG_CC
+AC_LANG_C
+
+AIX_TRUE=#
+HPUX_TRUE=#
+LINUX_TRUE=#
+SOLARIS_TRUE=#
+AIX_FALSE=''
+HPUX_FALSE=''
+LINUX_FALSE=''
+SOLARIS_FALSE=''
+B64_TRUE=''
+B64_FALSE=#
+CC="gcc"
+
+case `uname -a | awk '{print $1}'` in
+    "Linux")
+        OS="LINUX"
+        LINUX_TRUE=''
+        LINUX_FALSE=#
+        CC=gcc
+        uname -m | grep -q x86_64
+        if test $? -eq 1 ; then
+            B64_TRUE=#
+            B64_FALSE=''
+        fi
+        ;;
+    "SunOS")
+        OS="SOLARIS"
+        SOLARIS_TRUE=''
+        SOLARIS_FALSE=#
+        CC="gcc -m32"
+        CC64="gcc -m64"
+        ;;
+    "HP-UX")
+        OS=HPUX
+        HPUX_TRUE=''
+        HPUX_FALSE=#
+        if test -f /usr/lib/hpux64/libpam.so ; then
+            CC64="gcc -mlp64"
+        else
+            B64_TRUE=#
+            B64_FALSE=''
+        fi
+        ;;
+    "AIX")
+        OS=AIX
+        AIX_TRUE=''
+        AIX_FALSE=#
+        CC=gcc
+        CC64="gcc -maix64"
+        ;;
+esac        
+
+AC_CHECK_FUNCS(vsyslog snprintf asprintf asnprintf vasprintf vasnprintf vsnprintf)
+
+CFLAGS="-D${OS} -fpic"
+case $OS in 
+    "AIX")
+        if test `uname -a | awk '{print $3}'` -eq 3 ; then 
+            OS=AIX_53    
+        fi
+        ;;
+    "HP-UX")
+        if test `uname -a | awk '{print $3}'` = "ia64" ; then
+            OS=HPUX_IA64
+        fi    
+        ;;
+    *)
+        ;; 
+esac        
+LDFLAGS='-static-libgcc -shared -Bsymbolic -lc'
+
+AC_SUBST(OS)
+AC_SUBST(AIX_TRUE)
+AC_SUBST(HPUX_TRUE)
+AC_SUBST(LINUX_TRUE)
+AC_SUBST(SOLARIS_TRUE)
+AC_SUBST(AIX_FALSE)
+AC_SUBST(HPUX_FALSE)
+AC_SUBST(LINUX_FALSE)
+AC_SUBST(SOLARIS_FALSE)
+AC_SUBST(B64_TRUE)
+AC_SUBST(B64_FALSE)
+AC_SUBST(PACKAGE_NAME)
+AC_SUBST(CC)
+AC_SUBST(CC64)
+AC_SUBST(CFLAGS)
+AC_SUBST(LDFLAGS)
+
+AC_PROG_MAKE_SET
+AC_SUBST(MAKE)
+
+AC_HEADER_STDC
+                  
+AC_SUBST(VERSION)
+
+dnl read Makefile.in and write Makefile
+AC_OUTPUT(Makefile)
+AC_OUTPUT(install.sh)
+chmod u+x install.sh
