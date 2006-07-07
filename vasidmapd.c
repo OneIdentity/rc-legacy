@@ -18,6 +18,7 @@
 #endif
 
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <netinet/in.h>
@@ -685,7 +686,7 @@ int main (int argc, char *argv[])
 	struct sockaddr_in sockin;
 	char *query = NULL;
 	char *err_msg;
-	int count, len, ret, opt;
+	int count, len, ret, opt, child;
 
 	debug = 0;
 	if (argc > 1) {
@@ -724,12 +725,40 @@ int main (int argc, char *argv[])
 		exit(6);
 	}
 
+	child = 0;
+
 	while (1) {
-		int new;
+		int new, state, ret;
 		struct sockaddr addr;
 		socklen_t addrlen;
 		pid_t pid;
-	
+		struct timeval tv;
+		fd_set r_fds;
+
+		tv.tv_sec = 1;
+		tv.tv_usec = 0;
+		FD_ZERO(&r_fds);
+		FD_SET(sd, &r_fds);
+
+		ret = select(sd+1, &r_fds, NULL, NULL, &tv);
+		if (ret == 0) {
+			int i;
+			/* select has timed out let's just clean out pending
+			 * children and continue */
+			for (i = child; i > 0; i--) {
+				if (waitpid(-1, &state, WNOHANG) > 0) {
+					child--;
+				} else {
+					break;
+				}
+			}
+			continue;
+		}
+		if (ret < 0) {
+			if (debug) fprintf(stderr, "Socket error!");
+			exit(ret);
+		}
+
 		new = accept(sd, (struct sockaddr *)&addr, &addrlen);
 
 		if (new == -1) {
@@ -746,7 +775,7 @@ int main (int argc, char *argv[])
 
 		if (pid) {
 			close(new);
-			/* waitpid */
+			child++;
 		} else {
 			int ret;
 
