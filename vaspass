@@ -45,3 +45,6 @@ IFS=$'\n'
 DOMUSER=`/opt/quest/bin/vastool list users | head -n 1 |cut -d ':' -f 1`
 DOMSID=`/opt/quest/bin/vasidmap -u -n "$DOMUSER" | cut -d '-' -f 1-7`
 /opt/quest/bin/net setdomainsid $DOMSID
+
+#Finally run vasmap-preload to prefill the idmap cache
+/opt/quest/bin/vasmap-preload
