@@ -53,11 +53,11 @@ pkginfo_create ${SCRIPTDIR}/pkginfo.clients.in pkginfo
 pkgmk -o -r "${OUTPUTDIR}" -d /var/tmp -f "${SCRIPTDIR}/Prototype.clients"
 
 cd /var/tmp
-tar -cf - QSFTvasapps-clients | gzip -9 -c > QSFTvasapps-clients.${PKGVERSION}.${ARCH}.tar.gz
-tar -cf - QSFTvasapps-servers | gzip -9 -c > QSFTvasapps-servers.${PKGVERSION}.${ARCH}.tar.gz
+echo "QSFTvasapps-clients" | pkgtrans -os . ./QSFTvasapps-clients.$PKGVERSION.$ARCH.pkg
+echo "QSFTvasapps-servers" | pkgtrans -os . ./QSFTvasapps-servers.$PKGVERSION.$ARCH.pkg
 
 test -d "${PACKAGES_DEST}" || mkdir "${PACKAGES_DEST}"
-cp QSFTvasapps-*.${PKGVERSION}.${ARCH}.tar.gz ${PACKAGES_DEST}
+cp QSFTvasapps-*.${PKGVERSION}.${ARCH}.pkg ${PACKAGES_DEST}
 
 echo "Build complete, cleaning up..."
 cd "${SCRIPTDIR}"
