@@ -50,8 +50,8 @@ mkdir -p $RPM_BUILD_ROOT%{_sysconfdir}/rc.d/init.d
 
 install -m755 vasidmapd ${RPM_BUILD_ROOT}/%{_prefix}/sbin
 install -m755 vasidmap ${RPM_BUILD_ROOT}/%{_prefix}/bin
-install -m755 vaspass ${RPM_BUILD_ROOT}/%{_prefix}/bin
-install -m755 vasmapcron ${RPM_BUILD_ROOT}/%{_prefix}/bin
+install -m755 vasidmap-config ${RPM_BUILD_ROOT}/%{_prefix}/bin
+install -m755 vasidmap-preload ${RPM_BUILD_ROOT}/%{_prefix}/bin
 install -m755 vasidmapd-rh.init $RPM_BUILD_ROOT%{_sysconfdir}/rc.d/init.d
 install -m755 vasidmapd-suse.init $RPM_BUILD_ROOT%{_sysconfdir}/rc.d/init.d
 
@@ -69,13 +69,13 @@ else
         /sbin/insserv vasidmapd
   fi
 fi
-MAPCRON=`grep vasmapcron /etc/crontab > /dev/null && echo 1 || echo 0`
-if [ $MAPCRON == "0" ]; then
-	echo "5,35 * * * * root /opt/quest/bin/vasmapcron > /dev/null 2>&1" >> /etc/crontab
-fi
-#TODO: need to check if smb.conf is configured properly and if the machine is actually joined
-/opt/quest/bin/smbpasswd -w secret > /dev/null 2>&1
-/opt/quest/bin/vaspass
+# remove vasmacron from crontab (inserted by preproduction packages only)
+#MAPCRON=`grep vasmapcron /etc/crontab > /dev/null && echo 1 || echo 0`
+#if [ $MAPCRON != "0" ]; then
+#	grep -v vasmapcron /etc/crontab > /etc/crontab.new
+#	mv /etc/crontab.new /etc/crontab
+#fi
+/opt/quest/bin/vasidmap-config
 
 %preun
 if [ -f /etc/redhat-release ]; then
@@ -97,8 +97,8 @@ exit 0
 
 %{_sbindir}/vasidmapd
 %{_bindir}/vasidmap
-%{_bindir}/vaspass
-%{_bindir}/vasmapcron
+%{_bindir}/vasidmap-config
+%{_bindir}/vasidmap-preload
 %{_sysconfdir}/rc.d/init.d/vasidmapd-rh.init
 %{_sysconfdir}/rc.d/init.d/vasidmapd-suse.init
 

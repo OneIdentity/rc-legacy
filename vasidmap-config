@@ -64,12 +64,26 @@ function check_and_fix {
 	return 0
 }
 
-#Gather configuration data
+##########################
+#          MAIN          #
+##########################
 
+
+# First of all check if we are joined
+/opt/quest/bin/vastool -u host/ auth -S host/ > /dev/null 2>&1
+if [ "$?" != "0" ]; then
+	echo "ERROR: The machine appears to be not joined to any domain"
+	echo "Verify the machine is correctly joined and then launch"
+	echo "/opt/quest/bin/vasidmap-config to finish up the installation"
+	echo "and configuration of both samba and vas"
+	exit 1
+fi
+
+#Gather configuration data
 # Find the REALM
 REALM=`${VASTOOL} -u host/ info domain | tr "[:lower:]" "[:upper:]"`
 if [ "$REALM" = "" ]; then
-	echo "Error: unable to determine REALM."
+	echo "ERROR: unable to determine REALM."
 	echo "Is the machine porperly joined to the domain ?"
 	exit 1
 fi
@@ -77,20 +91,20 @@ fi
 # Find the pre-Windows 2000 Domain Name (Workgroup)
 DOMAINDN=`${VASTOOL} -u host/ info domain-dn`
 if [ "$DOMAINDN" = "" ]; then
-	echo "Error: unable to determine the domain DN."
+	echo "ERROR: unable to determine the domain DN."
 	echo "Is the machine porperly joined to the domain ?"
 	exit 1
 fi
 
 WORKGROUP=`${VASTOOL} -u host/ search -b CN=Configuration,${DOMAINDN} -q \(ncName=${DOMAINDN}\) nETBIOSName`
 if [ "$WORKGROUP" = "" ]; then
-	echo "Error: unable to determine the pre-Windows 2000 Domain Name."
+	echo "ERROR: unable to determine the pre-Windows 2000 Domain Name."
 	echo "Is the machine porperly joined to the domain ?"
 	exit 1
 fi
 
 if [ ! -f ${SAMBACONF} ]; then
-	echo "smb.conf file missing!"
+	echo "ERROR: smb.conf file missing!"
 	echo "Please verify that samba is installed properly."
 	exit 1
 else
@@ -98,6 +112,14 @@ else
 	TODAY=`date +"%Y%m%d"`
 	cp ${SAMBACONF} ${SAMBACONF}.${TODAY}
 fi
+
+### Make sure samba services are stopped while checking and updating configuration
+if [ -f /etc/init.d/nmb-quest ]; then
+	# Suse has this, RedHat don't
+	/etc/init.d/nmb-quest stop
+fi
+/etc/init.d/smb-quest stop
+/etc/init.d/winbind-quest stop
 
 ##########################
 # Verify/Modify smb.conf #
@@ -111,54 +133,70 @@ cp ${SAMBACONF} ${CONFMOD}
 check_and_fix "workgroup" "${WORKGROUP}" "${CONFMOD}"
 if [ "$?" -eq "1" ]; then
 	MISSING_WORKGROUP=1
+	MISSINGS=1
 fi
 
 check_and_fix "realm" "${REALM}" "${CONFMOD}"
 if [ "$?" -eq "1" ]; then
 	MISSING_REALM=1
+	MISSINGS=1
 fi
 
 check_and_fix "security" "ads" "${CONFMOD}"
 if [ "$?" -eq "1" ]; then
 	MISSING_SECURITY=1
+	MISSINGS=1
 fi
 
-check_and_fix "spnego" "yes" "${CONFMOD}"
+check_and_fix "use spnego" "yes" "${CONFMOD}"
 #if missing do nothing, by default it is true
 
 check_and_fix "use kerberos keytab" "yes" "${CONFMOD}"
 if [ "$?" -eq "1" ]; then
 	MISSING_UKK=1
+	MISSINGS=1
 fi
 
 check_and_fix "machine password timeout" "0" "${CONFMOD}"
 if [ "$?" -eq "1" ]; then
 	MISSING_MPT=1
+	MISSINGS=1
 fi
 
 check_and_fix "username map script" "/opt/quest/bin/vasidmap" "${CONFMOD}"
 if [ "$?" -eq "1" ]; then
 	MISSING_UMS=1
+	MISSINGS=1
+fi
+
+check_and_fix "ldap admin dn" "CN=VasIdmapAdmin" "${CONFMOD}"
+if [ "$?" -eq "1" ]; then
+	MISSING_LDAPADM=1
+	MISSINGS=1
 fi
 
 check_and_fix "idmap backend" "ldap" "${CONFMOD}"
 if [ "$?" -eq "1" ]; then
 	MISSING_IDMAPBCK=1
+	MISSINGS=1
 fi
 
 check_parm "idmap uid" "${CONFMOD}"
 if [ "$?" -eq "1" ]; then
 	MISSING_IDMAPUID=1
+	MISSINGS=1
 fi
 
 check_parm "idmap gid" "${CONFMOD}"
 if [ "$?" -eq "1" ]; then
 	MISSING_IDMAPGID=1
+	MISSINGS=1
 fi
 
 check_parm "idmap expire time" "${CONFMOD}"
 if [ "$?" -eq "1" ]; then
 	MISSING_IDMAPEXP=1
+	MISSINGS=1
 fi
 
 SECTIONS=0 # 1 will be [GLOBAL], 2 will be the first share
@@ -173,13 +211,13 @@ while read -s ILINE; do
 	fi
 
 	# Terminate reading [GLOBAL]
-	if [ "$SECTIONS" -eq "2" ]; then
-
+	if [ "$SECTIONS" == "2" ]; then
+	    if [ "$MISSINGS" == "1" ]; then
 		#Add all the missing parameters
 
 		echo ""
-		echo "-- Addedd by vasidmap-config --"
-		echo ""
+		echo "### Addedd by vasidmap-config ###"
+		echo "#"
 
 		if [ "${MISSING_WORKGROUP}" == "1" ]; then
 			echo "  workgroup = ${WORKGROUP}"
@@ -205,6 +243,10 @@ while read -s ILINE; do
 			echo "  username map script = /opt/quest/bin/vasidmap"
 		fi
 
+		if [ "${MISSING_LDAPADM}" == "1" ]; then
+			echo "  ldap admins dn = CN=VasIdmapAdmin"
+		fi
+
 		if [ "${MISSING_IDMAPBCK}" == "1" ]; then
 			echo "  idmap backend = ldap"
 		fi
@@ -221,8 +263,8 @@ while read -s ILINE; do
 			echo "  idmap expire time = 300   # Expire the tdb cache every 5 minutes"
 		fi
 
-		echo ""
-		echo "-- Addedd by vasidmap-config --"
+		echo "                                #"
+		echo "### Addedd by vasidmap-config ###"
 		echo ""
 		
 		# add back the section name
@@ -234,14 +276,19 @@ while read -s ILINE; do
 			echo $ILINE
 		done
 
-	# Copy everything else
+	    fi #MISSINGS
+
 	else
+		# Copy everything else
 		echo $ILINE
 	fi
 	
 done > ${CONFMOD}.new < ${CONFMOD}
 rm -f ${CONFMOD}
 mv ${CONFMOD}.new ${SAMBACONF}
+
+#set a fake ldap password
+/opt/quest/bin/smbpasswd -w secret > /dev/null 2>&1
 
 ##########################
 # Verify/Modify vas.conf #
@@ -301,3 +348,10 @@ DOMSID=`/opt/quest/bin/vasidmap -u -n "$DOMUSER" | cut -d '-' -f 1-7`
 #Finally run vasmap-preload to prefill the idmap cache
 #/opt/quest/bin/vasmap-preload
 
+### Finally restart samba services
+if [ -f /etc/init.d/nmb-quest ]; then
+	# Suse has this, RedHat don't
+	/etc/init.d/nmb-quest start
+fi
+/etc/init.d/smb-quest start
+/etc/init.d/winbind-quest start
