@@ -7,7 +7,7 @@ AM_CFLAGS =  $(VAS_CFLAGS)
 
 sbin_PROGRAMS=		vasidmapd
 bin_PROGRAMS=		vasidmap
-dist_bin_SCRIPTS=	vaspass vasmapcron
+dist_bin_SCRIPTS=	vasidmap-preload vasidmap-config
 
 vasidmap_LDADD  =   $(LIBOBJS)
 vasidmapd_LDADD =   $(LIBOBJS)
