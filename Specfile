@@ -9,7 +9,7 @@ Summary:  VAS idmap daemon and utilities
 Vendor:   Quest Software
 Packager: Vinteal Resource Central Team
 Name:     vas3-samba-idmap
-Version:  0.7
+Version:  0.8
 Release:  1
 License:  Quest Software - All Rights Reserved
 Group:    System Environment/Daemons
