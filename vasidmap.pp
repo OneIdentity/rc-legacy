@@ -3,7 +3,7 @@
     description="VAS idmap module for Samba"
 
 %depend
-    samba 3.0.22
+    quest-samba 3.0.22
 
 %files
     /opt/quest/bin/vasidmap-config
