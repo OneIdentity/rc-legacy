@@ -3,7 +3,7 @@
 AC_INIT([vasidmap],
 	[0.6]esyscmd((svnversion . /trunk||echo 0)|tr : _|tr -d \\012),
 	[samba@rc.vintela.com])
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE()
 AC_CONFIG_SRCDIR([vasidmap.c])
 AC_CONFIG_FILES([Makefile])
 AC_CONFIG_HEADERS([config.h])

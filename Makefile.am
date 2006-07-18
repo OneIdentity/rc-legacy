@@ -12,5 +12,12 @@ dist_bin_SCRIPTS=	vasidmap-preload vasidmap-config
 vasidmap_LDADD  =   $(LIBOBJS)
 vasidmapd_LDADD =   $(LIBOBJS)
 
-EXTRA_DIST=	vasidmapd-rh.init vasidmapd-suse.init
+EXTRA_DIST=	vasidmap.pp LICENCE 
 
+dist-hook:
+	cp /data/rc/pub/rc/polypkg/pp $(distdir)/pp
+package: pp vasidmap.pp
+	test -n "$(DESTDIR)"
+	$(srcdir)/pp --destdir=$(DESTDIR) \
+	    $(srcdir)/vasidmap.pp \
+	    version="$(VERSION)"
