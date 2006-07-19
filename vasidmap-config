@@ -81,12 +81,13 @@ fi
 
 #Gather configuration data
 # Find the REALM
-REALM=`${VASTOOL} -u host/ info domain | tr "[:lower:]" "[:upper:]"`
-if [ "$REALM" = "" ]; then
+DOMAIN=`${VASTOOL} -u host/ info domain`
+if [ "$DOMAIN" = "" ]; then
 	echo "ERROR: unable to determine REALM."
 	echo "Is the machine porperly joined to the domain ?"
 	exit 1
 fi
+REALM=`echo ${DOMAIN} | tr "[:lower:]" "[:upper:]"`
 
 # Find the pre-Windows 2000 Domain Name (Workgroup)
 DOMAINDN=`${VASTOOL} -u host/ info domain-dn`
@@ -96,7 +97,14 @@ if [ "$DOMAINDN" = "" ]; then
 	exit 1
 fi
 
-WORKGROUP=`${VASTOOL} -u host/ search -b CN=Configuration,${DOMAINDN} -q \(ncName=${DOMAINDN}\) nETBIOSName`
+CONFPART=`${VASTOOL} -u host/ search -s base -b "" -q "(objectclass=*)" namingContexts | grep -i "^CN=Configuration"`
+if [ "$CONFPART" = "" ]; then
+	echo "ERROR: unable to find the configuratio partition in your AD domain."
+	echo "Is the machine porperly joined to the domain ?"
+	exit 1
+fi
+
+WORKGROUP=`${VASTOOL} -u host/ search -U"DC://@${DOMAIN}" -b ${CONFPART} -q \(ncName=${DOMAINDN}\) nETBIOSName`
 if [ "$WORKGROUP" = "" ]; then
 	echo "ERROR: unable to determine the pre-Windows 2000 Domain Name."
 	echo "Is the machine porperly joined to the domain ?"
