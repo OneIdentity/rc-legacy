@@ -213,7 +213,7 @@ SAVEIFS=$IFS
 IFS=""
 while read -s ILINE; do
 
-	echo $ILINE | grep -E "[ \t]*\[.*\][ \t]*.*" > /dev/null
+	echo $ILINE | grep -E "[ \t]*\[.*\].*" > /dev/null
 	if [ "$?" -eq "0" ]; then
 		let SECTIONS++
 	fi
@@ -224,8 +224,8 @@ while read -s ILINE; do
 		#Add all the missing parameters
 
 		echo ""
-		echo "### Addedd by vasidmap-config ###"
-		echo "#"
+		echo "--- options addedd by vasidmap-config (start) ---"
+		echo ""
 
 		if [ "${MISSING_WORKGROUP}" == "1" ]; then
 			echo "  workgroup = ${WORKGROUP}"
@@ -271,20 +271,20 @@ while read -s ILINE; do
 			echo "  idmap expire time = 300   # Expire the tdb cache every 5 minutes"
 		fi
 
-		echo "                                #"
-		echo "### Addedd by vasidmap-config ###"
+		echo ""
+		echo "--- options addedd by vasidmap-config (end) ---"
 		echo ""
 		
-		# add back the section name
-		echo $ILINE
-
-		# Copy as is the rest of the file and exit
-		CONT=1
-		while read -s ILINE; do
-			echo $ILINE
-		done
-
 	    fi #MISSINGS
+
+	    # add back the section name
+	    echo $ILINE
+
+	    # Copy as is the rest of the file and exit
+	    CONT=1
+	    while read -s ILINE; do
+		echo $ILINE
+	    done
 
 	else
 		# Copy everything else
