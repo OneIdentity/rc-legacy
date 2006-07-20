@@ -122,12 +122,9 @@ else
 fi
 
 ### Make sure samba services are stopped while checking and updating configuration
-if [ -f /etc/init.d/nmb-quest ]; then
-	# Suse has this, RedHat don't
-	/etc/init.d/nmb-quest stop
-fi
-/etc/init.d/smb-quest stop
-/etc/init.d/winbind-quest stop
+/etc/init.d/nmbd-quest stop
+/etc/init.d/smbd-quest stop
+/etc/init.d/winbindd-quest stop
 
 ##########################
 # Verify/Modify smb.conf #
@@ -357,9 +354,6 @@ DOMSID=`/opt/quest/bin/vasidmap -u -n "$DOMUSER" | cut -d '-' -f 1-7`
 #/opt/quest/bin/vasmap-preload
 
 ### Finally restart samba services
-if [ -f /etc/init.d/nmb-quest ]; then
-	# Suse has this, RedHat don't
-	/etc/init.d/nmb-quest start
-fi
-/etc/init.d/smb-quest start
-/etc/init.d/winbind-quest start
+/etc/init.d/nmbd-quest start
+/etc/init.d/smbd-quest start
+/etc/init.d/winbindd-quest start
