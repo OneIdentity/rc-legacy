@@ -167,27 +167,27 @@ int main( int argc, char *argv[] )
     if ((input == INPUT_NAME)) {
         char *upn;
         const char *backslash;
+	vas_user_t *vasuser;
 	struct passwd *pwent;
 
 	/* Strip leading domain from DOMAIN\USER names */
         if ((backslash = strchr(str, '\\')) != NULL)
             str = backslash + 1;
 
-        if (vas_name_to_principal(vasctx, str, VAS_NAME_TYPE_USER,
-		    VAS_NAME_FLAG_FOREST_SCOPE, &upn))
+        if (vas_user_init(vasctx, vasid, str, VAS_NAME_FLAG_NO_LDAP, &vasuser)) {
+	    errx(1, "vas_user_init '%.100s': %s", str, 
+		    vas_err_get_string(vasctx, 1));
+            printf("UNKNOWN_USER");
+	    exit(1);
+	}
+
+
+        if (vas_user_get_pwinfo(vasctx, vasid, vasuser, &pwent))
        	{
-            warn("vas_name_to_principal '%.100s': %s", str,
+            warn("vas_user_get_pwinfo '%.100s': %s", str,
                     vas_err_get_string(vasctx, 1));
             printf("UNKNOWN_USER");
-	    exit(0);
-        }
-
-	errno = 0;
-        if ((pwent = getpwnam(upn)) == NULL) {
-	    if (errno)
-		err(1, "getpwnam '%.100s'", upn);
-	    else
-		errx(1, "getpwnam '%.100s': not found", upn);
+	    exit(1);
         }
 
         printf("%s\n", pwent->pw_name);
