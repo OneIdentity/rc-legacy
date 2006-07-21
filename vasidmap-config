@@ -58,7 +58,6 @@ check_and_fix () {
 			# param wrong, fix it
 			echo "Correcting parameter '$1' to '$2'"
 
-			echo sed -e "/^$SP*${PREG}$SP*=/s/=.*/= ${VALUE}/"
 			sed -e "/^$SP*${PREG}$SP*=/s/=.*/= ${VALUE}/" \
                             < ${CONFFILE} > ${CONFFILE}.new
 			mv ${CONFFILE}.new ${CONFFILE}
