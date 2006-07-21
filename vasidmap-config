@@ -205,7 +205,7 @@ if test -s $NEWTEXT; then
 elif cmp $CONFMOD $SAMBACONF >/dev/null; then
     echo "$SAMBACONF: No changes required"
 else
-    echo "$SAMBACONF: Writing changes parameters"
+    echo "$SAMBACONF: updated"
     mv $CONFMOD $SAMBACONF
 fi
 rm -f $NEWTEXT
