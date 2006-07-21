@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # (c) 2006 Quest Software, Inc. All rights reserved.
 
 VASTOOL="/opt/quest/bin/vastool"
@@ -6,18 +6,20 @@ SAMBACONF="/etc/opt/quest/samba/smb.conf"
 VASCONF="/etc/opt/quest/vas/vas.conf"
 
 DEBUG=0
+SP='[ 	]'
+LSP='\[ 	\]'
 
 # parameters:
 #  1 parm name
 # return:
 #  0 all ok
 #  1 parm missing 
-function check_parm {
+check_parm () {
 
-	PREG=`echo $1 | sed -e s/\ /[\ ]\*/g`
+	PREG=`echo $1 | sed -e "s/$SP$SP*/$LSP$LSP*/g`
 	CONFFILE=$2
 
-	grep -E "^[ \t]*$PREG[ \t]*=[ \t]*" ${CONFFILE} >/dev/null
+	grep "^$SP*$PREG$SP*=" ${CONFFILE} >/dev/null
 	if [ "$?" -ne "0" ]; then
 
 		#param missing
@@ -35,17 +37,17 @@ function check_parm {
 #  0 all ok
 #  1 parm missing 
 
-function check_and_fix {
+check_and_fix () {
 
-	PREG=`echo $1 | sed -e s/\ /[\ ]\*/g`
+	PREG=`echo $1 | sed -e "s/$SP$SP*/$LSP$LSP*/g`
 	VALUE=$2
 	CONFFILE=$3
 
-	grep -E "^[ \t]*$PREG[ \t]*=[ \t]*${VALUE}[ \t]*" ${CONFFILE} >/dev/null
+	grep "^$SP*$PREG$SP*=$SP*${VALUE}$SP*" ${CONFFILE} >/dev/null
 	if [ "$?" -ne "0" ]; then
 
 		#param wrong or missing
-		grep -E "^[ \t]*$PREG[ \t]*=[ \t]*" ${CONFFILE} > /dev/null
+		grep "^$SP*$PREG$SP*=" ${CONFFILE} > /dev/null
 		if [ "$?" -ne "0" ]; then
 
 			#param missing
@@ -54,9 +56,11 @@ function check_and_fix {
 		else
 
 			# param wrong, fix it
-			echo "WARNING: Parameter > $1 < not correct. Value changed to: $2"
+			echo "Correcting parameter '$1' to '$2'"
 
-			sed -e "s;\(^[ \t]*${PREG}[ \t]*=[ \t]*\).*$;\1${VALUE};" ${CONFFILE} > ${CONFFILE}.new
+			echo sed -e "/^$SP*${PREG}$SP*=/s/=.*/= ${VALUE}/"
+			sed -e "/^$SP*${PREG}$SP*=/s/=.*/= ${VALUE}/" \
+                            < ${CONFFILE} > ${CONFFILE}.new
 			mv ${CONFFILE}.new ${CONFFILE}
 		fi
 	fi
@@ -72,10 +76,10 @@ function check_and_fix {
 # First of all check if we are joined
 ${VASTOOL} -u host/ auth -S host/ > /dev/null 2>&1
 if [ "$?" != "0" ]; then
-	echo "ERROR: The machine appears to be not joined to any domain"
-	echo "Verify the machine is correctly joined and then launch"
-	echo "/opt/quest/bin/vasidmap-config to finish up the installation"
-	echo "and configuration of both samba and vas"
+    echo "ERROR: The machine does not appear to be joined to any domain."
+	echo "Please verify the machine is correctly joined and then re-run"
+	echo "$0 to complete the installation"
+	echo "and configuration of both SAMBA and VAS."
 	exit 1
 fi
 
@@ -83,43 +87,41 @@ fi
 # Find the REALM
 DOMAIN=`${VASTOOL} -u host/ info domain`
 if [ "$DOMAIN" = "" ]; then
-	echo "ERROR: unable to determine REALM."
-	echo "Is the machine porperly joined to the domain ?"
+        echo "ERROR: Unable to determine the current domain (realm)."
+	echo "Is this machine properly joined to the domain?"
 	exit 1
 fi
-REALM=`echo ${DOMAIN} | tr a-z A-Z`
+REALM=`echo ${DOMAIN} | tr '[a-z]' '[A-Z]'`
 
 # Find the pre-Windows 2000 Domain Name (Workgroup)
 DOMAINDN=`${VASTOOL} -u host/ info domain-dn`
 if [ "$DOMAINDN" = "" ]; then
-	echo "ERROR: unable to determine the domain DN."
-	echo "Is the machine porperly joined to the domain ?"
+	echo "ERROR: Unable to determine current domain information."
+	echo "Is this machine properly joined to the domain?"
 	exit 1
 fi
 
 CONFPART=`${VASTOOL} -u host/ search -s base -b "" -q "(objectclass=*)" namingContexts | grep -i "^CN=Configuration"`
 if [ "$CONFPART" = "" ]; then
-	echo "ERROR: unable to find the configuratio partition in your AD domain."
-	echo "Is the machine porperly joined to the domain ?"
+        echo "ERROR: Unable to find domain configuration information."
+	echo "Is this machine properly joined to the domain?"
 	exit 1
 fi
 
 WORKGROUP=`${VASTOOL} -u host/ search -U"DC://@${DOMAIN}" -b ${CONFPART} -q \(ncName=${DOMAINDN}\) nETBIOSName`
 if [ "$WORKGROUP" = "" ]; then
-	echo "ERROR: unable to determine the pre-Windows 2000 Domain Name."
-	echo "Is the machine porperly joined to the domain ?"
+        echo "ERROR: Unable to determine the domain's pre-Windows 2000 name."
+	echo "Is this machine properly joined to the domain?"
 	exit 1
 fi
 
 if [ ! -f ${SAMBACONF} ]; then
-	echo "ERROR: smb.conf file missing!"
-	echo "Please verify that samba is installed properly."
+	echo "ERROR: ${SAMBACONF} is missing."
+	echo "Please verify that the quest-samba package is installed."
 	exit 1
-else
-	#Backup smb.conf
-	TODAY=`date +"%Y%m%d"`
-	cp ${SAMBACONF} ${SAMBACONF}.${TODAY}
 fi
+
+TODAY=`date +"%Y%m%d"`
 
 ### Make sure samba services are stopped while checking and updating configuration
 /etc/init.d/nmbd-quest stop
@@ -131,166 +133,82 @@ fi
 ##########################
 
 CONFMOD=${SAMBACONF}.mod
+NEWTEXT=/tmp/newtext$$.tmp
 
 #Must do this before calling any check_* function
 cp ${SAMBACONF} ${CONFMOD}
+: >$NEWTEXT
 
-check_and_fix "workgroup" "${WORKGROUP}" "${CONFMOD}"
-if [ "$?" -eq "1" ]; then
-	MISSING_WORKGROUP=1
-	MISSINGS=1
+check_and_fix "workgroup" "${WORKGROUP}" "${CONFMOD}" ||
+    echo "  workgroup = ${WORKGROUP}" >> $NEWTEXT
+
+check_and_fix "realm" "${REALM}" "${CONFMOD}" ||
+    echo "  realm = ${REALM}" >> $NEWTEXT
+
+check_and_fix "security" "ads" "${CONFMOD}" ||
+    echo "  security = ads" >> $NEWTEXT
+
+if check_parm "use spnego" "${CONFMOD}"; then
+    check_and_fix "use spnego" "yes" "${CONFMOD}" ||
+        echo "  use spnego = yes" >> $NEWTEXT
 fi
 
-check_and_fix "realm" "${REALM}" "${CONFMOD}"
-if [ "$?" -eq "1" ]; then
-	MISSING_REALM=1
-	MISSINGS=1
+check_and_fix "use kerberos keytab" "yes" "${CONFMOD}" ||
+    echo "  use kerberos keytab = yes" >> $NEWTEXT
+
+check_and_fix "machine password timeout" "0" "${CONFMOD}" ||
+    echo "  machine password timeout = 0" >> $NEWTEXT
+
+check_and_fix "username map script" "/opt/quest/bin/vasidmap" "${CONFMOD}" ||
+    echo "  username map script = /opt/quest/bin/vasidmap"
+
+check_and_fix "ldap admin dn" "CN=VasIdmapAdmin" "${CONFMOD}" ||
+    echo "  ldap admins dn = CN=VasIdmapAdmin" >> $NEWTEXT
+
+check_and_fix "idmap backend" "ldap" "${CONFMOD}" ||
+    echo "  ldap backend = ldap" >> $NEWTEXT
+
+check_parm "idmap uid" "${CONFMOD}" ||
+    echo "  idmap uid = 1-2147483647" >> $NEWTEXT  # FIXME is this portable?
+
+check_parm "idmap gid" "${CONFMOD}" ||
+    echo "  idmap uid = 1-2147483647" >> $NEWTEXT  # FIXME is this portable?
+
+check_parm "idmap expire time" "${CONFMOD}" ||
+    echo "  idmap expire time = 300   # Expire the tdb cache every 5 minutes" \
+        >> $NEWTEXT
+
+#-- insert the new text at the end of the [global] section
+if test -s $NEWTEXT; then
+    SAVEIFS="$IFS"
+    IFS=""
+    INGLOBAL=false
+    while read ILINE; do
+        if echo "$ILINE" | grep "^$SP*\[global\]" >/dev/null; then
+            INGLOBAL=true
+        elif $INGLOBAL && echo "$ILINE" | grep "^$SP*\[.*\]" >/dev/null; then
+            echo
+            echo "  ;--- begin options added by vasidmap-config ($TODAY) ---"
+            cat $NEWTEXT
+            echo "  ;--- end options added by vasidmap-config ($TODAY) ---"
+            echo
+            echo "$ILINE"
+            cat
+            break
+        fi
+        echo "$ILINE"
+    done < ${CONFMOD} > ${CONFMOD}.new
+    IFS="$SAVEIFS"
+    mv ${SAMBACONF} ${SAMBACONF}.${TODAY}
+    mv ${CONFMOD}.new ${SAMBACONF}
+    rm -f ${CONFMOD}
+elif cmp $CONFMOD $SAMBACONF >/dev/null; then
+    echo "$SAMBACONF: No changes required"
+else
+    echo "$SAMBACONF: Writing changes parameters"
+    mv $CONFMOD $SAMBACONF
 fi
-
-check_and_fix "security" "ads" "${CONFMOD}"
-if [ "$?" -eq "1" ]; then
-	MISSING_SECURITY=1
-	MISSINGS=1
-fi
-
-check_and_fix "use spnego" "yes" "${CONFMOD}"
-#if missing do nothing, by default it is true
-
-check_and_fix "use kerberos keytab" "yes" "${CONFMOD}"
-if [ "$?" -eq "1" ]; then
-	MISSING_UKK=1
-	MISSINGS=1
-fi
-
-check_and_fix "machine password timeout" "0" "${CONFMOD}"
-if [ "$?" -eq "1" ]; then
-	MISSING_MPT=1
-	MISSINGS=1
-fi
-
-check_and_fix "username map script" "/opt/quest/bin/vasidmap" "${CONFMOD}"
-if [ "$?" -eq "1" ]; then
-	MISSING_UMS=1
-	MISSINGS=1
-fi
-
-check_and_fix "ldap admin dn" "CN=VasIdmapAdmin" "${CONFMOD}"
-if [ "$?" -eq "1" ]; then
-	MISSING_LDAPADM=1
-	MISSINGS=1
-fi
-
-check_and_fix "idmap backend" "ldap" "${CONFMOD}"
-if [ "$?" -eq "1" ]; then
-	MISSING_IDMAPBCK=1
-	MISSINGS=1
-fi
-
-check_parm "idmap uid" "${CONFMOD}"
-if [ "$?" -eq "1" ]; then
-	MISSING_IDMAPUID=1
-	MISSINGS=1
-fi
-
-check_parm "idmap gid" "${CONFMOD}"
-if [ "$?" -eq "1" ]; then
-	MISSING_IDMAPGID=1
-	MISSINGS=1
-fi
-
-check_parm "idmap expire time" "${CONFMOD}"
-if [ "$?" -eq "1" ]; then
-	MISSING_IDMAPEXP=1
-	MISSINGS=1
-fi
-
-SECTIONS=0 # 1 will be [GLOBAL], 2 will be the first share
-
-SAVEIFS=$IFS
-IFS=""
-while read -s ILINE; do
-
-	echo $ILINE | grep -E "[ \t]*\[.*\].*" > /dev/null
-	if [ "$?" -eq "0" ]; then
-		let SECTIONS++
-	fi
-
-	# Terminate reading [GLOBAL]
-	if [ "$SECTIONS" == "2" ]; then
-	    if [ "$MISSINGS" == "1" ]; then
-		#Add all the missing parameters
-
-		echo ""
-		echo "--- options addedd by vasidmap-config (start) ---"
-		echo ""
-
-		if [ "${MISSING_WORKGROUP}" == "1" ]; then
-			echo "  workgroup = ${WORKGROUP}"
-		fi
-
-		if [ "${MISSING_REALM}" == "1" ]; then
-			echo "  realm = ${REALM}"
-		fi
-
-		if [ "${MISSING_SECURITY}" == "1" ]; then
-			echo "  security = ads"
-		fi
-
-		if [ "${MISSING_UKK}" == "1" ]; then
-			echo "  use kerberos keytab = yes"
-		fi
-
-		if [ "${MISSING_MPT}" == "1" ]; then
-			echo "  machine password timeout = 0"
-		fi
-
-		if [ "${MISSING_UMS}" == "1" ]; then
-			echo "  username map script = /opt/quest/bin/vasidmap"
-		fi
-
-		if [ "${MISSING_LDAPADM}" == "1" ]; then
-			echo "  ldap admins dn = CN=VasIdmapAdmin"
-		fi
-
-		if [ "${MISSING_IDMAPBCK}" == "1" ]; then
-			echo "  idmap backend = ldap"
-		fi
-
-		if [ "${MISSING_IDMAPUID}" == "1" ]; then
-			echo "  idmap uid = 1-2147483647"
-		fi
-
-		if [ "${MISSING_IDMAPGID}" == "1" ]; then
-			echo "  idmap gid = 1-2147483647"
-		fi
-
-		if [ "${MISSING_IDMAPEXP}" == "1" ]; then
-			echo "  idmap expire time = 300   # Expire the tdb cache every 5 minutes"
-		fi
-
-		echo ""
-		echo "--- options addedd by vasidmap-config (end) ---"
-		echo ""
-		
-	    fi #MISSINGS
-
-	    # add back the section name
-	    echo $ILINE
-
-	    # Copy as is the rest of the file and exit
-	    CONT=1
-	    while read -s ILINE; do
-		echo $ILINE
-	    done
-
-	else
-		# Copy everything else
-		echo $ILINE
-	fi
-	
-done > ${CONFMOD}.new < ${CONFMOD}
-rm -f ${CONFMOD}
-mv ${CONFMOD}.new ${SAMBACONF}
+rm -f $NEWTEXT
 
 #set a fake ldap password
 /opt/quest/bin/smbpasswd -w secret > /dev/null 2>&1
@@ -304,51 +222,36 @@ CONFMOD=${VASCONF}.mod
 #Must do this before calling any check_* function
 cp ${VASCONF} ${CONFMOD}
 
-check_and_fix "password-change-interval" "0" "${CONFMOD}"
-if [ "$?" -eq "1" ]; then
-	echo "" >> ${CONFMOD}
+if check_and_fix "password-change-interval" "0" "${CONFMOD}"; then
+        rm ${CONFMOD}
+else
+	echo >> ${CONFMOD}
 	echo "[vasd]" >> ${CONFMOD}
 	echo " password-change-interval = 0" >> ${CONFMOD}
+        cp ${VASCONF} ${VASCONF}.$TODAY
+        mv ${CONFMOD} ${VASCONF}
 fi
 
-mv ${CONFMOD} ${VASCONF}
-
-IFS=$SAVEIFS
 
 if [ "$DEBUG" -ne "0" ]; then
 	echo "Exit before changing the password during debug"
 	exit 0
 fi
 
-# Initialize Random
-RANDOM=`date +%s`
-
-# Initialize source array
-CHARS=( abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ 1234567890\@\$\%^\&:\;-+\=_\?\.,~\| )
-
-# Secret is an empty string to start off
-SECRET=""
-
-#Generate the random password
-COUNT=0
-while [ $COUNT -lt 30 ]
-do
-	RD=$(($RANDOM%3))
-	SECRET=$SECRET${CHARS[$RD]:$(($RANDOM%26)):1}
-	let COUNT++
-done
+#Generate a secret key from the hex form of current key material
+SECRET='X!'`$VASTOOL ktutil list --keys | 
+    awk 'NR==4{print substr($4,0,16);exit}'`
 
 # Change the machine password using vastool
-(echo $SECRET; echo $SECRET) | ${VASTOOL} -s -q -u host/ passwd
+(echo "$SECRET"; echo "$SECRET") | ${VASTOOL} -s -q -u host/ passwd
 
 # Set the new machine password into secrets.tdb
-echo $SECRET | /opt/quest/bin/net -f -i changesecretpw
+echo "$SECRET" | /opt/quest/bin/net -f -i changesecretpw
 
 #Set domain SID
-IFS=$'\n'
-DOMUSER=`${VASTOOL} list users | head -n 1 |cut -d ':' -f 1`
+DOMUSER=`${VASTOOL} list users | awk -F: '{print $1;exit}'`
 DOMSID=`/opt/quest/bin/vasidmap -u -n "$DOMUSER" | cut -d '-' -f 1-7`
-/opt/quest/bin/net setdomainsid $DOMSID
+/opt/quest/bin/net setdomainsid "$DOMSID"
 
 #Finally run vasmap-preload to prefill the idmap cache
 #/opt/quest/bin/vasmap-preload
