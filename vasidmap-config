@@ -123,9 +123,10 @@ fi
 TODAY=`date +"%Y%m%d"`
 
 ### Make sure samba services are stopped while checking and updating configuration
-/etc/init.d/nmbd-quest stop
-/etc/init.d/smbd-quest stop
 /etc/init.d/winbindd-quest stop
+/etc/init.d/smbd-quest stop
+/etc/init.d/vasidmapd stop
+/etc/init.d/nmbd-quest stop
 
 ##########################
 # Verify/Modify smb.conf #
@@ -139,39 +140,39 @@ cp ${SAMBACONF} ${CONFMOD}
 : >$NEWTEXT
 
 check_and_fix "workgroup" "${WORKGROUP}" "${CONFMOD}" ||
-    echo "  workgroup = ${WORKGROUP}" >> $NEWTEXT
+       echo "  workgroup = ${WORKGROUP}" >> $NEWTEXT
 
 check_and_fix "realm" "${REALM}" "${CONFMOD}" ||
-    echo "  realm = ${REALM}" >> $NEWTEXT
+       echo "  realm = ${REALM}" >> $NEWTEXT
 
 check_and_fix "security" "ads" "${CONFMOD}" ||
-    echo "  security = ads" >> $NEWTEXT
+       echo "  security = ads" >> $NEWTEXT
 
 if check_parm "use spnego" "${CONFMOD}"; then
     check_and_fix "use spnego" "yes" "${CONFMOD}" ||
-        echo "  use spnego = yes" >> $NEWTEXT
+           echo "  use spnego = yes" >> $NEWTEXT
 fi
 
 check_and_fix "use kerberos keytab" "yes" "${CONFMOD}" ||
-    echo "  use kerberos keytab = yes" >> $NEWTEXT
+       echo "  use kerberos keytab = yes" >> $NEWTEXT
 
 check_and_fix "machine password timeout" "0" "${CONFMOD}" ||
-    echo "  machine password timeout = 0" >> $NEWTEXT
+       echo "  machine password timeout = 0" >> $NEWTEXT
 
 check_and_fix "username map script" "/opt/quest/bin/vasidmap" "${CONFMOD}" ||
-    echo "  username map script = /opt/quest/bin/vasidmap"
+       echo "  username map script = /opt/quest/bin/vasidmap" >>$NEWTEXT
 
 check_and_fix "ldap admin dn" "CN=VasIdmapAdmin" "${CONFMOD}" ||
-    echo "  ldap admins dn = CN=VasIdmapAdmin" >> $NEWTEXT
+       echo "  ldap admin dn = CN=VasIdmapAdmin" >> $NEWTEXT
 
 check_and_fix "idmap backend" "ldap" "${CONFMOD}" ||
-    echo "  ldap backend = ldap" >> $NEWTEXT
+       echo "  idmap backend = ldap" >> $NEWTEXT
 
 check_parm "idmap uid" "${CONFMOD}" ||
     echo "  idmap uid = 1-2147483647" >> $NEWTEXT  # FIXME is this portable?
 
 check_parm "idmap gid" "${CONFMOD}" ||
-    echo "  idmap uid = 1-2147483647" >> $NEWTEXT  # FIXME is this portable?
+    echo "  idmap gid = 1-2147483647" >> $NEWTEXT  # FIXME is this portable?
 
 check_parm "idmap expire time" "${CONFMOD}" ||
     echo "  idmap expire time = 300   # Expire the tdb cache every 5 minutes" \
@@ -201,6 +202,7 @@ if test -s $NEWTEXT; then
     mv ${SAMBACONF} ${SAMBACONF}.${TODAY}
     mv ${CONFMOD}.new ${SAMBACONF}
     rm -f ${CONFMOD}
+    echo "$SAMBACONF: updated"
 elif cmp $CONFMOD $SAMBACONF >/dev/null; then
     echo "$SAMBACONF: No changes required"
 else
@@ -256,6 +258,7 @@ DOMSID=`/opt/quest/bin/vasidmap -u -n "$DOMUSER" | cut -d '-' -f 1-7`
 #/opt/quest/bin/vasmap-preload
 
 ### Finally restart samba services
+/etc/init.d/vasidmapd start
 /etc/init.d/nmbd-quest start
 /etc/init.d/smbd-quest start
 /etc/init.d/winbindd-quest start
