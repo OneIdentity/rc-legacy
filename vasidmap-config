@@ -70,7 +70,7 @@ function check_and_fix {
 
 
 # First of all check if we are joined
-/opt/quest/bin/vastool -u host/ auth -S host/ > /dev/null 2>&1
+${VASTOOL} -u host/ auth -S host/ > /dev/null 2>&1
 if [ "$?" != "0" ]; then
 	echo "ERROR: The machine appears to be not joined to any domain"
 	echo "Verify the machine is correctly joined and then launch"
@@ -87,7 +87,7 @@ if [ "$DOMAIN" = "" ]; then
 	echo "Is the machine porperly joined to the domain ?"
 	exit 1
 fi
-REALM=`echo ${DOMAIN} | tr "[:lower:]" "[:upper:]"`
+REALM=`echo ${DOMAIN} | tr a-z A-Z`
 
 # Find the pre-Windows 2000 Domain Name (Workgroup)
 DOMAINDN=`${VASTOOL} -u host/ info domain-dn`
@@ -339,14 +339,14 @@ do
 done
 
 # Change the machine password using vastool
-(echo $SECRET; echo $SECRET) | /opt/quest/bin/vastool -s -q -u host/ passwd
+(echo $SECRET; echo $SECRET) | ${VASTOOL} -s -q -u host/ passwd
 
 # Set the new machine password into secrets.tdb
 echo $SECRET | /opt/quest/bin/net -f -i changesecretpw
 
 #Set domain SID
 IFS=$'\n'
-DOMUSER=`/opt/quest/bin/vastool list users | head -n 1 |cut -d ':' -f 1`
+DOMUSER=`${VASTOOL} list users | head -n 1 |cut -d ':' -f 1`
 DOMSID=`/opt/quest/bin/vasidmap -u -n "$DOMUSER" | cut -d '-' -f 1-7`
 /opt/quest/bin/net setdomainsid $DOMSID
 
