@@ -725,6 +725,13 @@ int main (int argc, char *argv[])
 		exit(6);
 	}
 
+	/* become a daemon */
+	if (!debug) {
+		if (fork()) {
+			exit(0);
+		}
+	}
+
 	child = 0;
 
 	while (1) {
