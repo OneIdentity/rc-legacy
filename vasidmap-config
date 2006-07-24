@@ -16,10 +16,11 @@ LSP='\[ 	\]'
 #  1 parm missing 
 check_parm () {
 
-	PREG=`echo $1 | sed -e "s/$SP$SP*/$LSP$LSP*/g`
+	PREG=`echo $1 | sed -e "s/$SP$SP*/$LSP$LSP*/g"`
+	echo $PREG >&2
 	CONFFILE=$2
 
-	grep "^$SP*$PREG$SP*=" ${CONFFILE} >/dev/null
+	grep -i "^$SP*$PREG$SP*=" ${CONFFILE} >/dev/null
 	if [ "$?" -ne "0" ]; then
 
 		#param missing
@@ -39,15 +40,16 @@ check_parm () {
 
 check_and_fix () {
 
-	PREG=`echo $1 | sed -e "s/$SP$SP*/$LSP$LSP*/g`
+	PREG=`echo $1 | sed -e "s/$SP$SP*/$LSP$LSP*/g"`
+	echo $PREG >&2
 	VALUE=$2
 	CONFFILE=$3
 
-	grep "^$SP*$PREG$SP*=$SP*${VALUE}$SP*" ${CONFFILE} >/dev/null
+	grep -i "^$SP*$PREG$SP*=$SP*${VALUE}$SP*" ${CONFFILE} >/dev/null
 	if [ "$?" -ne "0" ]; then
 
 		#param wrong or missing
-		grep "^$SP*$PREG$SP*=" ${CONFFILE} > /dev/null
+		grep -i "^$SP*$PREG$SP*=" ${CONFFILE} > /dev/null
 		if [ "$?" -ne "0" ]; then
 
 			#param missing
@@ -184,9 +186,9 @@ if test -s $NEWTEXT; then
     IFS=""
     INGLOBAL=false
     while read ILINE; do
-        if echo "$ILINE" | grep "^$SP*\[global\]" >/dev/null; then
+        if echo "$ILINE" | grep -i "^$SP*\[global\]" >/dev/null; then
             INGLOBAL=true
-        elif $INGLOBAL && echo "$ILINE" | grep "^$SP*\[.*\]" >/dev/null; then
+        elif $INGLOBAL && echo "$ILINE" | grep -i "^$SP*\[.*\]" >/dev/null; then
             echo
             echo "  ;--- begin options added by vasidmap-config ($TODAY) ---"
             cat $NEWTEXT
