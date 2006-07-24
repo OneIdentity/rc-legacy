@@ -75,7 +75,9 @@ fi
 #	grep -v vasmapcron /etc/crontab > /etc/crontab.new
 #	mv /etc/crontab.new /etc/crontab
 #fi
-/opt/quest/bin/vasidmap-config
+
+# Don't run the config package on installation, in many cases this is more trouble than benefits
+#/opt/quest/bin/vasidmap-config
 
 %preun
 if [ -f /etc/redhat-release ]; then

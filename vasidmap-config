@@ -17,7 +17,6 @@ LSP='\[ 	\]'
 check_parm () {
 
 	PREG=`echo $1 | sed -e "s/$SP$SP*/$LSP$LSP*/g"`
-	echo $PREG >&2
 	CONFFILE=$2
 
 	grep -i "^$SP*$PREG$SP*=" ${CONFFILE} >/dev/null
@@ -41,7 +40,6 @@ check_parm () {
 check_and_fix () {
 
 	PREG=`echo $1 | sed -e "s/$SP$SP*/$LSP$LSP*/g"`
-	echo $PREG >&2
 	VALUE=$2
 	CONFFILE=$3
 
