@@ -2,14 +2,14 @@
 %define _prefix /opt/quest
 %define _mandir /opt/quest/man
 %define _sysconfdir /etc%{_prefix}
-%define name vas3-samba-idmap
+%define name vasidmap
 %define vendortag Quest-VRC
 
 Summary:  VAS idmap daemon and utilities
 Vendor:   Quest Software
 Packager: Vinteal Resource Central Team
-Name:     vas3-samba-idmap
-Version:  0.8
+Name:     vasidmap
+Version:  0.9.1
 Release:  1
 License:  Quest Software - All Rights Reserved
 Group:    System Environment/Daemons
@@ -18,10 +18,10 @@ URL:      http://rc.vintela.com
 
 Source:   vasidmap-%{version}.tar.gz
 
-Requires: vas3-samba >= 3.0.23 vas3-samba-client >= 3.0.23 vasclnts >= 3.0.2
+Requires: quest-samba >= 3.0.23 quest-samba-client >= 3.0.23 vasclnts >= 3.0.2
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
 BuildRequires: make, gcc, vasdev >= 3.0.2
-Provides: vas3-samba-idmap = %{version}
+Provides: vasidmap = %{version}
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
 Prefix: %{_prefix}
@@ -103,6 +103,9 @@ exit 0
 %{_sysconfdir}/rc.d/init.d/vasidmapd-suse.init
 
 %changelog
+* Mon Jul 24 2006 Simo Sorce <simo,sorce@quest,com>
+- updated to 0.9.1
+
 * Wed Jun 14 2006 Simo Sorce <simo,sorce@quest,com>
 - Initial release
 
