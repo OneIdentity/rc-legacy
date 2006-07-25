@@ -1,11 +1,11 @@
 /*===========================================================================
- * Project:     vusermap - Simple utility that returns the local Username
+ * Project:     vasidmap - Simple utility that returns the local Username
  *              that correspond to a mapped Windows user
  *
  * Author:      Simo Sorce <simo.sorce@quest.com>
  *              Matt Peterson <matt.peterson@quest.com>
  *
- * File:        vusermap.c
+ * File:        vasidmap.c
  *
  * Description: Main implementation source file
  *=========================================================================*/
