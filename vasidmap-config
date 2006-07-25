@@ -8,6 +8,9 @@ VASCONF="/etc/opt/quest/vas/vas.conf"
 DEBUG=0
 SP='[ 	]'
 LSP='\[ 	\]'
+META='[/*+.()]'
+METASUBST='s/'"$META"'/\\&/g'
+
 
 # parameters:
 #  1 parm name
@@ -16,7 +19,7 @@ LSP='\[ 	\]'
 #  1 parm missing 
 check_parm () {
 
-	PREG=`echo $1 | sed -e "s/$SP$SP*/$LSP$LSP*/g"`
+	PREG=`echo "$1" | sed -e "$METASUBST" -e "s/$SP$SP*/$LSP$LSP*/g"`
 	CONFFILE=$2
 
 	grep -i "^$SP*$PREG$SP*=" ${CONFFILE} >/dev/null
@@ -39,8 +42,8 @@ check_parm () {
 
 check_and_fix () {
 
-	PREG=`echo $1 | sed -e "s/$SP$SP*/$LSP$LSP*/g"`
-	VALUE=$2
+	PREG=`echo "$1" | sed -e "$METASUBST" -e "s/$SP$SP*/$LSP$LSP*/g"`
+	VALUE=`echo "$2" | sed -e "$METASUBST"`
 	CONFFILE=$3
 
 	grep -i "^$SP*$PREG$SP*=$SP*${VALUE}$SP*" ${CONFFILE} >/dev/null
@@ -59,8 +62,8 @@ check_and_fix () {
 			echo "Correcting parameter '$1' to '$2'"
 
 			sed -e "/^$SP*${PREG}$SP*=/s/=.*/= ${VALUE}/" \
-                            < ${CONFFILE} > ${CONFFILE}.new
-			mv ${CONFFILE}.new ${CONFFILE}
+                            < ${CONFFILE} > ${CONFFILE}.new || exit 1
+			mv ${CONFFILE}.new ${CONFFILE} || exit 1
 		fi
 	fi
 
