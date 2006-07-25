@@ -165,8 +165,8 @@ check_and_fix "username map script" "/opt/quest/bin/vasidmap" "${CONFMOD}" ||
 check_and_fix "ldap admin dn" "CN=VasIdmapAdmin" "${CONFMOD}" ||
        echo "  ldap admin dn = CN=VasIdmapAdmin" >> $NEWTEXT
 
-check_and_fix "idmap backend" "ldap" "${CONFMOD}" ||
-       echo "  idmap backend = ldap" >> $NEWTEXT
+check_and_fix "idmap backend" "ldap:ldap://localhost" "${CONFMOD}" ||
+       echo "  idmap backend = ldap:ldap://localhost" >> $NEWTEXT
 
 check_parm "idmap uid" "${CONFMOD}" ||
     echo "  idmap uid = 1-2147483647" >> $NEWTEXT  # FIXME is this portable?
