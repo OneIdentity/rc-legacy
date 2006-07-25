@@ -162,8 +162,12 @@ check_and_fix "use kerberos keytab" "yes" "${CONFMOD}" ||
 check_and_fix "machine password timeout" "0" "${CONFMOD}" ||
        echo "  machine password timeout = 0" >> $NEWTEXT
 
-check_and_fix "username map script" "/opt/quest/bin/vasidmap" "${CONFMOD}" ||
-       echo "  username map script = /opt/quest/bin/vasidmap" >>$NEWTEXT
+## Do not enforce this, it is ok only in UPM mode, and potentially bad in non UPM.
+#check_and_fix "username map script" "/opt/quest/bin/vasidmap" "${CONFMOD}" ||
+#       echo "  username map script = /opt/quest/bin/vasidmap" >>$NEWTEXT
+
+check_and_fix "winbind nested groups" "no" "${CONFMOD}" ||
+       echo "  winbind nested groups = no" >> $NEWTEXT
 
 check_and_fix "ldap admin dn" "CN=VasIdmapAdmin" "${CONFMOD}" ||
        echo "  ldap admin dn = CN=VasIdmapAdmin" >> $NEWTEXT
