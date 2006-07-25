@@ -12,10 +12,10 @@ dist_bin_SCRIPTS=	vasidmap-preload vasidmap-config
 vasidmap_LDADD  =   $(LIBOBJS)
 vasidmapd_LDADD =   $(LIBOBJS)
 
-EXTRA_DIST=	vasidmap.pp LICENCE 
-
 TESTS=			rc.test
-TESTS_ENVIRONMENT=	${SHELL}
+TESTS_ENVIRONMENT=	$(SHELL)
+
+EXTRA_DIST=	vasidmap.pp LICENCE rc.test
 
 dist-hook:
 	cp /data/rc/pub/rc/polypkg/pp $(distdir)/pp
