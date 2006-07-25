@@ -835,6 +835,7 @@ int main (int argc, char *argv[])
                         err(1, "select");
 		}
 
+                addrlen = sizeof addr;
 		new = accept(sd, (struct sockaddr *)&addr, &addrlen);
 		if (new == -1) {
                         warn("accept");
