@@ -259,7 +259,7 @@ static int vlmapd_uid_to_sid(vas_ctx_t *vasctx, vas_id_t *vasid, ber_int_t msgid
 			"CN=VAS-Idmapper",
 			"sambaSID", sid,
 			"objectClass", "sambaIdmapEntry",
-			"uidnumber", val,
+			"uidNumber", val,
 		 msgid, LDAP_RES_SEARCH_RESULT,
 			LDAP_SUCCESS,
 			NULL, 0,
@@ -340,7 +340,7 @@ static int vlmapd_search_idpool(ber_int_t msgid, struct berval **reply)
 			 msgid, LDAP_RES_SEARCH_ENTRY,
 				"CN=VAS-Idmapper",
 				"objectClass", "sambaUnixIdPool",
-				"uidnumber", "1000",
+				"uidNumber", "1000",
 				"gidNumber", "1000",
 			 msgid, LDAP_RES_SEARCH_RESULT, LDAP_SUCCESS, 
                          NULL, 0, NULL, 0);
