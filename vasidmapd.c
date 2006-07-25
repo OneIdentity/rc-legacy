@@ -82,20 +82,24 @@ int vlmapd_sid_to_id(vas_ctx_t *vasctx, vas_id_t *vasid, ber_int_t msgid, char *
 			   VAS_NAME_FLAG_FOREST_SCOPE,
 			   &vasuser)) == 0) { /* success */
 
-		if (vas_user_get_pwinfo(vasctx, vasid, vasuser, &pwent)) {
-			if (debug) fprintf(stderr,
+		if (vas_user_get_pwinfo(vasctx, vasid, vasuser, &pwent) == 0) {
+			sprintf(num, "%ld", pwent->pw_uid);
+			attr = "uidNumber";
+
+			vas_user_free(vasctx, vasuser);
+			free(pwent);
+
+			goto got_an_id;
+		}
+
+		vas_user_free(vasctx, vasuser);
+	
+		if (debug) fprintf(stderr,
 					   "ERROR: no pwinfo for sid: %s. %s\n",
 					   sid,
 					   vas_err_get_string(vasctx, 1));
-			vas_user_free(vasctx, vasuser);
-			return search_result_ok(msgid, reply);
-		}
 
-		sprintf(num, "%ld", pwent->pw_uid);
-		attr = "uidNumber";
-
-		vas_user_free(vasctx, vasuser);
-		free(pwent);
+		if (debug) fprintf(stderr, "Try with a group.\n");
 
 	} else { /* if not an uid check if it is a gid */
 
@@ -104,36 +108,37 @@ int vlmapd_sid_to_id(vas_ctx_t *vasctx, vas_id_t *vasid, ber_int_t msgid, char *
 				   sid,
 				   vas_err_get_string(vasctx, 1));
 		if (debug) fprintf(stderr, "Try with a group.\n");
-
-		if ((vas_group_init(vasctx,
-				    vasid,
-				    sid,
-				    VAS_NAME_FLAG_FOREST_SCOPE,
-				    &vasgrp))) { /* error */
-		
-			if (debug) fprintf(stderr,
-					   "ERROR: Unable to initialize VAS group using sid: %s. %s\n",
-					   sid,
-					   vas_err_get_string(vasctx, 1));
-			return search_result_ok(msgid, reply);
-		}
-
-		if (vas_group_get_grinfo(vasctx, vasid, vasgrp, &grent)) {
-			if (debug) fprintf(stderr,
-					   "ERROR: no grinfo for sid: %s. %s\n",
-					   sid,
-					   vas_err_get_string(vasctx, 1));
-			vas_group_free(vasctx, vasgrp);
-			return search_result_ok(msgid, reply);
-		}
-		
-		sprintf(num, "%ld", grent->gr_gid);
-		attr = "gidNumber";
-
-		vas_group_free(vasctx, vasgrp);
-		free(grent);
 	}
 
+	if ((vas_group_init(vasctx,
+			    vasid,
+			    sid,
+			    VAS_NAME_FLAG_FOREST_SCOPE,
+			    &vasgrp))) { /* error */
+		
+		if (debug) fprintf(stderr,
+				   "ERROR: Unable to initialize VAS group using sid: %s. %s\n",
+				   sid,
+				   vas_err_get_string(vasctx, 1));
+		return search_result_ok(msgid, reply);
+	}
+
+	if (vas_group_get_grinfo(vasctx, vasid, vasgrp, &grent)) {
+		if (debug) fprintf(stderr,
+				   "ERROR: no grinfo for sid: %s. %s\n",
+				   sid,
+				   vas_err_get_string(vasctx, 1));
+		vas_group_free(vasctx, vasgrp);
+		return search_result_ok(msgid, reply);
+	}
+	
+	sprintf(num, "%ld", grent->gr_gid);
+	attr = "gidNumber";
+
+	vas_group_free(vasctx, vasgrp);
+	free(grent);
+
+got_an_id:
 	if (debug) fprintf(stderr,
 			   "SUCCESS: converted SID: %s to %s: %s.\n",
 			   sid, pwent?"UID":"GID", num);
