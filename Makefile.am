@@ -8,9 +8,11 @@ AM_CFLAGS =  $(VAS_CFLAGS)
 sbin_PROGRAMS=		vasidmapd
 bin_PROGRAMS=		vasidmap
 dist_bin_SCRIPTS=	vasidmap-preload vasidmap-config
+noinst_PROGRAMS=	vasidmapc
 
 vasidmap_LDADD  =   $(LIBOBJS)
 vasidmapd_LDADD =   $(LIBOBJS)
+vasidmapc_LDADD =   $(LIBOBJS)
 
 EXTRA_DIST=	vasidmap.pp LICENCE 
 
