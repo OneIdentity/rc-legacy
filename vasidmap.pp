@@ -12,5 +12,5 @@
     /opt/quest/sbin/vasidmapd
 
 %service vasidmapd
-    cmd=/opt/quest/sbin/vasidmapd
+    cmd=/opt/quest/sbin/vasidmapd -F
 
