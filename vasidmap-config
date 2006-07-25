@@ -19,7 +19,7 @@ METASUBST='s/'"$META"'/\\&/g'
 #  1 parm missing 
 check_parm () {
 
-	PREG=`echo "$1" | sed -e "$METASUBST" -e "s/$SP$SP*/$LSP$LSP*/g"`
+	PREG=`echo "$1" | sed -e "s/$SP$SP*/$LSP$LSP*/g"`
 	CONFFILE=$2
 
 	grep -i "^$SP*$PREG$SP*=" ${CONFFILE} >/dev/null
@@ -42,7 +42,7 @@ check_parm () {
 
 check_and_fix () {
 
-	PREG=`echo "$1" | sed -e "$METASUBST" -e "s/$SP$SP*/$LSP$LSP*/g"`
+	PREG=`echo "$1" | sed -e "s/$SP$SP*/$LSP$LSP*/g"`
 	VALUE=`echo "$2" | sed -e "$METASUBST"`
 	CONFFILE=$3
 
