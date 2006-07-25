@@ -1,16 +1,19 @@
 %set
     name="vasidmapd"
     description="VAS idmap module for Samba"
+    prefix=/opt/quest
+    bindir=$prefix/bin
+    sbindir=$prefix/sbin
 
 %depend
-    quest-samba 3.0.22
+    quest-samba 3.0.23
 
 %files
-    /opt/quest/bin/vasidmap-config
-    /opt/quest/bin/vasidmap-preload
-    /opt/quest/bin/vasidmap
-    /opt/quest/sbin/vasidmapd
+    $bindir/vasidmap-config
+    $bindir/vasidmap-preload
+    $bindir/vasidmap
+    $sbindir/vasidmapd
 
 %service vasidmapd
-    cmd=/opt/quest/sbin/vasidmapd -F
+    cmd="$sbindir/vasidmapd -F"
 
