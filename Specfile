@@ -9,7 +9,7 @@ Summary:  VAS idmap daemon and utilities
 Vendor:   Quest Software
 Packager: Vinteal Resource Central Team
 Name:     vasidmap
-Version:  0.9.1
+Version:  0.9.2
 Release:  1
 License:  Quest Software - All Rights Reserved
 Group:    System Environment/Daemons
@@ -18,7 +18,7 @@ URL:      http://rc.vintela.com
 
 Source:   vasidmap-%{version}.tar.gz
 
-Requires: quest-samba >= 3.0.23 quest-samba-client >= 3.0.23 vasclnts >= 3.0.2
+Requires: quest-samba >= 3.0.23 vasclnts >= 3.0.2
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
 BuildRequires: make, gcc, vasdev >= 3.0.2
 Provides: vasidmap = %{version}

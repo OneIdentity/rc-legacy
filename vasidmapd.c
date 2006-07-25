@@ -705,7 +705,7 @@ int main (int argc, char *argv[])
         extern int optind;
         extern char *optarg;
 
-        while ((ch = getopt(argc, argv, "A:d:DFp:")) != -1)
+        while ((error == 0) && ((ch = getopt(argc, argv, "A:d:DFp:")) != -1)) {
             switch (ch) {
                 case 'A': bindaddr = optarg; break;
                 case 'd': debug = atoi(optarg); break;
@@ -714,6 +714,7 @@ int main (int argc, char *argv[])
                 case 'F': daemonize = 0; break;
                 default: error = 1;
             }
+        }
 
         /* Backward compat: old way of providing debug */
         if (optind < argc && strcmp(argv[optind], "debug") == 0) {
@@ -731,10 +732,12 @@ int main (int argc, char *argv[])
         /* Construct a server socket at port 389 LDAP */
 	sockin.sin_family = AF_INET;
 	sockin.sin_port = htons(port);
-        if (!bindaddr)
-            bindaddr = debug ? "0.0.0.0" : "127.0.0.1";
-        if (inet_pton(AF_INET, bindaddr, &(sockin.sin_addr.s_addr) <= 0))
+        if (!bindaddr) {
+            bindaddr = "127.0.0.1";
+        }
+        if (inet_pton(AF_INET, bindaddr, &(sockin.sin_addr) <= 0)) {
             errx(1, "bad IP address '%s'", bindaddr);
+        }
 
 	sd = socket(AF_INET, SOCK_STREAM, 0);
 	if (sd == -1) {
@@ -759,7 +762,7 @@ int main (int argc, char *argv[])
 	}
 
 	/* Double-fork to daemonize */
-	if (!daemonize) {
+	if (daemonize) {
 		switch (fork()) {
                     case -1: err(1, "fork");
                     case 0: break;
