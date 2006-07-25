@@ -25,6 +25,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <errno.h>
+#include <stdarg.h>
 #include <pwd.h>
 #include <grp.h>
 #include <err.h>
@@ -33,40 +34,89 @@
 #include <ber.h>
 #include <ldap.h>
 
+/* Prints a message to stderr only when the debug level is 
+ * at 'level' or higher */
+#define DEBUG(level, fmt, va...)  \
+    do { if (debug >= level) fprintf(stderr, fmt , ## va); } while (0)
+
+/* 
+ * This convenience macro prints into a DER-encoded berval
+ * in one step. It takes care of error handling.
+ * On success, sets local variable ret to 0 and returns.
+ * On error, sets ret to -1 and branches to the FINISHED label.
+ */
+#define BERVAL_PRINTF(reply, fmt, va...)                    \
+    do {                                                    \
+        BerElement *be = ber_alloc_t(BER_USE_DER);          \
+        if (be == NULL) {                                   \
+            warnx("ber_alloc_t failed");                    \
+            ret = -1;                                       \
+            goto FINISHED;                                  \
+        }                                                   \
+        ret = ber_printf(be, fmt , ## va);                  \
+        if (ret == -1) {                                    \
+            warnx("ber_printf failed");                     \
+            ber_free(be, 1);                                \
+            goto FINISHED;                                  \
+        }                                                   \
+        ret = ber_flatten(be, reply);                       \
+        ber_free(be, 1);                                    \
+        if (ret == -1) {                                    \
+            warnx("ber_flatten failed");                    \
+            goto FINISHED;                                  \
+        }                                                   \
+    } while (0)
+
 #if !HAVE_SOCKLEN_T
 # undef socklen_t
 # define socklen_t int
 #endif
 
-int debug;
+/* Prototypes */
+static void usage(const char *prog);
+static int search_result_ok(ber_int_t msgid, struct berval **reply);
+static int vlmapd_sid_to_id(vas_ctx_t *vasctx, vas_id_t *vasid, 
+        ber_int_t msgid, char *sid, struct berval **reply);
+static int vlmapd_uid_to_sid(vas_ctx_t *vasctx, vas_id_t *vasid, 
+        ber_int_t msgid, char *val, struct berval **reply);
+static int vlmapd_gid_to_sid(vas_ctx_t *vasctx, vas_id_t *vasid,
+        ber_int_t msgid, char *val, struct berval **reply);
+static int vlmapd_search_idpool(ber_int_t msgid, struct berval **reply);
+static int vlmapd_search(vas_ctx_t *vasctx, vas_id_t *vasid, ber_int_t msgid,
+        BerElement *be, struct berval **reply);
+static int vlmapd_bind(ber_int_t msgid, struct berval **reply);
+static int vlmapd_generic_error(ber_int_t msgid, ber_tag_t msgtype,
+        struct berval **reply);
+static int vmapd_query(vas_ctx_t *vasctx, vas_id_t *vasid,
+        struct berval *query, struct berval **reply);
+static int vmapd_recv(int sd, struct berval *query);
+static int vmapd_send(int sd, struct berval *reply);
+static int vmapd_server(int sd);
 
-void usage(const char *prog) 
+
+int debug;  /* Set by -d command line option */
+
+/* Displays command line usage message */
+static void usage(const char *prog) 
 {
-        fprintf(stderr, "usage: %s [-A ipaddr] [-d level] [-p port] [-D] [-F]\n", prog);
+        fprintf(stderr, "usage: %s"
+               " [-A ipaddr] [-d level] [-p port] [-D] [-F]\n", prog);
 }
 
-int search_result_ok(ber_int_t msgid, struct berval **reply)
+/* Constructs the reply message: SEARCH_RESULT{SUCCESS} */
+static int search_result_ok(ber_int_t msgid, struct berval **reply)
 {
-	BerElement *be;
 	int ret;
 
-	be = ber_alloc_t(BER_USE_DER);
-	if (be == NULL) return -1;
-
-	ret = ber_printf(be, "{it{eoo}}", msgid, LDAP_RES_SEARCH_RESULT, LDAP_SUCCESS, NULL, 0, NULL, 0);
-	if (ret == -1) {
-		if (debug) fprintf(stderr, "vlmapd(%d): ERROR unable to create result ok reply\n", getpid());
-		return -1;
-	}
-
-	ret = ber_flatten(be, reply);
-	ber_free(be, 1);
+	BERVAL_PRINTF(reply, "{it{eoo}}", msgid, LDAP_RES_SEARCH_RESULT, 
+                LDAP_SUCCESS, NULL, 0, NULL, 0);
+FINISHED:
 	return ret;
 }
 
-int vlmapd_sid_to_id(vas_ctx_t *vasctx, vas_id_t *vasid, ber_int_t msgid, char *sid, struct berval **reply)
+static int vlmapd_sid_to_id(vas_ctx_t *vasctx, vas_id_t *vasid,
+        ber_int_t msgid, char *sid, struct berval **reply)
 {
-	BerElement *be;
 	char num[12];
 	char *attr;
 	vas_user_t *vasuser;
@@ -143,12 +193,7 @@ got_an_id:
 			   "SUCCESS: converted SID: %s to %s: %s.\n",
 			   sid, pwent?"UID":"GID", num);
 
-	if ((be = ber_alloc_t(BER_USE_DER)) == NULL) {
-		if (debug) fprintf(stderr, "ERROR: Memory allocation failed!\n");
-		return -1;
-	}
-
-	if ((ret = ber_printf(be, "{it{s{{s{s}}{s{s}}{s{s}}}}}{it{eoo}}",
+        BERVAL_PRINTF(reply, "{it{s{{s{s}}{s{s}}{s{s}}}}}{it{eoo}}",
 		 msgid, LDAP_RES_SEARCH_ENTRY,
 			"CN=VAS-Idmapper",
 			"sambaSID", sid,
@@ -157,20 +202,13 @@ got_an_id:
 		 msgid, LDAP_RES_SEARCH_RESULT,
 			LDAP_SUCCESS,
 			NULL, 0,
-			NULL, 0)
-	    ) == -1) {
-		if (debug) fprintf(stderr, "vlmapd(%d): ERROR unable to berprintf search entry\n", getpid());
-		return -1;
-	}
-
-	ret = ber_flatten(be, reply);
-	ber_free(be, 1);
+			NULL, 0);
+FINISHED:
 	return ret;
 }
 
-int vlmapd_uid_to_sid(vas_ctx_t *vasctx, vas_id_t *vasid, ber_int_t msgid, char *val, struct berval **reply)
+static int vlmapd_uid_to_sid(vas_ctx_t *vasctx, vas_id_t *vasid, ber_int_t msgid, char *val, struct berval **reply)
 {
-	BerElement *be;
 	vas_user_t *vasuser;
 	struct passwd *pwent = NULL;
 	char *sid;
@@ -216,12 +254,7 @@ int vlmapd_uid_to_sid(vas_ctx_t *vasctx, vas_id_t *vasid, ber_int_t msgid, char 
 			   "SUCCESS: converted UID: %ld to SID: %s.\n",
 			   uid, sid);
 
-	if ((be = ber_alloc_t(BER_USE_DER)) == NULL) {
-		if (debug) fprintf(stderr, "ERROR: Memory allocation failed!\n");
-		return -1;
-	}
-
-	if ((ret = ber_printf(be, "{it{s{{s{s}}{s{s}}{s{s}}}}}{it{eoo}}",
+	BERVAL_PRINTF(reply, "{it{s{{s{s}}{s{s}}{s{s}}}}}{it{eoo}}",
 		 msgid, LDAP_RES_SEARCH_ENTRY,
 			"CN=VAS-Idmapper",
 			"sambaSID", sid,
@@ -230,20 +263,13 @@ int vlmapd_uid_to_sid(vas_ctx_t *vasctx, vas_id_t *vasid, ber_int_t msgid, char 
 		 msgid, LDAP_RES_SEARCH_RESULT,
 			LDAP_SUCCESS,
 			NULL, 0,
-			NULL, 0)
-	    ) == -1) {
-		if (debug) fprintf(stderr, "vlmapd(%d): ERROR unable to berprintf search entry\n", getpid());
-		return -1;
-	}
-
-	ret = ber_flatten(be, reply);
-	ber_free(be, 1);
+			NULL, 0);
+FINISHED:
 	return ret;
 }
 
-int vlmapd_gid_to_sid(vas_ctx_t *vasctx, vas_id_t *vasid, ber_int_t msgid, char *val, struct berval **reply)
+static int vlmapd_gid_to_sid(vas_ctx_t *vasctx, vas_id_t *vasid, ber_int_t msgid, char *val, struct berval **reply)
 {
-	BerElement *be;
 	vas_group_t *vasgrp;
 	struct group *grent = NULL;
 	char *sid;
@@ -289,12 +315,7 @@ int vlmapd_gid_to_sid(vas_ctx_t *vasctx, vas_id_t *vasid, ber_int_t msgid, char 
 			   "SUCCESS: converted GID: %ld to SID: %s.\n",
 			   gid, sid);
 
-	if ((be = ber_alloc_t(BER_USE_DER)) == NULL) {
-		if (debug) fprintf(stderr, "ERROR: Memory allocation failed!\n");
-		return -1;
-	}
-
-	if ((ret = ber_printf(be, "{it{s{{s{s}}{s{s}}{s{s}}}}}{it{eoo}}",
+	BERVAL_PRINTF(reply, "{it{s{{s{s}}{s{s}}{s{s}}}}}{it{eoo}}",
 		 msgid, LDAP_RES_SEARCH_ENTRY,
 			"CN=VAS-Idmapper",
 			"sambaSID", sid,
@@ -303,66 +324,65 @@ int vlmapd_gid_to_sid(vas_ctx_t *vasctx, vas_id_t *vasid, ber_int_t msgid, char 
 		 msgid, LDAP_RES_SEARCH_RESULT,
 			LDAP_SUCCESS,
 			NULL, 0,
-			NULL, 0)
-	    ) == -1) {
-		if (debug) fprintf(stderr, "vlmapd(%d): ERROR unable to berprintf search entry\n", getpid());
-		return -1;
-	}
-
-	ret = ber_flatten(be, reply);
-	ber_free(be, 1);
+			NULL, 0);
+FINISHED:
 	return ret;
 }
 
-int vlmapd_search_idpool(ber_int_t msgid, struct berval **reply)
+static int vlmapd_search_idpool(ber_int_t msgid, struct berval **reply)
 {
-	BerElement *be;
 	int ret;
 
-	be = ber_alloc_t(BER_USE_DER);
+	/* return a face unixidpool entry with uidNumber, 
+         * gidNumber and objectclass */
 
-	/* return a face unixidpool entry with uidNumber, gidNumber and objectclass */
-
-	if ((ret = ber_printf(be, "{it{s{{s{s}}{s{s}}{s{s}}}}}{it{eoo}}",
+	BERVAL_PRINTF(reply, "{it{s{{s{s}}{s{s}}{s{s}}}}}{it{eoo}}",
 			 msgid, LDAP_RES_SEARCH_ENTRY,
 				"CN=VAS-Idmapper",
 				"objectClass", "sambaUnixIdPool",
 				"uidnumber", "1000",
 				"gidNumber", "1000",
-			 msgid, LDAP_RES_SEARCH_RESULT, LDAP_SUCCESS, NULL, 0, NULL, 0))
-	    == -1) {
-		if (debug) fprintf(stderr, "vlmapd(%d): ERROR unable to berprintf bind reply\n", getpid());
-		return -1;
-	}
-
-	ret = ber_flatten(be, reply);
-	ber_free(be, 1);
+			 msgid, LDAP_RES_SEARCH_RESULT, LDAP_SUCCESS, 
+                         NULL, 0, NULL, 0);
+FINISHED:
 	return ret;
 }
 
-int vlmapd_search(vas_ctx_t *vasctx, vas_id_t *vasid, ber_int_t msgid, BerElement *be, struct berval **reply)
+#define FILTER_TAG_AND              0xA0
+#define FILTER_TAG_EQUALITY_MATCH   0xA3
+
+/* Handles an LDAP search request, and constructs a reply. */
+static int vlmapd_search(vas_ctx_t *vasctx, vas_id_t *vasid, 
+        ber_int_t msgid, BerElement *be, struct berval **reply)
 {
 	ber_tag_t ft;
-	char name[128], val[128];
+	char name[4096], val[4096];
 	int nl, vl;
 	int ret;
 
-	/* skip everything up to the filter (seeiib -> dn, deref, sizel, timel, typesb) */
+	/* Skip everything up to the Filter 
+         * ("seeiib" -> dn, deref, sizel, timel, typesb)
+         * See RFC 2251 section 4.5.1
+         */
 	ret = ber_scanf(be, "xxxxxxt", &ft);
 	if (ret == -1) {
-		if (debug) fprintf(stderr, "vlmapd(%d): ERROR malformed search request\n");
+                warnx("malformed SearchRequest");
 		return -1;
 	}
 
+        DEBUG(3, "search filter tag %02x\n", ft);
+
 	switch (ft) {
-	case 0xA3:
+	case FILTER_TAG_EQUALITY_MATCH:
 		/* equality check what is it about */
-		nl = vl = 128;
+		nl = sizeof name;
+                vl = sizeof val;
 		ret = ber_scanf(be, "{ss}", name, &nl, val, &vl);
 		if (ret == -1) {
-			if (debug) fprintf(stderr, "vlmapd(%d): ERROR malformed search request(A3)\n");
+                        warnx("malformed AttributeValueAssertion");
 			return -1;
 		}
+                DEBUG(3, "(%.*s=%.*s)\n", nl, name, vl, val);
 		if (strncasecmp(name, "objectclass", nl) == 0) {
 			if (strncasecmp(val, "sambaUnixIdPool", vl) == 0) {
 				ret = vlmapd_search_idpool(msgid, reply);
@@ -374,277 +394,285 @@ int vlmapd_search(vas_ctx_t *vasctx, vas_id_t *vasid, ber_int_t msgid, BerElemen
 		ret = search_result_ok(msgid, reply);
 		break;
 
-	case 0xA0:
+	case FILTER_TAG_AND:
 		/* and filter we need further investigation */
-		nl = vl = 128;
+		nl = sizeof name;
+                vl = sizeof val;
 		ret = ber_scanf(be, "{{ss}", name, &nl, val, &vl);
 		if (ret == -1) {
-			if (debug) fprintf(stderr, "vlmapd(%d): ERROR malformed search request (A0)\n");
+                        warnx("expected filter (&(=)...)");
 			return -1;
 		}
 
-		if (strncasecmp(name, "objectclass", nl) == 0) {
-			if (strncasecmp(val, "sambaIdmapEntry", vl) == 0) {
-				nl = vl = 128;
-				ret = ber_scanf(be, "{ss}}", name, &nl, val, &vl);
-				if (ret == -1) {
-					if (debug) fprintf(stderr, "vlmapd(%d): ERROR malformed search request (A0)\n");
-					return -1;
-				}
+                DEBUG(3, "(&(%.*s=%.*s)...)\n", nl, name, vl, val);
 
-				if (strncasecmp(name, "sambaSID", nl) == 0) {
-					ret = vlmapd_sid_to_id(vasctx, vasid, msgid, val, reply);
-				} else if (strncasecmp(name, "uidNumber", nl) == 0) {
-					ret = vlmapd_uid_to_sid(vasctx, vasid, msgid, val, reply);
-				} else if (strncasecmp(name, "gidNumber", nl) == 0) {
-					ret = vlmapd_gid_to_sid(vasctx, vasid, msgid, val, reply);
-				} else {
-					ret = search_result_ok(msgid, reply);
-				}
-				break;
-			}
+		if (strncasecmp(name, "objectclass", nl) == 0 &&
+                    strncasecmp(val, "sambaIdmapEntry", vl) == 0) {
+                        nl = sizeof name;
+                        vl = sizeof val;
+                        ret = ber_scanf(be, "{ss}}", name, &nl, val, &vl);
+                        if (ret == -1) {
+                                warnx("expected filter (&(=)(=))");
+                                return -1;
+                        }
+                        DEBUG(3, "(&...(%.*s=%.*s))\n", nl, name, vl, val);
+
+                        if (strncasecmp(name, "sambaSID", nl) == 0) {
+                                ret = vlmapd_sid_to_id(vasctx, vasid, msgid, val, reply);
+                        } else if (strncasecmp(name, "uidNumber", nl) == 0) {
+                                ret = vlmapd_uid_to_sid(vasctx, vasid, msgid, val, reply);
+                        } else if (strncasecmp(name, "gidNumber", nl) == 0) {
+                                ret = vlmapd_gid_to_sid(vasctx, vasid, msgid, val, reply);
+                        } else {
+                                ret = search_result_ok(msgid, reply);
+                        }
+                        break;
 		}
+
 
 		/* return nothing for everything else */
 		ret = search_result_ok(msgid, reply);
 		break;
 		
-	case 0x87:
-		/* 99% it is (objectclass=*) */
 	default:
 		/* answer we found nothing */
 		ret = search_result_ok(msgid, reply);
 		break;
 	}
 
-	ber_free(be, 1);
 	return ret;
 }
 
-int vlmapd_bind(ber_int_t msgid, struct berval **reply)
+static int vlmapd_bind(ber_int_t msgid, struct berval **reply)
 {
-	BerElement *be;
 	int ret;
 
-	if (debug) fprintf(stderr, "vlmapd(%d): return success to a bind request\n", getpid());
+        DEBUG(1, "returning success to a BindRequest\n");
 
-	be = ber_alloc_t(BER_USE_DER);
-
-	ret = ber_printf(be, "{it{eoo}}", msgid, LDAP_RES_BIND, LDAP_SUCCESS, NULL, 0, NULL, 0);
-	if (ret == -1) {
-		if (debug) fprintf(stderr, "vlmapd(%d): ERROR unable to berprintf bind reply\n", getpid());
-		return -1;
-	}
-
-	ret = ber_flatten(be, reply);
-	ber_free(be, 1);
+	BERVAL_PRINTF(reply, "{it{eoo}}", msgid, LDAP_RES_BIND, 
+                LDAP_SUCCESS, NULL, 0, NULL, 0);
+FINISHED:
 	return ret;
 }
 
-int vlmapd_generic_error(ber_int_t msgid, ber_tag_t msgtype, struct berval **reply)
+static int vlmapd_generic_error(ber_int_t msgid, ber_tag_t msgtype, 
+        struct berval **reply)
 {
-	BerElement *be;
 	int ret;
 
-	if (debug) fprintf(stderr, "vlmapd(%d): return error on any non search request\n", getpid());
+	DEBUG(1, "returning error on non-search request\n");
 
-	be = ber_alloc_t(BER_USE_DER);
-
-	ret = ber_printf(be, "{it{eoo}}", msgid, msgtype+1, LDAP_INSUFFICIENT_ACCESS, NULL, 0, NULL, 0);
-	if (ret == -1) {
-		if (debug) fprintf(stderr, "vlmapd(%d): ERROR unable to berprintf bind reply\n", getpid());
-		return -1;
-	}
-
-	ret = ber_flatten(be, reply);
-	ber_free(be, 1);
+	BERVAL_PRINTF(reply, "{it{eoo}}", msgid, msgtype + 1,
+                LDAP_INSUFFICIENT_ACCESS, NULL, 0, NULL, 0);
+FINISHED:
 	return ret;
 }
 
-int vmapd_query(vas_ctx_t *vasctx, vas_id_t *vasid, struct berval *query, struct berval **reply)
+static int vmapd_query(vas_ctx_t *vasctx, vas_id_t *vasid, 
+        struct berval *query, struct berval **reply)
 {
-	ber_tag_t ret;
 	BerElement *be;
 	ber_int_t msgid;
 	ber_tag_t msgtype;
+        int ret;
 
 	be = ber_init(query);
 	if (be == NULL) {
-		if (debug) fprintf (stderr, "vlmapd(%d): ERROR Invalid ber string\n");
-		ber_free(be, 1);
-		return -1;
+                warnx("malformed query");
+		ret = -1;
+                goto FINISHED;
 	}
 
-	ret = ber_scanf(be, "{it{", &msgid, &msgtype);
+	ret = ber_scanf(be, "{it{", &msgid, &msgtype) == BER_ERROR ? -1 : 0;
+        if (ret == -1) {
+            warnx("malformed query");
+            goto FINISHED;
+        }
 
 	switch (msgtype) {
 	case LDAP_REQ_BIND:
-		ber_free(be, 1);
-		return vlmapd_bind(msgid, reply);
+		ret = vlmapd_bind(msgid, reply);
+                break;
 	case LDAP_REQ_SEARCH:
-		return vlmapd_search(vasctx, vasid, msgid, be, reply);
+		ret = vlmapd_search(vasctx, vasid, msgid, be, reply);
+                break;
 	default:
-		ber_free(be, 1);
-		return vlmapd_generic_error(msgid, msgtype, reply);
+		ret = vlmapd_generic_error(msgid, msgtype, reply);
+                break;
 	}
 
-	return -1;
+FINISHED:
+        if (be) {
+            ber_free(be, 1);
+        }
+	return ret;
 }
 
 #define SHORT_MSG_SIZE 129
 
-int vmapd_recv(int sd, struct berval *query)
+/* Reads a <tag,value,len> from the wire into a berval structure.
+ * On success, returns 0, and caller must free query->bv_val.
+ * On error, return -1.
+ * On connection closed with no bytes read, returns -2.
+ */
+static int vmapd_recv(int sd, struct berval *query)
 {
 	ssize_t ret;
 	ssize_t len;
-	unsigned char *buf;
-	int skip;
+	unsigned char *buf, *newbuf;
+	int skip, target, vlen;
 
 	buf = (unsigned char *)malloc(SHORT_MSG_SIZE);
+        if (buf == NULL) {
+            warnx("malloc");
+            ret = -1;
+            goto FINISHED;
+        }
 
-	ret = read(sd, buf, 2);
-	if (ret != 2) {
-		if (debug) {
-			if (ret == -1) {
-				fprintf(stderr, "vmapd(%d): ERROR (%d) while reading from socket\n", getpid(), errno);
-			} else {
-				fprintf(stderr, "vmapd(%d): ERROR short read from socket reading first bytes\n", getpid());
-			}
-		}
-		return -2;
-	}
+        /* Read the SEQUENCE tag and first DER length byte */
+        target = 2;
+        for (skip = 0; skip < target; skip += len) {
+            len = read(sd, buf + skip, target - skip);
+            if (len < 0) {
+                warn("read");
+                ret = -1;
+                goto FINISHED;
+            }
+            if (len == 0) {
+                if (skip == 0) {
+                    ret = -2;
+                } else {
+                    warnx("connection lost");
+                    ret = -1;
+                }
+                goto FINISHED;
+            }
+        }
 
-	if (buf[0] != 0x30) {
-		if (debug) {
-			fprintf(stderr, "vmapd(%d): ERROR protocol Error invalid first byte signature (%x)\n", getpid(), buf[0]);
-		}
-		return -2;
-	}
 
-	skip = 2; /* Let's skip at least the SEQUENCE tag and the Simple lenght byte */
+        /* Expect a SEQUENCE tag */
+	if (buf[0] != BER_SEQUENCE) {
+            warnx("protocol error (buf[0] = %02x)", buf[0]);
+            ret = -1;
+            goto FINISHED;
+        }
 
+        /* If the length has the msb set, then a length word follows */
 	if (buf[1] & 0x80) {
-		/* not a simple length short message */
-		/* lets retrieve the contents length */
 		int n, i;
 
-		n = (buf[1] & 0x7F);
-		skip += n; /* on the packet read skip also the laready retrieved length bytes */
+		n = buf[1] & 0x7F;
+                if (n > sizeof vlen) {
+                    warnx("SEQUENCE length too long or corrupted");
+                    ret = -1;
+                    goto FINISHED;
+                }
 
-		if (n > 4) {
-			/* more than 4 bytes for the length ?! */
-			if (debug) fprintf(stderr, "vmapd(%d): ERROR, we do not support more than 4 length bytes sequences\n");
-			return -2;
-		}
+                /* Read in the n-byte length word */
+                for (target += n; skip < target; skip += len) {
+                    len = read(sd, buf + skip, target - skip);
+                    if (len < 0) {
+                        warn("read");
+                        ret = -1;
+                        goto FINISHED;
+                    }
+                    if (len == 0) {
+                        warnx("connection lost");
+                        ret = -1;
+                        goto FINISHED;
+                    }
+                }
 
-		ret = read(sd, &(buf[2]), n);
-		if (ret != n) {
-			if (debug) {
-				if (ret == -1) {
-					fprintf(stderr, "vmapd(%d): ERROR (%d) while reading from socket\n", getpid(), errno);
-				} else {
-					fprintf(stderr, "vmapd(%d): ERROR short read from socket reading length\n", getpid());
-				}
-			}
-			return -2;
+                /* Convert the word into a native integer */
+		vlen = 0;
+                for (i = 0; i < n; i++) {
+                    vlen = (vlen << 8) | buf[i+2];
 		}
+                if (vlen < 0) { /* Check for overflow */
+                    warnx("SEQUENCE length too long or corrupted");
+                    ret = -1;
+                    goto FINISHED;
+                }
 
-		len = 0;
-		i = 0;
-		switch (n) {
-		case 4:
-			len += buf[2+i] << 24;
-			i++;
-		case 3:
-			len += buf[2+i] << 16;
-			i++;
-		case 2:
-			len += buf[2+i] << 8;
-			i++;
-		case 1:
-			len += buf[2+i];
-			break;
-		default:
-			if (debug) fprintf(stderr, "vmapd(%d): ERROR Internal operation failed for unkown reasons\n", getpid());
+                /* Resize the buffer before we read in the value part */
+                if (vlen + skip > SHORT_MSG_SIZE) {
+                    newbuf = (unsigned char *)realloc(buf, skip + vlen);
+                    if (newbuf == NULL) {
+                        warnx("realloc: could not allocate %u bytes", 
+                                skip + vlen);
+                        ret = -1;
+                        goto FINISHED;
+                    }
+                    buf = newbuf;
 		}
-
-		buf = (unsigned char *)realloc(buf, skip + len);
-		if (buf == NULL) {
-			 if (debug) fprintf(stderr, "vmapd(%d): ERROR Memory allocation failed (realloc)\n", getpid());
-			return -2;
-		}
-	} else { /* simple lenght */
-		len = buf[1];
+	} else { /* simple length */
+		vlen = buf[1];
 	}
 
-	ret = read(sd, &(buf[skip]), len);
-	if (ret != len) {
-		if (debug) {
-			if (ret == -1) {
-				fprintf(stderr, "vmapd(%d): ERROR (%d) while reading from socket\n", getpid(), errno);
-			} else {
-				fprintf(stderr, "vmapd(%d): ERROR short read from socket reading payload\n", getpid());
-			}
-		}
-		return -2;
-	}
+        /* Read the value part of the TLV */
+        for (target += vlen; skip < target; skip += len) {
+            len = read(sd, buf + skip, target - skip);
+            if (len < 0) {
+                warn("read");
+                ret = -1;
+                goto FINISHED;
+            }
+            if (len == 0) {
+                warnx("connection lost");
+                ret = -1;
+                goto FINISHED;
+            }
+        }
 
 	query->bv_val = (char *)buf;
-	query->bv_len = skip+len;
+	query->bv_len = skip;
+        ret = 0;
 
-	return 0;
+FINISHED:
+        if (buf && ret != 0)
+            free(buf);
+	return ret;
 }
 
-int vmapd_send(int sd, struct berval *reply)
+/* Writes a berval onto the wire */
+static int vmapd_send(int sd, struct berval *reply)
 {
-	ssize_t len = reply->bv_len;
-	ssize_t ret, s = 0;
+	ssize_t wlen, s = 0;
 
-	while (s < len) {
-		ret = write(sd, &(reply->bv_val[s]), len-s);
-		if (ret == -1) {
-			 if (debug) fprintf(stderr, "ERROR: Sending reply (errno=%d)\n", errno);
-			return -1;
+        for (s = 0; s < reply->bv_len; s += wlen) {
+		wlen = write(sd, (char *)reply->bv_val + s, 
+                        reply->bv_len - s);
+		if (wlen < 0) {
+                        warn("write");
+                        return -1;
 		}
-		s += ret;
+		s += wlen;
 	}
-
 	return 0;
 }
 
-int vmapd_server(int sd)
+/* Services one LDAP query. Returns 0 on success */
+static int vmapd_server(int sd)
 {
 	vas_ctx_t *vasctx = NULL;
 	vas_id_t *vasid = NULL;
 	struct berval query;
 	struct berval *reply;
 	int ret = 0;
+        vas_err_t error;
 
 	query.bv_val = NULL;
 	reply = NULL;
 
-	if(vas_library_version_check(VAS_API_VERSION_MAJOR, 
-				     VAS_API_VERSION_MINOR,
-				     VAS_API_VERSION_MICRO)) {
-		if (debug) fprintf(stderr, 
-				   "ERROR: Version of VAS API library is too old."
-				   "This program needs"VAS_API_VERSION_STR" or newer.\n");
-
-		ret = -1;
-		goto FINISHED;          
-	}
-
-	if ((ret = vas_ctx_alloc(&vasctx))) {
-		fprintf(stderr,
-			"ERROR: Unable to allocate VAS CTX. %s\n",
-			vas_err_get_string(vasctx, 1));
+	if ((error = vas_ctx_alloc(&vasctx))) {
+                warnx("vas_ctx_alloc: error %d%s", error,
+                    error == VAS_ERR_NO_MEMORY ? ": no memory" :
+                    error == VAS_ERR_INVALID_PARAM ? ": invalid param" : "");
 		goto FINISHED;
 	}
 
-        if ((vas_id_alloc( vasctx, "host/", &vasid ))) {
-		fprintf(stderr, 
-			"ERROR: Unable to allocate VAS ID for 'host/'. %s\n",
-			vas_err_get_string(vasctx, 1));
+        if ((vas_id_alloc(vasctx, "host/", &vasid))) {
+                warnx("vas_id_alloc host/: %s", vas_err_get_string(vasctx, 1));
 		goto FINISHED;
         }
 
@@ -652,8 +680,7 @@ int vmapd_server(int sd)
 						   VAS_ID_FLAG_USE_MEMORY_CCACHE |
 						     VAS_ID_FLAG_KEEP_COPY_OF_CRED,
 						   NULL))) {
-		fprintf(stderr,
-			"ERROR: Unable to establish credentials for 'host/'. %s\n",
+                warnx("vas_id_establish_cred_keytab host/: %s", 
 			vas_err_get_string(vasctx, 1));
 		goto FINISHED;
         }
@@ -664,23 +691,18 @@ int vmapd_server(int sd)
 		if (ret != 0) {
 			goto FINISHED;
 		}
-		 if (debug == 2) fprintf(stderr, "QUERY Successfully Received\n");
+		DEBUG(2, "QUERY successfully received\n");
 
 		ret = vmapd_query(vasctx, vasid, &query, &reply);
 		if (ret != 0) {
 			goto FINISHED;
 		}
 
-		 if (debug == 2) fprintf(stderr, "REPLY Successfully Delivered\n");
+		DEBUG(2, "REPLY successfully delivered\n");
 		ret = vmapd_send(sd, reply);
 		if (ret != 0) {
 			goto FINISHED;
 		}
-
-		free(query.bv_val);
-		ber_bvfree(reply);
-		query.bv_val = NULL;
-		reply = NULL;
 	}
 
 FINISHED:
@@ -715,12 +737,20 @@ int main (int argc, char *argv[])
                 default: error = 1;
             }
         }
-        if (optind < argc)
+        if (optind < argc) {
             error = 1;
+        }
         if (error) {
             usage(argv[0]);
             exit(1);
         }
+
+        /* Check that VAS version is suitable */
+	if (vas_library_version_check(VAS_API_VERSION_MAJOR, 
+				      VAS_API_VERSION_MINOR,
+				      VAS_API_VERSION_MICRO)) {
+            errx(1, "bad VAS version; need " VAS_API_VERSION_STR " or newer");
+	}
 
         /* Construct a server socket at port 389 LDAP */
 	sockin.sin_family = AF_INET;
@@ -805,7 +835,6 @@ int main (int argc, char *argv[])
 		}
 
 		new = accept(sd, (struct sockaddr *)&addr, &addrlen);
-
 		if (new == -1) {
                         warn("accept");
 			continue;
@@ -819,9 +848,11 @@ int main (int argc, char *argv[])
 		}
 
 		if (pid) {
+                        /* parent */
 			close(new);
 			child++;
 		} else {
+                        /* child */
 			int ret;
 
 			ret = vmapd_server(new);
