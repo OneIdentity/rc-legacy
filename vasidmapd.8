@@ -1,0 +1,26 @@
+.\" (c) 2006, Quest Software, Inc. All rights reserved.
+.TH VASIDMAPD 8
+.SH NAME
+vasidmapd \- SID-UID and SID-GID mapper for Active Directory
+.SH SYNOPSIS
+.B vasidmapd
+[\-D]
+[\-F]
+.RI [\-A\  ip-addr ]
+.RI [\-d\  debug-level ]
+.RI [\-p\  port ]
+.SH DESCRIPTION
+The
+.B vasidmapd
+daemon implements a small LDAP server which services requests from
+SAMBA to map between SIDs, UIDs and GIDs.
+.PP
+The easiest way to configure SAMBA for this is to run the
+.B vasidmap-config
+script which comes with the daemon.
+.SH "SEE ALSO"
+vastool(1),
+smb.conf(5),
+.I http://rc.vintela.com/topics/samba/
+.SH AUTHORS
+Simo Sorce, Quest Software, Inc.
