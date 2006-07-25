@@ -1,0 +1,104 @@
+#!/bin/sh
+
+: ${builddir:=.}
+: ${host:=127.0.0.1}
+: ${port:=389}          # vastool -p option not working
+: ${vastool:=/opt/quest/bin/vastool}
+: ${debug:=}        # eg -d2
+: ${SUDO:=sudo}
+
+EXIT=0
+desc () { desc="$*"; }
+pass () { echo "PASS: $desc" >&2; }
+fail () { echo "FAIL: $desc" >&2; EXIT=1; }
+result () { test $? -eq 0 && pass || fail; }
+negresult () { test $? -eq 1 && pass || fail; }
+fatal () { fail; exit 1; }
+required () { test $? -eq 0 && pass || fatal; }
+
+expfile=${TMPDIR:-/tmp}/test.$$.expect
+outfile=${TMPDIR:-/tmp}/test.$$.result
+${SUDO} ${builddir}/vasidmapd -F -A $host -p $port $debug &
+pid=$!
+trap "rm -f $expfile $outfile; ${SUDO} kill $pid && wait" 0 # cleanup on exit
+
+
+desc "start vasidmapd"
+    sleep 1
+    ${SUDO} kill -0 $pid 2>/dev/null
+required
+
+#-- usage "filter" ["description"] <expected-output
+tryfilter () {
+    desc "${2:-$1}"
+    cat > $expfile
+    $vastool search -a -h $host -p $port "$1" > $outfile &&
+    cmp $outfile $expfile
+    result
+    if ! cmp $outfile $expfile >/dev/null; then
+        echo "expected:"
+        sed -ne l $expfile | sed -e 's/^/	/' 
+        echo "but got:"
+        sed -ne l $outfile | sed -e 's/^/	/' 
+    fi >&2
+}
+#-- usage "filter" ["description"]
+tryfilterfail () {
+    desc "${2:-$1, negative}"
+    $vastool search -a -h $host -p $port "$1" > $outfile 2>/dev/null
+    negresult
+}
+
+tryfilterfail '(arbitrary=equality)'
+
+tryfilter '(objectClass=sambaUnixIdPool)' <<.
+dn: CN=VAS-Idmapper
+objectClass: sambaUnixIdPool
+uidNumber: 1000
+gidNumber: 1000
+.
+
+
+tryfilter '(OBjeCTcLASS=SAmBAuNIXiDpoOl)' <<.
+dn: CN=VAS-Idmapper
+objectClass: sambaUnixIdPool
+uidNumber: 1000
+gidNumber: 1000
+.
+
+tryfilterfail '(&(a=b)(c=d)(e=f))'
+
+usid='S-1-5-21-2633041085-1379753522-2373667922-1111'
+gsid='S-1-5-21-2633041085-1379753522-2373667922-1112'
+uid=1032
+gid=1015
+
+tryfilter "(&(objectClass=sambaIdmapEntry)(sambaSID=$usid))" <<.
+dn: CN=VAS-Idmapper
+sambaSID: $usid
+objectClass: sambaIdmapEntry
+uidNumber: $uid
+.
+
+tryfilter "(&(objectClass=sambaIdmapEntry)(sambaSID=$gsid))" <<.
+dn: CN=VAS-Idmapper
+sambaSID: $gsid
+objectClass: sambaIdmapEntry
+gidNumber: $gid
+.
+
+tryfilter "(&(objectClass=sambaIdmapEntry)(uidNumber=$uid))" <<.
+dn: CN=VAS-Idmapper
+sambaSID: $usid
+objectClass: sambaIdmapEntry
+uidNumber: $uid
+.
+
+tryfilter "(&(objectClass=sambaIdmapEntry)(gidNumber=$gid))" <<.
+dn: CN=VAS-Idmapper
+sambaSID: $gsid
+objectClass: sambaIdmapEntry
+gidNumber: $gid
+.
+
+exit $EXIT
