@@ -27,6 +27,7 @@
 #include <errno.h>
 #include <pwd.h>
 #include <grp.h>
+#include <err.h>
 
 #include <vas.h>
 #include <ber.h>
@@ -38,6 +39,11 @@
 #endif
 
 int debug;
+
+void usage(const char *prog) 
+{
+        fprintf(stderr, "usage: %s [-A ipaddr] [-d level] [-p port] [-D] [-F]\n", prog);
+}
 
 int search_result_ok(ber_int_t msgid, struct berval **reply)
 {
@@ -687,48 +693,77 @@ int main (int argc, char *argv[])
 	char *query = NULL;
 	char *err_msg;
 	int count, len, ret, opt, child;
+        int ch, error = 0;
+        int daemonize = 1;
+        int port = 389;
+        const char *bindaddr = NULL;
+        extern int optind;
+        extern char *optarg;
 
-	debug = 0;
-	if (argc > 1) {
-		if (strcmp(argv[1], "debug") == 0) {
-			debug = 1;
-		}
-	}
+        while ((ch = getopt(argc, argv, "A:d:DFp:")) != -1)
+            switch (ch) {
+                case 'A': bindaddr = optarg; break;
+                case 'd': debug = atoi(optarg); break;
+                case 'p': port = atoi(optarg); break;
+                case 'D': daemonize = 1; break;
+                case 'F': daemonize = 0; break;
+                default: error = 1;
+            }
 
+        /* Backward compat: old way of providing debug */
+        if (optind < argc && strcmp(argv[optind], "debug") == 0) {
+            debug = 1;
+            optind++;
+        }
+
+        if (optind < argc)
+            error = 1;
+        if (error) {
+            usage(argv[0]);
+            exit(1);
+        }
+
+        /* Construct a server socket at port 389 LDAP */
 	sockin.sin_family = AF_INET;
-	sockin.sin_port = htons(389); /* ldap */
-	if (debug) {
-		inet_pton(AF_INET, "0.0.0.0", &(sockin.sin_addr.s_addr));
-	} else {
-		inet_pton(AF_INET, "127.0.0.1", &(sockin.sin_addr.s_addr));
-	}
+	sockin.sin_port = htons(port);
+        if (!bindaddr)
+            bindaddr = debug ? "0.0.0.0" : "127.0.0.1";
+        if (inet_pton(AF_INET, bindaddr, &(sockin.sin_addr.s_addr) <= 0))
+            errx(1, "bad IP address '%s'", bindaddr);
 
 	sd = socket(AF_INET, SOCK_STREAM, 0);
 	if (sd == -1) {
-		fprintf(stderr, "ERROR: Unable to create a new unix socket descriptor\n");
-		exit(5);
+                err(5, "socket");
 	}
 
+#if defined(SO_REUSEADDR)
 	opt = 1;
-	setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, (const void *)&opt, 4);
+	if (setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, (const void *)&opt, sizeof opt) < 0)
+            warn("setsockopt SO_REUSEADDR");
+#endif
 
 	len = sizeof(sockin);
 	ret = bind(sd, (struct sockaddr *)&sockin, len);
 	if (ret == -1) {
-		 if (debug) fprintf(stderr, "ERROR: Bind failed with errno=%d\n", errno);
-		exit(6);
+                err(6, "bind");
 	}
 
 	ret = listen(sd, 5);
 	if (ret == -1) {
-		 if (debug) fprintf(stderr, "ERROR: Listen failed with errno=%d\n", errno);
-		exit(6);
+                err(6, "listen");
 	}
 
-	/* become a daemon */
-	if (!debug) {
-		if (fork()) {
-			exit(0);
+	/* Double-fork to daemonize */
+	if (!daemonize) {
+		switch (fork()) {
+                    case -1: err(1, "fork");
+                    case 0: break;
+                    default: _exit(0);
+		}
+		switch (fork()) {
+                    case -1: err(1, "fork");
+                    case 0: break;
+                    default: _exit(0);
 		}
 	}
 
@@ -742,6 +777,7 @@ int main (int argc, char *argv[])
 		struct timeval tv;
 		fd_set r_fds;
 
+                /* FIXME: use sigchld/signign to reap children */
 		tv.tv_sec = 1;
 		tv.tv_usec = 0;
 		FD_ZERO(&r_fds);
@@ -762,22 +798,23 @@ int main (int argc, char *argv[])
 			continue;
 		}
 		if (ret < 0) {
-			if (debug) fprintf(stderr, "Socket error!");
-			exit(ret);
+                        if (errno == EINTR)
+                            continue;
+                        err(1, "select");
 		}
 
 		new = accept(sd, (struct sockaddr *)&addr, &addrlen);
 
 		if (new == -1) {
-			 if (debug) fprintf(stderr, "WARNING: Accept failed!");
+                        warn("accept");
 			continue;
 		}
 
 		pid = fork();
 		if (pid == -1) {
-			 if (debug) fprintf(stderr, "ERROR: Fork failed!");
+                        warn("fork");
 			close(new);
-			exit(7);
+			continue;
 		}
 
 		if (pid) {
