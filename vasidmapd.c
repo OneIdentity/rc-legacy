@@ -511,6 +511,7 @@ FINISHED:
 #define SHORT_MSG_SIZE 129
 
 /* Reads a <tag,value,len> from the wire into a berval structure.
+ * Checks that it is a SEQUENCE (LDAPMessage).
  * On success, returns 0, and caller must free query->bv_val.
  * On error, return -1.
  * On connection closed with no bytes read, returns -2.
@@ -563,7 +564,7 @@ static int vmapd_recv(int sd, struct berval *query)
 
 		n = buf[1] & 0x7F;
                 if (n > sizeof vlen) {
-                    warnx("SEQUENCE length too long or corrupted");
+                    warnx("LDAPMessage length too long or corrupted");
                     ret = -1;
                     goto FINISHED;
                 }
@@ -589,7 +590,7 @@ static int vmapd_recv(int sd, struct berval *query)
                     vlen = (vlen << 8) | buf[i+2];
 		}
                 if (vlen < 0) { /* Check for overflow */
-                    warnx("SEQUENCE length too long or corrupted");
+                    warnx("LDAPMessage length too long or corrupted");
                     ret = -1;
                     goto FINISHED;
                 }
