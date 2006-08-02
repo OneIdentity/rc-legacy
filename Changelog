@@ -1,0 +1,7 @@
+0.9.3
+* Added -s option to vasidmapd
+* Improved documentation
+* Removed unnecessary dependency on Samba
+
+0.9.2
+* Initial release
