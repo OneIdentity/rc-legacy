@@ -6,8 +6,8 @@
     sbindir=$prefix/sbin
     mandir=$prefix/man
 
-%depend
-    quest-samba 3.0.23
+#%depend
+#    libvas.so.4
 
 %files
     $bindir/vasidmap-config
