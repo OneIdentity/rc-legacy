@@ -9,6 +9,7 @@ vasidmapd \- SID-UID and SID-GID mapper for Active Directory
 .RI [\-A\  ip-addr ]
 .RI [\-d\  debug-level ]
 .RI [\-p\  port ]
+.RI [\-s\  spn ]
 .SH DESCRIPTION
 The
 .B vasidmapd
@@ -18,6 +19,50 @@ SAMBA to map between SIDs, UIDs and GIDs.
 The easiest way to configure SAMBA for this is to run the
 .B vasidmap-config
 script which comes with the daemon.
+.SS OPTIONS
+.TP
+.RI \-D
+If specified, this parameter causes
+.B vasidmapd
+to operate as a daemon.
+That is, it detaches itself and runs in the background.
+This is the recommended, and default behaviour.
+.TP
+.RI \-F
+If specified, this parameter causes the main
+.B vasidmapd
+process to not daemonize.
+Child processes are still created to handle incoming connections,
+but the main process does not exit.
+This operation mode is suitable for running
+.B vasidmapd
+under process supervisors.
+.TP
+.RI \-A\  ip-addr
+If specified, changes the IP address that
+.B vasidmapd
+binds and listens to.
+The listen address defaults to the loopback address 127.0.0.1.
+.TP
+.RI \-d\  debug-level
+This parameter sets the debug level as an integer.
+The default is level 0 and indicates no debugging.
+Debug messages are sent to standard error.
+.TP
+.RI \-p\  port
+This parameter sets the TCP port number on which
+.B vasidmapd
+listens for requests.
+The
+.I port
+parameter is a single integer, and defaults to 389.
+.TP
+.RI \-s\  spn
+This parameter sets the principal name that the
+.B vasidmapd
+service authenticates as.
+It defaults to
+.IR host/ .
 .SH "SEE ALSO"
 vastool(1),
 smb.conf(5),

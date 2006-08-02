@@ -94,13 +94,16 @@ static int vmapd_send(int sd, struct berval *reply);
 static int vmapd_server(int sd);
 
 
-int debug;  /* Set by -d command line option */
+int debug;                          /* Set by the -d option */
+const char *service_name = "host/"; /* Set by the -s option */
 
 /* Displays command line usage message */
 static void usage(const char *prog) 
 {
         fprintf(stderr, "usage: %s"
-               " [-A ipaddr] [-d level] [-p port] [-D] [-F]\n", prog);
+               " [-A ipaddr] [-d level] [-p port]"
+               " [-s spn]"
+               " [-D] [-F]\n", prog);
 }
 
 /* Constructs the reply message: SEARCH_RESULT{SUCCESS} */
@@ -672,16 +675,17 @@ static int vmapd_server(int sd)
 		goto FINISHED;
 	}
 
-        if ((vas_id_alloc(vasctx, "host/", &vasid))) {
-                warnx("vas_id_alloc host/: %s", vas_err_get_string(vasctx, 1));
+        if ((vas_id_alloc(vasctx, service_name, &vasid))) {
+                warnx("vas_id_alloc %s: %s", service_name,
+                        vas_err_get_string(vasctx, 1));
 		goto FINISHED;
         }
 
         if ((vas_id_establish_cred_keytab(vasctx, vasid,
-						   VAS_ID_FLAG_USE_MEMORY_CCACHE |
-						     VAS_ID_FLAG_KEEP_COPY_OF_CRED,
-						   NULL))) {
-                warnx("vas_id_establish_cred_keytab host/: %s", 
+                                VAS_ID_FLAG_USE_MEMORY_CCACHE |
+                                VAS_ID_FLAG_KEEP_COPY_OF_CRED,
+				NULL))) {
+                warnx("vas_id_establish_cred_keytab %s: %s", service_name,
 			vas_err_get_string(vasctx, 1));
 		goto FINISHED;
         }
@@ -728,13 +732,14 @@ int main (int argc, char *argv[])
         extern int optind;
         extern char *optarg;
 
-        while ((ch = getopt(argc, argv, "A:d:DFp:")) != -1) {
+        while ((ch = getopt(argc, argv, "A:d:DFp:s:")) != -1) {
             switch (ch) {
                 case 'A': bindaddr = optarg; break;
                 case 'd': debug = atoi(optarg); break;
                 case 'p': port = atoi(optarg); break;
                 case 'D': daemonize = 1; break;
                 case 'F': daemonize = 0; break;
+                case 's': service_name = optarg; break;
                 default: error = 1;
             }
         }
