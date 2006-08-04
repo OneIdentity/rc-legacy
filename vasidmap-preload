@@ -11,11 +11,8 @@ rm -f ${VASTMP}/idmap_new.tbl
 touch ${VASTMP}/idmap_new.tbl
 
 # For every user on AD
-VASUSERS=`${VASPATH}/vastool -u host/ list -l users | grep ":VAS:" | cut -d ':' -f 1,3`
-if [ "${VASUSERS}x" = "x" ]; then #UPM mode ?
-	${VASPATH}/vastool flush users
-	VASUSERS=`${VASPATH}/vastool list users | grep ":VAS:" | cut -d ':' -f 1,3`
-fi
+VASUSERS=`${VASPATH}/vastool list users | grep ":VAS:" | cut -d ':' -f 1,3`
+
 for i in $VASUSERS
 do
 	# retrieve the Group Name
@@ -28,11 +25,7 @@ do
 done
 
 # For every group on AD
-VAGROUPS=`${VASPATH}/vastool -u host/ list -l groups | grep ":VAS:" | cut -d ':' -f 1,3`
-if [ "${VASGROUPS}x" = "x" ]; then #UPM mode ?
-	${VASPATH}/vastool flush groups
-	VASGROUPS=`${VASPATH}/vastool list groups | grep ":VAS:" | cut -d ':' -f 1,3`
-fi
+VASGROUPS=`${VASPATH}/vastool list groups | grep ":VAS:" | cut -d ':' -f 1,3`
 for i in $VASGROUPS
 do
 	# retrieve the Group Name
