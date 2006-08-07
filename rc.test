@@ -8,9 +8,9 @@
 : ${SUDO:=sudo}
 
 EXIT=0
-desc () { desc="$*"; }
-pass () { echo "PASS: $desc" >&2; }
-fail () { echo "FAIL: $desc" >&2; EXIT=1; }
+desc () { DESC="$*"; }
+fail () { echo "[37;41mFAILED[m [4m$DESC${*:+ ($*)}[m" >&2; EXIT=1; }
+pass () { echo "[37;42mPASSED[m [4m$DESC${*:+ ($*)}[m" >&2; }
 result () { test $? -eq 0 && pass || fail; }
 negresult () { test $? -eq 1 && pass || fail; }
 fatal () { fail; exit 1; }
@@ -35,7 +35,9 @@ tryfilter () {
     $vastool search -a -h $host -p $port "$1" > $outfile &&
     cmp $outfile $expfile
     result
-    if ! cmp $outfile $expfile >/dev/null; then
+    if cmp $outfile $expfile >/dev/null; then
+        : ok
+    else
         echo "expected:"
         sed -ne l $expfile | sed -e 's/^/	/' 
         echo "but got:"
