@@ -1,3 +1,6 @@
+0.9.4
+* Fix multidomain support in vasidmap
+
 0.9.3
 * Added -s option to vasidmapd
 * Improved documentation

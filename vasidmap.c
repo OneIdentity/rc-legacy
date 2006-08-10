@@ -165,26 +165,183 @@ int main( int argc, char *argv[] )
      * account name => username
      */
     if ((input == INPUT_NAME)) {
+	char *user_string;
         char *upn;
         const char *backslash;
 	vas_user_t *vasuser;
 	struct passwd *pwent;
 
 	/* Strip leading domain from DOMAIN\USER names */
-        if ((backslash = strchr(str, '\\')) != NULL)
-            str = backslash + 1;
+        if ((backslash = strchr(str, '\\')) != NULL) {
+	    const char *anames[] = { "namingContexts", NULL };
+	    const char *nnames[] = { "ncName", "nETBIOSName", "dnsRoot", NULL };
+	    vas_attrs_t *vasattrs;
+	    char *domain;
+	    char *domain_dn;
+	    char *dcuri;
+	    char *filter;
+	    char *conf_dn = NULL;
+	    char **vals;
+	    int num, i;
+	    char *nbt_domain;
+	    char *user_realm;
+	    char *username;
 
-        if (vas_user_init(vasctx, vasid, str, VAS_NAME_FLAG_NO_LDAP, &vasuser)) {
-	    errx(1, "vas_user_init '%.100s': %s", str, 
-		    vas_err_get_string(vasctx, 1));
-            printf("UNKNOWN_USER");
-	    exit(1);
+	    if (!fflag) {
+		/* We need to do authenticated operations against the AD LDAP server.
+		 * If the force option has not been specified we need to set up the
+		 * host credentials
+		 */
+	        if (vas_id_alloc(vasctx, "host/", &vasid))
+		    errx(1, "vas_id_alloc host/: %s", vas_err_get_string(vasctx, 1));
+
+		if (vas_id_establish_cred_keytab(vasctx, vasid,
+			   VAS_ID_FLAG_USE_MEMORY_CCACHE |
+			   VAS_ID_FLAG_KEEP_COPY_OF_CRED, NULL))
+		    errx(1, "vas_id_establish_cred_keytab: %s",
+			   vas_err_get_string(vasctx, 1));
+	    }
+
+	    if (!(username = strdup(backslash+1))) {
+		printf("Memory allocation error.\n");
+		exit(1);
+	    }
+   
+	    if (!(nbt_domain = malloc(backslash-str+1))) {
+		printf("Memory allocation error.\n");
+		exit(1);
+	    }
+	    snprintf(nbt_domain, backslash-str+1, "%s", str);
+    
+	    /* find out the domain we are joined to */
+	    if (vas_info_joined_domain(vasctx, &domain, &domain_dn) != VAS_ERR_SUCCESS) {
+		printf("Error: are we joined to any domain?\n");
+		exit(1);
+	    }
+
+	    if ((dcuri = malloc(strlen(domain) + 7)) == NULL) {
+		printf("Memory allocation error.\n");
+		exit(1);
+	    }
+	    snprintf(dcuri, strlen(domain) + 7, "DC://@%s", domain);
+   
+	    if (vas_attrs_alloc(vasctx, vasid, &vasattrs) != VAS_ERR_SUCCESS) {
+		printf("Search error: %s\n", vas_err_get_string(vasctx, 1));
+		exit(1);
+	    }
+
+	    /* find the configuration naming context */
+	    if (vas_attrs_find(vasctx,
+			       vasattrs,
+			       dcuri,
+			       "base",
+			       "",
+			       "(objectclass=*)",
+			       anames) != VAS_ERR_SUCCESS) {
+		printf("Search error: %s\n", vas_err_get_string(vasctx, 1));
+		exit(1);
+	    }
+
+	    if (vas_vals_get_string(vasctx,
+				    vasattrs,
+				    "namingContexts",
+				    &vals,
+				    &num) != VAS_ERR_SUCCESS) {
+		printf("Search error: %s\n", vas_err_get_string(vasctx, 1));
+		exit(1);
+	    }
+
+	    for (i = 0; i < num; i++) {
+    
+		if (strncmp(vals[i], "CN=Configuration,", 17) == 0) {
+		    conf_dn = vals[i];
+		}
+	    }
+	    if (!conf_dn) {
+		printf("Search error: Configuration partition not found!\n");
+		exit(1);
+	    }
+    
+	    if ((filter = malloc(strlen(domain_dn) + 15)) == NULL) {
+		printf("Memory allocation error.\n");
+		exit(1);
+	    }
+	    snprintf(filter, strlen(nbt_domain) + 15, "(nETBIOSName=%s)", nbt_domain);
+
+            /* find out the principal name from the short domain name */
+	    if (vas_attrs_find(vasctx,
+			       vasattrs,
+			       dcuri,
+			       "sub",
+			       conf_dn,
+			       filter,
+			       nnames) != VAS_ERR_SUCCESS) {
+		printf("Search error: %s\n", vas_err_get_string(vasctx, 1));
+		exit(1);
+	    }
+
+	    if (vas_vals_get_string(vasctx,
+				    vasattrs,
+				    "dnsRoot",
+				    &vals,
+				    &num) != VAS_ERR_SUCCESS) {
+		printf("Search error: %s\n", vas_err_get_string(vasctx, 1));
+		exit(1);
+	    }
+
+	    /* in any case we can get only the first name */
+	    if (num == 0) {
+		printf("Search error: domain realm not found\n");
+		exit(1);
+	    }
+
+	    if (!(user_realm = strdup(vals[0]))) {
+		printf("Memory allocation error.\n");
+		exit(1);
+	    }
+	    for (i = 0; i < strlen(user_realm); i++) {
+		user_realm[i] = (char)toupper(user_realm[i]);
+	    }
+
+	    if (!(user_string = malloc(strlen(user_realm)+strlen(username)+2))) {
+		printf("Memory allocation error.\n");
+		exit(1);
+	    }
+	    snprintf(user_string, strlen(user_realm)+strlen(username)+2, "%s@%s", username, user_realm);
+    
+	} else {
+	    user_string = strdup(str);
+	}
+
+        if (vas_user_init(vasctx, vasid, user_string, VAS_NAME_FLAG_NO_LDAP, &vasuser)) {
+            /* try again bypassing the cache */
+	    if (!fflag) {
+		/* We need to do authenticated operations against the AD LDAP server.
+		 * If the force option has not been specified we need to set up the
+		 * host credentials
+		 */
+	        if (vas_id_alloc(vasctx, getuid()?NULL:"host/", &vasid))
+		    errx(1, "vas_id_alloc: %s", vas_err_get_string(vasctx, 1));
+
+		if (vas_id_establish_cred_keytab(vasctx, vasid,
+			   VAS_ID_FLAG_USE_MEMORY_CCACHE |
+			   VAS_ID_FLAG_KEEP_COPY_OF_CRED, NULL))
+		    errx(1, "vas_id_establish_cred_keytab: %s",
+			   vas_err_get_string(vasctx, 1));
+	    }
+
+            if (vas_user_init(vasctx, vasid, user_string, VAS_NAME_FLAG_NO_CACHE, &vasuser)) {
+                errx(1, "vas_user_init '%.100s': %s", user_string, 
+                        vas_err_get_string(vasctx, 1));
+                printf("UNKNOWN_USER");
+                exit(1);
+            }
 	}
 
 
         if (vas_user_get_pwinfo(vasctx, vasid, vasuser, &pwent))
        	{
-            warn("vas_user_get_pwinfo '%.100s': %s", str,
+            warn("vas_user_get_pwinfo '%.100s': %s", user_string,
                     vas_err_get_string(vasctx, 1));
             printf("UNKNOWN_USER");
 	    exit(1);
