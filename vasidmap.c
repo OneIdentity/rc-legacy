@@ -64,6 +64,42 @@ strtougid(const char *s)
     return id;
 }
 
+void get_proper_creds(vas_ctx_t *vasctx, vas_id_t **vasid) {
+
+    int verr;
+
+    if (getuid()) {
+        /* we are not root, let's if we have credentials, or warn the user */
+        if (vas_id_alloc(vasctx, NULL, vasid)) {
+            errx(1, "vas_id_alloc: %s", vas_err_get_string(vasctx, 1));
+        }
+
+        if ((verr = vas_id_is_cred_established(vasctx, *vasid)) != VAS_ERR_SUCCESS) {
+            if (verr == VAS_ERR_CRED_NEEDED) {
+                errx(1, "No kerberos ticket found, please use vastool kinit to obtain a kerberos ticket.");
+            }
+            if (verr == VAS_ERR_CRED_EXPIRED) {
+                errx(1, "Your ticket is expired, please use vastool kinit to obtain a kerberos ticket.");
+            }
+            errx(1, "vas_id_is_cred_established: %s", vas_err_get_string(vasctx, 1));
+        }
+    } else { 
+        /* we are root, let's use the host credentials */
+        if (vas_id_alloc(vasctx, "host/", vasid)) {
+            errx(1, "vas_id_alloc as host/: %s", vas_err_get_string(vasctx, 1));
+        }
+    
+        if (vas_id_is_cred_established(vasctx, *vasid)) {
+            if (vas_id_establish_cred_keytab(vasctx, *vasid,
+                                             VAS_ID_FLAG_USE_MEMORY_CCACHE |
+                                             VAS_ID_FLAG_KEEP_COPY_OF_CRED, NULL)) {
+                errx(1, "vas_id_establish_cred_keytab: %s",
+                        vas_err_get_string(vasctx, 1));
+            }
+        }
+    }
+}
+
 int main( int argc, char *argv[] )
 {
     const char *str = NULL;
@@ -75,6 +111,7 @@ int main( int argc, char *argv[] )
     extern int optind;
     extern char *optarg;
     int exitcode = 1;
+    int verr;
     
     if( vas_library_version_check( VAS_API_VERSION_MAJOR, 
                                    VAS_API_VERSION_MINOR,
@@ -151,14 +188,7 @@ int main( int argc, char *argv[] )
 
     /* Use the host's keytab when forcing with the -f option. */
     if (fflag) {
-        if (vas_id_alloc(vasctx, "host/", &vasid))
-	    errx(1, "vas_id_alloc host/: %s", vas_err_get_string(vasctx, 1));
-
-	if (vas_id_establish_cred_keytab(vasctx, vasid,
-		   VAS_ID_FLAG_USE_MEMORY_CCACHE |
-		   VAS_ID_FLAG_KEEP_COPY_OF_CRED, NULL))
-	    errx(1, "vas_id_establish_cred_keytab: %s",
-		   vas_err_get_string(vasctx, 1));
+        get_proper_creds(vasctx, &vasid);
     }
     
     /*
@@ -192,14 +222,7 @@ int main( int argc, char *argv[] )
 		 * If the force option has not been specified we need to set up the
 		 * host credentials
 		 */
-	        if (vas_id_alloc(vasctx, "host/", &vasid))
-		    errx(1, "vas_id_alloc host/: %s", vas_err_get_string(vasctx, 1));
-
-		if (vas_id_establish_cred_keytab(vasctx, vasid,
-			   VAS_ID_FLAG_USE_MEMORY_CCACHE |
-			   VAS_ID_FLAG_KEEP_COPY_OF_CRED, NULL))
-		    errx(1, "vas_id_establish_cred_keytab: %s",
-			   vas_err_get_string(vasctx, 1));
+                get_proper_creds(vasctx, &vasid);
 	    }
 
 	    if (!(username = strdup(backslash+1))) {
@@ -320,14 +343,7 @@ int main( int argc, char *argv[] )
 		 * If the force option has not been specified we need to set up the
 		 * host credentials
 		 */
-	        if (vas_id_alloc(vasctx, getuid()?NULL:"host/", &vasid))
-		    errx(1, "vas_id_alloc: %s", vas_err_get_string(vasctx, 1));
-
-		if (vas_id_establish_cred_keytab(vasctx, vasid,
-			   VAS_ID_FLAG_USE_MEMORY_CCACHE |
-			   VAS_ID_FLAG_KEEP_COPY_OF_CRED, NULL))
-		    errx(1, "vas_id_establish_cred_keytab: %s",
-			   vas_err_get_string(vasctx, 1));
+                get_proper_creds(vasctx, &vasid);
 	    }
 
             if (vas_user_init(vasctx, vasid, user_string, VAS_NAME_FLAG_NO_CACHE, &vasuser)) {

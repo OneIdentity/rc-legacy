@@ -18,7 +18,7 @@ URL:      http://rc.vintela.com
 
 Source:   vasidmapd-%{version}.tar.gz
 
-Requires: quest-samba >= 3.0.23 vasclnts >= 3.0.1
+Requires: quest-samba >= 3.0.23 vasclnts >= 3.0.2
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
 BuildRequires: make, gcc, vasdev >= 3.0.2
 Provides: vasidmapd = %{version}
