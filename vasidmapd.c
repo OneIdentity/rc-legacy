@@ -149,20 +149,18 @@ static int vlmapd_sid_to_id(vas_ctx_t *vasctx, vas_id_t *vasid,
 
 		vas_user_free(vasctx, vasuser);
 	
-		if (debug) fprintf(stderr,
-					   "ERROR: no pwinfo for sid: %s. %s\n",
-					   sid,
-					   vas_err_get_string(vasctx, 1));
+                DEBUG(1, "ERROR: no pwinfo for sid: %s. %s\n"
+                         "Try with a group.\n",
+                         sid,
+                         vas_err_get_string(vasctx, 1));
 
-		if (debug) fprintf(stderr, "Try with a group.\n");
+	} else {
 
-	} else { /* if not an uid check if it is a gid */
-
-		if (debug) fprintf(stderr,
-				   "WARNING: Unable to initalize VAS user using sid: %s. %s\n", 
-				   sid,
-				   vas_err_get_string(vasctx, 1));
-		if (debug) fprintf(stderr, "Try with a group.\n");
+                DEBUG(1, "WARNING: Unable to initalize VAS user"
+                         " using sid: %s. %s\n"
+                         "Try with a group.\n",
+                         sid,
+                         vas_err_get_string(vasctx, 1));
 	}
 
 	if ((vas_group_init(vasctx,
@@ -171,18 +169,17 @@ static int vlmapd_sid_to_id(vas_ctx_t *vasctx, vas_id_t *vasid,
 			    VAS_NAME_FLAG_FOREST_SCOPE,
 			    &vasgrp))) { /* error */
 		
-		if (debug) fprintf(stderr,
-				   "ERROR: Unable to initialize VAS group using sid: %s. %s\n",
-				   sid,
-				   vas_err_get_string(vasctx, 1));
+		DEBUG(1, "ERROR: Unable to initialize VAS group"
+                         " using sid: %s. %s\n",
+			 sid,
+			 vas_err_get_string(vasctx, 1));
 		return search_result_ok(msgid, reply);
 	}
 
 	if (vas_group_get_grinfo(vasctx, vasid, vasgrp, &grent)) {
-		if (debug) fprintf(stderr,
-				   "ERROR: no grinfo for sid: %s. %s\n",
-				   sid,
-				   vas_err_get_string(vasctx, 1));
+		DEBUG(1, "ERROR: no grinfo for sid: %s. %s\n",
+			 sid,
+			 vas_err_get_string(vasctx, 1));
 		vas_group_free(vasctx, vasgrp);
 		return search_result_ok(msgid, reply);
 	}
@@ -194,9 +191,8 @@ static int vlmapd_sid_to_id(vas_ctx_t *vasctx, vas_id_t *vasid,
 	free(grent);
 
 got_an_id:
-	if (debug) fprintf(stderr,
-			   "SUCCESS: converted SID: %s to %s: %s.\n",
-			   sid, pwent?"UID":"GID", num);
+        DEBUG(1, "SUCCESS: converted SID: %s to %s: %s.\n",
+		 sid, pwent?"UID":"GID", num);
 
         BERVAL_PRINTF(reply, "{it{s{{s{s}}{s{s}}{s{s}}}}}{it{eoo}}",
 		 msgid, LDAP_RES_SEARCH_ENTRY,
@@ -212,7 +208,8 @@ FINISHED:
 	return ret;
 }
 
-static int vlmapd_uid_to_sid(vas_ctx_t *vasctx, vas_id_t *vasid, ber_int_t msgid, char *val, struct berval **reply)
+static int vlmapd_uid_to_sid(vas_ctx_t *vasctx, vas_id_t *vasid, 
+        ber_int_t msgid, char *val, struct berval **reply)
 {
 	vas_user_t *vasuser;
 	struct passwd *pwent = NULL;
@@ -223,41 +220,39 @@ static int vlmapd_uid_to_sid(vas_ctx_t *vasctx, vas_id_t *vasid, ber_int_t msgid
 	errno = 0;
 	uid = (uid_t)strtol(val, NULL, 10);
 	if (errno != 0) {
-		if (debug) fprintf(stderr, "vlmapd(%d): ERROR Conversion to uid_t failed.\n"
-					   "            (val=[%s],errno=%d)\n", getpid(), val, errno);
+		DEBUG(1, "vlmapd(%d):"
+                         " ERROR Conversion to uid_t failed.\n"
+                         "            (val=[%s],errno=%d)\n", 
+                         getpid(), val, errno);
 	}
 	if ((pwent = getpwuid(uid)) == NULL) {
-		if (debug) fprintf(stderr, "ERROR: uid (%d) not found!\n", uid);
+		DEBUG(1, "ERROR: uid (%d) not found!\n", uid);
 		return search_result_ok(msgid, reply);
 	}
 
 	if ((vas_user_init(vasctx, vasid, pwent->pw_name,
 				   VAS_NAME_FLAG_FOREST_SCOPE,
 				   &vasuser)) != VAS_ERR_SUCCESS) {
-		if (debug) fprintf(stderr,
-				   "vlmapd(%d): ERROR Unable to initalize VAS user:%s.\n"
-				   "            [%s]\n",
-				   getpid(),
-				   pwent->pw_name,
-				   vas_err_get_string(vasctx, 1));
+		DEBUG(1, "vlmapd(%d): ERROR Unable to initalize VAS user:%s.\n"
+                         "            [%s]\n",
+                         getpid(),
+                         pwent->pw_name,
+                         vas_err_get_string(vasctx, 1));
 		return search_result_ok(msgid, reply);
 	}
 
 	if ((vas_user_get_sid(vasctx, vasid, vasuser, &sid)) != VAS_ERR_SUCCESS) {
-		if (debug) fprintf(stderr,
-				   "vlmapd(%d): ERROR Unable to get the SID of user %s.\n"
-				   "            [%s]\n",
-				   getpid(), sid,
-				   vas_err_get_string(vasctx, 1));
+		DEBUG(1, "vlmapd(%d): ERROR Unable to get the SID of user %s.\n"
+                         "            [%s]\n",
+			 getpid(), sid,
+			 vas_err_get_string(vasctx, 1));
 		vas_user_free(vasctx, vasuser);
 		return search_result_ok(msgid, reply);
 	}
 
 	vas_user_free(vasctx, vasuser);
 
-	if (debug) fprintf(stderr,
-			   "SUCCESS: converted UID: %ld to SID: %s.\n",
-			   uid, sid);
+	DEBUG(1, "SUCCESS: converted UID: %ld to SID: %s.\n", uid, sid);
 
 	BERVAL_PRINTF(reply, "{it{s{{s{s}}{s{s}}{s{s}}}}}{it{eoo}}",
 		 msgid, LDAP_RES_SEARCH_ENTRY,
@@ -284,41 +279,39 @@ static int vlmapd_gid_to_sid(vas_ctx_t *vasctx, vas_id_t *vasid, ber_int_t msgid
 	errno = 0;
 	gid = (gid_t)strtol(val, NULL, 10);
 	if (errno != 0) {
-		if (debug) fprintf(stderr, "vlmapd(%d): ERROR Conversion to gid_t failed.\n"
-					   "            (val=[%s],errno=%d)\n", getpid(), val, errno);
+		DEBUG(1, "vlmapd(%d): ERROR Conversion to gid_t failed.\n"
+                         "            (val=[%s],errno=%d)\n", 
+                         getpid(), val, errno);
 	}
 	if ((grent = getgrgid(gid)) == NULL) {
-		if (debug) fprintf(stderr, "ERROR: gid (%d) not found!\n", gid);
+		DEBUG(1, "ERROR: gid (%d) not found!\n", gid);
 		return search_result_ok(msgid, reply);
 	}
 
 	if ((vas_group_init(vasctx, vasid, grent->gr_name,
 				    VAS_NAME_FLAG_FOREST_SCOPE,
 				    &vasgrp)) != VAS_ERR_SUCCESS) {
-		if (debug) fprintf(stderr,
-				   "vlmapd(%d): ERROR Unable to initalize VAS group:%s.\n"
-				   "            [%s]\n",
-				   getpid(),
-				   grent->gr_name,
-				   vas_err_get_string(vasctx, 1));
+		DEBUG(1, "vlmapd(%d): ERROR Unable to initalize VAS group:%s.\n"
+                         "            [%s]\n",
+                         getpid(),
+                         grent->gr_name,
+                         vas_err_get_string(vasctx, 1));
 		return search_result_ok(msgid, reply);
 	}
 
 	if ((vas_group_get_sid(vasctx, vasid, vasgrp, &sid)) != VAS_ERR_SUCCESS) {
-		if (debug) fprintf(stderr,
-				   "vlmapd(%d): ERROR Unable to get the SID of group %s.\n"
-				   "            [%s]\n",
-				   getpid(), sid,
-				   vas_err_get_string(vasctx, 1));
+		DEBUG(1, "vlmapd(%d): ERROR Unable to get the SID"
+                         " of group %s.\n"
+                         "            [%s]\n",
+			 getpid(), sid,
+			 vas_err_get_string(vasctx, 1));
 		vas_group_free(vasctx, vasgrp);
 		return search_result_ok(msgid, reply);
 	}
 
 	vas_group_free(vasctx, vasgrp);
 
-	if (debug) fprintf(stderr,
-			   "SUCCESS: converted GID: %ld to SID: %s.\n",
-			   gid, sid);
+        DEBUG(1, "SUCCESS: converted GID: %ld to SID: %s.\n", gid, sid);
 
 	BERVAL_PRINTF(reply, "{it{s{{s{s}}{s{s}}{s{s}}}}}{it{eoo}}",
 		 msgid, LDAP_RES_SEARCH_ENTRY,
@@ -423,11 +416,14 @@ static int vlmapd_search(vas_ctx_t *vasctx, vas_id_t *vasid,
                         DEBUG(3, "(&...(%.*s=%.*s))\n", nl, name, vl, val);
 
                         if (strncasecmp(name, "sambaSID", nl) == 0) {
-                                ret = vlmapd_sid_to_id(vasctx, vasid, msgid, val, reply);
+                                ret = vlmapd_sid_to_id(vasctx, vasid, 
+                                        msgid, val, reply);
                         } else if (strncasecmp(name, "uidNumber", nl) == 0) {
-                                ret = vlmapd_uid_to_sid(vasctx, vasid, msgid, val, reply);
+                                ret = vlmapd_uid_to_sid(vasctx, vasid, 
+                                        msgid, val, reply);
                         } else if (strncasecmp(name, "gidNumber", nl) == 0) {
-                                ret = vlmapd_gid_to_sid(vasctx, vasid, msgid, val, reply);
+                                ret = vlmapd_gid_to_sid(vasctx, vasid, 
+                                        msgid, val, reply);
                         } else {
                                 ret = search_result_ok(msgid, reply);
                         }
