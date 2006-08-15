@@ -93,7 +93,7 @@ static int vmapd_query(vas_ctx_t *vasctx, vas_id_t *vasid,
 static int vmapd_recv(int sd, struct berval *query);
 static int vmapd_send(int sd, struct berval *reply);
 static int vmapd_server(int sd);
-static void daemon(void);
+static void become_daemon(void);
 
 
 int debug;                          /* Set by the -d option */
@@ -717,7 +717,7 @@ FINISHED:
 }
 
 /* Double fork to become a daemon */
-static void daemon () {
+static void become_daemon () {
         switch (fork()) {
             case -1: err(1, "fork");
             case 0: break;
@@ -807,7 +807,7 @@ int main (int argc, char *argv[])
 	}
 
 	if (daemonize) {
-                daemon();
+                become_daemon();
         }
 
         /* Ignore child exit signals to avoid zombie processes */
