@@ -29,6 +29,7 @@
 #include <pwd.h>
 #include <grp.h>
 #include <err.h>
+#include <signal.h>
 
 #include <vas.h>
 #include <ber.h>
@@ -92,6 +93,7 @@ static int vmapd_query(vas_ctx_t *vasctx, vas_id_t *vasid,
 static int vmapd_recv(int sd, struct berval *query);
 static int vmapd_send(int sd, struct berval *reply);
 static int vmapd_server(int sd);
+static void daemon(void);
 
 
 int debug;                          /* Set by the -d option */
@@ -718,20 +720,38 @@ FINISHED:
 	return ret;
 }
 
+/* Double fork to become a daemon */
+static void daemon () {
+        switch (fork()) {
+            case -1: err(1, "fork");
+            case 0: break;
+            default: _exit(0);
+        }
+        switch (fork()) {
+            case -1: err(1, "fork");
+            case 0: break;
+            default: _exit(0);
+        }
+}
+
 int main (int argc, char *argv[])
 {
 	int sd;
 	struct sockaddr_in sockin;
 	char *query = NULL;
 	char *err_msg;
-	int count, len, ret, opt, child;
+	int count, len, ret;
         int ch, error = 0;
         int daemonize = 1;
         int port = 389;
-        const char *bindaddr = NULL;
+        const char *bindaddr = "127.0.0.1";
         extern int optind;
         extern char *optarg;
+#if defined(SO_REUSEADDR)
+        int opt;
+#endif
 
+        /* Process command line arguments */
         while ((ch = getopt(argc, argv, "A:d:DFp:s:")) != -1) {
             switch (ch) {
                 case 'A': bindaddr = optarg; break;
@@ -751,19 +771,16 @@ int main (int argc, char *argv[])
             exit(1);
         }
 
-        /* Check that VAS version is suitable */
+        /* Check that the VAS version is suitable */
 	if (vas_library_version_check(VAS_API_VERSION_MAJOR, 
 				      VAS_API_VERSION_MINOR,
 				      VAS_API_VERSION_MICRO)) {
             errx(1, "bad VAS version; need " VAS_API_VERSION_STR " or newer");
 	}
 
-        /* Construct a server socket at port 389 LDAP */
+        /* Construct a listening server socket at port 389 LDAP */
 	sockin.sin_family = AF_INET;
 	sockin.sin_port = htons(port);
-        if (!bindaddr) {
-            bindaddr = "127.0.0.1";
-        }
         if (inet_pton(AF_INET, bindaddr, &sockin.sin_addr) <= 0) {
             errx(1, "bad IP address '%s'", bindaddr);
         }
@@ -775,8 +792,11 @@ int main (int argc, char *argv[])
 
 #if defined(SO_REUSEADDR)
 	opt = 1;
-	if (setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, (const void *)&opt, sizeof opt) < 0)
+	if (setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, 
+                    (const void *)&opt, sizeof opt) < 0)
+        {
             warn("setsockopt SO_REUSEADDR");
+        }
 #endif
 
 	len = sizeof(sockin);
@@ -790,55 +810,20 @@ int main (int argc, char *argv[])
                 err(6, "listen");
 	}
 
-	/* Double-fork to daemonize */
 	if (daemonize) {
-		switch (fork()) {
-                    case -1: err(1, "fork");
-                    case 0: break;
-                    default: _exit(0);
-		}
-		switch (fork()) {
-                    case -1: err(1, "fork");
-                    case 0: break;
-                    default: _exit(0);
-		}
-	}
+                daemon();
+        }
 
-	child = 0;
+        /* Ignore child exit signals to avoid zombie processes */
+        if (signal(SIGCHLD, SIG_IGN) == SIG_ERR) {
+            err(1, "signal");
+        }
 
 	while (1) {
-		int new, state, ret;
+		int new, ret;
 		struct sockaddr addr;
-		socklen_t addrlen;
+		socklen_t addrlen = sizeof addr;
 		pid_t pid;
-		struct timeval tv;
-		fd_set r_fds;
-
-                /* FIXME: use sigchld/signign to reap children */
-		tv.tv_sec = 1;
-		tv.tv_usec = 0;
-		FD_ZERO(&r_fds);
-		FD_SET(sd, &r_fds);
-
-		ret = select(sd+1, &r_fds, NULL, NULL, &tv);
-		if (ret == 0) {
-			int i;
-			/* select has timed out let's just clean out pending
-			 * children and continue */
-			for (i = child; i > 0; i--) {
-				if (waitpid(-1, &state, WNOHANG) > 0) {
-					child--;
-				} else {
-					break;
-				}
-			}
-			continue;
-		}
-		if (ret < 0) {
-                        if (errno == EINTR)
-                            continue;
-                        err(1, "select");
-		}
 
                 addrlen = sizeof addr;
 		new = accept(sd, (struct sockaddr *)&addr, &addrlen);
@@ -848,23 +833,18 @@ int main (int argc, char *argv[])
 		}
 
 		pid = fork();
-		if (pid == -1) {
+                switch (pid) {
+                    case -1: /* error */
                         warn("fork");
 			close(new);
 			continue;
-		}
-
-		if (pid) {
-                        /* parent */
-			close(new);
-			child++;
-		} else {
-                        /* child */
-			int ret;
-
+                    case 0: /* child */
+                        close(sd);
 			ret = vmapd_server(new);
 			close(new);
-			exit(ret);
+			_exit(ret);
+                    default: /* parent */
+			close(new);
 		}
 	}
 }
