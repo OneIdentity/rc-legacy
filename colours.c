@@ -11,7 +11,7 @@ const char
     *col_SE = "";
 
 void 
-authtest_colours()
+authtest_init()
 {
     col_SO     = "\033[32m";
     col_SO_ERR = "\033[31m";

@@ -116,6 +116,7 @@ main(argc, argv)
 	int failreason = AUDIT_FAIL;
 	char *nocred[] = {NULL};
 
+        authtest_init();
 
 	while ((ch = getopt(argc, argv, "h:lm:p:t:")) != -1)
 	    switch (ch) {

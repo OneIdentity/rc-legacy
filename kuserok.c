@@ -16,12 +16,14 @@ main(int argc, char **argv)
     struct passwd *princ_pw, *luser_pw;
     uid_t princ_uid, luser_uid;
 
-    authtest_colours();
+    authtest_init();
 
     /* Obtain an initial krb5 context */
     error = krb5_init_context(&context);
-    if (error)
-        errx(1, "krb5_init_context: %d", error);
+    if (error) {
+        fprintf(stderr, "krb5_init_context: error %d\n", error);
+        exit(1);
+    }
 
     /* Parse the command line arguments */
     if (argc != 3) {

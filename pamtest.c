@@ -325,6 +325,8 @@ main(int argc, char *argv[])
     int rflag = 0;
     int pflag = 0;
 
+    authtest_init();
+
     while ((ch = getopt(argc, argv, "n:p:rsu:")) != -1) 
 	switch (ch) {
 	    case 'n': name = optarg; break;

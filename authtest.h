@@ -7,7 +7,7 @@ extern const char
     *col_SO_INP,
     *col_SE;
 
-void authtest_colours(void);
+void authtest_init(void);
 
 void debug(const char *fmt, ...);
 void debug_err(const char *fmt, ...);
