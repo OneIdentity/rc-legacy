@@ -16,35 +16,35 @@
 #include <ctype.h>
 #include "gss-common.h"
 #include "base64.h"
+#include "authtest.h"
 
 #include "gssapi_krb5.h"
 
-/* Terminates program with a GSS error message written to stderr. */
+/* Terminates program with a GSS error message. */
 void
 gssdie(int exitcode, struct res *res, const char *message)
 {
     OM_uint32 major, minor;
     gss_buffer_desc buf;
 
-    fprintf(stderr, "error: %s", message);
+    debug_err("error: %s", message);
     if (res) {
 	OM_uint32 ctx = 0;
 	do {
 	    major = gss_display_status(&minor, res->major,
 		    GSS_C_GSS_CODE, GSS_C_NO_OID, &ctx, &buf);
 	    if (GSS_ERROR(major)) { exit(1); }
-	    fprintf(stderr, "; %.*s", buf.length, (char *)buf.value);
+	    debug_err("\t%.*s", buf.length, (char *)buf.value);
 	    (void) gss_release_buffer(&minor, &buf);
 	} while (ctx);
 	if (res->minor) do {
 	    major = gss_display_status(&minor, res->minor,
 		    GSS_C_MECH_CODE, GSS_C_NO_OID, &ctx, &buf);
 	    if (GSS_ERROR(major)) { exit(1); }
-	    fprintf(stderr, "; %.*s", buf.length, (char *)buf.value);
+	    debug_err("\t%.*s", buf.length, (char *)buf.value);
 	    (void) gss_release_buffer(&minor, &buf);
 	} while (ctx);
     }
-    fprintf(stderr, "\n");
     exit(exitcode);
 }
 
@@ -62,7 +62,7 @@ static struct {
 };
 #define nflagtab (sizeof flagtab / sizeof flagtab[0])
 
-/* Print GSS flags to stderr in the form "<flag,flag,...>" */
+/* Return GSS flags in the form "<flag,flag,...>" */
 const char *
 flags2str(OM_uint32 flags)
 {
@@ -111,7 +111,7 @@ names2flags(const char *names)
     s = strtok(cp, ",");
     while (s) {
 	flag = name2flag(s);
-	if (!flag) { fprintf(stderr, "unknown flag '%s'\n", s); exit(1); }
+	if (!flag) { debug_err("unknown flag '%s'", s); exit(1); }
 	flags |= flag;
 	s = strtok(NULL, ",");
     }
@@ -130,7 +130,7 @@ readb64(gss_buffer_t buf)
     int bufpos, inlen, ch;
 
     if (isatty(0)) {
-	fprintf(stderr, "\ninput: ");
+	fprintf(stderr, "\n%sinput:%s ", col_SO_INP, col_SE);
     	fflush(stdout);
     }
     bufpos = 0;
@@ -142,12 +142,12 @@ readb64(gss_buffer_t buf)
     }
     sbuf[bufpos] = '\0';
     if (ch == EOF) {
-	fprintf(stderr, "fgetc: eof\n");
+	debug_err("fgetc: eof");
 	exit(1);
     }
     dec = base64_string_decode(sbuf, &inlen);
     if (!dec) {
-	fprintf(stderr, "base64_string_decode: failed\n");
+	debug_err("base64_string_decode: failed");
 	exit(1);
     }
     printf("\n");
