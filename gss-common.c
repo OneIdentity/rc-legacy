@@ -71,6 +71,7 @@ flags2str(OM_uint32 flags)
     char *s;
     int i;
 
+    s = buf;
     for (i = 0; i < nflagtab; i++)
 	if (flagtab[i].flag & flags) {
             int len = strlen(flagtab[i].desc);
