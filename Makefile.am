@@ -24,4 +24,14 @@ gss_server_LDFLAGS =	@GSS_LIBS@
 gss_client_CFLAGS =	@GSS_CFLAGS@
 gss_client_LDFLAGS =	@GSS_LIBS@
 
-EXTRA_DIST =		LICENCE
+EXTRA_DIST =		LICENCE pp authtest.pp
+
+package: authtest.pp pp
+	DESTDIR=`pwd -P`/destdir; rm -rf $$DESTDIR; mkdir -p $$DESTDIR && \
+	$(MAKE) install DESTDIR=$$DESTDIR && \
+	$(SHELL) $(srcdir)/pp --destdir=$$DESTDIR \
+	    $(srcdir)/authtest.pp \
+	    bindir=$(bindir) \
+	    version=$(PACKAGE_VERSION) \
+	    name=$(PACKAGE_NAME)
+
