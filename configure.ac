@@ -15,6 +15,8 @@ AC_C_CONST
 AC_HEADER_STDC
 AC_PROG_RANLIB
 
+AM_MAINTAINER_MODE
+
 AC_PATH_PROG([KRB5CONFIG], [krb5-config], [no], [/opt/quest/bin:$PATH])
 if test x"$KRB5CONFIG" = x"no"; then
     AC_MSG_ERROR([krb5-config was not found; is the VAS SDK installed?])
@@ -25,7 +27,8 @@ KRB5_LIBS=`$KRB5CONFIG --libs`;     AC_SUBST(KRB5_LIBS)
 GSS_CFLAGS=`$KRB5CONFIG --cflags gssapi`; AC_SUBST(GSS_CFLAGS)
 GSS_LIBS=`$KRB5CONFIG --libs gssapi`;     AC_SUBST(GSS_LIBS) 
 
-AC_SEARCH_LIBS([pam_start], [pam])
+AC_SEARCH_LIBS([pam_start], [pam], [have_pam=true], [have_pam=false])
+AM_CONDITIONAL(HAVE_PAM, test x$have_pam = xtrue)
 
 AC_CHECK_FUNC([authenticate], [have_lam=true], [have_lam=false])
 AM_CONDITIONAL(HAVE_LAM, test x$have_lam = xtrue)

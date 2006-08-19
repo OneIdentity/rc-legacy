@@ -4,13 +4,16 @@ AUTOMAKE_OPTIONS =	foreign
 noinst_LIBRARIES =	libauthtest.a
 libauthtest_a_SOURCES =	colours.c authtest.h
 
-bin_PROGRAMS =		pamtest kuserok gss-server gss-client
+bin_PROGRAMS =		kuserok gss-server gss-client
 
 kuserok_CFLAGS =	@KRB5_CFLAGS@
 kuserok_LDFLAGS =	@KRB5_LIBS@
 kuserok_LDADD =		libauthtest.a
 
+if HAVE_PAM
+bin_PROGRAMS +=		pamtest
 pamtest_LDADD =		libauthtest.a
+endif
 
 if HAVE_LAM
 bin_PROGRAMS +=		lamtest
