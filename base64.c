@@ -21,7 +21,7 @@ static char enctab[] =  "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 			"0123456789+/";
 
 /* Decoding table: digit to value */
-static char dectab[128] = {
+static signed char dectab[128] = {
     -1,-1,-1,-1,-1,-1,-1,-1,   /* -1: invalid */
     -1,-2,-2,-2,-2,-2,-1,-1,   /* -2: whitespace */
     -1,-1,-1,-1,-1,-1,-1,-1,   /* 0..63: base64 digit */
