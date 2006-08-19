@@ -24,8 +24,10 @@ gss_server_SOURCES=	gss-server.c base64.c gss-common.c base64.h gss-common.h
 gss_client_SOURCES=	gss-client.c base64.c gss-common.c base64.h gss-common.h
 gss_server_CFLAGS =	@GSS_CFLAGS@
 gss_server_LDFLAGS =	@GSS_LIBS@
+gss_server_LDADD =	libauthtest.a
 gss_client_CFLAGS =	@GSS_CFLAGS@
 gss_client_LDFLAGS =	@GSS_LIBS@
+gss_client_LDADD =	libauthtest.a
 
 EXTRA_DIST =		LICENCE pp authtest.pp
 

@@ -5,6 +5,10 @@
  * GSSAPI test server. 
  */
 
+#if HAVE_CONFIG_H
+# include <config.h>
+#endif
+
 #include <stdio.h>
 #include <unistd.h>
 #include <gssapi.h>
@@ -12,6 +16,7 @@
 #include <string.h>
 #include "base64.h"
 #include "gss-common.h"
+#include "authtest.h"
 
 static char server_message[] = "I am the server";
 
@@ -30,6 +35,8 @@ main(int argc, char **argv)
     int ch, error;
     const char *service = NULL;
     int bug6793 = 0;
+
+    authtest_init();
 
     error = 0;
     while ((ch = getopt(argc, argv, "cs:b:")) != -1)
@@ -80,7 +87,7 @@ main(int argc, char **argv)
 		NULL);
 	if (GSS_ERROR(res.major))
 	    gssdie(1, &res, "gss_display_name");
-	fprintf(stderr, "acquired creds for %.*s\n",
+	debug("acquired creds for %.*s",
 		service_buf.length, (char *)service_buf.value);
 	(void)gss_release_buffer(&res.minor, &service_buf);
 	(void)gss_release_name(&res.minor, &service_name);
@@ -115,10 +122,8 @@ main(int argc, char **argv)
 
     } while (res.major & GSS_S_CONTINUE_NEEDED);
 
-    fprintf(stderr, "gss_accept_sec_context completed %d\n", res.major);
-    fprintf(stderr, "result flags = "); 
-    fprintflags(stderr, ret_flags); 
-    fprintf(stderr, "\n");
+    debug("gss_accept_sec_context completed %d", res.major);
+    debug("result flags = %s", flags2str(ret_flags)); 
 
     /* Display the name used */
     if (source_name != GSS_C_NO_NAME) {
@@ -127,19 +132,19 @@ main(int argc, char **argv)
         res.major = gss_display_name(&res.minor, source_name, &buf, NULL);
         if (GSS_ERROR(res.major))
 	    gssdie(1, &res, "gss_display_name");
-        fprintf(stderr, "source = %.*s\n", buf.length, (char *)buf.value);
+        debug("source = %.*s", buf.length, (char *)buf.value);
         (void)gss_release_buffer(&res.minor, &buf);
     }
 
     /* Display any credentials delegated */
     if (deleg_cred == GSS_C_NO_CREDENTIAL) {
-	fprintf(stderr, "no delegated credentials\n");
+	debug("no delegated credentials");
     } else {
 	gss_name_t name = GSS_C_NO_NAME;
 	OM_uint32 lifetime;
 	gss_cred_usage_t usage;
 
-	fprintf(stderr, "credentials were delegated:\n");
+	debug("credentials were delegated:");
 	res.major = gss_inquire_cred(&res.minor, deleg_cred, &name,
 		&lifetime, &usage, NULL);
 	if (GSS_ERROR(res.major))
@@ -148,17 +153,17 @@ main(int argc, char **argv)
 	res.major = gss_display_name(&res.minor, name, &buf, NULL);
 	if (GSS_ERROR(res.major))
 	    gssdie(1, &res, "gss_display_name");
-	fprintf(stderr, "    name = %.*s\n", buf.length, (char *)buf.value);
+	debug("    name = %.*s", buf.length, (char *)buf.value);
 	(void)gss_release_buffer(&res.minor, &buf);
 	(void)gss_release_name(&res.minor, &name);
 
-	fprintf(stderr, "    usage = %s\n",
+	debug("    usage = %s",
 		usage == GSS_C_INITIATE ? "initiate" :
 		usage == GSS_C_ACCEPT   ? "accept" :
 		usage == GSS_C_BOTH     ? "initiate+accept" :
 					  "unknown");
 
-	fprintf(stderr, "    lifetime = %u\n", lifetime);
+	debug("    lifetime = %u", lifetime);
     }
 
     /* Encode and send the server message */

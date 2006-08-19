@@ -5,6 +5,10 @@
  * Common code for the GSSAPI token tester
  */
 
+#if HAVE_CONFIG_H
+# include <config.h>
+#endif
+
 #include <stdio.h>
 #include <gssapi.h>
 #include <string.h>
@@ -59,19 +63,27 @@ static struct {
 #define nflagtab (sizeof flagtab / sizeof flagtab[0])
 
 /* Print GSS flags to stderr in the form "<flag,flag,...>" */
-void
-fprintflags(FILE *out, OM_uint32 flags)
+const char *
+flags2str(OM_uint32 flags)
 {
-
+    static char buf[1024];
     char nc = '<';
+    char *s;
     int i;
 
     for (i = 0; i < nflagtab; i++)
 	if (flagtab[i].flag & flags) {
-	    fprintf(out, "%c%s", nc, flagtab[i].desc);
+            int len = strlen(flagtab[i].desc);
+            *s++ = nc;
+            memcpy(s, flagtab[i].desc, len); s+=len;
 	    nc = ',';
 	}
-    fprintf(out, nc == '<' ? "<>" : ">");
+    if (nc == '<') {
+        *s++ = '<';
+        *s++ = '>';
+    }
+    *s = 0;
+    return buf;
 }
 
 /* Converts a flag name to a flag bitmask. Returns 0 if name unknown */
@@ -172,14 +184,17 @@ oideq(const gss_OID oid1, const gss_OID oid2)
 	   memcmp(oid1->elements, oid2->elements, oid1->length) == 0;
 }
 
-void
-fprintoid(FILE *out, gss_OID oid)
+const char *
+oid2str(gss_OID oid)
 {
-    int i;
+    static char buf[1024];
+    char numbuf[10];
+    int i, len;
     unsigned long n;
     unsigned char *b;
+    char *s;
 
-#define T(n) if (oideq(n,oid)) { fprintf(out, "%s", #n); return; }
+#define T(n) if (oideq(n,oid)) { return #n; }
     T(GSS_C_NO_OID)
     T(GSS_C_NT_USER_NAME)
     T(GSS_C_NT_MACHINE_UID_NAME)
@@ -196,19 +211,30 @@ fprintoid(FILE *out, gss_OID oid)
     T(GSS_KRB5_MECHANISM)
 #undef T
 
-    if (oid->length < 3) {
-	fprintf(out, "<bad oid>");
-	return;
-    }
+    if (oid->length < 3)
+	return "<bad oid>";
     b = oid->elements;
-    fprintf(out, "{%u.%u", b[0] / 40, b[0] % 40);
+    s = buf;
+
+    *s++ = '{';
+#define N(n) \
+        snprintf(numbuf, sizeof numbuf, "%lu", n); \
+        len = strlen(numbuf); \
+        memcpy(s, numbuf, len); \
+        s += len;
+    N(b[0] / 40)
+    *s++ = '.';
+    N(b[0] % 40)
     n = 0;
     for (i = 1; i < oid->length; i++) {
 	n = n << 7 | (b[i] & 0x7f);
 	if ((b[i] & 0x80) == 0) {
-	    fprintf(out, ".%lu", n);
+            *s++ = '.';
+            N(n)
 	    n = 0;
 	}
     }
-    fprintf(out, "}");
+    *s++ = '.';
+    *s = 0;
+    return buf;
 }

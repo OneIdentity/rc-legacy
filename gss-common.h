@@ -14,7 +14,7 @@ struct res {
 void gssdie(int exitcode, struct res *res, const char *msg);
 
 /* Prints GSS flags inside angle brackets to stderr. */
-void fprintflags(FILE *out, OM_uint32 flags);
+const char *flags2str(OM_uint32 flags);
 
 /* Converts a comma-separated list of flag names to a flag bitmask */
 OM_uint32 names2flags(const char *names);
@@ -26,5 +26,5 @@ void readb64(gss_buffer_t buf);
 void writeb64_and_release(gss_buffer_t buf);
 
 /* Prints an OID (or its symbolic name) */
-void fprintoid(FILE *out, gss_OID oid);
+const char *oid2str(gss_OID oid);
 

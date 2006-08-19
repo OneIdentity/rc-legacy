@@ -5,6 +5,10 @@
  * GSSAPI test client.
  */
 
+#if HAVE_CONFIG_H
+# include <config.h>
+#endif
+
 #include <stdio.h>
 #include <unistd.h>
 #include <gssapi.h>
@@ -13,6 +17,7 @@
 #include <string.h>
 #include "base64.h"
 #include "gss-common.h"
+#include "authtest.h"
 
 static char client_message[] = "I am the client";
 
@@ -31,6 +36,7 @@ main(int argc, char **argv)
     gss_qop_t qop_state;
 
     req_flags = 0;
+    authtest_init();
 
     error = 0;
     while ((ch = getopt(argc, argv, "cf:t:")) != -1)
@@ -79,17 +85,13 @@ main(int argc, char **argv)
     res.major = gss_display_name(&res.minor, target_name, &buf, &target_name_type);
     if (GSS_ERROR(res.major))
 	gssdie(1, &res, "gss_display_name");
-    fprintf(stderr, "target_name = %.*s\n", buf.length, (char *)buf.value);
+    debug("target_name = %.*s", buf.length, (char *)buf.value);
     (void)gss_release_buffer(&res.minor, &buf);
 
-    fprintf(stderr, "target_name type: ");
-    fprintoid(stderr, target_name_type);
-    fprintf(stderr, "\n");
+    debug("target_name type: %s", oid2str(target_name_type));
 
     /* Display the request flags we'll be using */
-    fprintf(stderr, "request flags = "); 
-    fprintflags(stderr, req_flags);
-    fprintf(stderr, "\n");
+    debug("request flags = %s", flags2str(req_flags)); 
 
     setbuf(stdout, NULL);
 
@@ -133,10 +135,8 @@ main(int argc, char **argv)
 
     } while (res.major & GSS_S_CONTINUE_NEEDED);
 
-    fprintf(stderr, "gss_init_sec_context completed %d\n", res.major);
-    fprintf(stderr, "result flags = "); 
-    fprintflags(stderr, ret_flags); 
-    fprintf(stderr, "\n");
+    debug("gss_init_sec_context completed %d", res.major);
+    debug("result flags = %s", flags2str(ret_flags));
 
     /* Wait for and decode the server message */
     readb64(&input);

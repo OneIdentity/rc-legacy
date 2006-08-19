@@ -1,5 +1,10 @@
 /* (c) 2006 Quest Software, Inc. All rights reserved. */
+#if HAVE_CONFIG_H
+# include <config.h>
+#endif
+
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdarg.h>
 
 #include "authtest.h"
@@ -13,10 +18,23 @@ const char
 void 
 authtest_init()
 {
-    col_SO     = "\033[32m";
-    col_SO_ERR = "\033[31m";
-    col_SO_INP = "\033[34m";
-    col_SE     = "\033[m";
+    const char *term = NULL;
+
+    /* I'm too cheap to go hunting for termcap/terminfo */
+#if HAVE_GETENV
+    term = getenv("TERM");
+#endif
+    if (!term)
+        term ="unknown";
+    if (strncmp(term, "xterm", 5) == 0 ||
+        strncmp(term, "vt", 2) == 0 ||
+        strncmp(term, "putty", 5) == 0)
+    {
+        col_SO     = "\033[32m";
+        col_SO_ERR = "\033[31m";
+        col_SO_INP = "\033[34m";
+        col_SE     = "\033[m";
+    }
 }
 
 /* Prints a message surrounded by col_SO and col_SE \n to stderr */
