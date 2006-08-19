@@ -23,3 +23,5 @@ gss_server_CFLAGS =	@GSS_CFLAGS@
 gss_server_LDFLAGS =	@GSS_LIBS@
 gss_client_CFLAGS =	@GSS_CFLAGS@
 gss_client_LDFLAGS =	@GSS_LIBS@
+
+EXTRA_DIST =		LICENCE

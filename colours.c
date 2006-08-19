@@ -1,4 +1,4 @@
-
+/* (c) 2006 Quest Software, Inc. All rights reserved. */
 #include <stdio.h>
 #include <stdarg.h>
 

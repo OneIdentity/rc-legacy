@@ -1,7 +1,7 @@
+/* (c) 2006 Quest Software, Inc. All rights reserved. */
 /*
  * Pam testing tool
- * David Leonard, 2006.
- * (c) 2006, Quest Software. All rights reserved.
+ * David Leonard
  */
 
 #include <stdio.h>

@@ -1,3 +1,4 @@
+/* (c) 2006 Quest Software, Inc. All rights reserved. */
 #include <krb5.h>
 #include <stdio.h>
 #include <pwd.h>
