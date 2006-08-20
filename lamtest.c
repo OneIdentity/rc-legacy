@@ -216,7 +216,41 @@ main(argc, argv)
 	    printf("%s\n", message);
 	}
 	if (error == 1) {
-	    debug("XXX! should force password change at this point");
+	    debug("changing password");
+            reenter = 1;
+            response = NULL;
+            while (reenter) {
+                debug("calling chpass(%s, %s,,)",
+			str(username), response ? "<response>" : "NULL");
+		error = chpass(username, response, &reenter, &message);
+		debug("  chpass() -> %d; reenter=%d message=%s",
+			error, reenter, str(message));
+		if (error) {
+		    debug("  chpass() -> %d [errno %d]", error, errno);
+                    if (error < 0) {
+                        perror("chpass");
+                        failreason = AUDIT_FAIL_AUTH;
+                        goto fail;
+                    }
+                    if (error == 2) {
+                        failreason = AUDIT_FAIL;
+                        goto fail;
+                    }
+                    debug("restarting chpass loop");
+                    reenter = 1;
+                    response = NULL;
+                    continue;
+                }
+		if (reenter) {
+                    if (message == NULL) {
+                        debug_err("Got NULL msg from chpass()");
+                        continue;
+                    }
+		    response = getpass(message);
+		    if (!response)
+			goto fail;
+		}
+            }
 	} else if (error == 2) {
 	    debug("Exiting because password expired and unchangable");
 	    exit(0);
