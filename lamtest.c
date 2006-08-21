@@ -109,11 +109,12 @@ main(argc, argv)
 {
 	char *username = NULL;
 	char *hostname = NULL;
-	char *message;
+	char *message = NULL;
 	char *response = NULL;
 	char *tty = NULL;
 	int reenter;
 	int mode = S_RLOGIN;
+        int must_chpass = 0;
 	int ch;
 	int error = 0;
 	int logresult = 0;
@@ -179,18 +180,27 @@ main(argc, argv)
 		debug("calling authenticate(%s, %s,,)",
 			str(username), response ? "<response>" : "NULL");
 		error = authenticate(username, response, &reenter, &message);
+		debug("  authenticate() -> %d; reenter=%d message=%s",
+			error, reenter, str(message));
+		if (!error && reenter) {
+		    response = getpass(message);
+		    if (!response) {
+                        if (message) {
+                            free(message);
+                            message = NULL;
+                        }
+			goto fail;
+                    }
+		}
+                if (message) {
+                    free(message);
+                    message = NULL;
+                }
 		if (error) {
 		    debug("  authenticate() -> %d [errno %d]", error, errno);
 		    perror("authenticate");
 		    failreason = AUDIT_FAIL_AUTH;
 		    goto fail;
-		}
-		debug("  authenticate() -> %d; reenter=%d message=%s",
-			error, reenter, str(message));
-		if (reenter) {
-		    response = getpass(message);
-		    if (!response)
-			goto fail;
 		}
 	}
 
@@ -198,61 +208,30 @@ main(argc, argv)
 	 * 2. passwdexpired
 	 */
 
-	message = NULL;
 	debug("calling passwdexpired(%s,)", str(username));
 	error = passwdexpired(username, &message);
-	if (error == -1) {
-	    debug("  passwdexpired() -> %d [errno %d]", error, errno);
-	    perror("passwdexpred");
-	    goto fail;
-	}
-        debug("  passwdexpired() -> %d [%s]", error,
+        debug("  passwdexpired() -> %d [%s], message=%s", error,
+            error == -1 ? strerror(errno):
 	    error == 0 ? "password is valid":
 	    error == 1 ? "password expired; user must change":
 	    error == 2 ? "password expired; sysadmin must change":
-			 "?");
+			 "?",
+            str(message));
+
 	if (message) {
-	    debug("  passwdexpired() return message %s", str(message));
 	    printf("%s\n", message);
+            free(message);
+            message = NULL;
 	}
-	if (error == 1) {
-	    debug("changing password");
-            reenter = 1;
-            response = NULL;
-            while (reenter) {
-                debug("calling chpass(%s, %s,,)",
-			str(username), response ? "<response>" : "NULL");
-		error = chpass(username, response, &reenter, &message);
-		debug("  chpass() -> %d; reenter=%d message=%s",
-			error, reenter, str(message));
-		if (error) {
-		    debug("  chpass() -> %d [errno %d]", error, errno);
-                    if (error < 0) {
-                        perror("chpass");
-                        failreason = AUDIT_FAIL_AUTH;
-                        goto fail;
-                    }
-                    if (error == 2) {
-                        failreason = AUDIT_FAIL;
-                        goto fail;
-                    }
-                    debug("restarting chpass loop");
-                    reenter = 1;
-                    response = NULL;
-                    continue;
-                }
-		if (reenter) {
-                    if (message == NULL) {
-                        debug_err("Got NULL msg from chpass()");
-                        continue;
-                    }
-		    response = getpass(message);
-		    if (!response)
-			goto fail;
-		}
-            }
-	} else if (error == 2) {
-	    debug("Exiting because password expired and unchangable");
+
+        switch (error) {
+        case -1:
+	    goto fail;
+        case 1:
+            must_chpass = 1;
+            break;
+        case 2:
+	    debug_err("password expired and unchangable");
 	    exit(0);
 	}
 
@@ -260,7 +239,6 @@ main(argc, argv)
 	 * 3. loginrestrictions
 	 */
 
-	message = NULL;
 	debug("calling loginrestrictions(%s, %s, %s, )",
 		str(username),
 		mode == S_LOGIN ? "S_LOGIN" :
@@ -270,23 +248,27 @@ main(argc, argv)
 		"?",
 		str(tty));
 	error = loginrestrictions(username, mode, tty, &message);
-	if (error != 0) {
-		debug("  loginrestrictions() -> %d [errno %d]", error, errno);
-		if (message) {
-		    debug("  loginrestrictions returns message %s",
-			str(message));
-		    fprintf(stderr, "Login restricted: %s\n", message);
-		}
-		perror("loginrestrictions");
-		goto fail;
+        if (error) {
+            debug("  loginrestrictions() -> %d, errno=%d, message=%s", 
+                    error, errno, str(message));
+            fprintf(stderr, "login restricted: %s\n", message);
+        } else
+            debug("  loginrestrictions() -> %d, message=%s", error,
+                    str(message));
+        if (message) {
+            free(message);
+            message = NULL;
+        }
+	if (error) {
+            perror("loginrestrictions");
+            goto fail;
 	}
-	debug("  loginrestrictions() -> %d [success]", error);
 
 	/*
 	 * 4. loginsuccess
 	 */
 
-	printf("Authenticated as %s\n", str(username));
+	printf("authenticated as %s\n", str(username));
 
 	if (logresult) {
 	    debug("calling loginsuccess(%s, %s, %s,)",
@@ -305,7 +287,60 @@ main(argc, argv)
 	    }
 	}
 
-#if 0
+        /* 
+         * 6. Change password
+         *     - must run with the real uid of the user
+         */
+        if (must_chpass) {
+	    debug("changing password");
+
+            debug("getuid()=%d geteuid()=%d", getuid(), geteuid());
+
+            reenter = 1;
+            /* response = NULL; */
+            while (reenter) {
+                debug("calling chpass(%s, %s,,)",
+			str(username), response ? "<response>" : "NULL");
+		error = chpass(username, response, &reenter, &message);
+		debug("  chpass() -> %d; reenter=%d message=%s",
+			error, reenter, str(message));
+		if (!error && reenter) {
+                    if (message == NULL) {
+                        debug_err("got NULL msg from chpass()");
+                        continue;
+                    }
+		    response = getpass(message);
+		    if (!response) {
+                        free(message);
+                        message = NULL;
+			goto fail;
+                    }
+		}
+                if (message) {
+                    free(message);
+                    message = NULL;
+                }
+		if (error) {
+		    debug("  chpass() -> %d [errno %d]", error, errno);
+                    if (error < 0) {
+                        perror("chpass");
+                        failreason = AUDIT_FAIL_AUTH;
+                        goto fail;
+                    }
+                    if (error == 2) {
+                        failreason = AUDIT_FAIL;
+                        goto fail;
+                    }
+                    debug("restarting chpass loop");
+                    reenter = 1;
+                    response = NULL;
+                    continue;
+                }
+
+            }
+        }
+
+#if 1
 	/*
 	 * 5. setpcred
 	 */
@@ -317,13 +352,15 @@ main(argc, argv)
 	    perror("setpcred");
 	} else
 	    debug("  setpcred() -> %d [success]", error);
+
+        debug("getuid()=%d geteuid()=%d", getuid(), geteuid());
 #endif
 
 	exit(0);
 
 fail:
 	/*
-	 * 6. loginfailed
+	 * 7. loginfailed
 	 */
 
 	if (logresult) {
