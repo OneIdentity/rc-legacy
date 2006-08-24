@@ -171,6 +171,26 @@ main(argc, argv)
 		exit(1);
 	}
 
+#if 0
+	/* Simulate openssh with its 'none' authentication */
+	message = NULL;
+	debug("loginrestrictions(%s,,,)");
+	error = loginrestrictions(username, mode, tty, &message);
+	debug("  -> %d", error);
+	debug("  message = %s", str(message));
+	if (message) free(message);
+
+	reenter = 1;
+	do {
+	    debug("calling authenticate(%s, \"\",,)", str(username));
+	    message = NULL;
+	    error = authenticate(username, "", &reenter, &message);
+	    debug("  -> %d", error);
+	    debug("  message = %s", str(message));
+	    if (message) free(message);
+	} while (reenter);
+#endif
+
 	/*
 	 * 1. authenticate
 	 */
