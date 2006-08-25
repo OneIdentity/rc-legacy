@@ -22,6 +22,7 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <netinet/in.h>
+#include <netinet/tcp.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <errno.h>
@@ -660,11 +661,15 @@ static int vmapd_server(int sd)
 	vas_id_t *vasid = NULL;
 	struct berval query;
 	struct berval *reply;
-	int ret = 0;
+	int opt, ret = 0;
         vas_err_t error;
 
 	query.bv_val = NULL;
 	reply = NULL;
+
+	opt = 1;
+	if (setsockopt(sd, IPPROTO_TCP, TCP_NODELAY, (const void *)&opt, sizeof opt) < 0)
+            warn("setsockopt TCP_NODELAY");
 
 	if ((error = vas_ctx_alloc(&vasctx))) {
                 warnx("vas_ctx_alloc: error %d%s", error,
