@@ -31,6 +31,7 @@
 #include <grp.h>
 #include <err.h>
 #include <signal.h>
+#include <stdlib.h>
 
 #include <vas.h>
 #include <ber.h>
@@ -120,93 +121,128 @@ FINISHED:
 	return ret;
 }
 
+#define FAIL(level, fmt, va...) do { DEBUG(level, fmt, ## va); ret = search_result_ok(msgid, reply); goto FINISHED; } while (0);
+
 static int vlmapd_sid_to_id(vas_ctx_t *vasctx, vas_id_t *vasid,
-        ber_int_t msgid, char *sid, struct berval **reply)
+                            ber_int_t msgid, char *sid, struct berval **reply)
 {
-	char num[12];
-	char *attr;
-	vas_user_t *vasuser;
-	vas_group_t *vasgrp;
-	struct passwd *pwent = NULL;
-	struct group *grent = NULL;
-	int ret;
+    char num[12];
+    char *attr;
+    vas_user_t *vasuser = NULL;
+    vas_group_t *vasgrp = NULL;
+    struct passwd *pwent = NULL;
+    struct group *grent = NULL;
+    int ret;
 
-	/* check if it is a uid */
-	if ((vas_user_init(vasctx,
-			   vasid,
-			   sid,
-			   VAS_NAME_FLAG_FOREST_SCOPE,
-			   &vasuser)) == 0) { /* success */
 
-		if (vas_user_get_pwinfo(vasctx, vasid, vasuser, &pwent) == 0) {
-			sprintf(num, "%ld", pwent->pw_uid);
-			attr = "uidNumber";
+    DEBUG(1, "\nLook up Unix ID for sid: %s\n", sid);
 
-			vas_user_free(vasctx, vasuser);
-			free(pwent);
+    /* check to see if the SID is a Group */
+    DEBUG(1, "Looking up as group...\n");
 
-			goto got_an_id;
-		}
+    if ((vas_group_init(vasctx,
+                        vasid, 
+                        sid, 
+                        VAS_NAME_FLAG_NO_LDAP,
+                        &vasgrp )) == 0) {
+        if (vas_group_get_grinfo(vasctx, 
+                                 vasid, 
+                                 vasgrp, 
+                                 &grent) == 0) {
+            sprintf(num, "%ld", grent->gr_gid);
+            attr = "gidNumber";
+            goto SUCCESS;
+        }
+        else {
+            int major, minor;
 
-		vas_user_free(vasctx, vasuser);
-	
-                DEBUG(1, "ERROR: no pwinfo for sid: %s. %s\n"
-                         "Try with a group.\n",
-                         sid,
-                         vas_err_get_string(vasctx, 1));
+            DEBUG(1, 
+                  "   WARNING: no grinfo. %s\n",
+                  vas_err_get_string(vasctx, 1));
 
-	} else {
+            vas_product_version( &major, &minor, NULL);
+            if (major == 3 && minor == 0) { /* ( major == 3 && minor == 0 ) */
+                /* 
+                 * THIS IS A REALLY BAD HACK FOR VAS 3.0.X
+                 *
+                 * This code check an error string if it begins with "Group" we know that 
+                 * this is a legitimate group that is not Unix enabled and we can goto 
+                 * FINISHED with out trying to resolve the SID as a user 
+                 *
+                 * Yes, I know, this is a really bad hack. Fortunately this code will
+                 * not be executed if we're on product version > 3.1.x 
+                 */
+                if ( strncmp( vas_err_get_string(vasctx, 1), "Group", 5) == 0 );
+                {
+                    FAIL(1, "ERROR: Could not map SID to an Unix ID\n");
+                }
 
-                DEBUG(1, "WARNING: Unable to initalize VAS user"
-                         " using sid: %s. %s\n"
-                         "Try with a group.\n",
-                         sid,
-                         vas_err_get_string(vasctx, 1));
-	}
+                DEBUG(1, "   WARNING: may not be a group.\n" );
+            }
+            else { /* VAS 3.1 and later */
+                FAIL(1, "ERROR: Could not map SID to an Unix ID\n");
+	    }
+        }
+    }
+    else {
+        DEBUG(1,
+              "   WARNING: Unable to initialize VAS group. %s\n",
+              vas_err_get_string(vasctx, 1));
+    }
 
-	if ((vas_group_init(vasctx,
-			    vasid,
-			    sid,
-			    VAS_NAME_FLAG_FOREST_SCOPE,
-			    &vasgrp))) { /* error */
-		
-		DEBUG(1, "ERROR: Unable to initialize VAS group"
-                         " using sid: %s. %s\n",
-			 sid,
-			 vas_err_get_string(vasctx, 1));
-		return search_result_ok(msgid, reply);
-	}
+    /* check to see if the SID is a User */
+    DEBUG(1, "Looking up as a user...\n");
 
-	if (vas_group_get_grinfo(vasctx, vasid, vasgrp, &grent)) {
-		DEBUG(1, "ERROR: no grinfo for sid: %s. %s\n",
-			 sid,
-			 vas_err_get_string(vasctx, 1));
-		vas_group_free(vasctx, vasgrp);
-		return search_result_ok(msgid, reply);
-	}
-	
-	sprintf(num, "%ld", grent->gr_gid);
-	attr = "gidNumber";
+    if ((vas_user_init(vasctx,
+                       vasid,
+                       sid,
+                       VAS_NAME_FLAG_NO_LDAP,
+                       &vasuser)) == 0) {
+        if (vas_user_get_pwinfo(vasctx, 
+                                vasid, 
+                                vasuser, 
+                                &pwent) == 0) {
+            /* SID is a user.  Return Unix UID */
+            sprintf(num, "%ld", pwent->pw_uid);
+            attr = "uidNumber";
+        }
+        else {
+            FAIL(1, 
+                  "   ERROR: no pwinfo. %s\n",
+                  vas_err_get_string(vasctx, 1));
+        }
+    }
+    else {
+        FAIL(1, 
+              "   ERROR: Unable to initalize VAS user. %s\n", 
+              vas_err_get_string(vasctx, 1));
+    }
 
-	vas_group_free(vasctx, vasgrp);
-	free(grent);
+SUCCESS:
+    DEBUG(1, 
+          "SUCCESS: converted SID to %s: %s.\n",
+          pwent?"UID":"GID", 
+          num);
 
-got_an_id:
-        DEBUG(1, "SUCCESS: converted SID: %s to %s: %s.\n",
-		 sid, pwent?"UID":"GID", num);
+    /* TRICKY: BERVAL_PRINTF sets ret */
+    BERVAL_PRINTF(reply, "{it{s{{s{s}}{s{s}}{s{s}}}}}{it{eoo}}",
+                  msgid, LDAP_RES_SEARCH_ENTRY,
+                  "CN=VAS-Idmapper",
+                  "sambaSID",sid,
+                  "objectClass", "sambaIdmapEntry",
+                  attr, num,
+                  msgid, LDAP_RES_SEARCH_RESULT,
+                  LDAP_SUCCESS,
+                  NULL, 0,
+                  NULL, 0);
 
-        BERVAL_PRINTF(reply, "{it{s{{s{s}}{s{s}}{s{s}}}}}{it{eoo}}",
-		 msgid, LDAP_RES_SEARCH_ENTRY,
-			"CN=VAS-Idmapper",
-			"sambaSID", sid,
-			"objectClass", "sambaIdmapEntry",
-			attr, num,
-		 msgid, LDAP_RES_SEARCH_RESULT,
-			LDAP_SUCCESS,
-			NULL, 0,
-			NULL, 0);
 FINISHED:
-	return ret;
+    if ( vasuser ) vas_user_free( vasctx, vasuser );
+    if ( vasgrp ) vas_group_free( vasctx, vasgrp );
+    if ( pwent ) free( pwent );
+    if ( grent ) free( grent );
+
+    return ret;
 }
 
 static int vlmapd_uid_to_sid(vas_ctx_t *vasctx, vas_id_t *vasid, 
