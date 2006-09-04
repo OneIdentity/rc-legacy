@@ -22,12 +22,37 @@ ${SUDO} ${builddir}/vasidmapd -F -A $host -p $port $debug &
 pid=$!
 trap "rm -f $expfile $outfile; ${SUDO} kill $pid && wait" 0 # cleanup on exit
 
-# Obtain some UID/SIDs to test against
+#-- used SID/GID/UIDs for testing
 uid=`$vastool list users | awk -F: '{print $3; exit;}'`
 uname=`$vastool nss getpwuid $uid | awk -F: '{print $1}'` 
 usid=`vastool attrs -b -u $uname objectSid | awk '{print $2}'`
 gid=`$vastool list groups | awk -F: '{print $3; exit;}'`
 gsid=`$vastool list -s groups | awk -F: '$3 == gid {print $5;}' gid=$gid`
+
+#-- unused SID/UID/GIDs for testing
+findid () {
+    id=0
+    while $vastool nss $1 $id 2>/dev/null >/dev/null; do
+        id=`expr $id '*' 3`
+        id=`expr $id '+' 7`
+    done
+    echo $id
+}
+badsid=S-1-2-3-4-5-6-7
+baduid=`findid getpwuid`
+badgid=`findid getgrgid`
+
+if test -n "$debug"; then
+    cat <<. >&2
+        uid=    $uid
+        usid=   $usid
+        gid=    $gid
+        gsid=   $gsid
+        badsid= $badsid
+        baduid= $baduid
+        badgid= $badgid
+.
+fi
 
 desc "start vasidmapd"
     sleep 1
@@ -103,5 +128,9 @@ sambaSID: $gsid
 objectClass: sambaIdmapEntry
 gidNumber: $gid
 .
+
+tryfilterfail "(&(objectClass=sambaIdmapEntry)(sambaSID=$badsid))"
+tryfilterfail "(&(objectClass=sambaIdmapEntry)(uidNumber=$baduid))"
+tryfilterfail "(&(objectClass=sambaIdmapEntry)(gidNumber=$badgid))"
 
 exit $EXIT
