@@ -37,6 +37,13 @@
 #include <ber.h>
 #include <ldap.h>
 
+#define VAS_API_VERSION_SUPPORTS(major,minor) \
+            (VAS_API_VERSION_MAJOR == major && VAS_API_VERSION_MINOR >= minor)
+
+#if !VAS_API_VERSION_SUPPORTS(4,2)
+# error "Requires VAS 3.0.2 or later"
+#endif
+
 /* Prints a message to stderr only when the debug level is 
  * at 'level' or higher */
 #define DEBUG(level, fmt, va...)  \
@@ -748,13 +755,6 @@ int main (int argc, char *argv[])
             usage(argv[0]);
             exit(1);
         }
-
-        /* Check that the VAS version is suitable */
-	if (vas_library_version_check(VAS_API_VERSION_MAJOR, 
-				      VAS_API_VERSION_MINOR,
-				      VAS_API_VERSION_MICRO)) {
-            errx(1, "bad VAS version; need " VAS_API_VERSION_STR " or newer");
-	}
 
         /* Construct a listening server socket at port 389 LDAP */
 	sockin.sin_family = AF_INET;

@@ -24,6 +24,13 @@
 
 #include <vas.h>
 
+#define VAS_API_VERSION_SUPPORTS(major,minor) \
+        (VAS_API_VERSION_MAJOR == major && VAS_API_VERSION_MINOR >= minor)
+
+#if !VAS_API_VERSION_SUPPORTS(4,2)
+# error "Requires VAS 3.0.2 or later"
+#endif
+
 #define INPUT_NAME 0
 #define INPUT_UID 1
 #define INPUT_GID 2
@@ -112,11 +119,6 @@ int main( int argc, char *argv[] )
     extern char *optarg;
     int exitcode = 1;
     int verr;
-    
-    if( vas_library_version_check( VAS_API_VERSION_MAJOR, 
-                                   VAS_API_VERSION_MINOR,
-                                   VAS_API_VERSION_MICRO ) )
-        errx(1, "Requires " VAS_API_VERSION_STR " or newer");
 
     /* Process command line arguments. */
     while ((ch = getopt(argc, argv, "fGgnsUu")) != -1)

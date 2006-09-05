@@ -7,7 +7,8 @@
     mandir=$prefix/man
 
 #%depend
-#    libvas.so.4
+#    libvas.so.4.2
+#    vasclnt 3.0.2
 
 %files
     $bindir/vasidmap-config
