@@ -9,7 +9,7 @@ Summary:  VAS idmap daemon and utilities
 Vendor:   Quest Software
 Packager: Vinteal Resource Central Team
 Name:     vasidmapd
-Version:  0.9.5
+Version:  0.9.7
 Release:  1
 License:  Quest Software - All Rights Reserved
 Group:    System Environment/Daemons

@@ -128,12 +128,7 @@ FINISHED:
 	return ret;
 }
 
-/* Common failure actions */
-#define FAIL(level, fmt, va...) do { \
-    DEBUG(level, fmt, ## va); \
-    ret = search_result_ok(msgid, reply); \
-    goto FINISHED; \
-  } while (0);
+#define FAIL(level, fmt, va...) do { DEBUG(level, fmt, ## va); ret = search_result_ok(msgid, reply); goto FINISHED; } while (0);
 
 static int vlmapd_sid_to_id(vas_ctx_t *vasctx, vas_id_t *vasid,
                             ber_int_t msgid, char *sid, struct berval **reply)
@@ -146,27 +141,91 @@ static int vlmapd_sid_to_id(vas_ctx_t *vasctx, vas_id_t *vasid,
     struct group *grent = NULL;
     int ret;
 
+
     DEBUG(1, "\nLook up Unix ID for sid: %s\n", sid);
 
-    /* Try looking up the SID as a user first */
-    if (vas_user_init(vasctx, vasid, sid, VAS_NAME_FLAG_NO_LDAP, &vasuser) == 0
-         &&
-        vas_user_get_pwinfo(vasctx, vasid, vasuser, &pwent) == 0)
-    {
-        snprintf(num, sizeof num, "%ld", pwent->pw_uid);
-        attr = "uidNumber";
-    } else {
-        /* object wasn't found or didn't have a unixUid, so try as group */
-        if (vas_group_init(vasctx, vasid, sid, VAS_NAME_FLAG_NO_LDAP, &vasgrp))
-            FAIL(1, "   ERROR: vas_group_init: %s\n",
-                    vas_err_get_string(vasctx, 1));
-        if (vas_group_get_grinfo(vasctx, vasid, vasgrp, &grent))
-            FAIL(1, "   ERROR: !vas_group_get_grinfo: %s\n",
-                    vas_err_get_string(vasctx, 1));
-        snprintf(num, sizeof num, "%ld", grent->gr_gid);
-        attr = "gidNumber";
+    /* check to see if the SID is a Group */
+    DEBUG(1, "Looking up as group...\n");
+
+    if ((vas_group_init(vasctx,
+                        vasid, 
+                        sid, 
+                        VAS_NAME_FLAG_NO_LDAP,
+                        &vasgrp )) == 0) {
+        if (vas_group_get_grinfo(vasctx, 
+                                 vasid, 
+                                 vasgrp, 
+                                 &grent) == 0) {
+            sprintf(num, "%ld", grent->gr_gid);
+            attr = "gidNumber";
+            goto SUCCESS;
+        }
+        else {
+            int major, minor;
+
+            DEBUG(1, 
+                  "   WARNING: no grinfo. %s\n",
+                  vas_err_get_string(vasctx, 1));
+
+            vas_product_version( &major, &minor, NULL);
+            if (major == 3 && minor == 0) { /* ( major == 3 && minor == 0 ) */
+                /* 
+                 * THIS IS A REALLY BAD HACK FOR VAS 3.0.X
+                 *
+                 * This code check an error string if it begins with "Group" we know that 
+                 * this is a legitimate group that is not Unix enabled and we can goto 
+                 * FINISHED with out trying to resolve the SID as a user 
+                 *
+                 * Yes, I know, this is a really bad hack. Fortunately this code will
+                 * not be executed if we're on product version > 3.1.x 
+                 */
+                if ( strncmp( vas_err_get_string(vasctx, 1), "Group", 5) == 0 )
+                {
+                    FAIL(1, "ERROR: Could not map SID to a GID\n");
+                }
+
+                DEBUG(1, "   WARNING: may not be a group.\n" );
+            }
+            else { /* VAS 3.1 and later */
+                FAIL(1, "ERROR: Could not map SID to a Unix ID\n");
+	    }
+        }
+    }
+    else {
+        DEBUG(1,
+              "   WARNING: Unable to initialize VAS group. %s\n",
+              vas_err_get_string(vasctx, 1));
     }
 
+    /* check to see if the SID is a User */
+    DEBUG(1, "Looking up as a user...\n");
+
+    if ((vas_user_init(vasctx,
+                       vasid,
+                       sid,
+                       VAS_NAME_FLAG_NO_LDAP,
+                       &vasuser)) == 0) {
+        if (vas_user_get_pwinfo(vasctx, 
+                                vasid, 
+                                vasuser, 
+                                &pwent) == 0) {
+            /* SID is a user.  Return Unix UID */
+            sprintf(num, "%ld", pwent->pw_uid);
+            attr = "uidNumber";
+        }
+        else {
+            FAIL(1, 
+                  "   ERROR: no pwinfo. %s\n",
+                  vas_err_get_string(vasctx, 1));
+        }
+    }
+    else {
+        FAIL(1, 
+              "   ERROR: Unable to initalize VAS user. %s\n", 
+              vas_err_get_string(vasctx, 1));
+    }
+
+SUCCESS:
     DEBUG(1, 
           "SUCCESS: converted SID to %s: %s.\n",
           pwent?"UID":"GID", 
