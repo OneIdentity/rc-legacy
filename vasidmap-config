@@ -249,14 +249,14 @@ fi
 #Generate a secret key from the hex form of current key material
 SECRET='X!'`$VASTOOL ktutil list --keys | 
     awk 'NR==4{print substr($4,0,16);exit}'`
-
 # Change the machine password using vastool
-(echo "$SECRET"; echo "$SECRET") | ${VASTOOL} -s -q -u host/ passwd
+(echo "$SECRET"; echo "$SECRET") | ${VASTOOL} -s -u host/ passwd
 
 # Set the new machine password into secrets.tdb
 echo "$SECRET" | /opt/quest/bin/net -f -i changesecretpw
 
 #Set domain SID
+echo "Detecting domain SID..."
 DOMUSER=`${VASTOOL} list users | awk -F: '{print $1;exit}'`
 DOMSID=`/opt/quest/bin/vasidmap -u -n "$DOMUSER" | cut -d '-' -f 1-7`
 /opt/quest/bin/net setdomainsid "$DOMSID"
