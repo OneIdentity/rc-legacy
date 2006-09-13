@@ -139,8 +139,11 @@ static int vlmapd_sid_to_id(vas_ctx_t *vasctx, vas_id_t *vasid,
     vas_group_t *vasgrp = NULL;
     struct passwd *pwent = NULL;
     struct group *grent = NULL;
+    int major, minor;
     int ret;
 
+    vas_product_version( &major, &minor, NULL);
+    DEBUG(2, "libvas major: %d, minor: %d\n", major, minor);
 
     DEBUG(1, "\nLook up Unix ID for sid: %s\n", sid);
 
@@ -158,16 +161,47 @@ static int vlmapd_sid_to_id(vas_ctx_t *vasctx, vas_id_t *vasid,
                                  &grent) == 0) {
             sprintf(num, "%ld", grent->gr_gid);
             attr = "gidNumber";
+
+            /* this version is bugged double check we actually really got a group */
+            if (major == 3 && minor == 0) {
+                if (grent->gr_mem[0] != NULL) {
+
+                    /* If there are members this is definitively group */
+                    goto SUCCESS;
+
+                } else {
+
+                    /* No members ... let's see if it is a user instead */                    
+                    DEBUG(1, "Memberhip empty! Looking up as a user...\n");
+                
+                    if ((vas_user_init(vasctx,
+                                       vasid,
+                                       sid,
+                                       VAS_NAME_FLAG_NO_LDAP,
+                                       &vasuser)) == 0) {
+                        if (vas_user_get_pwinfo(vasctx, 
+                                                vasid, 
+                                                vasuser, 
+                                                &pwent) == 0) {
+                            /* SID is a user.  Return Unix UID */
+                            sprintf(num, "%ld", pwent->pw_uid);
+                            attr = "uidNumber";
+
+                            goto SUCCESS;
+                        }
+                    }
+                    /* it wasn't a user after all let's go on assuming it is a group */
+                }
+            }
+
             goto SUCCESS;
         }
         else {
-            int major, minor;
 
             DEBUG(1, 
                   "   WARNING: no grinfo. %s\n",
                   vas_err_get_string(vasctx, 1));
 
-            vas_product_version( &major, &minor, NULL);
             if (major == 3 && minor == 0) { /* ( major == 3 && minor == 0 ) */
                 /* 
                  * THIS IS A REALLY BAD HACK FOR VAS 3.0.X
