@@ -1,3 +1,9 @@
+0.9.7
+* Fix bug 78, user SIDs being detected as groups with VAS < 3.1
+
+0.9.5
+* Improved performance in SID translation code
+
 0.9.4
 * Fix multidomain support in vasidmap
 
