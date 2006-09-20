@@ -1,3 +1,4 @@
+/* (c) 2006, Quest Software, Inc. All rights reserved. */
 
 #if HAVE_CONFIG_H
 # include <config.h>

@@ -40,4 +40,10 @@ AC_CHECK_TYPE([socklen_t],[AC_DEFINE([HAVE_SOCKLEN_T],[1],[socklen_t])],,[
 #endif
 ])
 
+AC_CHECK_SIZEOF(long)
+AC_CHECK_SIZEOF(int)
+AC_CHECK_SIZEOF(uid_t,, [#include <sys/types.h>])
+AC_CHECK_SIZEOF(gid_t,, [#include <sys/types.h>])
+AC_CHECK_SIZEOF(pid_t,, [#include <sys/types.h>])
+
 AC_OUTPUT

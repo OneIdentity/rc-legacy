@@ -1,5 +1,5 @@
 /*===========================================================================
- * Project:     vlmapd - VAS ID mapping Daemon emulating a subset of the
+ * Project:     vasidmapd - VAS ID mapping Daemon emulating a subset of the
  *		of the LDAP protocol to be used with samba idmap_ldap
  *
  *		Based on sidtouid/sidtogid utilities made by:
@@ -7,7 +7,7 @@
  *
  * Author:	Simo Sorce <simo.sorce@quest.com>
  *
- * File:        vlmapd.c
+ * File:        vasidmapd.c
  *
  * Description: Main implementation source file
  *=========================================================================*/
@@ -23,6 +23,7 @@
 #include <sys/un.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
+#include <arpa/inet.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <errno.h>
@@ -42,6 +43,24 @@
 
 #if !VAS_API_VERSION_SUPPORTS(4,2)
 # error "Requires VAS 3.0.2 or later"
+#endif
+
+#if SIZEOF_GID_T == SIZEOF_LONG
+# define GID_T_FMT    "%ld"
+#elif SIZEOF_GID_T == SIZEOF_INT
+# define GID_T_FMT    "%d"
+#endif
+
+#if SIZEOF_UID_T == SIZEOF_LONG
+# define UID_T_FMT    "%ld"
+#elif SIZEOF_UID_T == SIZEOF_INT
+# define UID_T_FMT    "%d"
+#endif
+
+#if SIZEOF_PID_T == SIZEOF_LONG
+# define PID_T_FMT    "%ld"
+#elif SIZEOF_PID_T == SIZEOF_INT
+# define PID_T_FMT    "%d"
 #endif
 
 /* Prints a message to stderr only when the debug level is 
@@ -128,7 +147,12 @@ FINISHED:
 	return ret;
 }
 
-#define FAIL(level, fmt, va...) do { DEBUG(level, fmt, ## va); ret = search_result_ok(msgid, reply); goto FINISHED; } while (0);
+/* Common failure macro; logs a message and returns an empty search result */
+#define FAIL(level, fmt, va...) do { \
+        DEBUG(level, fmt, ## va); \
+        ret = search_result_ok(msgid, reply); \
+        goto FINISHED; \
+    } while (0);
 
 static int vlmapd_sid_to_id(vas_ctx_t *vasctx, vas_id_t *vasid,
                             ber_int_t msgid, char *sid, struct berval **reply)
@@ -159,7 +183,7 @@ static int vlmapd_sid_to_id(vas_ctx_t *vasctx, vas_id_t *vasid,
                                  vasid, 
                                  vasgrp, 
                                  &grent) == 0) {
-            sprintf(num, "%ld", grent->gr_gid);
+            snprintf(num, sizeof num, GID_T_FMT, grent->gr_gid);
             attr = "gidNumber";
 
             /* this version is bugged double check we actually really got a group */
@@ -184,7 +208,7 @@ static int vlmapd_sid_to_id(vas_ctx_t *vasctx, vas_id_t *vasid,
                                                 vasuser, 
                                                 &pwent) == 0) {
                             /* SID is a user.  Return Unix UID */
-                            sprintf(num, "%ld", pwent->pw_uid);
+                            snprintf(num, sizeof num, UID_T_FMT, pwent->pw_uid);
                             attr = "uidNumber";
 
                             goto SUCCESS;
@@ -244,7 +268,7 @@ static int vlmapd_sid_to_id(vas_ctx_t *vasctx, vas_id_t *vasid,
                                 vasuser, 
                                 &pwent) == 0) {
             /* SID is a user.  Return Unix UID */
-            sprintf(num, "%ld", pwent->pw_uid);
+            snprintf(num, sizeof num, UID_T_FMT, pwent->pw_uid);
             attr = "uidNumber";
         }
         else {
@@ -298,10 +322,9 @@ static int vlmapd_uid_to_sid(vas_ctx_t *vasctx, vas_id_t *vasid,
 	errno = 0;
 	uid = (uid_t)strtol(val, NULL, 10);
 	if (errno != 0) {
-		DEBUG(1, "vlmapd(%d):"
-                         " ERROR Conversion to uid_t failed.\n"
+		DEBUG(1, "ERROR Conversion to uid_t failed.\n"
                          "            (val=[%s],errno=%d)\n", 
-                         getpid(), val, errno);
+                         val, errno);
 	}
 	if ((pwent = getpwuid(uid)) == NULL) {
 		DEBUG(1, "ERROR: uid (%d) not found!\n", uid);
@@ -311,18 +334,17 @@ static int vlmapd_uid_to_sid(vas_ctx_t *vasctx, vas_id_t *vasid,
 	if ((vas_user_init(vasctx, vasid, pwent->pw_name,
 				   VAS_NAME_FLAG_FOREST_SCOPE,
 				   &vasuser)) != VAS_ERR_SUCCESS) {
-		DEBUG(1, "vlmapd(%d): ERROR Unable to initalize VAS user:%s.\n"
+		DEBUG(1, "ERROR Unable to initalize VAS user:%s.\n"
                          "            [%s]\n",
-                         getpid(),
                          pwent->pw_name,
                          vas_err_get_string(vasctx, 1));
 		return search_result_ok(msgid, reply);
 	}
 
 	if ((vas_user_get_sid(vasctx, vasid, vasuser, &sid)) != VAS_ERR_SUCCESS) {
-		DEBUG(1, "vlmapd(%d): ERROR Unable to get the SID of user %s.\n"
+		DEBUG(1, "ERROR Unable to get the SID of user %s.\n"
                          "            [%s]\n",
-			 getpid(), sid,
+			 sid,
 			 vas_err_get_string(vasctx, 1));
 		vas_user_free(vasctx, vasuser);
 		return search_result_ok(msgid, reply);
@@ -330,7 +352,7 @@ static int vlmapd_uid_to_sid(vas_ctx_t *vasctx, vas_id_t *vasid,
 
 	vas_user_free(vasctx, vasuser);
 
-	DEBUG(1, "SUCCESS: converted UID: %ld to SID: %s.\n", uid, sid);
+	DEBUG(1, "SUCCESS: converted UID " UID_T_FMT " to SID %s.\n", uid, sid);
 
 	BERVAL_PRINTF(reply, "{it{s{{s{s}}{s{s}}{s{s}}}}}{it{eoo}}",
 		 msgid, LDAP_RES_SEARCH_ENTRY,
@@ -357,31 +379,30 @@ static int vlmapd_gid_to_sid(vas_ctx_t *vasctx, vas_id_t *vasid, ber_int_t msgid
 	errno = 0;
 	gid = (gid_t)strtol(val, NULL, 10);
 	if (errno != 0) {
-		DEBUG(1, "vlmapd(%d): ERROR Conversion to gid_t failed.\n"
+		DEBUG(1, "ERROR Conversion to gid_t failed.\n"
                          "            (val=[%s],errno=%d)\n", 
-                         getpid(), val, errno);
+                         val, errno);
 	}
 	if ((grent = getgrgid(gid)) == NULL) {
-		DEBUG(1, "ERROR: gid (%d) not found!\n", gid);
+		DEBUG(1, "ERROR: gid " GID_T_FMT " not found!\n", gid);
 		return search_result_ok(msgid, reply);
 	}
 
 	if ((vas_group_init(vasctx, vasid, grent->gr_name,
 				    VAS_NAME_FLAG_FOREST_SCOPE,
 				    &vasgrp)) != VAS_ERR_SUCCESS) {
-		DEBUG(1, "vlmapd(%d): ERROR Unable to initalize VAS group:%s.\n"
+		DEBUG(1, "ERROR Unable to initalize VAS group:%s.\n"
                          "            [%s]\n",
-                         getpid(),
                          grent->gr_name,
                          vas_err_get_string(vasctx, 1));
 		return search_result_ok(msgid, reply);
 	}
 
 	if ((vas_group_get_sid(vasctx, vasid, vasgrp, &sid)) != VAS_ERR_SUCCESS) {
-		DEBUG(1, "vlmapd(%d): ERROR Unable to get the SID"
+		DEBUG(1, "ERROR Unable to get the SID"
                          " of group %s.\n"
                          "            [%s]\n",
-			 getpid(), sid,
+			 sid,
 			 vas_err_get_string(vasctx, 1));
 		vas_group_free(vasctx, vasgrp);
 		return search_result_ok(msgid, reply);
@@ -389,7 +410,7 @@ static int vlmapd_gid_to_sid(vas_ctx_t *vasctx, vas_id_t *vasid, ber_int_t msgid
 
 	vas_group_free(vasctx, vasgrp);
 
-        DEBUG(1, "SUCCESS: converted GID: %ld to SID: %s.\n", gid, sid);
+        DEBUG(1, "SUCCESS: converted GID " GID_T_FMT " to SID %s.\n", gid, sid);
 
 	BERVAL_PRINTF(reply, "{it{s{{s{s}}{s{s}}{s{s}}}}}{it{eoo}}",
 		 msgid, LDAP_RES_SEARCH_ENTRY,
@@ -816,9 +837,7 @@ int main (int argc, char *argv[])
 {
 	int sd;
 	struct sockaddr_in sockin;
-	char *query = NULL;
-	char *err_msg;
-	int count, len, ret;
+	int len, ret;
         int ch, error = 0;
         int daemonize = 1;
         int port = 389;
