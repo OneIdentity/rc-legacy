@@ -29,9 +29,11 @@ uname=`$vastool nss getpwuid $uid | awk -F: '{print $1}'`
 usid=`vastool attrs -b -u $uname objectSid | awk '{print $2}'`
 gid=`$vastool list groups | awk -F: '{print $3; exit;}'`
 gsid=`$vastool list -s groups | awk -F: '$3 == gid {print $5; exit;}' gid=$gid`
+gname=`$vastool list -s groups | awk -F: '$3 == gid {print $1; exit;}' gid=$gid`
 
 #-- unused SID/UID/GIDs for testing
 findid () {
+    #-- returns an ID that doesn't appear to be used
     id=0
     while $vastool nss $1 $id 2>/dev/null >/dev/null; do
         id=`expr $id '*' 3`
@@ -40,31 +42,33 @@ findid () {
     echo $id
 }
 badsid=S-1-2-3-4-5-6-7
+baduname=_baduname
 baduid=`findid getpwuid`
+badgname=_badgname
 badgid=`findid getgrgid`
 
 if test -n "$debug"; then
     cat <<. >&2
-        uid=    $uid
-        usid=   $usid
-        gid=    $gid
-        gsid=   $gsid
-        badsid= $badsid
-        baduid= $baduid
-        badgid= $badgid
+        uname=    $uname
+        uid=      $uid
+        usid=     $usid
+        gname=    $gname
+        gid=      $gid
+        gsid=     $gsid
+        badsid=   $badsid
+        baduname= $baduname
+        baduid=   $baduid
+        badgname= $badgname
+        badgid=   $badgid
 .
 fi
 
-desc "start vasidmapd"
-    sleep 1
-    ${SUDO} kill -0 $pid 2>/dev/null
-required
-
-#-- usage "filter" ["description"] <expected-output
-tryfilter () {
-    desc "${2:-$1}"
+#-- usage: trycommand "desc" command... <expected-output
+trycommand () {
+    desc "$1"
+    shift
     cat > $expfile
-    verbose $vastool search -a -h $host -p $port "$1" > $outfile &&
+    verbose "$@" > $outfile &&
     cmp $outfile $expfile
     result
     if cmp $outfile $expfile >/dev/null; then
@@ -78,10 +82,82 @@ tryfilter () {
         test -s $outfile || echo '	(empty)'
     fi >&2
 }
-#-- usage "filter" ["description"]
+
+#------------------------------------------------------------
+# vasidmap tests
+
+#-- usage: trymap args <expected-output
+trymap () {
+    trycommand "vasidmap $*" ${builddir}/vasidmap "$@"
+}
+trymapfail () {
+    desc "vasidmap $*, negative"
+    if verbose ${builddir}/vasidmap "$@" >$outfile 2>/dev/null; then
+        fail
+    elif test -s $outfile; then
+        echo "expected empty stdout, but got:"
+        cat $outfile
+        fail
+    else
+        pass
+    fi
+}
+
+trymap $uname <<.
+$uname
+.
+
+trymap -u $uid <<.
+$usid
+.
+
+trymap -g $gid <<.
+$gsid
+.
+
+trymap -un $uname <<.
+$usid
+.
+
+trymap -gn $gname <<.
+$gsid
+.
+
+trymap -sU $usid <<.
+$uid
+.
+
+trymap -sG $gsid <<.
+$gid
+.
+
+#trymapfail -sU $gsid
+#trymapfail -sG $usid
+
+trymapfail -u $baduid
+trymapfail -g $badgid
+trymapfail -un $baduname
+trymapfail -gn $badgname
+trymapfail -sU $badsid
+trymapfail -sG $badsid
+
+#------------------------------------------------------------
+# vasidmapd tests
+
+desc "start vasidmapd"
+    sleep 1
+    ${SUDO} kill -0 $pid 2>/dev/null
+required
+
+#-- usage: tryfilter "filter" ["description"] <expected-output
+tryfilter () {
+    trycommand "${2:-$1}" $vastool search -a -h $host -p $port "$1" 
+}
+
+#-- usage: tryfilterfail "filter" ["description"]
 tryfilterfail () {
     desc "${2:-$1, negative}"
-    verbose $vastool search -a -h $host -p $port "$1" > $outfile 2>/dev/null
+    verbose $vastool search -a -h $host -p $port "$1" >/dev/null 2>/dev/null
     negresult
 }
 
