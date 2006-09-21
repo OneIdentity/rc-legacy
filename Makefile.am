@@ -23,5 +23,6 @@ dist-hook:
 package: pp vasidmap.pp
 	test -n "$(DESTDIR)"
 	$(srcdir)/pp --destdir=$(DESTDIR) \
+	    --install-script=install-vasidmap \
 	    $(srcdir)/vasidmap.pp \
 	    version="$(VERSION)"
