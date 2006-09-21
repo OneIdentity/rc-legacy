@@ -1,11 +1,34 @@
 #!/bin/sh
+#
+# usage:
+#   rc.test [-installed] [/build/path]
+# If build path is not provided, assumes "."
+#
+# If -installed is given, then assumes package is installed under /opt/quest
+# AND that the vasidmapd service is running
+#
 
-: ${builddir:=.}
 : ${host:=127.0.0.1}
 : ${port:=389}          # vastool -p option not working
 : ${vastool:=/opt/quest/bin/vastool}
 : ${debug:=}        # eg -d2
+: ${prefix:=/opt/quest}
 : ${SUDO:=sudo}
+
+if [ x"$1" = x"-installed" ]; then
+    installed=true
+    echo "Note: Testing installed package"
+    shift
+else
+    installed=false
+fi
+
+if [ $# -gt 0 ]; then
+    builddir="$1"
+    shift
+else
+    : ${builddir:=.}
+fi
 
 EXIT=0
 desc () { DESC="$*"; }
@@ -19,9 +42,6 @@ verbose () { test -n "$debug" && echo "[4m+ $*[m" >&2; "$@"; }
 
 expfile=${TMPDIR:-/tmp}/test.$$.expect
 outfile=${TMPDIR:-/tmp}/test.$$.result
-${SUDO} ${builddir}/vasidmapd -F -A $host -p $port $debug &
-pid=$!
-trap "rm -f $expfile $outfile; ${SUDO} kill $pid && wait" 0 # cleanup on exit
 
 #-- used SID/GID/UIDs for testing
 uid=`$vastool list users | awk -F: '{print $3; exit;}'`
@@ -86,13 +106,21 @@ trycommand () {
 #------------------------------------------------------------
 # vasidmap tests
 
+trap "rm -f $expfile $outfile" 0
+
+if $installed; then
+    vasidmap=$prefix/bin/vasidmap
+else
+    vasidmap=$builddir/vasidmap
+fi
+
 #-- usage: trymap args <expected-output
 trymap () {
-    trycommand "vasidmap $*" ${builddir}/vasidmap "$@"
+    trycommand "vasidmap $*" ${vasidmap} "$@"
 }
 trymapfail () {
     desc "vasidmap $*, negative"
-    if verbose ${builddir}/vasidmap "$@" >$outfile 2>/dev/null; then
+    if verbose ${vasidmap} "$@" >$outfile 2>/dev/null; then
         fail
     elif test -s $outfile; then
         echo "expected empty stdout, but got:"
@@ -144,10 +172,17 @@ trymapfail -sG $badsid
 #------------------------------------------------------------
 # vasidmapd tests
 
-desc "start vasidmapd"
-    sleep 1
-    ${SUDO} kill -0 $pid 2>/dev/null
-required
+if $installed; then
+    echo "(using running vasidmapd service)"
+else
+    desc "start vasidmapd"
+        ${SUDO} ${builddir}/vasidmapd -F -A $host -p $port $debug &
+        pid=$!
+        trap "rm -f $expfile $outfile; ${SUDO} kill $pid && wait" 0 
+        sleep 1
+        ${SUDO} kill -0 $pid 2>/dev/null
+    required
+fi
 
 #-- usage: tryfilter "filter" ["description"] <expected-output
 tryfilter () {
