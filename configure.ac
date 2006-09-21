@@ -29,6 +29,7 @@ AC_SUBST([VAS_LIBS])
 AC_CHECK_FUNC([getopt], [], [AC_LIBOBJ([getopt])])
 AC_CHECK_FUNC([errx], [], [AC_LIBOBJ([err])])
 AC_CHECK_FUNC([inet_pton], [], [AC_LIBOBJ([inet_pton])])
+AC_CHECK_FUNCS([syslog])
 
 AC_SEARCH_LIBS([socket], [socket])
 AC_SEARCH_LIBS([setsockopt], [xnet])

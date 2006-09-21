@@ -63,10 +63,36 @@
 # define PID_T_FMT    "%d"
 #endif
 
+#if HAVE_SYSLOG
+# include <syslog.h>
+# define DEBUG(level, fmt, va...) do { \
+    if (debug >= level) \
+        syslog(LOG_DAEMON | LOG_DEBUG, fmt , ## va); \
+  } while (0)
+
+/* Use syslog for warn() and err() */
+#define warnx(fmt, va...) do {  \
+    syslog(LOG_DAEMON | LOG_WARNING, fmt , ## va);  \
+    warnx(fmt , ## va);  \
+  } while (0)
+#define warn(fmt, va...) do {  \
+    syslog(LOG_DAEMON | LOG_WARNING, fmt ": %m" , ## va);  \
+    warn(fmt , ## va);  \
+  } while (0)
+#define errx(ec, fmt, va...) do {  \
+    syslog(LOG_DAEMON | LOG_ERR, fmt , ## va);  \
+    errx(ec, fmt , ## va);  \
+  } while (0)
+#define err(ec, fmt, va...) do {  \
+    syslog(LOG_DAEMON | LOG_ERR, fmt ": %m" , ## va);  \
+    err(ec, fmt , ## va);  \
+  } while (0)
+#else
 /* Prints a message to stderr only when the debug level is 
  * at 'level' or higher */
-#define DEBUG(level, fmt, va...)  \
+# define DEBUG(level, fmt, va...)  \
     do { if (debug >= level) fprintf(stderr, fmt , ## va); } while (0)
+#endif
 
 /* 
  * This convenience macro prints into a DER-encoded berval
@@ -149,7 +175,7 @@ FINISHED:
 
 /* Common failure macro; logs a message and returns an empty search result */
 #define FAIL(level, fmt, va...) do { \
-        DEBUG(level, fmt, ## va); \
+        DEBUG(level, fmt , ## va); \
         ret = search_result_ok(msgid, reply); \
         goto FINISHED; \
     } while (0);
@@ -868,12 +894,9 @@ int main (int argc, char *argv[])
             exit(1);
         }
 
-        /* Construct a listening server socket at port 389 LDAP */
-	sockin.sin_family = AF_INET;
-	sockin.sin_port = htons(port);
-        if (inet_pton(AF_INET, bindaddr, &sockin.sin_addr) <= 0) {
-            errx(1, "bad IP address '%s'", bindaddr);
-        }
+#if HAVE_SYSLOG
+        openlog("vasidmapd", daemonize ? LOG_CONS | LOG_PID : 0, LOG_DAEMON);
+#endif
 
 	sd = socket(AF_INET, SOCK_STREAM, 0);
 	if (sd == -1) {
@@ -888,6 +911,14 @@ int main (int argc, char *argv[])
             warn("setsockopt SO_REUSEADDR");
         }
 #endif
+
+        /* Construct a listening server socket at port 389 LDAP */
+        memset(&sockin, 0, sizeof sockin);
+	sockin.sin_family = AF_INET;
+	sockin.sin_port = htons(port);
+        if (inet_pton(AF_INET, bindaddr, &sockin.sin_addr) <= 0) {
+            errx(1, "bad IP address '%s'", bindaddr);
+        }
 
 	len = sizeof(sockin);
 	ret = bind(sd, (struct sockaddr *)&sockin, len);
