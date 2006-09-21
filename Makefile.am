@@ -16,7 +16,7 @@ vasidmapd_LDADD =   $(LIBOBJS)
 TESTS=			rc.test
 TESTS_ENVIRONMENT=	$(SHELL)
 
-EXTRA_DIST=	vasidmap.pp LICENCE rc.test $(man_MANS)
+EXTRA_DIST=	vasidmap.pp LICENCE rc.test $(man_MANS) pp
 
 dist-hook:
 	cp /data/rc/pub/rc/polypkg/pp $(distdir)/pp
