@@ -1,0 +1,36 @@
+#!/bin/sh
+#
+# Development script for building and testing the package
+#
+
+BUILD=/var/tmp/vasidmap.build
+DESTDIR=/var/tmp/vasidmap.root
+d0=`dirname $0`
+SRC=`(cd $d0 && pwd -P)`
+MAKE=${MAKE:-make}
+VERSION=`$SRC/configure --version | awk 'NR == 1 { print $3; exit; }'`
+PP_PKGDESTDIR=$DESTDIR; export PP_PKGDESTDIR
+
+echo "Building $VERSION"
+if (
+ set -e
+ set -x 
+ rm -rf $BUILD $DESTDIR
+ mkdir -p $BUILD $DESTDIR
+ cd $BUILD 
+ sh $SRC/configure "$@" 
+ $MAKE 
+ $MAKE check 
+ $MAKE install package DESTDIR=$DESTDIR
+ ${SUDO:-sudo} ./install-vasidmap stop vasidmapd || :
+ ${SUDO:-sudo} ./install-vasidmap install all || exit 1
+ ${SUDO:-sudo} ./install-vasidmap start vasidmapd || exit 1
+ sh $SRC/rc.test -installed || exit 1
+ ${SUDO:-sudo} ./install-vasidmap stop vasidmapd
+ ${SUDO:-sudo} ./install-vasidmap uninstall all
+ ) 
+then
+    echo "[37;42mPASS[m $VERSION" 
+else
+    echo "[37;41mFAIL[m $VERSION"
+fi
