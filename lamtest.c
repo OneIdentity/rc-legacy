@@ -15,6 +15,7 @@
  *   -l                Log result with loginsuccess/loginfailed. [no]
  *   -h hostname       Specify the hostname to log. [none]
  *   -t tty            Port (TTY) name to log. [none]
+ *   -r                Restart if auth fails.
  *
  * David.Leonard@quest.com 
  */
@@ -108,9 +109,11 @@ main(argc, argv)
 	char *argv[];
 {
 	char *username = NULL;
+	char *arg_username = NULL;
 	char *hostname = NULL;
 	char *message = NULL;
 	char *response = NULL;
+	char *arg_response = NULL;
 	char *tty = NULL;
 	int reenter;
 	int mode = S_RLOGIN;
@@ -120,10 +123,11 @@ main(argc, argv)
 	int logresult = 0;
 	int failreason = AUDIT_FAIL;
 	char *nocred[] = {NULL};
+        int rflag = 0;
 
         authtest_init();
 
-	while ((ch = getopt(argc, argv, "h:lm:p:t:")) != -1)
+	while ((ch = getopt(argc, argv, "h:lm:p:rt:")) != -1)
 	    switch (ch) {
 	    case 'h':
 		hostname = optarg;
@@ -142,8 +146,11 @@ main(argc, argv)
 		   error = 1;
 		}
 		break;
+	    case 'r':
+                rflag = 1;
+                break;
 	    case 'p':
-		response = optarg;	/* initial auth response */
+		arg_response = optarg;	/* initial auth response */
 		break;
 	    case 't':
 		tty = optarg;
@@ -153,10 +160,10 @@ main(argc, argv)
 	    }
 
 	if (optind < argc)
-	    username = argv[optind++];
+	    arg_username = argv[optind++];
 	
 	if (error || optind < argc) {
-	    fprintf(stderr, "usage: %s [-l] [-m mode] [-p passwd]"
+	    fprintf(stderr, "usage: %s [-lr] [-m mode] [-p passwd]"
 			    " [-t tty] [-h host] [username]\n",
 		argv[0]);
 	    exit(1);
@@ -164,6 +171,10 @@ main(argc, argv)
 
 	if (geteuid() != 0) 
 	    debug("warning: not running as root");
+
+   restart:
+        username = arg_username;
+        response = arg_response;
 
 	if (!username) {
 	    username = readline("username: ");
@@ -379,6 +390,11 @@ main(argc, argv)
 	exit(0);
 
 fail:
+        if (rflag) {
+            debug("restarting authentication loop");
+            goto restart;
+        }
+
 	/*
 	 * 7. loginfailed
 	 */
