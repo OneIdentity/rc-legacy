@@ -20,6 +20,8 @@
 
 #include "gssapi_krb5.h"
 
+int base64_whitespace = 1;
+
 /* Terminates program with a GSS error message. */
 void
 gssdie(int exitcode, struct res *res, const char *message)
@@ -79,10 +81,9 @@ flags2str(OM_uint32 flags)
             memcpy(s, flagtab[i].desc, len); s+=len;
 	    nc = ',';
 	}
-    if (nc == '<') {
+    if (nc == '<') 
         *s++ = '<';
-        *s++ = '>';
-    }
+    *s++ = '>';
     *s = 0;
     return buf;
 }
@@ -168,7 +169,17 @@ writeb64_and_release(gss_buffer_t buf)
     enc = base64_string_encode(buf->value, buf->length);
     if (isatty(0))
 	printf("output: ");
-    printf("%s.\n", enc);
+    if (!base64_whitespace)
+        printf("%s.\n", enc);
+    else {
+        char *e = enc;
+        int len;
+        while ((len = strlen(e)) > 60) {
+            printf(" %.60s\n", e);
+            e += 60;
+        }
+        printf(" %s.\n", e);
+    }
     free(enc);
     res.major = gss_release_buffer(&res.minor, buf);
     if (GSS_ERROR(res.major))
