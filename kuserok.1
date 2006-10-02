@@ -1,0 +1,35 @@
+.\" (c) 2006, Quest Software, Inc. All rights reserved.
+.TH KUSEROK 1
+.SH NAME
+kuserok \- Kerberos account access test
+.SH SYNOPSIS
+.B kuserok
+.I principal
+.I unix-user
+.SH DESCRIPTION
+The
+.B kuserok
+tool tests if the given Kerberos
+.I principal
+is permitted access to the Unix account named by
+.IR unix-user .
+.PP
+If access is denied by
+.IR krb5_kuserok (3)
+then a
+.IR getpwnam (3)
+call is made on
+.I principal
+and
+.I unix-user
+and UIDs are compared if they succeed.
+.PP
+Because
+.I krb5_kuserok()
+may access restricted files such as
+.IR .k5login ,
+this program should be invoked by root.
+.SH "SEE ALSO"
+.IR krb5_kuserok (3)
+.SH AUTHORS
+David Leonard, Quest Software, Inc.

@@ -1,0 +1,37 @@
+.\" (c) 2006, Quest Software, Inc. All rights reserved.
+.TH GSS-SERVER 1
+.SH NAME
+gss-server \- GSSAPI test server
+.SH SYNOPSIS
+.B gss-server
+[\-c]
+.RI [\-s\  service ]
+.RI [\-b\  bug ]
+.I target
+.SH DESCRIPTION
+The
+.B gss-server
+tool is the counterpart to
+.B gss-client .
+The server reads a base-64 encoded GSSAPI tokens from standard input
+terminated by a period (.) character.
+It then prints a base-64 encoded GSSAPI token to standard output 
+terminated by a period character.
+.PP
+Once a security context is established, the server sends a wrapped
+token containing "I am the server", then waits for a wrapped token reply
+from the client.
+.SS OPTIONS
+.TP
+\-c
+specifies that the wrapped tokens should be confidential (encrypted)
+.TP
+.RI \-s\  service
+specifies the host-based service name this server will use
+.TP
+.RI \-b\  bug
+Enables test support for the given Vintela bug number.
+.SH "SEE ALSO"
+gss-client(1)
+.SH AUTHORS
+David Leonard, Quest Software, Inc.

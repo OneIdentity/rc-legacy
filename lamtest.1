@@ -1,0 +1,72 @@
+.\" (c) 2006, Quest Software, Inc. All rights reserved.
+.TH LAMTEST 1
+.SH NAME
+lamtest \- AIX authentication test tool
+.SH SYNOPSIS
+.B lamtest
+[\-lr]
+.RI [\-m\  mode ]
+.RI [\-p\  password ]
+.RI [\-h\  hostname ]
+.RI [\-t\  tty ]
+.RI [ username ]
+
+ *   authenticate()
+ *   passwdexpired()
+ *   loginrestrictions()
+ *   loginsuccess()
+ *
+ * Usage:  lamtest [options] [username]
+ *   -l                Log result with loginsuccess/loginfailed. [no]
+ *   -r                Restart if auth fails.
+ *   -m mode           Specifies authentication mode (login,rlogin,su,daemon).
+ *                     [The default mode is "rlogin".]
+ *   -p password       Initial response to use (i.e. password).  [def: none]
+ *   -h hostname       Specify the hostname to log. [none]
+ *   -t tty            Port (TTY) name to log. [none]
+
+.SH DESCRIPTION
+The
+.B lamtest
+tool invokes all the stages of AIX local authentication to test
+a LAM module.
+.PP
+The tool provides checking and verbose status information about the
+AIX authentication calls made:
+.IR authenticate (3),
+.IR passwdexpired (3),
+.IR loginrestrictions (3),
+.IR loginsuccess (3).
+.PP
+.SS OPTIONS
+.TP
+\-l
+specifies that
+.IR loginsuccess (3)
+or
+.IR loginfailed (3)
+should be called after an authentication attempt.
+.TP
+\-r
+causes the authentication loop to restart on failure.
+This simulates how servers like OpenSSH perform multiple authentications.
+.TP
+.RI \-m\  mode
+specifies the authentication mode.
+Valid modes are login, rlogin, su and daemon.
+The default mode is rlogin.
+.TP
+.RI \-p\  password
+specifies the initial response to use.
+This is normally the password.
+Defaults to none (NULL).
+.TP
+.TI \-h\  hostname
+specifies the hostname to use when logging authentication results.
+.TP
+.TI \-t\  tty
+specifies the serial TTY name to use when logging authentication results.
+.SH "SEE ALSO"
+.IR authenticate (3)
+.SH AUTHORS
+David Leonard, Quest Software, Inc.

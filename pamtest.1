@@ -1,0 +1,50 @@
+.\" (c) 2006, Quest Software, Inc. All rights reserved.
+.TH PAMTEST 1
+.SH NAME
+pamtest \- PAM test tool
+.SH SYNOPSIS
+.B pamtest
+[\-s]
+.RI [\-n\  appname ]
+.RI [\-p\  uid ]
+.RI [\-u\  user ]
+.RI [\-r\  response... ]
+.SH DESCRIPTION
+The
+.B pamtest
+tool invokes all the stages of PAM authentication in order to
+test a PAM module.
+.PP
+The tool provides checking and verbose status information about the
+PAM calls made.
+.SS OPTIONS
+.TP
+\-s
+specifies that
+.IR pam_authenticate (3)
+should not be called.
+This simulates the behaviour of OpenSSH when authenticating using GSSAPI.
+.TP
+.RI \-n\  appname
+specifies the application name to use.
+Defaults to "pamtest".
+.TP
+.RI \-p\  uid
+specifies the UID to change to when performing
+.IR pam_authenticate (3),
+.IR pam_acct_mgmt (3)
+and
+.IR pam_chauthtok (3).
+.TP
+.RI \-u\  user
+specifies the username to pass to
+.IR pam_start (3).
+Defaults to NULL, which should cause PAM to prompt for a username.
+.RI \-r\ responses...
+If the \-r option is specified, the following arguments are treated
+as responses to give to the PAM prompts.
+Once the response list is exhausted, responses are read from standard input.
+.SH "SEE ALSO"
+.IR pam_start (3)
+.SH AUTHORS
+David Leonard, Quest Software, Inc.
