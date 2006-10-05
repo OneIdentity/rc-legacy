@@ -144,6 +144,8 @@ privsep_start()
     }
 /*    if (signal(SIGCHLD, SIG_IGN) < 0)
 	perror("signal"); */
+
+    debug("[starting privsep]");
     if ((privsep_child = fork()) < 0) {
 	perror("fork");
 	exit(1);
@@ -151,13 +153,21 @@ privsep_start()
     if (privsep_child == 0) {
 	close(pipefd[0]);
 	privsep_pipe = fdopen(pipefd[1], "w");
+	if (!privsep_pipe) {
+	    perror("fdopen");
+	    exit(1);
+	}
 	if (setreuid(privsep_uid, privsep_uid) < 0)
 	    perror("setreuid");
-	debug("[privsep: uid=%d euid=%d]", getuid(), geteuid());
+	debug("[uid=%d euid=%d]", getuid(), geteuid());
 	return 1;
     } else {
 	close(pipefd[1]);
 	privsep_pipe = fdopen(pipefd[0], "r");
+	if (!privsep_pipe) {
+	    perror("fdopen");
+	    exit(1);
+	}
 	return 0;
     }
 }
@@ -168,12 +178,14 @@ privsep_end()
     int status;
 
     if (privsep_child == 0) {
+	fclose(privsep_pipe);
 	_exit(0);
     } else {
 	if (waitpid(privsep_child, &status, 0) < 0) {
 	    perror("waitpid");
 	    exit(1);
 	}
+	debug("[ending privsep]");
 	if (WIFEXITED(status)) {
 	    if (WEXITSTATUS(status) != 0) 
 		fprintf(stderr, "[unpriv child exit %d]\n", 
@@ -362,32 +374,34 @@ main(int argc, char *argv[])
     pamh = NULL;
     CHECK(pamh, pam_start(name, user, &conv, &pamh));
 
-    if (sflag)
-        debug("[-s: skipping pam_authenticate]");
-    else {
-	if (!pflag || privsep_start()) {
-	    CHECK(pamh, pam_authenticate(pamh, 0));
-	    error = LOG(pamh, pam_acct_mgmt(pamh, 0));
-	    if (error == PAM_NEW_AUTHTOK_REQD) {
-		CHECK(pamh, pam_chauthtok(pamh, 0));
-	    } else if (error != PAM_SUCCESS) {
-		exit(1);
-	    }
-	    if (pflag) {
-		fprintf(privsep_pipe, "1");
-		privsep_end();
-	    } 
-	} else {
-	    int ok = 0;
-	    fscanf(privsep_pipe, "%u", &ok);
-	    privsep_end();
-	    if (!ok) {
-		fprintf(stderr, "[unpriv child failed]\n");
-		exit(1);
-	    }
+    if (pflag && !privsep_start()) {
+	int ok;
+	if (fscanf(privsep_pipe, "%u", &ok) < 1) 
+	    ok = -1;
+	privsep_end();
+	if (ok != 1) {
+	    fprintf(stderr, "[unpriv child failed: %d]\n", ok);
+	    exit(1);
 	}
+	goto end_privsep;
     }
-	    
+
+    if (sflag)
+	debug("[-s: skipping pam_authenticate]");
+    else
+	CHECK(pamh, pam_authenticate(pamh, 0));
+    error = LOG(pamh, pam_acct_mgmt(pamh, 0));
+    if (error == PAM_NEW_AUTHTOK_REQD)
+	CHECK(pamh, pam_chauthtok(pamh, 0));
+    else if (error != PAM_SUCCESS)
+	exit(1);
+    if (pflag) {
+	fprintf(privsep_pipe, "1");
+	privsep_end();
+    } 
+
+end_privsep:
+
     CHECK(pamh, pam_open_session(pamh, 0));
 
     debug("session opened");
