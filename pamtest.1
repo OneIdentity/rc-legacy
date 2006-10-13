@@ -6,7 +6,7 @@ pamtest \- PAM test tool
 .B pamtest
 [\-s]
 .RI [\-n\  appname ]
-.RI [\-p\  uid ]
+.RI [\-p\  user ]
 .RI [\-u\  user ]
 .RI [\-r\  response... ]
 .SH DESCRIPTION
@@ -29,12 +29,13 @@ This simulates the behaviour of OpenSSH when authenticating using GSSAPI.
 specifies the application name to use.
 Defaults to "pamtest".
 .TP
-.RI \-p\  uid
-specifies the UID to change to when performing
+.RI \-p\  user
+specifies the username or UID to change to when performing
 .IR pam_authenticate (3),
 .IR pam_acct_mgmt (3)
 and
 .IR pam_chauthtok (3).
+This emulates what OpenSSH does for privilege separation.
 .TP
 .RI \-u\  user
 specifies the username to pass to

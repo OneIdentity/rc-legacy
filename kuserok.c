@@ -51,7 +51,7 @@ main(int argc, char **argv)
     /* Verify that the local (unix) user exists */
     luser_pw = getpwnam(luser);
     if (!luser_pw) {
-        debug("unknown unix user '%s'", luser);
+        debug_err("unknown unix user '%s'", luser);
         exit(1);
     }
     luser_uid = luser_pw->pw_uid;

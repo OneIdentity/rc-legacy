@@ -15,8 +15,14 @@
 #include <unistd.h>
 #include <string.h>
 #include <signal.h>
+#include <pwd.h>
 #include <security/pam_appl.h>
 #include "authtest.h"
+
+int pflag = 0;	    /* -p: privsep uid */
+int rflag = 0;	    /* -r: use responses instead of prompting */
+char **responses;
+int sflag = 0;	    /* -s: skip pam_authenticate */
 
 /*-----------------------------------
  * PEM error codes
@@ -57,8 +63,6 @@ static struct err {
 
 /* Standout codes to distinguish PAM conversation from debugging */
 
-char **responses;
-
 /*------------------------------------------------------------
  * getpass()
  * 
@@ -66,7 +70,7 @@ char **responses;
  */
 #if __hpux
 # define getpass mygetpass
-#include <termios.h>
+# include <termios.h>
 
 struct termios gp_tsave;
 void (*gp_ssave)(int);
@@ -115,7 +119,23 @@ getpass(char *prompt)
     return s;
 }
 
-#endif
+#endif /* hpux */
+
+/* Convert a username or integer to a uid */
+int
+touid(const char *s)
+{
+    struct passwd *pw;
+
+    if (*s >= '0' && *s <= '9')
+	return atoi(s);
+    pw = getpwnam(s);
+    if (!pw) {
+	fprintf(stderr, "bad username '%s'\n", s);
+	exit(1);
+    }
+    return pw->pw_uid;
+}
 
 /*------------------------------------------------------------
  * Unprivileged process. Forks a child process, drops privileges,
@@ -198,6 +218,22 @@ privsep_end()
     fclose(privsep_pipe);
 }
 
+void
+privsep_return(int ok)
+{
+	fprintf(privsep_pipe, "%u", ok);
+	privsep_end();
+}
+
+int
+privsep_wait()
+{
+	int ok;
+	if (fscanf(privsep_pipe, "%u", &ok) < 1) 
+	    ok = -1;
+	privsep_end();
+	return ok;
+}
 
 /*------------------------------------------------------------
  * PAM logging and error printing
@@ -294,7 +330,8 @@ convfn(int n, struct pam_message **m, struct pam_response **r, void *data)
 		r[i]->resp = strdup(s);
 		break;
 	    case PAM_PROMPT_ECHO_ON:
-		debug("{style=prompt_echo_on}%s", m[i]->msg);
+		debug("{style=prompt_echo_on}");
+		printf("%s", m[i]->msg);
 		if (responses && *responses) {
 		    s = *responses++;
 		    printf("%s%s%s\n", col_SO_INP, s, col_SE);
@@ -333,20 +370,18 @@ main(int argc, char *argv[])
 {
     int ch;
     int error = 0;
-    const char *name = "pamtest";
+    const char *svcname = "pamtest";
     const char *user = NULL;
     pam_handle_t *pamh;
     struct pam_conv conv = { convfn,  NULL };
-    int sflag = 0;
-    int rflag = 0;
-    int pflag = 0;
 
     authtest_init();
 
+    /* Process command line args */
     while ((ch = getopt(argc, argv, "n:p:rsu:")) != -1) 
 	switch (ch) {
-	    case 'n': name = optarg; break;
-	    case 'p': privsep_uid = atoi(optarg); 
+	    case 'n': svcname = optarg; break;
+	    case 'p': privsep_uid = touid(optarg); 
 		      pflag = 1; break;
 	    case 's': sflag = 1; break;  /* skip authentication */
 	    case 'u': user = optarg; break;
@@ -357,28 +392,29 @@ main(int argc, char *argv[])
 	error = 1;
     if (error) {
 	fprintf(stderr, 
-		"usage: %s [-s] [-n appname] [-p uid] [-u user] "
-		"[-r resp ...]\n",
+		"usage: %s [-s] [-n svcname] [-p privsep_uid] [-u user] "
+		"[-r response ...]\n",
 		argv[0]);
 	exit(1);
     }
     if (rflag)
 	responses = argv + optind;
 
+    /* We should be running privileged */
     if (geteuid() != 0)
-	debug("Warning: unprivileged (euid=%d)", geteuid());
+	debug("Warning: running unprivileged (euid=%d)", geteuid());
 
-    debug("[user=%s]", user ? user : "(null)");
-    debug("[name=%s]", name);
+    debug(user ? "[user = '%s']" : "[user = (null)]", user);
+    debug(svcname ? "[svcname = '%s']" : "[svcname = (null)]", svcname);
 
+    /* pam_start() */
     pamh = NULL;
-    CHECK(pamh, pam_start(name, user, &conv, &pamh));
+    CHECK(pamh, pam_start(svcname, user, &conv, &pamh));
 
+    /* run as unprivileged if -p is given */
     if (pflag && !privsep_start()) {
-	int ok;
-	if (fscanf(privsep_pipe, "%u", &ok) < 1) 
-	    ok = -1;
-	privsep_end();
+	/* Forked. Now we wait for the privsep_return() call below */
+	int ok = privsep_wait();
 	if (ok != 1) {
 	    fprintf(stderr, "[unpriv child failed: %d]\n", ok);
 	    exit(1);
@@ -386,22 +422,28 @@ main(int argc, char *argv[])
 	goto end_privsep;
     }
 
+    /* (START UNPRIVILEGED) */
+
+    /* pam_authenticate() */
     if (sflag)
 	debug("[-s: skipping pam_authenticate]");
     else
 	CHECK(pamh, pam_authenticate(pamh, 0));
+
+    /* pam_acct_mgmt() */
     error = LOG(pamh, pam_acct_mgmt(pamh, 0));
     if (error == PAM_NEW_AUTHTOK_REQD)
 	CHECK(pamh, pam_chauthtok(pamh, 0));
     else if (error != PAM_SUCCESS)
 	exit(1);
-    if (pflag) {
-	fprintf(privsep_pipe, "1");
-	privsep_end();
-    } 
 
+    if (pflag)
+	privsep_return(1);	     /* Terminates privsep child */
 end_privsep:
 
+    /* (END PRIVILEGED) */
+
+    /* pam_open_session() */
     CHECK(pamh, pam_open_session(pamh, 0));
 
     debug("session opened");
@@ -411,6 +453,7 @@ end_privsep:
     GETITEM(pamh, PAM_TTY);
     GETITEM(pamh, PAM_RHOST);
 
+    /* pam_close_session() */
     CHECK(pamh, pam_close_session(pamh, 0));
     CHECK(pamh, pam_end(pamh, PAM_SUCCESS));
 
