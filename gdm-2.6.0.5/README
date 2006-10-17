@@ -1,0 +1,98 @@
+
+		    GDM - GNOME DISPLAY MANAGER
+
+ -----------------------------------------------------------
+ Note: For instructions how to install read README.install |
+ -----------------------------------------------------------
+ | For documentation see the website:
+ | http://www.jirka.org/gdm.html
+ | Or use the gnome help browser under GNOME|System.
+ | The xml documentation is in doc/X and is in docbook/xml
+ | format so you can use docbook2html or docbook2pdf to
+ | convert it.
+ -----------------------------------------------------------
+
+The Gnome Display Manager is a re-implementation of the well known xdm
+program.  GDM 2.4 implements all significant features required for managing
+local and remote displays.
+
+gdm daemon:
+
+ o X Authentication
+ o Default and per-display initialization scripts
+ o Pre and post session scripts
+ o Pluggable Authentication Modules (PAM)
+ o XDMCP (Remote login)
+ o TCP Wrappers for access control (for XDMCP)
+ o IPv6 support (optional, use --enable-ipv6=yes to get this)
+ o Autologin for single user workstations
+ o Timed login for kiosks and public terminals
+ o On demand local servers
+ o Can manage X servers without a login window
+   (Such as for XDMCP terminal client machines)
+ o Many other features ...
+
+gdmlogin:
+
+ o Logo image
+ o Background image/color
+ o Halt, reboot, suspend
+ o Can launch the XDMCP chooser
+ o Can launch the Setup program
+ o Session selection support
+ o Language selection support
+ o Face browser
+ o Background program support
+ o Xinerama support
+
+gdmgreeter:
+
+ o Fully themable
+ o Halt, reboot, suspend
+ o Can launch the XDMCP chooser
+ o Can launch the Setup program
+ o Session selection support
+ o Language selection support
+ o Face browser (if in the theme)
+ o Xinerama support
+
+gdmchooser:
+
+ o XDMCP
+ o Visual host browser 
+ o Type in extra host names
+ o Customizable icons
+
+gdmsetup:
+
+ o GUI way to configure the more important aspects of GDM, the rest
+   is configured by editting the config file
+
+Most features can be turned on and off in the configuration file by
+the sysadmin.
+
+Availability:
+
+   ftp://ftp.gnome.org/pub/GNOME/sources/gdm/
+
+
+Please consult README.install for instructions on how to configure and
+install gdm.
+
+Report bugs in gdm2 at http://bugzilla.gnome.org under the product "gdm".
+Or mail George <jirka@5z.com> with suggestions or other such things.
+
+George
+(based on original README by Martin K. Petersen)
+
+-------------------------------------------------------------------------
+Note:
+
+Originally I started maintaing gdm2 because martin didn't yet finish gdm3 and
+was in general busy and we needed a working gdm for 1.4.  The move to gdm3 is
+very unlikely to happen nowdays as gdm3 has been pretty dead for quite
+a while.  Do not send gdm2 patches to martin (well you can but he'll likely
+ignore them:), send them to me instead and I'll integrate them for you.
+
+-George <jirka@5z.com>
+-------------------------------------------------------------------------

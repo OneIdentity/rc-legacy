@@ -1,0 +1,787 @@
+# Makefile.in generated automatically by automake 1.4-p6 from Makefile.am
+
+# Copyright (C) 1994, 1995-8, 1999, 2001 Free Software Foundation, Inc.
+# This Makefile.in is free software; the Free Software Foundation
+# gives unlimited permission to copy and/or distribute it,
+# with or without modifications, as long as this notice is preserved.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY, to the extent permitted by law; without
+# even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+# PARTICULAR PURPOSE.
+
+
+SHELL = @SHELL@
+
+srcdir = @srcdir@
+top_srcdir = @top_srcdir@
+VPATH = @srcdir@
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+
+bindir = @bindir@
+sbindir = @sbindir@
+libexecdir = @libexecdir@
+datadir = @datadir@
+sysconfdir = @sysconfdir@
+sharedstatedir = @sharedstatedir@
+localstatedir = @localstatedir@
+libdir = @libdir@
+infodir = @infodir@
+mandir = @mandir@
+includedir = @includedir@
+oldincludedir = /usr/include
+
+DESTDIR =
+
+pkgdatadir = $(datadir)/@PACKAGE@
+pkglibdir = $(libdir)/@PACKAGE@
+pkgincludedir = $(includedir)/@PACKAGE@
+
+top_builddir = ..
+
+ACLOCAL = @ACLOCAL@
+AUTOCONF = @AUTOCONF@
+AUTOMAKE = @AUTOMAKE@
+AUTOHEADER = @AUTOHEADER@
+
+INSTALL = @INSTALL@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@ $(AM_INSTALL_PROGRAM_FLAGS)
+INSTALL_DATA = @INSTALL_DATA@
+INSTALL_SCRIPT = @INSTALL_SCRIPT@
+transform = @program_transform_name@
+
+NORMAL_INSTALL = :
+PRE_INSTALL = :
+POST_INSTALL = :
+NORMAL_UNINSTALL = :
+PRE_UNINSTALL = :
+POST_UNINSTALL = :
+host_alias = @host_alias@
+host_triplet = @host@
+AR = @AR@
+AS = @AS@
+CATALOGS = @CATALOGS@
+CATOBJEXT = @CATOBJEXT@
+CC = @CC@
+CONSOLE_HELPER = @CONSOLE_HELPER@
+CXX = @CXX@
+CXXCPP = @CXXCPP@
+DAEMON_CFLAGS = @DAEMON_CFLAGS@
+DAEMON_LIBS = @DAEMON_LIBS@
+DATADIRNAME = @DATADIRNAME@
+DLLTOOL = @DLLTOOL@
+ECHO = @ECHO@
+EGREP = @EGREP@
+EXEEXT = @EXEEXT@
+EXPANDED_AUTHDIR = @EXPANDED_AUTHDIR@
+EXPANDED_BINDIR = @EXPANDED_BINDIR@
+EXPANDED_DATADIR = @EXPANDED_DATADIR@
+EXPANDED_GDMCONFIGDIR = @EXPANDED_GDMCONFIGDIR@
+EXPANDED_LIBDIR = @EXPANDED_LIBDIR@
+EXPANDED_LIBEXECDIR = @EXPANDED_LIBEXECDIR@
+EXPANDED_LOCALEDIR = @EXPANDED_LOCALEDIR@
+EXPANDED_LOGDIR = @EXPANDED_LOGDIR@
+EXPANDED_PIXMAPDIR = @EXPANDED_PIXMAPDIR@
+EXPANDED_SBINDIR = @EXPANDED_SBINDIR@
+EXPANDED_SESSDIR = @EXPANDED_SESSDIR@
+EXPANDED_SYSCONFDIR = @EXPANDED_SYSCONFDIR@
+EXTRA_CHOOSER_LIBS = @EXTRA_CHOOSER_LIBS@
+EXTRA_DAEMON_LIBS = @EXTRA_DAEMON_LIBS@
+EXTRA_GDMASKPASS_LIBS = @EXTRA_GDMASKPASS_LIBS@
+F77 = @F77@
+GCJ = @GCJ@
+GCJFLAGS = @GCJFLAGS@
+GDMASKPASS = @GDMASKPASS@
+GDMCHOOSER = @GDMCHOOSER@
+GDMOPEN = @GDMOPEN@
+GDMXNESTCHOOSER = @GDMXNESTCHOOSER@
+GETTEXT_PACKAGE = @GETTEXT_PACKAGE@
+GMOFILES = @GMOFILES@
+GMSGFMT = @GMSGFMT@
+GREETER_CFLAGS = @GREETER_CFLAGS@
+GREETER_LIBS = @GREETER_LIBS@
+GUIGLADE_CFLAGS = @GUIGLADE_CFLAGS@
+GUIGLADE_LIBS = @GUIGLADE_LIBS@
+GUING_CFLAGS = @GUING_CFLAGS@
+GUING_LIBS = @GUING_LIBS@
+GUI_CFLAGS = @GUI_CFLAGS@
+GUI_LIBS = @GUI_LIBS@
+HAVE_LIB = @HAVE_LIB@
+INSTOBJEXT = @INSTOBJEXT@
+INTLLIBS = @INTLLIBS@
+INTLTOOL_CAVES_RULE = @INTLTOOL_CAVES_RULE@
+INTLTOOL_DESKTOP_RULE = @INTLTOOL_DESKTOP_RULE@
+INTLTOOL_DIRECTORY_RULE = @INTLTOOL_DIRECTORY_RULE@
+INTLTOOL_EXTRACT = @INTLTOOL_EXTRACT@
+INTLTOOL_KBD_RULE = @INTLTOOL_KBD_RULE@
+INTLTOOL_KEYS_RULE = @INTLTOOL_KEYS_RULE@
+INTLTOOL_MERGE = @INTLTOOL_MERGE@
+INTLTOOL_OAF_RULE = @INTLTOOL_OAF_RULE@
+INTLTOOL_PERL = @INTLTOOL_PERL@
+INTLTOOL_PONG_RULE = @INTLTOOL_PONG_RULE@
+INTLTOOL_PROP_RULE = @INTLTOOL_PROP_RULE@
+INTLTOOL_SCHEMAS_RULE = @INTLTOOL_SCHEMAS_RULE@
+INTLTOOL_SERVER_RULE = @INTLTOOL_SERVER_RULE@
+INTLTOOL_SHEET_RULE = @INTLTOOL_SHEET_RULE@
+INTLTOOL_SOUNDLIST_RULE = @INTLTOOL_SOUNDLIST_RULE@
+INTLTOOL_THEME_RULE = @INTLTOOL_THEME_RULE@
+INTLTOOL_UI_RULE = @INTLTOOL_UI_RULE@
+INTLTOOL_UPDATE = @INTLTOOL_UPDATE@
+INTLTOOL_XAM_RULE = @INTLTOOL_XAM_RULE@
+INTLTOOL_XML_RULE = @INTLTOOL_XML_RULE@
+LIB = @LIB@
+LIBTOOL = @LIBTOOL@
+LN_S = @LN_S@
+LTLIB = @LTLIB@
+MAINT = @MAINT@
+MAKEINFO = @MAKEINFO@
+MKINSTALLDIRS = @MKINSTALLDIRS@
+OBJDUMP = @OBJDUMP@
+OBJEXT = @OBJEXT@
+PACKAGE = @PACKAGE@
+PAM_PREFIX = @PAM_PREFIX@
+PKG_CONFIG = @PKG_CONFIG@
+POFILES = @POFILES@
+POSUB = @POSUB@
+PO_IN_DATADIR_FALSE = @PO_IN_DATADIR_FALSE@
+PO_IN_DATADIR_TRUE = @PO_IN_DATADIR_TRUE@
+RANLIB = @RANLIB@
+RC = @RC@
+STRIP = @STRIP@
+USE_NLS = @USE_NLS@
+UTILS_CFLAGS = @UTILS_CFLAGS@
+UTILS_LIBS = @UTILS_LIBS@
+VERSION = @VERSION@
+VRFY = @VRFY@
+WARN_CFLAGS = @WARN_CFLAGS@
+WARN_CXXFLAGS = @WARN_CXXFLAGS@
+XDMCP_LIBS = @XDMCP_LIBS@
+XINERAMA_LIBS = @XINERAMA_LIBS@
+X_CONFIG_OPTIONS = @X_CONFIG_OPTIONS@
+X_CONF_PATH = @X_CONF_PATH@
+X_PATH = @X_PATH@
+X_SERVER = @X_SERVER@
+X_SERVER_PATH = @X_SERVER_PATH@
+
+SUBDIRS = . greeter modules
+
+DEFS = @DEFS@ 	-DPREFIX=\"@prefix@\" 	-DSYSCONFDIR=\"@sysconfdir@\" 	-DDATADIR=\"@datadir@\" 	-DLIBDIR=\"@libdir@\" 	-DGDM_CONFIG_FILE=\"@sysconfdir@/gdm/gdm.conf\" 	-DGDM_FACTORY_CONFIG_FILE=\"@sysconfdir@/gdm/factory-gdm.conf\" 	-DGDM_GLADE_DIR=\"@datadir@/gdm\"
+
+
+INCLUDES =  	-I.							-I..							-I$(top_srcdir)/daemon					-I$(top_srcdir)/vicious-extensions			-DGNOMELOCALEDIR=\""$(datadir)/locale"\" 		$(GUI_CFLAGS)
+
+
+#
+#	-DG_DISABLE_DEPRECATED				\
+#	-DGDK_DISABLE_DEPRECATED			\
+#	-DGDK_PIXBUF_DISABLE_DEPRECATED			\
+#	-DGTK_DISABLE_DEPRECATED			\
+#	-DGNOME_DISABLE_DEPRECATED			\
+#
+
+noinst_LIBRARIES = libgdmwm.a libgdmcommon.a
+
+bin_PROGRAMS =  	@GDMCHOOSER@ 			gdmlogin 			gdmsetup 			gdmphotosetup 			@GDMXNESTCHOOSER@		gdmflexiserver
+
+EXTRA_PROGRAMS = gdmchooser gdmXnestchooser
+
+gdmphotosetup_SOURCES =  	gdmphotosetup.c
+
+
+gdmXnestchooser_SOURCES =  	gdmXnestchooser.c		gdmcomm.c			gdmcomm.h
+
+
+gdmflexiserver_SOURCES =  	gdmflexiserver.c		gdmcomm.c			gdmcomm.h
+
+
+libgdmwm_a_SOURCES =  	gdmwm.c				gdmwm.h
+
+
+libgdmcommon_a_SOURCES =  	gdmlanguages.c			gdmlanguages.h			misc.c				misc.h				gdmcommon.c			gdmcommon.h
+
+
+gdmchooser_SOURCES =  	gdmchooser.c			misc.c				misc.h			
+
+
+gdmlogin_SOURCES =  	gdmlogin.c
+
+
+gdmsetup_SOURCES =  	gdmsetup.c			gdmcomm.c			gdmcomm.h			misc.c				misc.h
+
+
+gdmchooser_LDFLAGS = -export-dynamic
+gdmchooser_LDADD =  	$(EXTRA_CHOOSER_LIBS)		libgdmwm.a			libgdmcommon.a			$(GUIGLADE_LIBS)		$(X_LIBS)			$(XDMCP_LIBS)			-lpopt				-lX11				$(XINERAMA_LIBS)		$(X_EXTRA_LIBS)		$(INTLLIBS)			-L$(top_builddir)/vicious-extensions		-lviciousui
+
+
+gdmlogin_LDADD =  	libgdmwm.a			libgdmcommon.a			$(GUING_LIBS)			$(X_LIBS)			-lX11				$(XINERAMA_LIBS)		$(X_EXTRA_LIBS)			$(INTLLIBS)			-L$(top_builddir)/vicious-extensions		-lviciousui-minimal
+
+
+gdmsetup_LDFLAGS = -export-dynamic
+gdmsetup_LDADD =  	$(GUI_LIBS)			-lXau				-lX11				$(INTLLIBS)			-L$(top_builddir)/vicious-extensions		-lviciousui-gnome
+
+
+gdmphotosetup_LDADD =  	$(GUI_LIBS)			$(INTLLIBS)			-L$(top_builddir)/vicious-extensions		-lviciousui-gnome
+
+
+gdmXnestchooser_LDADD =  	$(GUI_LIBS)			-lXau				-lX11				$(INTLLIBS)			-L$(top_builddir)/vicious-extensions		-lviciousui-gnome
+
+
+gdmflexiserver_LDADD =  	$(GUI_LIBS)			-lXau				$(INTLLIBS)			-L$(top_builddir)/vicious-extensions		-lviciousui-gnome
+
+
+Settingsdir = $(datadir)/gnome/capplets
+Settings_in_files = gdmphotosetup.desktop.in
+Settings_DATA = $(Settings_in_files:.desktop.in=.desktop)
+
+Systemdir = $(datadir)/applications
+System_in_files =  	gdmsetup.desktop.in			gdmflexiserver.desktop.in		gdmflexiserver-xnest.desktop.in
+
+System_DATA = $(System_in_files:.desktop.in=.desktop)
+
+Gladedir = $(datadir)/gdm
+Glade_DATA = gdmsetup.glade gdmchooser.glade
+
+Iconsdir = $(datadir)/pixmaps
+
+Icons_DATA =  	login-photo.png
+
+
+EXTRA_DIST =  	gdmsetup-strings.c		gdmchooser-strings.c		gdmsetup.gladep			gdmchooser.gladep		$(Glade_DATA)			$(Icons_DATA)			$(System_DATA)			$(System_in_files)		$(Settings_DATA)		$(Settings_in_files)
+
+mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
+CONFIG_HEADER = ../config.h
+CONFIG_CLEAN_FILES = 
+LIBRARIES =  $(noinst_LIBRARIES)
+
+CPPFLAGS = @CPPFLAGS@
+LDFLAGS = @LDFLAGS@
+LIBS = @LIBS@
+X_CFLAGS = @X_CFLAGS@
+X_LIBS = @X_LIBS@
+X_EXTRA_LIBS = @X_EXTRA_LIBS@
+X_PRE_LIBS = @X_PRE_LIBS@
+libgdmwm_a_LIBADD = 
+libgdmwm_a_OBJECTS =  gdmwm.$(OBJEXT)
+libgdmcommon_a_LIBADD = 
+libgdmcommon_a_OBJECTS =  gdmlanguages.$(OBJEXT) misc.$(OBJEXT) \
+gdmcommon.$(OBJEXT)
+bin_PROGRAMS =  @GDMCHOOSER@ gdmlogin$(EXEEXT) gdmsetup$(EXEEXT) \
+gdmphotosetup$(EXEEXT) @GDMXNESTCHOOSER@ gdmflexiserver$(EXEEXT)
+PROGRAMS =  $(bin_PROGRAMS)
+
+gdmchooser_OBJECTS =  gdmchooser.$(OBJEXT) misc.$(OBJEXT)
+gdmchooser_DEPENDENCIES =  libgdmwm.a libgdmcommon.a
+gdmXnestchooser_OBJECTS =  gdmXnestchooser.$(OBJEXT) gdmcomm.$(OBJEXT)
+gdmXnestchooser_DEPENDENCIES = 
+gdmXnestchooser_LDFLAGS = 
+gdmlogin_OBJECTS =  gdmlogin.$(OBJEXT)
+gdmlogin_DEPENDENCIES =  libgdmwm.a libgdmcommon.a
+gdmlogin_LDFLAGS = 
+gdmsetup_OBJECTS =  gdmsetup.$(OBJEXT) gdmcomm.$(OBJEXT) misc.$(OBJEXT)
+gdmsetup_DEPENDENCIES = 
+gdmphotosetup_OBJECTS =  gdmphotosetup.$(OBJEXT)
+gdmphotosetup_DEPENDENCIES = 
+gdmphotosetup_LDFLAGS = 
+gdmflexiserver_OBJECTS =  gdmflexiserver.$(OBJEXT) gdmcomm.$(OBJEXT)
+gdmflexiserver_DEPENDENCIES = 
+gdmflexiserver_LDFLAGS = 
+CFLAGS = @CFLAGS@
+COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+CCLD = $(CC)
+LINK = $(LIBTOOL) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(LDFLAGS) -o $@
+DATA =  $(Glade_DATA) $(Icons_DATA) $(Settings_DATA) $(System_DATA)
+
+DIST_COMMON =  Makefile.am Makefile.in
+
+
+DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
+
+TAR = gtar
+GZIP_ENV = --best
+SOURCES = $(libgdmwm_a_SOURCES) $(libgdmcommon_a_SOURCES) $(gdmchooser_SOURCES) $(gdmXnestchooser_SOURCES) $(gdmlogin_SOURCES) $(gdmsetup_SOURCES) $(gdmphotosetup_SOURCES) $(gdmflexiserver_SOURCES)
+OBJECTS = $(libgdmwm_a_OBJECTS) $(libgdmcommon_a_OBJECTS) $(gdmchooser_OBJECTS) $(gdmXnestchooser_OBJECTS) $(gdmlogin_OBJECTS) $(gdmsetup_OBJECTS) $(gdmphotosetup_OBJECTS) $(gdmflexiserver_OBJECTS)
+
+all: all-redirect
+.SUFFIXES:
+.SUFFIXES: .S .c .lo .o .obj .s
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
+	cd $(top_srcdir) && $(AUTOMAKE) --gnu --include-deps gui/Makefile
+
+Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
+	cd $(top_builddir) \
+	  && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
+
+
+mostlyclean-noinstLIBRARIES:
+
+clean-noinstLIBRARIES:
+	-test -z "$(noinst_LIBRARIES)" || rm -f $(noinst_LIBRARIES)
+
+distclean-noinstLIBRARIES:
+
+maintainer-clean-noinstLIBRARIES:
+
+.c.o:
+	$(COMPILE) -c $<
+
+# FIXME: We should only use cygpath when building on Windows,
+# and only if it is available.
+.c.obj:
+	$(COMPILE) -c `cygpath -w $<`
+
+.s.o:
+	$(COMPILE) -c $<
+
+.S.o:
+	$(COMPILE) -c $<
+
+mostlyclean-compile:
+	-rm -f *.o core *.core
+	-rm -f *.$(OBJEXT)
+
+clean-compile:
+
+distclean-compile:
+	-rm -f *.tab.c
+
+maintainer-clean-compile:
+
+.c.lo:
+	$(LIBTOOL) --mode=compile $(COMPILE) -c $<
+
+.s.lo:
+	$(LIBTOOL) --mode=compile $(COMPILE) -c $<
+
+.S.lo:
+	$(LIBTOOL) --mode=compile $(COMPILE) -c $<
+
+mostlyclean-libtool:
+	-rm -f *.lo
+
+clean-libtool:
+	-rm -rf .libs _libs
+
+distclean-libtool:
+
+maintainer-clean-libtool:
+
+libgdmwm.a: $(libgdmwm_a_OBJECTS) $(libgdmwm_a_DEPENDENCIES)
+	-rm -f libgdmwm.a
+	$(AR) cru libgdmwm.a $(libgdmwm_a_OBJECTS) $(libgdmwm_a_LIBADD)
+	$(RANLIB) libgdmwm.a
+
+libgdmcommon.a: $(libgdmcommon_a_OBJECTS) $(libgdmcommon_a_DEPENDENCIES)
+	-rm -f libgdmcommon.a
+	$(AR) cru libgdmcommon.a $(libgdmcommon_a_OBJECTS) $(libgdmcommon_a_LIBADD)
+	$(RANLIB) libgdmcommon.a
+
+mostlyclean-binPROGRAMS:
+
+clean-binPROGRAMS:
+	-test -z "$(bin_PROGRAMS)" || rm -f $(bin_PROGRAMS)
+
+distclean-binPROGRAMS:
+
+maintainer-clean-binPROGRAMS:
+
+install-binPROGRAMS: $(bin_PROGRAMS)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(bindir)
+	@list='$(bin_PROGRAMS)'; for p in $$list; do \
+	  if test -f $$p; then \
+	    echo " $(LIBTOOL)  --mode=install $(INSTALL_PROGRAM) $$p $(DESTDIR)$(bindir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`"; \
+	    $(LIBTOOL)  --mode=install $(INSTALL_PROGRAM) $$p $(DESTDIR)$(bindir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`; \
+	  else :; fi; \
+	done
+
+uninstall-binPROGRAMS:
+	@$(NORMAL_UNINSTALL)
+	list='$(bin_PROGRAMS)'; for p in $$list; do \
+	  rm -f $(DESTDIR)$(bindir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`; \
+	done
+
+gdmchooser$(EXEEXT): $(gdmchooser_OBJECTS) $(gdmchooser_DEPENDENCIES)
+	@rm -f gdmchooser$(EXEEXT)
+	$(LINK) $(gdmchooser_LDFLAGS) $(gdmchooser_OBJECTS) $(gdmchooser_LDADD) $(LIBS)
+
+gdmXnestchooser$(EXEEXT): $(gdmXnestchooser_OBJECTS) $(gdmXnestchooser_DEPENDENCIES)
+	@rm -f gdmXnestchooser$(EXEEXT)
+	$(LINK) $(gdmXnestchooser_LDFLAGS) $(gdmXnestchooser_OBJECTS) $(gdmXnestchooser_LDADD) $(LIBS)
+
+gdmlogin$(EXEEXT): $(gdmlogin_OBJECTS) $(gdmlogin_DEPENDENCIES)
+	@rm -f gdmlogin$(EXEEXT)
+	$(LINK) $(gdmlogin_LDFLAGS) $(gdmlogin_OBJECTS) $(gdmlogin_LDADD) $(LIBS)
+
+gdmsetup$(EXEEXT): $(gdmsetup_OBJECTS) $(gdmsetup_DEPENDENCIES)
+	@rm -f gdmsetup$(EXEEXT)
+	$(LINK) $(gdmsetup_LDFLAGS) $(gdmsetup_OBJECTS) $(gdmsetup_LDADD) $(LIBS)
+
+gdmphotosetup$(EXEEXT): $(gdmphotosetup_OBJECTS) $(gdmphotosetup_DEPENDENCIES)
+	@rm -f gdmphotosetup$(EXEEXT)
+	$(LINK) $(gdmphotosetup_LDFLAGS) $(gdmphotosetup_OBJECTS) $(gdmphotosetup_LDADD) $(LIBS)
+
+gdmflexiserver$(EXEEXT): $(gdmflexiserver_OBJECTS) $(gdmflexiserver_DEPENDENCIES)
+	@rm -f gdmflexiserver$(EXEEXT)
+	$(LINK) $(gdmflexiserver_LDFLAGS) $(gdmflexiserver_OBJECTS) $(gdmflexiserver_LDADD) $(LIBS)
+
+install-GladeDATA: $(Glade_DATA)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(Gladedir)
+	@list='$(Glade_DATA)'; for p in $$list; do \
+	  if test -f $(srcdir)/$$p; then \
+	    echo " $(INSTALL_DATA) $(srcdir)/$$p $(DESTDIR)$(Gladedir)/$$p"; \
+	    $(INSTALL_DATA) $(srcdir)/$$p $(DESTDIR)$(Gladedir)/$$p; \
+	  else if test -f $$p; then \
+	    echo " $(INSTALL_DATA) $$p $(DESTDIR)$(Gladedir)/$$p"; \
+	    $(INSTALL_DATA) $$p $(DESTDIR)$(Gladedir)/$$p; \
+	  fi; fi; \
+	done
+
+uninstall-GladeDATA:
+	@$(NORMAL_UNINSTALL)
+	list='$(Glade_DATA)'; for p in $$list; do \
+	  rm -f $(DESTDIR)$(Gladedir)/$$p; \
+	done
+
+install-IconsDATA: $(Icons_DATA)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(Iconsdir)
+	@list='$(Icons_DATA)'; for p in $$list; do \
+	  if test -f $(srcdir)/$$p; then \
+	    echo " $(INSTALL_DATA) $(srcdir)/$$p $(DESTDIR)$(Iconsdir)/$$p"; \
+	    $(INSTALL_DATA) $(srcdir)/$$p $(DESTDIR)$(Iconsdir)/$$p; \
+	  else if test -f $$p; then \
+	    echo " $(INSTALL_DATA) $$p $(DESTDIR)$(Iconsdir)/$$p"; \
+	    $(INSTALL_DATA) $$p $(DESTDIR)$(Iconsdir)/$$p; \
+	  fi; fi; \
+	done
+
+uninstall-IconsDATA:
+	@$(NORMAL_UNINSTALL)
+	list='$(Icons_DATA)'; for p in $$list; do \
+	  rm -f $(DESTDIR)$(Iconsdir)/$$p; \
+	done
+
+install-SettingsDATA: $(Settings_DATA)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(Settingsdir)
+	@list='$(Settings_DATA)'; for p in $$list; do \
+	  if test -f $(srcdir)/$$p; then \
+	    echo " $(INSTALL_DATA) $(srcdir)/$$p $(DESTDIR)$(Settingsdir)/$$p"; \
+	    $(INSTALL_DATA) $(srcdir)/$$p $(DESTDIR)$(Settingsdir)/$$p; \
+	  else if test -f $$p; then \
+	    echo " $(INSTALL_DATA) $$p $(DESTDIR)$(Settingsdir)/$$p"; \
+	    $(INSTALL_DATA) $$p $(DESTDIR)$(Settingsdir)/$$p; \
+	  fi; fi; \
+	done
+
+uninstall-SettingsDATA:
+	@$(NORMAL_UNINSTALL)
+	list='$(Settings_DATA)'; for p in $$list; do \
+	  rm -f $(DESTDIR)$(Settingsdir)/$$p; \
+	done
+
+install-SystemDATA: $(System_DATA)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(Systemdir)
+	@list='$(System_DATA)'; for p in $$list; do \
+	  if test -f $(srcdir)/$$p; then \
+	    echo " $(INSTALL_DATA) $(srcdir)/$$p $(DESTDIR)$(Systemdir)/$$p"; \
+	    $(INSTALL_DATA) $(srcdir)/$$p $(DESTDIR)$(Systemdir)/$$p; \
+	  else if test -f $$p; then \
+	    echo " $(INSTALL_DATA) $$p $(DESTDIR)$(Systemdir)/$$p"; \
+	    $(INSTALL_DATA) $$p $(DESTDIR)$(Systemdir)/$$p; \
+	  fi; fi; \
+	done
+
+uninstall-SystemDATA:
+	@$(NORMAL_UNINSTALL)
+	list='$(System_DATA)'; for p in $$list; do \
+	  rm -f $(DESTDIR)$(Systemdir)/$$p; \
+	done
+
+# This directory's subdirectories are mostly independent; you can cd
+# into them and run `make' without going through this Makefile.
+# To change the values of `make' variables: instead of editing Makefiles,
+# (1) if the variable is set in `config.status', edit `config.status'
+#     (which will cause the Makefiles to be regenerated when you run `make');
+# (2) otherwise, pass the desired values on the `make' command line.
+
+@SET_MAKE@
+
+all-recursive install-data-recursive install-exec-recursive \
+installdirs-recursive install-recursive uninstall-recursive  \
+check-recursive installcheck-recursive info-recursive dvi-recursive:
+	@set fnord $(MAKEFLAGS); amf=$$2; \
+	dot_seen=no; \
+	target=`echo $@ | sed s/-recursive//`; \
+	list='$(SUBDIRS)'; for subdir in $$list; do \
+	  echo "Making $$target in $$subdir"; \
+	  if test "$$subdir" = "."; then \
+	    dot_seen=yes; \
+	    local_target="$$target-am"; \
+	  else \
+	    local_target="$$target"; \
+	  fi; \
+	  (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) $$local_target) \
+	   || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; \
+	done; \
+	if test "$$dot_seen" = "no"; then \
+	  $(MAKE) $(AM_MAKEFLAGS) "$$target-am" || exit 1; \
+	fi; test -z "$$fail"
+
+mostlyclean-recursive clean-recursive distclean-recursive \
+maintainer-clean-recursive:
+	@set fnord $(MAKEFLAGS); amf=$$2; \
+	dot_seen=no; \
+	rev=''; list='$(SUBDIRS)'; for subdir in $$list; do \
+	  rev="$$subdir $$rev"; \
+	  test "$$subdir" != "." || dot_seen=yes; \
+	done; \
+	test "$$dot_seen" = "no" && rev=". $$rev"; \
+	target=`echo $@ | sed s/-recursive//`; \
+	for subdir in $$rev; do \
+	  echo "Making $$target in $$subdir"; \
+	  if test "$$subdir" = "."; then \
+	    local_target="$$target-am"; \
+	  else \
+	    local_target="$$target"; \
+	  fi; \
+	  (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) $$local_target) \
+	   || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; \
+	done && test -z "$$fail"
+tags-recursive:
+	list='$(SUBDIRS)'; for subdir in $$list; do \
+	  test "$$subdir" = . || (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) tags); \
+	done
+
+tags: TAGS
+
+ID: $(HEADERS) $(SOURCES) $(LISP)
+	list='$(SOURCES) $(HEADERS)'; \
+	unique=`for i in $$list; do echo $$i; done | \
+	  awk '    { files[$$0] = 1; } \
+	       END { for (i in files) print i; }'`; \
+	here=`pwd` && cd $(srcdir) \
+	  && mkid -f$$here/ID $$unique $(LISP)
+
+TAGS: tags-recursive $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) $(LISP)
+	tags=; \
+	here=`pwd`; \
+	list='$(SUBDIRS)'; for subdir in $$list; do \
+   if test "$$subdir" = .; then :; else \
+	    test -f $$subdir/TAGS && tags="$$tags -i $$here/$$subdir/TAGS"; \
+   fi; \
+	done; \
+	list='$(SOURCES) $(HEADERS)'; \
+	unique=`for i in $$list; do echo $$i; done | \
+	  awk '    { files[$$0] = 1; } \
+	       END { for (i in files) print i; }'`; \
+	test -z "$(ETAGS_ARGS)$$unique$(LISP)$$tags" \
+	  || (cd $(srcdir) && etags $(ETAGS_ARGS) $$tags  $$unique $(LISP) -o $$here/TAGS)
+
+mostlyclean-tags:
+
+clean-tags:
+
+distclean-tags:
+	-rm -f TAGS ID
+
+maintainer-clean-tags:
+
+distdir = $(top_builddir)/$(PACKAGE)-$(VERSION)/$(subdir)
+
+subdir = gui
+
+distdir: $(DISTFILES)
+	@for file in $(DISTFILES); do \
+	  d=$(srcdir); \
+	  if test -d $$d/$$file; then \
+	    cp -pr $$d/$$file $(distdir)/$$file; \
+	  else \
+	    test -f $(distdir)/$$file \
+	    || ln $$d/$$file $(distdir)/$$file 2> /dev/null \
+	    || cp -p $$d/$$file $(distdir)/$$file || :; \
+	  fi; \
+	done
+	for subdir in $(SUBDIRS); do \
+	  if test "$$subdir" = .; then :; else \
+	    test -d $(distdir)/$$subdir \
+	    || mkdir $(distdir)/$$subdir \
+	    || exit 1; \
+	    chmod 777 $(distdir)/$$subdir; \
+	    (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) top_distdir=../$(top_distdir) distdir=../$(distdir)/$$subdir distdir) \
+	      || exit 1; \
+	  fi; \
+	done
+gdmchooser.o: gdmchooser.c ../config.h ../vicious-extensions/viciousui.h \
+	../vicious-extensions/vicious.h ../vicious-extensions/ve-misc.h \
+	../vicious-extensions/ve-config.h \
+	../vicious-extensions/ve-signal.h \
+	../vicious-extensions/ve-miscui.h \
+	../vicious-extensions/glade-helper.h ../daemon/gdm.h misc.h \
+	gdmwm.h gdmcommon.h
+gdmcomm.o: gdmcomm.c ../config.h ../vicious-extensions/viciousui.h \
+	../vicious-extensions/vicious.h ../vicious-extensions/ve-misc.h \
+	../vicious-extensions/ve-config.h \
+	../vicious-extensions/ve-signal.h \
+	../vicious-extensions/ve-miscui.h \
+	../vicious-extensions/glade-helper.h ../daemon/gdm.h gdmcomm.h
+gdmcommon.o: gdmcommon.c ../config.h ../vicious-extensions/vicious.h \
+	../vicious-extensions/ve-misc.h \
+	../vicious-extensions/ve-config.h \
+	../vicious-extensions/ve-signal.h \
+	../vicious-extensions/viciousui.h \
+	../vicious-extensions/ve-miscui.h \
+	../vicious-extensions/glade-helper.h ../daemon/gdm.h gdmwm.h \
+	gdmcommon.h misc.h
+gdmflexiserver.o: gdmflexiserver.c ../config.h \
+	../vicious-extensions/viciousui.h \
+	../vicious-extensions/vicious.h ../vicious-extensions/ve-misc.h \
+	../vicious-extensions/ve-config.h \
+	../vicious-extensions/ve-signal.h \
+	../vicious-extensions/ve-miscui.h \
+	../vicious-extensions/glade-helper.h ../daemon/gdm.h gdmcomm.h
+gdmlanguages.o: gdmlanguages.c ../config.h \
+	../vicious-extensions/vicious.h ../vicious-extensions/ve-misc.h \
+	../vicious-extensions/ve-config.h \
+	../vicious-extensions/ve-signal.h gdmlanguages.h
+gdmlogin.o: gdmlogin.c ../config.h ../vicious-extensions/viciousui.h \
+	../vicious-extensions/vicious.h ../vicious-extensions/ve-misc.h \
+	../vicious-extensions/ve-config.h \
+	../vicious-extensions/ve-signal.h \
+	../vicious-extensions/ve-miscui.h \
+	../vicious-extensions/glade-helper.h ../daemon/gdm.h gdmwm.h \
+	gdmlanguages.h gdmcommon.h misc.h
+gdmphotosetup.o: gdmphotosetup.c ../config.h \
+	../vicious-extensions/viciousui.h \
+	../vicious-extensions/vicious.h ../vicious-extensions/ve-misc.h \
+	../vicious-extensions/ve-config.h \
+	../vicious-extensions/ve-signal.h \
+	../vicious-extensions/ve-miscui.h \
+	../vicious-extensions/glade-helper.h ../daemon/gdm.h
+gdmsetup.o: gdmsetup.c ../config.h ../vicious-extensions/viciousui.h \
+	../vicious-extensions/vicious.h ../vicious-extensions/ve-misc.h \
+	../vicious-extensions/ve-config.h \
+	../vicious-extensions/ve-signal.h \
+	../vicious-extensions/ve-miscui.h \
+	../vicious-extensions/glade-helper.h ../daemon/gdm.h misc.h \
+	gdmcomm.h
+gdmwm.o: gdmwm.c ../config.h gdmwm.h ../daemon/gdm.h
+gdmXnestchooser.o: gdmXnestchooser.c ../config.h \
+	../vicious-extensions/viciousui.h \
+	../vicious-extensions/vicious.h ../vicious-extensions/ve-misc.h \
+	../vicious-extensions/ve-config.h \
+	../vicious-extensions/ve-signal.h \
+	../vicious-extensions/ve-miscui.h \
+	../vicious-extensions/glade-helper.h ../daemon/gdm.h gdmcomm.h
+misc.o: misc.c ../config.h ../vicious-extensions/vicious.h \
+	../vicious-extensions/ve-misc.h \
+	../vicious-extensions/ve-config.h \
+	../vicious-extensions/ve-signal.h misc.h
+
+info-am:
+info: info-recursive
+dvi-am:
+dvi: dvi-recursive
+check-am: all-am
+check: check-recursive
+installcheck-am:
+installcheck: installcheck-recursive
+install-exec-am: install-binPROGRAMS
+install-exec: install-exec-recursive
+
+install-data-am: install-GladeDATA install-IconsDATA \
+		install-SettingsDATA install-SystemDATA \
+		install-data-local
+install-data: install-data-recursive
+
+install-am: all-am
+	@$(MAKE) $(AM_MAKEFLAGS) install-exec-am install-data-am
+install: install-recursive
+uninstall-am: uninstall-binPROGRAMS uninstall-GladeDATA \
+		uninstall-IconsDATA uninstall-SettingsDATA \
+		uninstall-SystemDATA
+uninstall: uninstall-recursive
+all-am: Makefile $(LIBRARIES) $(PROGRAMS) $(DATA)
+all-redirect: all-recursive
+install-strip:
+	$(MAKE) $(AM_MAKEFLAGS) AM_INSTALL_PROGRAM_FLAGS=-s install
+installdirs: installdirs-recursive
+installdirs-am:
+	$(mkinstalldirs)  $(DESTDIR)$(bindir) $(DESTDIR)$(Gladedir) \
+		$(DESTDIR)$(Iconsdir) $(DESTDIR)$(Settingsdir) \
+		$(DESTDIR)$(Systemdir)
+
+
+mostlyclean-generic:
+
+clean-generic:
+
+distclean-generic:
+	-rm -f Makefile $(CONFIG_CLEAN_FILES)
+	-rm -f config.cache config.log stamp-h stamp-h[0-9]*
+
+maintainer-clean-generic:
+mostlyclean-am:  mostlyclean-noinstLIBRARIES mostlyclean-compile \
+		mostlyclean-libtool mostlyclean-binPROGRAMS \
+		mostlyclean-tags mostlyclean-generic
+
+mostlyclean: mostlyclean-recursive
+
+clean-am:  clean-noinstLIBRARIES clean-compile clean-libtool \
+		clean-binPROGRAMS clean-tags clean-generic \
+		mostlyclean-am
+
+clean: clean-recursive
+
+distclean-am:  distclean-noinstLIBRARIES distclean-compile \
+		distclean-libtool distclean-binPROGRAMS distclean-tags \
+		distclean-generic clean-am
+	-rm -f libtool
+
+distclean: distclean-recursive
+
+maintainer-clean-am:  maintainer-clean-noinstLIBRARIES \
+		maintainer-clean-compile maintainer-clean-libtool \
+		maintainer-clean-binPROGRAMS maintainer-clean-tags \
+		maintainer-clean-generic distclean-am
+	@echo "This command is intended for maintainers to use;"
+	@echo "it deletes files that may require special tools to rebuild."
+
+maintainer-clean: maintainer-clean-recursive
+
+.PHONY: mostlyclean-noinstLIBRARIES distclean-noinstLIBRARIES \
+clean-noinstLIBRARIES maintainer-clean-noinstLIBRARIES \
+mostlyclean-compile distclean-compile clean-compile \
+maintainer-clean-compile mostlyclean-libtool distclean-libtool \
+clean-libtool maintainer-clean-libtool mostlyclean-binPROGRAMS \
+distclean-binPROGRAMS clean-binPROGRAMS maintainer-clean-binPROGRAMS \
+uninstall-binPROGRAMS install-binPROGRAMS uninstall-GladeDATA \
+install-GladeDATA uninstall-IconsDATA install-IconsDATA \
+uninstall-SettingsDATA install-SettingsDATA uninstall-SystemDATA \
+install-SystemDATA install-data-recursive uninstall-data-recursive \
+install-exec-recursive uninstall-exec-recursive installdirs-recursive \
+uninstalldirs-recursive all-recursive check-recursive \
+installcheck-recursive info-recursive dvi-recursive \
+mostlyclean-recursive distclean-recursive clean-recursive \
+maintainer-clean-recursive tags tags-recursive mostlyclean-tags \
+distclean-tags clean-tags maintainer-clean-tags distdir info-am info \
+dvi-am dvi check check-am installcheck-am installcheck install-exec-am \
+install-exec install-data-local install-data-am install-data install-am \
+install uninstall-am uninstall all-redirect all-am all installdirs-am \
+installdirs mostlyclean-generic distclean-generic clean-generic \
+maintainer-clean-generic clean mostlyclean distclean maintainer-clean
+
+
+@INTLTOOL_DESKTOP_RULE@
+
+install-data-local:
+	-test -z "$(DESTDIR)$(bindir)/gdmXnest" || rm -f $(DESTDIR)$(bindir)/gdmXnest
+	$(LN_S) -f gdmXnestchooser $(DESTDIR)$(bindir)/gdmXnest
+
+# Tell versions [3.59,3.63) of GNU make to not export all variables.
+# Otherwise a system limit (for SysV at least) may be exceeded.
+.NOEXPORT:

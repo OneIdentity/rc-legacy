@@ -1,0 +1,3928 @@
+# Romanian translation of gdm2
+# Copyright (C) 2000 - 2004 Free Software Foundation, Inc.
+# Marius Andreiana <marius galuna.ro>, 2000, 2002
+# Dan Damian <dand@dnttm.ro>, 2001.
+# Mişu Moldovan <dumol@go.ro>, 2003, 2004.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: gdm2\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2004-09-14 15:41-0700\n"
+"PO-Revision-Date: 2004-08-30 22:41+0300\n"
+"Last-Translator: Mişu Moldovan <dumol@go.ro>\n"
+"Language-Team: Romanian <gnomero-list@lists.sourceforge.net>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: config/CDE.desktop.in.h:1
+msgid "CDE"
+msgstr "CDE"
+
+#: config/CDE.desktop.in.h:2
+msgid "This session logs you into CDE"
+msgstr "Această sesiune vă autentifică în CDE"
+
+#: config/default.desktop.in.h:1
+msgid "Default System Session"
+msgstr "Sesiune implicită"
+
+#: config/default.desktop.in.h:2
+msgid "This is the default system session"
+msgstr "Aceasta este sesiunea implicită a sistemului"
+
+#. DON\'T CHANGE THIS BY HAND! CHANGE THE SCRIPT THIS IS GENERATED
+#. ALWAYS ADD A CHANGELOG OR I WILL PERSONALLY KICK YOUR ASS!
+#: config/gettextfoo.h:3
+msgid ""
+"I cannot start the X server (your graphical interface).  It is likely that "
+"it is not set up correctly.  You will need to log in on a console and rerun "
+"the X configuration program.  Then restart GDM."
+msgstr ""
+"Nu pot porni serverul X (interfaţa grafică). Probabil setările nu sunt "
+"corecte. Va trebui să vă autentificaţi într-o consolă şi să porniţi "
+"programul de configurare X. Apoi restartaţi GDM."
+
+#: config/gettextfoo.h:4
+msgid ""
+"Would you like me to try to run the X configuration program?  Note that you "
+"will need the root password for this."
+msgstr ""
+"Doriţi să încerc să pornesc programul de configurare X? Veţi avea nevoie de "
+"parola de „root” pentru aceasta."
+
+#: config/gettextfoo.h:5
+msgid "Please type in the root (privileged user) password."
+msgstr "Vă rog introduceţi parola de „root” (utilizatorul privilegiat)."
+
+#: config/gettextfoo.h:6
+msgid "I will now try to restart the X server again."
+msgstr "Voi încerca să restartez serverul X încă o dată."
+
+#: config/gettextfoo.h:7
+msgid ""
+"I will disable this X server for now.  Restart GDM when it is configured "
+"correctly."
+msgstr ""
+"Voi dezactiva momentan acest server X. Reporniţi Gdm când serverul X va fi "
+"corect configurat."
+
+#: config/gettextfoo.h:8
+msgid ""
+"I cannot start the X server (your graphical interface).  It is likely that "
+"it is not set up correctly.  Would you like to view the X server output to "
+"diagnose the problem?"
+msgstr ""
+"Nu pot porni serverul X (interfaţa grafică). Probabil setările nu sunt "
+"corecte. Doriţi să vedeţi ieşirea de la serverul X pentru a diagnostica "
+"problema?"
+
+#: config/gettextfoo.h:9
+msgid "Would you like to view the detailed X server output as well?"
+msgstr "Doriţi să vedeţi şi ieşirea detaliată de la serverul X?"
+
+#: config/gettextfoo.h:10
+msgid ""
+"I cannot start the X server (your graphical interface).  It seems that the "
+"pointer device (your mouse) is not set up correctly.  Would you like to view "
+"the X server output to diagnose the problem?"
+msgstr ""
+"Nu pot porni serverul X (interfaţa grafică). Se pare că e o problemă cu o "
+"setare de mouse. Doriţi să vedeţi ieşirea de la serverul X pentru a "
+"diagnostica problema?"
+
+#: config/gettextfoo.h:11 config/gettextfoo.h:12
+msgid ""
+"Would you like me to try to run the mouse configuration program?  Note that "
+"you will need the root password for this."
+msgstr ""
+"Doriţi să încerc să pornesc programul de configurare pentru mouse? Veţi avea "
+"nevoie de parola de „root” pentru aceasta."
+
+#: config/gettextfoo.h:13
+msgid ""
+"This is the failsafe xterm session.  Windows now have focus only if you have "
+"your cursor above them.  To get out of this mode type 'exit' in the window "
+"in the upper left corner"
+msgstr ""
+"Aceasta este sesiunea minimală Xterm. Ferestrele vor fi focalizate doar dacă "
+"indicatorul de mouse va fi deasupra lor. Pentru a ieşi din această sesiune "
+"tastaţi „exit” în fereastra din colţul din stânga sus."
+
+#: config/gettextfoo.h:14
+msgid ""
+"I could not start your session and so I have started the failsafe xterm "
+"session.  Windows now have focus only if you have your cursor above them.  "
+"To get out of this mode type 'exit' in the window in the upper left corner"
+msgstr ""
+"Nu am putut să vă pornesc sesiunea şi am pornit o sesiune minimală Xterm. "
+"Ferestrele vor fi focalizate doar dacă indicatorul de mouse va fi deasupra "
+"lor. Pentru a ieşi din această sesiune tastaţi „exit” în fereastra din "
+"colţul din stânga sus."
+
+#: config/gnome.desktop.in.h:1
+msgid "GNOME"
+msgstr "GNOME"
+
+#: config/gnome.desktop.in.h:2
+msgid "This session logs you into GNOME"
+msgstr "Această sesiune vă va autentifica în GNOME"
+
+#: daemon/auth.c:66
+#, c-format
+msgid "%s: Could not write new authorization entry: %s"
+msgstr "%s: Nu s-a putut scrie noua autorizaţie: %s"
+
+#: daemon/auth.c:69
+#, c-format
+msgid "%s: Could not write new authorization entry.  Possibly out of diskspace"
+msgstr "%s: Nu s-a putut scrie noua autorizaţie. Probabil nu mai este spaţiu"
+
+#: daemon/auth.c:74
+#, c-format
+msgid ""
+"GDM could not write a new authorization entry to disk.  Possibly out of "
+"diskspace.%s%s"
+msgstr ""
+"GDM nu a putut scrie noua autorizaţie. Probabil nu mai este spaţiu. %s%s"
+
+#: daemon/auth.c:204
+#, c-format
+msgid "%s: Could not make new cookie file in %s"
+msgstr "%s: Nu s-a putut crea noul fişier cookie în %s"
+
+#: daemon/auth.c:228 daemon/auth.c:245 daemon/auth.c:879
+#, c-format
+msgid "%s: Cannot safely open %s"
+msgstr "%s: Nu pot deschide în siguranţă %s"
+
+#. Really no need to clean up here - this process is a goner anyway
+#: daemon/auth.c:677 daemon/auth.c:717
+#, c-format
+msgid "%s: Could not open cookie file %s"
+msgstr "%s: Nu s-a putut deschide fişierul cookie %s"
+
+#: daemon/auth.c:698
+#, c-format
+msgid "%s: Could not lock cookie file %s"
+msgstr "%s: Nu s-a putut face „lock” pe fişierul cookie %s"
+
+#: daemon/auth.c:748 daemon/auth.c:770
+#, c-format
+msgid "%s: Could not write cookie"
+msgstr "%s: Nu s-a putut scrie un cookie"
+
+#: daemon/auth.c:855
+#, c-format
+msgid "%s: Ignoring suspiciously looking cookie file %s"
+msgstr "%s: Ignor fişierul cookie %s deoarece arată suspect"
+
+#: daemon/auth.c:898 daemon/gdm.c:2291
+#, c-format
+msgid "Can't write to %s: %s"
+msgstr "Nu pot scrie în %s: %s"
+
+#. This means we have no clue what's happening,
+#. * it's not X server crashing as we would have
+#. * cought that elsewhere.  Things are just
+#. * not working out, so tell the user.
+#. * However this may have been caused by a malicious local user
+#. * zapping the display repeatedly, that shouldn't cause gdm
+#. * to stop working completely so just wait for 2 minutes,
+#. * that should give people ample time to stop gdm if needed,
+#. * or just wait for the stupid malicious user to get bored
+#. * and go away
+#: daemon/display.c:114
+#, c-format
+msgid ""
+"The display server has been shut down about 6 times in the last 90 seconds, "
+"it is likely that something bad is going on.  I will wait for 2 minutes "
+"before trying again on display %s."
+msgstr ""
+"Serverul X a fost închis de vreo şase ori în ultimele 90 de secunde. "
+"Probabil se întâmplă ceva nelalocul său. Aştept 2 minute şi apoi voi încerca "
+"din nou în ecranul %s."
+
+#: daemon/display.c:260
+#, c-format
+msgid "%s: Cannot create pipe"
+msgstr "%s: Nu pot crea un conector"
+
+#: daemon/display.c:336
+#, c-format
+msgid "%s: Failed forking gdm slave process for %s"
+msgstr "%s: Nu am reuşit să clonez procesul sclav GDM pentru %s"
+
+#: daemon/errorgui.c:356
+#, c-format
+msgid "%s not a regular file!\n"
+msgstr "%s nu este un fişier obişnuit!\n"
+
+#: daemon/errorgui.c:373
+msgid ""
+"\n"
+"... File too long to display ...\n"
+msgstr ""
+"\n"
+"... Fişier prea mare pentru a fi afişat ...\n"
+
+#: daemon/errorgui.c:382
+#, c-format
+msgid "%s could not be opened"
+msgstr "%s nu a putut fi deschis"
+
+#: daemon/errorgui.c:494 daemon/errorgui.c:635 daemon/errorgui.c:743
+#: daemon/errorgui.c:861
+#, c-format
+msgid "%s: Cannot fork to display error/info box"
+msgstr "%s: Nu pot clona pentru a afişa fereastra cu detalii sau erori"
+
+#: daemon/filecheck.c:64
+#, c-format
+msgid "%s: Directory %s does not exist."
+msgstr "%s: Directorul %s nu există."
+
+#: daemon/filecheck.c:76 daemon/filecheck.c:118 daemon/filecheck.c:180
+#, c-format
+msgid "%s: %s is not owned by uid %d."
+msgstr "%s: %s nu este deţinut de uid %d."
+
+#: daemon/filecheck.c:82 daemon/filecheck.c:125
+#, c-format
+msgid "%s: %s is writable by group."
+msgstr "%s: %s poate fi scris de grup."
+
+#: daemon/filecheck.c:88
+#, c-format
+msgid "%s: %s is writable by other."
+msgstr "%s: %s poate fi scris de alţii."
+
+#: daemon/filecheck.c:103 daemon/filecheck.c:168
+#, c-format
+msgid "%s: %s does not exist but must exist."
+msgstr "%s: %s nu există, dar este necesar."
+
+#: daemon/filecheck.c:111 daemon/filecheck.c:174
+#, c-format
+msgid "%s: %s is not a regular file."
+msgstr "%s: %s nu este un fişier obişnuit."
+
+#: daemon/filecheck.c:132
+#, c-format
+msgid "%s: %s is writable by group/other."
+msgstr "%s: %s poate fi scris de grup/alţii"
+
+#: daemon/filecheck.c:139 daemon/filecheck.c:192
+#, c-format
+msgid "%s: %s is bigger than sysadmin specified maximum file size."
+msgstr "%s: mărimea %s e mai mare decât cea maximă specificată de sysadmin."
+
+#: daemon/gdm-net.c:271
+#, c-format
+msgid "%s: Could not make socket"
+msgstr "%s: Nu am reuşit să creez un soclu"
+
+#: daemon/gdm-net.c:302
+#, c-format
+msgid "%s: Could not bind socket"
+msgstr "%s: Nu am reuşit să mă leg la soclu"
+
+#: daemon/gdm-net.c:388
+#, c-format
+msgid "%s: Could not make FIFO"
+msgstr "%s: Nu am reuşit să fac FIFO"
+
+#: daemon/gdm-net.c:396
+#, c-format
+msgid "%s: Could not open FIFO"
+msgstr "%s: Nu am reuşit să deschid FIFO"
+
+#: daemon/gdm.c:248
+#, c-format
+msgid ""
+"Server Authorization directory (daemon/ServAuthDir) is set to %s but this "
+"does not exist. Please correct gdm configuration %s and restart gdm."
+msgstr ""
+"ServAuthDir este setat la %s, dar nu există. Corectaţi fişierul de "
+"configurare %s şi reporniţi Gdm."
+
+#: daemon/gdm.c:257
+#, c-format
+msgid "%s: Authdir %s does not exist. Aborting."
+msgstr "%s: Authdir este setat la %s, dar nu există. Renunţ."
+
+#: daemon/gdm.c:262
+#, c-format
+msgid ""
+"Server Authorization directory (daemon/ServAuthDir) is set to %s but this is "
+"not a directory. Please correct gdm configuration %s and restart gdm."
+msgstr ""
+"ServAuthDir este setat la %s, dar nu este un director.Corectaţi fişierul de "
+"configurare %s şi reporniţi GDM."
+
+#: daemon/gdm.c:271
+#, c-format
+msgid "%s: Authdir %s is not a directory. Aborting."
+msgstr "%s: Authdir %s nu este un director. Renunţ."
+
+#: daemon/gdm.c:284
+#, c-format
+msgid ""
+"%s: Logdir %s does not exist or isn't a directory.  Using ServAuthDir %s."
+msgstr ""
+"%s: Logdir %s nu există sau nu este un director. Utilizez ServAuthDir %s."
+
+#: daemon/gdm.c:313 gui/gdmlogin.c:650 gui/greeter/greeter.c:105
+#, c-format
+msgid "%s: No configuration file: %s. Using defaults."
+msgstr "%s: Lipseşte fişierul de configurare: %s. Utilizez setările implicite."
+
+#: daemon/gdm.c:364
+#, c-format
+msgid "%s: BaseXsession empty, using %s/gdm/Xsession"
+msgstr "%s: BaseXsession gol, utilizez %s/gdm/Xsession"
+
+#: daemon/gdm.c:408
+#, c-format
+msgid "%s: Standard X server not found, trying alternatives"
+msgstr "%s: Serverul X standard nu a fost găsit, încerc alternative"
+
+#: daemon/gdm.c:440
+#, c-format
+msgid "%s: XDMCP was enabled while there is no XDMCP support, turning it off"
+msgstr "%s: XDMCP a fost activat şi nu există suport pentru XDMCP, îl opresc"
+
+#: daemon/gdm.c:453
+#, c-format
+msgid "%s: Root cannot be autologged in, turing off automatic login"
+msgstr ""
+"%s: „Root” nu poate fi autentificat automat, dezactivez autentificarea "
+"automată"
+
+#: daemon/gdm.c:466
+#, c-format
+msgid "%s: Root cannot be autologged in, turing off timed login"
+msgstr ""
+"%s: „Root” nu poate fi autentificat automat, dezactivez autentificarea "
+"cronometrată"
+
+#: daemon/gdm.c:472
+#, c-format
+msgid "%s: TimedLoginDelay less than 5, so I will just use 5."
+msgstr "%s: TimedLoginDelay mai mic decât 5, se va utiliza 5."
+
+#: daemon/gdm.c:482
+#, c-format
+msgid "%s: No greeter specified."
+msgstr "%s: Nici un salut nu a fost specificat."
+
+#: daemon/gdm.c:485
+#, c-format
+msgid "%s: No remote greeter specified."
+msgstr "%s: Nici un salut la distanţă nu a fost specificat."
+
+#: daemon/gdm.c:489
+#, c-format
+msgid "%s: No sessions directory specified."
+msgstr "%s: Directorul de sesiuni nu a fost specificat."
+
+#: daemon/gdm.c:514
+#, c-format
+msgid "%s: Empty server command, using standard one."
+msgstr "%s: Comanda server este nulă, o utilizez pe cea standard."
+
+#: daemon/gdm.c:557
+#, c-format
+msgid "%s: Display number %d in use!  I will use %d"
+msgstr "%s: Ecranul numărul %d este ocupat! Voi folosi %d"
+
+#: daemon/gdm.c:576
+#, c-format
+msgid "%s: Invalid server line in config file. Ignoring!"
+msgstr "%s: Linie invalidă de server în fişierul de configurare. Ignor!"
+
+#: daemon/gdm.c:587 daemon/gdm.c:628
+#, c-format
+msgid "%s: XDMCP disabled and no local servers defined. Aborting!"
+msgstr ""
+"%s: XDMCP este dezactivat si nici un server local nu a fost definit. "
+"Abandonez!"
+
+#. start
+#. server uid
+#: daemon/gdm.c:605
+#, c-format
+msgid ""
+"%s: XDMCP disabled and no local servers defined. Adding %s on :%d to allow "
+"configuration!"
+msgstr ""
+"%s: XDMCP este dezactivat şi nici un server local nu a fost definit. Adaug %"
+"s pe :%d pentru a permite configurarea!"
+
+#: daemon/gdm.c:620
+#, c-format
+msgid ""
+"XDMCP is disabled and gdm cannot find any local server to start.  Aborting!  "
+"Please correct the configuration %s and restart gdm."
+msgstr ""
+"XDMCP este dezactivat şi nu am găsit nici un server local pentru pornire. "
+"Abandonez! Corectaţi fişierul de configurare %s şi reporniţi GDM."
+
+#: daemon/gdm.c:642
+#, c-format
+msgid ""
+"The gdm user does not exist. Please correct gdm configuration %s and restart "
+"gdm."
+msgstr ""
+"Utilizatorul „gdm” nu există. Corectaţi fişierul de configurare %s şi "
+"reporniţi GDM."
+
+#: daemon/gdm.c:649
+#, c-format
+msgid "%s: Can't find the gdm user (%s). Aborting!"
+msgstr "%s: Nu am găsit utilizatorul „gdm” (%s). Abandonez!"
+
+#: daemon/gdm.c:656
+#, c-format
+msgid ""
+"The gdm user is set to be root, but this is not allowed since it can pose a "
+"security risk.  Please correct gdm configuration %s and restart gdm."
+msgstr ""
+"Utilizatorul „gdm” este setat să fie „root“, dar asta nu se permite datorită "
+"riscurilor de securitate. Corectaţi fişierul de configurare %s şi reporniţi "
+"GDM."
+
+#: daemon/gdm.c:664
+#, c-format
+msgid "%s: The gdm user should not be root. Aborting!"
+msgstr "%s: Utilizatorul „gdm” n-ar trebui să fie „root“. Abandonez!"
+
+#: daemon/gdm.c:671
+#, c-format
+msgid ""
+"The gdm group does not exist. Please correct gdm configuration %s and "
+"restart gdm."
+msgstr ""
+"Grupul „gdm” nu există. Corectaţi fişierul de configurare %s şi reporniţi "
+"GDM."
+
+#: daemon/gdm.c:678
+#, c-format
+msgid "%s: Can't find the gdm group (%s). Aborting!"
+msgstr "%s: Nu am găsit grupul „gdm” (%s). Abandonez!"
+
+#: daemon/gdm.c:685
+#, c-format
+msgid ""
+"The gdm group is set to be root, but this is not allowed since it can pose a "
+"security risk. Please correct gdm configuration %s and restart gdm."
+msgstr ""
+"Grupul „gdm” este setat să fie „root“, dar asta nu este permis datorită "
+"riscurilor de securitate. Corectaţi fişierul de configurare %s şi reporniţi "
+"GDM."
+
+#: daemon/gdm.c:693
+#, c-format
+msgid "%s: The gdm group should not be root. Aborting!"
+msgstr "%s: Grupul „gdm” n-ar trebui să fie „root“. Abandonez!"
+
+#: daemon/gdm.c:708
+#, c-format
+msgid "%s: Greeter not found or can't be executed by the gdm user"
+msgstr "%s: Salut negăsit sau care nu poate fi executat de utilizatorul „gdm“"
+
+#: daemon/gdm.c:715
+#, c-format
+msgid "%s: Remote greeter not found or can't be executed by the gdm user"
+msgstr ""
+"%s: Salut la distanţă lipsă sau care nu poate fi executat de utilizatorul "
+"„gdm“"
+
+#: daemon/gdm.c:726
+#, c-format
+msgid "%s: Chooser not found or it can't be executed by the gdm user"
+msgstr "%s: „Chooser” lipsă sau ce nu poate fi executat de utilizatorul „gdm“"
+
+#: daemon/gdm.c:735
+msgid "No daemon/ServAuthDir specified in the configuration file"
+msgstr ""
+"Nici un daemon/ServAuthDir nu a fost specificat în fişierul de configurare"
+
+#: daemon/gdm.c:737
+#, c-format
+msgid "%s: No daemon/ServAuthDir specified."
+msgstr "%s: Daemon/ServAuthDir nespecificat."
+
+#: daemon/gdm.c:761
+#, c-format
+msgid ""
+"Server Authorization directory (daemon/ServAuthDir) is set to %s but is not "
+"owned by user %s and group %s. Please correct the ownership or gdm "
+"configuration %s and restart gdm."
+msgstr ""
+"ServAuthDir este setat la %s dar nu este deţinut de utilizatorul „%s” şi "
+"grupul „%s“. Corectaţi drepturile de acces sau fişierul de configurare %s şi "
+"reporniţi GDM."
+
+#: daemon/gdm.c:772
+#, c-format
+msgid "%s: Authdir %s is not owned by user %s, group %s. Aborting."
+msgstr ""
+"%s: Authdir %s nu este deţinut de utilizatorul „%s“, grupul „%s“. Renunţ"
+
+#: daemon/gdm.c:778
+#, c-format
+msgid ""
+"Server Authorization directory (daemon/ServAuthDir) is set to %s but has the "
+"wrong permissions, it should have permissions of %o. Please correct the "
+"permissions or the gdm configuration %s and restart gdm."
+msgstr ""
+"ServAuthDir este setat la %s, dar are drepturi de acces greşite, ar trebui "
+"să aibă %o. Corectaţi drepturile de acces sau fişierul de configurare %s şi "
+"reporniţi GDM."
+
+#: daemon/gdm.c:789
+#, c-format
+msgid "%s: Authdir %s has wrong permissions %o. Should be %o. Aborting."
+msgstr ""
+"%s: Authdir %s are drepturi de acces greşite %o. Ar trebui să fie %o. Renunţ"
+
+#. FIXME: how to handle this?
+#: daemon/gdm.c:845 daemon/gdm.c:853 daemon/gdm.c:2073 daemon/gdm.c:2081
+#, c-format
+msgid "Cannot write PID file %s, possibly out of diskspace.  Error: %s\n"
+msgstr ""
+"Nu pot scrie fişierul PID %s, probabil din lipsă de spaţiu pe disc. Eroare: %"
+"s\n"
+
+#: daemon/gdm.c:847 daemon/gdm.c:855 daemon/gdm.c:2075 daemon/gdm.c:2083
+#, c-format
+msgid "Cannot write PID file %s, possibly out of diskspace.  Error: %s"
+msgstr ""
+"Nu pot scrie fişierul PID %s, probabil din lipsă de spaţiu pe disc. Eroare: %"
+"s"
+
+#: daemon/gdm.c:865
+#, c-format
+msgid "%s: fork() failed!"
+msgstr "%s: fork() eşuat!"
+
+#. should never happen
+#: daemon/gdm.c:868 daemon/slave.c:3437
+#, c-format
+msgid "%s: setsid() failed: %s!"
+msgstr "%s: setsid() eşuat: %s!"
+
+#: daemon/gdm.c:1038
+#, c-format
+msgid "%s: Trying failsafe X server %s"
+msgstr "%s: Încerc server X de rezervă %s"
+
+#: daemon/gdm.c:1056
+#, c-format
+msgid "%s: Running the XKeepsCrashing script"
+msgstr "%s: Pornesc scriptul XKeepsCrashing"
+
+#: daemon/gdm.c:1176
+msgid ""
+"I cannot start the X server (your graphical interface).  It is likely that "
+"it is not set up correctly. You will need to log in on a console and rerun "
+"the X configuration program.  Then restart GDM."
+msgstr ""
+"Nu am reuşit să pornesc serverul X (interfaţa grafică). Probabil nu este "
+"setat corect. Va trebui să vă autentificaţi într-o consolă şi să porniţi "
+"programul de configurare X. Apoi reporniţi GDM."
+
+#. else {
+#. * At this point .... screw the user, we don't know how to
+#. * talk to him.  He's on some 'l33t system anyway, so syslog
+#. * reading will do him good
+#. * }
+#: daemon/gdm.c:1188
+#, c-format
+msgid ""
+"Failed to start X server several times in a short time period; disabling "
+"display %s"
+msgstr ""
+"Nu am reuşit să pornesc serverul X de câteva ori la rând într-un interval "
+"scurt de timp, dezactivez ecranul %s"
+
+#: daemon/gdm.c:1196 daemon/gdm.c:2794
+msgid "Master suspending..."
+msgstr "Adormire calculator..."
+
+#: daemon/gdm.c:1250
+#, c-format
+msgid "System is rebooting, please wait ..."
+msgstr "Se reporneşte calculatorul, aşteptaţi..."
+
+#: daemon/gdm.c:1252
+#, c-format
+msgid "System is shutting down, please wait ..."
+msgstr "Se închide calculatorul, aşteptaţi..."
+
+#: daemon/gdm.c:1263
+msgid "Master halting..."
+msgstr "Oprire calculator..."
+
+#: daemon/gdm.c:1276
+#, c-format
+msgid "%s: Halt failed: %s"
+msgstr "%s: Oprirea a eşuat: %s!"
+
+#: daemon/gdm.c:1285
+msgid "Master rebooting..."
+msgstr "Repornire calculator..."
+
+#: daemon/gdm.c:1298
+#, c-format
+msgid "%s: Reboot failed: %s"
+msgstr "%s: Repornirea a eşuat: %s!"
+
+#: daemon/gdm.c:1396
+#, c-format
+msgid "Reboot or Halt request when there is no system menu from display %s"
+msgstr ""
+"Cerere de repornire sau de închidere în lipsa unui meniu sistem de la "
+"ecranul %s"
+
+#: daemon/gdm.c:1405
+#, c-format
+msgid "Restart, Reboot or Halt request from a non-local display %s"
+msgstr "Cerere de repornire sau oprire de la un ecran la distanţă %s"
+
+#. Bury this display for good
+#: daemon/gdm.c:1471
+#, c-format
+msgid "%s: Aborting display %s"
+msgstr "%s: Abandonez ecranul %s"
+
+#: daemon/gdm.c:1622
+msgid "GDM restarting ..."
+msgstr "Repornire GDM..."
+
+#: daemon/gdm.c:1626
+msgid "Failed to restart self"
+msgstr "Nu am reuşit să mă repornesc"
+
+#. FIXME: note that this could mean out of memory
+#: daemon/gdm.c:1700
+msgid "main daemon: Got SIGABRT, something went very wrong. Going down!"
+msgstr "main daemon: Am primit SIGABRT, ceva e greşit. Abandonez!"
+
+#: daemon/gdm.c:1859
+msgid "Do not fork into the background"
+msgstr "Nu clona în fundal"
+
+#: daemon/gdm.c:1861
+msgid "No console (local) servers to be run"
+msgstr "Nici un server consolă (local) de pornit"
+
+#: daemon/gdm.c:1863
+msgid "Preserve LD_* variables"
+msgstr "Păstrează variabilele LD_*"
+
+#: daemon/gdm.c:1865
+msgid "Print GDM version"
+msgstr "Arată versiunea GDM"
+
+#: daemon/gdm.c:1867
+msgid "Start the first X server but then halt until we get a GO in the fifo"
+msgstr ""
+"Porneşte primul server X şi apoi opreşte-te până la primirea unui GO în fifo"
+
+#: daemon/gdm.c:1988 gui/gdmchooser.c:2057
+#, c-format
+msgid ""
+"Error on option %s: %s.\n"
+"Run '%s --help' to see a full list of available command line options.\n"
+msgstr ""
+"Eroare la opţiunea %s: %s\n"
+"Executaţi „%s --help” pentru a vedea o listă cu opţiunile disponibile.\n"
+
+#: daemon/gdm.c:2011
+msgid "Only root wants to run gdm\n"
+msgstr "Numai „root” doreşte să pornească GDM\n"
+
+#: daemon/gdm.c:2027 daemon/gdm.c:2031 daemon/gdm.c:2106 daemon/gdm.c:2110
+#: daemon/gdm.c:2114 daemon/gdm.c:2118 daemon/gdm.c:2128 daemon/gdm.c:2134
+#: daemon/gdm.c:2145 daemon/misc.c:1648 daemon/misc.c:1652 daemon/misc.c:1656
+#: daemon/misc.c:1663 daemon/misc.c:1667 daemon/misc.c:1671
+#: daemon/server.c:521 daemon/server.c:534 daemon/slave.c:811
+#: daemon/slave.c:825 daemon/slave.c:835 daemon/slave.c:845 daemon/slave.c:857
+#: gui/gdmchooser.c:1936 gui/gdmchooser.c:1939 gui/gdmchooser.c:1942
+#: gui/gdmlogin.c:3958 gui/gdmlogin.c:3966 gui/gdmlogin.c:3969
+#: gui/greeter/greeter.c:1085 gui/greeter/greeter.c:1093
+#: gui/greeter/greeter.c:1096
+#, c-format
+msgid "%s: Error setting up %s signal handler: %s"
+msgstr "%s: Eroare la setarea descriptorului semnalului %s: %s"
+
+#: daemon/gdm.c:2055
+msgid "gdm already running. Aborting!"
+msgstr "GDM e deja pornit. Abandonez!"
+
+#: daemon/gdm.c:2154
+#, c-format
+msgid "%s: Error setting up CHLD signal handler"
+msgstr "%s: Eroare la setarea descriptorului pentru semnalul CHLD"
+
+#: daemon/gdm.c:2260
+#, c-format
+msgid "Can't open %s for writing"
+msgstr "Nu s-a putut deschide %s pentru scriere"
+
+#: daemon/gdm.c:3527 daemon/gdm.c:3546
+msgid "FLEXI_XSERVER request denied: Not authenticated"
+msgstr "Cerere refuzată FLEXI_XSERVER: Neautentificat"
+
+#. Don't print the name to syslog as it might be
+#. * long and dangerous
+#: daemon/gdm.c:3564
+msgid "Unknown server type requested, using standard server."
+msgstr "Se cere un tip necunoscut de server, utilizez serverul standard."
+
+#: daemon/gdm.c:3568
+#, c-format
+msgid ""
+"Requested server %s not allowed to be used for flexible servers, using "
+"standard server."
+msgstr ""
+"Utilizarea serverului cerut %s nu e permisă cu servere flexibile, utilizez "
+"serverul standard."
+
+#: daemon/gdm.c:3690
+msgid "QUERY_LOGOUT_ACTION request denied: Not authenticated"
+msgstr "Cerere refuzată de tip QUERY_LOGOUT_ACTION: Neautentificat"
+
+#: daemon/gdm.c:3748 daemon/gdm.c:3803
+msgid "SET_LOGOUT_ACTION request denied: Not authenticated"
+msgstr "Cerere refuzată de tip SET_LOGOUT_ACTION: Neautentificat"
+
+#: daemon/gdm.c:3848 daemon/gdm.c:3875
+msgid "QUERY_VT request denied: Not authenticated"
+msgstr "Cerere refuzată de tip QUERY_VT: Neautentificat"
+
+#. Translators, don't translate the 'y' and 'n'
+#: daemon/misc.c:652
+msgid "y = Yes or n = No? >"
+msgstr "y = Da sau n = Nu? >"
+
+#: daemon/misc.c:1016
+#, c-format
+msgid "%s: Cannot get local addresses!"
+msgstr "%s: Nu am putut obţine adresa locală!"
+
+#: daemon/misc.c:1168
+#, c-format
+msgid "Could not setgid %d. Aborting."
+msgstr "Nu am putut seta gid %d. Renunţ."
+
+#: daemon/misc.c:1173
+#, c-format
+msgid "initgroups() failed for %s. Aborting."
+msgstr "initgroups() eşuat pentru %s. Renunţ."
+
+#: daemon/misc.c:1410 daemon/misc.c:1424
+#, c-format
+msgid "%s: Error setting signal %d to %s"
+msgstr "%s: Eroare la setarea semnalului %d pentru %s"
+
+#: daemon/misc.c:2317
+#, c-format
+msgid ""
+"Last login:\n"
+"%s"
+msgstr ""
+"Ultima autentificare:\n"
+"%s"
+
+#: daemon/server.c:160
+msgid "Can not start fallback console"
+msgstr "Nu am reuşit să pornesc consola de rezervă"
+
+#: daemon/server.c:341
+#, c-format
+msgid ""
+"There already appears to be an X server running on display %s.  Should I try "
+"another display number?  If you answer no, I will attempt to start the "
+"server on %s again.%s"
+msgstr ""
+"Se pare că există deja un server pornit în ecranul %s. Să încerc un alt "
+"ecran? Dacă răspundeţi „Nu” voi încerca să pornesc serverul pe %s din nou. %s"
+
+#: daemon/server.c:348
+msgid ""
+"  (You can change consoles by pressing Ctrl-Alt plus a function key, such as "
+"Ctrl-Alt-F7 to go to console 7.  X servers usually run on consoles 7 and "
+"higher.)"
+msgstr ""
+"(Puteţi schimba consolele apăsând Ctrl-Alt şi o tastă F, de exemplu Ctrl-Alt-"
+"F7 pentru a ajunge la consola 7. Serverele X sunt pornite de obicei pe "
+"consolele 7 sau următoarele.)"
+
+#: daemon/server.c:394
+#, c-format
+msgid "Display '%s' cannot be opened by Xnest"
+msgstr "Ecranul „%s” nu poate fi deschis de Xnest"
+
+#: daemon/server.c:425
+#, c-format
+msgid "Display %s is busy. There is another X server running already."
+msgstr "Ecranul %s este ocupat, un alt server X este pornit deja."
+
+#: daemon/server.c:509
+#, c-format
+msgid "%s: Error opening a pipe: %s"
+msgstr "%s: Eroare la deschiderea unui conector: %s"
+
+#. Send X too busy
+#: daemon/server.c:794
+#, c-format
+msgid "%s: Cannot find a free display number"
+msgstr "%s: Nu am găsit un număr de ecran liber"
+
+#: daemon/server.c:821
+#, c-format
+msgid "%s: Display %s busy.  Trying another display number."
+msgstr "%s: Ecranul %s e ocupat. Încerc un alt număr de ecran."
+
+#: daemon/server.c:916
+#, c-format
+msgid "Invalid server command '%s'"
+msgstr "Comandă server invalidă „%s“"
+
+#: daemon/server.c:921
+#, c-format
+msgid "Server name '%s' not found, using standard server"
+msgstr "Nu am găsit numele de server „%s“, utilizez serverul standard"
+
+#: daemon/server.c:1098
+#, c-format
+msgid "%s: Could not open logfile for display %s!"
+msgstr "%s: Nu s-a putut deschide fişierul log pentru ecranul %s!"
+
+#: daemon/server.c:1110 daemon/server.c:1116 daemon/server.c:1121
+#, c-format
+msgid "%s: Error setting %s to %s"
+msgstr "%s: Eroare la setarea %s în %s"
+
+#: daemon/server.c:1158
+#, c-format
+msgid "%s: Empty server command for display %s"
+msgstr "%s: Comandă de server nulă pentru ecranul %s"
+
+#: daemon/server.c:1172
+#, c-format
+msgid "%s: Server was to be spawned by uid %d but that user doesn't exist"
+msgstr "%s: Serverul trebuie repornit de uid „%d“, dar utilizatorul nu există"
+
+#: daemon/server.c:1187 daemon/slave.c:2500 daemon/slave.c:2978
+#, c-format
+msgid "%s: Couldn't set groupid to %d"
+msgstr "%s: Nu s-a putut seta groupid la „%d“"
+
+#: daemon/server.c:1193 daemon/slave.c:2505 daemon/slave.c:2983
+#, c-format
+msgid "%s: initgroups() failed for %s"
+msgstr "%s: initgroups() eşuat pentru %s"
+
+#: daemon/server.c:1199 daemon/slave.c:2510 daemon/slave.c:2988
+#, c-format
+msgid "%s: Couldn't set userid to %d"
+msgstr "%s: Nu s-a putut seta userid la „%d“"
+
+#: daemon/server.c:1206
+#, c-format
+msgid "%s: Couldn't set groupid to 0"
+msgstr "%s: Nu s-a putut seta groupid la 0"
+
+#: daemon/server.c:1223
+#, c-format
+msgid "%s: Xserver not found: %s"
+msgstr "%s: Xserver negăsit: %s"
+
+#: daemon/server.c:1231
+#, c-format
+msgid "%s: Can't fork Xserver process!"
+msgstr "%s: Nu am putut clona procesul Xserver!"
+
+#: daemon/slave.c:307
+msgid "Can't set EGID to user GID"
+msgstr "Nu am putut seta EGID la GID-ul utilizatorului"
+
+#: daemon/slave.c:315
+msgid "Can't set EUID to user UID"
+msgstr "Nu am putut seta EUID la UID-ul utilizatorului"
+
+#: daemon/slave.c:1120
+msgid "Log in anyway"
+msgstr "Autentificare oricum"
+
+#: daemon/slave.c:1122
+msgid ""
+"You are already logged in.  You can log in anyway, return to your previous "
+"login session, or abort this login"
+msgstr ""
+"Sunteţi autentificat deja. Vă puteţi autentifica oricum, puteţi să vă "
+"întoarceţi la precedenta sesiune de autentificare sau puteţi abandona "
+"această autentificare"
+
+#: daemon/slave.c:1126
+msgid "Return to previous login"
+msgstr "Precedenta autentificare"
+
+#: daemon/slave.c:1127 daemon/slave.c:1133
+msgid "Abort login"
+msgstr "Abandon autentificare"
+
+#: daemon/slave.c:1130
+msgid "You are already logged in.  You can log in anyway or abort this login"
+msgstr ""
+"Sunteţi deja autentificat. Puteţi să vă autentificaţi oricum sau puteţi "
+"abandona această autentificare"
+
+#: daemon/slave.c:1221
+msgid ""
+"I could not start the X\n"
+"server (your graphical environment)\n"
+"due to some internal error.\n"
+"Please contact your system administrator\n"
+"or check your syslog to diagnose.\n"
+"In the meantime this display will be\n"
+"disabled.  Please restart gdm when\n"
+"the problem is corrected."
+msgstr ""
+"Nu am putut porni serverul X\n"
+"(mediul grafic) datorită unei erori\n"
+"interne. Contactaţi administratorul\n"
+"sistemului sau citiţi mesajele din\n"
+"fişierul syslog pentru diagnosticare.\n"
+"În acest timp ecranul va fi dezactivat.\n"
+"Restartaţi GDM după ce remediaţi\n"
+"problema apărută."
+
+#: daemon/slave.c:1470
+#, c-format
+msgid "%s: cannot fork"
+msgstr "%s: nu am reuşit să clonez"
+
+#: daemon/slave.c:1517
+#, c-format
+msgid "%s: cannot open display %s"
+msgstr "%s: nu am reuşit să deschid ecranul %s"
+
+#: daemon/slave.c:1668
+msgid ""
+"Could not execute the configuration program.  Make sure it's path is set "
+"correctly in the configuration file.  I will attempt to start it from the "
+"default location."
+msgstr ""
+"Nu am putut executa programul de configurare. Asiguraţi-vă că în fişierul de "
+"configurare calea e corect setată. Voi încerca să-l pornesc din locaţia "
+"implicită."
+
+#: daemon/slave.c:1682
+msgid ""
+"Could not execute the configuration program.  Make sure it's path is set "
+"correctly in the configuration file."
+msgstr ""
+"Nu am putut executa programul de configurare. Asiguraţi-vă că în fişierul de "
+"configurare calea e corect setată."
+
+#: daemon/slave.c:1812
+msgid ""
+"Enter the root password\n"
+"to run the configuration."
+msgstr ""
+"Introduceţi parola de „root“\n"
+"pentru a porni programul configurarea."
+
+#: daemon/slave.c:2454 daemon/slave.c:2459
+#, c-format
+msgid "%s: Can't init pipe to gdmgreeter"
+msgstr "%s: Nu am reuşit iniţializarea conectorului către gdmgreeter"
+
+#: daemon/slave.c:2582
+msgid ""
+"No servers were defined in the configuration file and XDMCP was disabled.  "
+"This can only be a configuration error.  So I have started a single server "
+"for you.  You should log in and fix the configuration.  Note that automatic "
+"and timed logins are disabled now."
+msgstr ""
+"Nici un server nu a fost definit în fişierul de configurare şi XDMCP a fost "
+"dezactivat. Aceasta nu poate fi decât o eroare de configurare aşa că am "
+"pornit un server unic pentru a vă autentifica şi a repara setările. De notat "
+"că autentificările automate şi cronometrate sunt acum dezactivate."
+
+#: daemon/slave.c:2596
+msgid ""
+"I could not start the regular X server (your graphical environment) and so "
+"this is a failsafe X server.  You should log in and properly configure the X "
+"server."
+msgstr ""
+"Nu am reuşit să pornesc serverul normal X (mediul grafic) aşa că acesta este "
+"un server de rezervă X. Ar trebui să vă autentificaţi şi să configuraţi "
+"corect serverul X."
+
+#: daemon/slave.c:2605
+#, c-format
+msgid ""
+"The specified display number was busy, so this server was started on display "
+"%s."
+msgstr ""
+"Numărul de ecran specificat este ocupat, aşa că acest server a fost pornit "
+"în ecranul %s."
+
+#: daemon/slave.c:2625
+msgid ""
+"The greeter program appears to be crashing.\n"
+"I will attempt to use a different one."
+msgstr ""
+"Programul de salut gdmgreeter se pare că se blochează.\n"
+"Voi încerca să utilizez un altul."
+
+#. Something went wrong
+#: daemon/slave.c:2646
+#, c-format
+msgid "%s: Cannot start greeter with gtk modules: %s. Trying without modules"
+msgstr ""
+"%s: Nu am reuşit să pornesc gdmgreeter cu modulele GTK+: %s. Încerc fără "
+"aceste module."
+
+#: daemon/slave.c:2653
+#, c-format
+msgid "%s: Cannot start greeter trying default: %s"
+msgstr "%s: Nu am reuşit să pornesc gdmgreeter, încerc setările implicite: %s"
+
+#: daemon/slave.c:2665
+msgid ""
+"Cannot start the greeter program, you will not be able to log in.  This "
+"display will be disabled.  Try logging in by other means and editing the "
+"configuration file"
+msgstr ""
+"Nu am reuşit să pornesc gdmgreeter, nu vă veţi putea autentifica. Acest "
+"ecran va fi dezactivat. Încercaţi să vă autentificaţi pe altă cale pentru a "
+"edita fişierul de configurare."
+
+#. If no greeter we really have to disable the display
+#: daemon/slave.c:2672
+#, c-format
+msgid "%s: Error starting greeter on display %s"
+msgstr "%s: Eroare la pornirea gdmgreeter în ecranul %s"
+
+#: daemon/slave.c:2676
+#, c-format
+msgid "%s: Can't fork gdmgreeter process"
+msgstr "%s: Nu am reuşit să clonez procesul gdmgreeter"
+
+#: daemon/slave.c:2761
+#, c-format
+msgid "%s: Can't open fifo!"
+msgstr "%s: Nu am reuşit să deschid FIFO!"
+
+#: daemon/slave.c:2937
+#, c-format
+msgid "%s: Can't init pipe to gdmchooser"
+msgstr "%s: Nu am reuşit iniţializarea unui conector către gdmchooser"
+
+#: daemon/slave.c:3035
+msgid ""
+"Cannot start the chooser program, you will probably not be able to log in.  "
+"Please contact the system administrator."
+msgstr ""
+"Nu am reuşit pornirea programului gdmchooser, probabil nu vă puteţi "
+"autentifica. Contactaţi administratorul de sistem."
+
+#: daemon/slave.c:3039
+#, c-format
+msgid "%s: Error starting chooser on display %s"
+msgstr "%s: Eroare la pornirea gdmchooser în ecranul %s"
+
+#: daemon/slave.c:3042
+#, c-format
+msgid "%s: Can't fork gdmchooser process"
+msgstr "%s: Nu am reuşit să clonez procesul gdmchooser"
+
+#: daemon/slave.c:3338
+#, c-format
+msgid "%s: Could not open ~/.xsession-errors"
+msgstr "%s: Nu am reuşit să deschid ~/.xsession-errors"
+
+#: daemon/slave.c:3474
+#, c-format
+msgid "%s: Execution of PreSession script returned > 0. Aborting."
+msgstr ""
+"%s: Execuţia scriptului PreSession a returnat un cod diferit de 0. Renunţ."
+
+#: daemon/slave.c:3503
+#, c-format
+msgid "Language %s does not exist, using %s"
+msgstr "Limba %s nu există, utilizez %s"
+
+#: daemon/slave.c:3504
+msgid "System default"
+msgstr "Setări implicite"
+
+#: daemon/slave.c:3520
+#, c-format
+msgid "%s: Could not setup environment for %s. Aborting."
+msgstr "%s: Nu am reuşit să setez mediul pentru %s. Renunţ."
+
+#: daemon/slave.c:3567
+#, c-format
+msgid "%s: setusercontext() failed for %s. Aborting."
+msgstr "%s: setusercontext() eşuat pentru %s. Renunţ."
+
+#: daemon/slave.c:3573
+#, c-format
+msgid "%s: Could not become %s. Aborting."
+msgstr "%s: Nu am reuşit să devin %s. Renunţ."
+
+#: daemon/slave.c:3636
+#, c-format
+msgid "%s: No Exec line in the session file: %s, starting failsafe GNOME"
+msgstr ""
+"%s: Nici o linie „exec” în fişierul sesiune %s. Pornesc o sesiune GNOME "
+"minimală."
+
+#: daemon/slave.c:3642
+msgid ""
+"The session you selected does not look valid.  I will run the GNOME failsafe "
+"session for you."
+msgstr "Sesiunea selectată nu pare validă. Voi porni o sesiune minimală GNOME."
+
+#: daemon/slave.c:3656
+#, c-format
+msgid ""
+"%s: Cannot find or run the base Xsession script, will try GNOME failsafe"
+msgstr ""
+"%s: Nu am găsit sau nu pot executa scriptul Xsession de bază, încerc o "
+"sesiune GNOME minimală"
+
+#: daemon/slave.c:3662
+msgid ""
+"Cannot find or run the base session script, will try the GNOME failsafe "
+"session for you."
+msgstr ""
+"Nu am găsit sau nu pot executa scriptul sesiune de bază, încerc o sesiune "
+"GNOME minimală"
+
+#. yaikes
+#: daemon/slave.c:3677
+#, c-format
+msgid "%s: gnome-session not found for a failsafe GNOME session, trying xterm"
+msgstr ""
+"%s: gnome-session nu a găsit o sesiune GNOME minimală, voi încerca Xterm"
+
+#: daemon/slave.c:3682
+msgid ""
+"Could not find the GNOME installation, will try running the \"Failsafe xterm"
+"\" session."
+msgstr ""
+"Nu am găsit o instalare GNOME, se va încerca pornirea sesiunii minimale de "
+"rezervă Xterm."
+
+#: daemon/slave.c:3690
+msgid ""
+"This is the Failsafe Gnome session.  You will be logged into the 'Default' "
+"session of Gnome with no startup scripts run.  This is only to fix problems "
+"in your installation."
+msgstr ""
+"Aceasta este sesiunea minimală de rezervă GNOME. Veţi fi autentificat într-o "
+"sesiune GNOME implicită fără a executa vreun script de iniţializare pentru a "
+"putea remedia problemele de instalare."
+
+#: daemon/slave.c:3705
+msgid "Cannot find \"xterm\" to start a failsafe session."
+msgstr "Nu am găsit „xterm” pentru a porni o sesiune minimală."
+
+#: daemon/slave.c:3718
+msgid ""
+"This is the Failsafe xterm session.  You will be logged into a terminal "
+"console so that you may fix your system if you cannot log in any other way.  "
+"To exit the terminal emulator, type 'exit' and an enter into the window."
+msgstr ""
+"Aceasta este sesiunea minimală de rezervă Xterm. Veţi fi autentificat într-o "
+"consolă terminal pentru a putea remedia problemele de instalare dacă nu vă "
+"puteţi autentifica în alt fel. Pentru a ieşi din terminal, scrieţi în "
+"fereastră „exit” şi apăsaţi „Enter“"
+
+#: daemon/slave.c:3745
+#, c-format
+msgid "%s: User not allowed to log in"
+msgstr "%s: Utilizatorului nu i se permite autentificarea"
+
+#: daemon/slave.c:3748
+msgid "The system administrator has disabled your account."
+msgstr "Administratorul sistemului v-a dezactivat contul."
+
+#: daemon/slave.c:3777
+msgid "Error! Unable to set executable context."
+msgstr "Eroare! Nu reuşesc să setez contextul executabilului."
+
+#. will go to .xsession-errors
+#: daemon/slave.c:3785 daemon/slave.c:3790
+#, c-format
+msgid "%s: Could not exec %s %s %s"
+msgstr "%s: Nu am reuşit să execut %s %s %s"
+
+#. we can't really be any more specific
+#: daemon/slave.c:3801
+msgid "Cannot start the session due to some internal error."
+msgstr "Nu am reuşit să pornesc sesiunea din cauza unor erori interne."
+
+#: daemon/slave.c:3855
+#, c-format
+msgid "%s: User passed auth but getpwnam(%s) failed!"
+msgstr "%s: Utilizatorul a trecut de auth dar getpwnam(%s) a eşuat!"
+
+#: daemon/slave.c:3869
+#, c-format
+msgid "%s: Execution of PostLogin script returned > 0. Aborting."
+msgstr ""
+"%s: Execuţia scriptului PostLogin a returnat un cod diferit de 0. Renunţ."
+
+#: daemon/slave.c:3878
+#, c-format
+msgid ""
+"Your home directory is listed as:\n"
+"'%s'\n"
+"but it does not appear to exist.  Do you want to log in with the / (root) "
+"directory as your home directory?\n"
+"\n"
+"It is unlikely anything will work unless you use a failsafe session."
+msgstr ""
+"Directorul „Acasă” vă este setat ca:\n"
+"„%s“\n"
+"dar se pare că nu există. Doriţi să vă autentificaţi cu directorul rădăcină "
+"ca director „Acasă“?\n"
+"\n"
+"Probabil nimic nu va funcţiona decât dacă utilizaţi o sesiune minimală."
+
+#: daemon/slave.c:3886
+#, c-format
+msgid "%s: Home directory for %s: '%s' does not exist!"
+msgstr "%s: Directorul „Acasă” pentru %s: „%s” nu există!"
+
+#: daemon/slave.c:4063
+msgid ""
+"GDM could not write to your authorization file.  This could mean that you "
+"are out of disk space or that your home directory could not be opened for "
+"writing.  In any case, it is not possible to log in.  Please contact your "
+"system administrator"
+msgstr ""
+"GDM nu a reuşit să scrie fişierul de autorizare. S-ar putea ca să nu mai "
+"aveţi spaţiu pe disc sau nu mai aveţi drepturi de scriere în directorul "
+"„Acasă“. În orice caz, autenficarea nu este posibilă. Contactaţi "
+"administratorul de sistem."
+
+#: daemon/slave.c:4139
+#, c-format
+msgid "%s: Error forking user session"
+msgstr "%s: Eroare la clonarea sesiunii utilizator"
+
+#: daemon/slave.c:4220
+msgid ""
+"Your session only lasted less than 10 seconds.  If you have not logged out "
+"yourself, this could mean that there is some installation problem or that "
+"you may be out of diskspace.  Try logging in with one of the failsafe "
+"sessions to see if you can fix this problem."
+msgstr ""
+"Aţi ieşit din sesiune în mai puţin de 10 secunde. Dacă nu v-aţi "
+"deautentificat asta poate să însemne că există o problemă de instalare sau "
+"că nu mai aveţi spaţiu liber pe disc. Încercaţi să vă autentificaţi cu o "
+"sesiune minimală pentru a remedia această problemă."
+
+#: daemon/slave.c:4228
+msgid "View details (~/.xsession-errors file)"
+msgstr "Arată detalii (fişierul ~/.xsession-errors)"
+
+#: daemon/slave.c:4372
+msgid "GDM detected a shutdown or reboot in progress."
+msgstr ""
+"GDM a detectat iniţierea unei acţiuni de închidere sau repornire a "
+"calculatorului."
+
+#: daemon/slave.c:4466
+#, c-format
+msgid "Ping to %s failed, whacking display!"
+msgstr "Ping eşuat către %s!"
+
+#: daemon/slave.c:4752
+#, c-format
+msgid "%s: Fatal X error - Restarting %s"
+msgstr "%s: Eroare X fatală - Repornesc %s"
+
+#: daemon/slave.c:4846
+msgid ""
+"Login sound requested on non-local display or the play software cannot be "
+"run or the sound does not exist"
+msgstr ""
+"S-a cerut un sunet la autentificare pentru un ecran la distanţă sau nu "
+"există programul de redare sau sunetul setat"
+
+#: daemon/slave.c:5201
+#, c-format
+msgid "%s: Failed starting: %s"
+msgstr "%s: Eroare la pornire: %s"
+
+#: daemon/slave.c:5209 daemon/slave.c:5348
+#, c-format
+msgid "%s: Can't fork script process!"
+msgstr "%s: Nu am reuşit să clonez procesul script!"
+
+#: daemon/slave.c:5303
+#, c-format
+msgid "%s: Failed creating pipe"
+msgstr "%s: Eroare la crearea conectorului"
+
+#: daemon/slave.c:5342
+#, c-format
+msgid "%s: Failed executing: %s"
+msgstr "%s: Eroare la pornirea: %s"
+
+#: daemon/verify-crypt.c:75 daemon/verify-pam.c:1030 daemon/verify-shadow.c:76
+msgid ""
+"\n"
+"Incorrect username or password.  Letters must be typed in the correct case."
+msgstr ""
+"\n"
+"Numele de utilizator sau parola sunt incorecte. Atenţie la diferenţa dintre "
+"literele mari şi cele mici."
+
+#: daemon/verify-crypt.c:80 daemon/verify-pam.c:1040 daemon/verify-shadow.c:81
+msgid "Please make sure the Caps Lock key is not enabled."
+msgstr "Asiguraţi-vă că tasta „Caps Lock” nu este activată."
+
+#. I think I'll add the buttons next to this
+#: daemon/verify-crypt.c:127 daemon/verify-pam.c:439
+#: daemon/verify-shadow.c:126 gui/gdmlogin.c:3069
+msgid "Please enter your username"
+msgstr "Introduceţi numele de utilizator"
+
+#. login: is whacked always translate to Username:
+#: daemon/verify-crypt.c:128 daemon/verify-pam.c:339 daemon/verify-pam.c:340
+#: daemon/verify-pam.c:341 daemon/verify-pam.c:426 daemon/verify-pam.c:785
+#: daemon/verify-shadow.c:127 gui/gdmlogin.c:1073 gui/gdmlogin.c:1087
+#: gui/gdmlogin.c:1873 gui/gdmlogin.c:2372 gui/greeter/greeter.c:281
+#: gui/greeter/greeter_parser.c:1061
+msgid "Username:"
+msgstr "Nume utilizator:"
+
+#: daemon/verify-crypt.c:166 daemon/verify-pam.c:342 daemon/verify-pam.c:343
+#: daemon/verify-pam.c:487 daemon/verify-shadow.c:184 gui/gdmlogin.c:1905
+msgid "Password:"
+msgstr "Parolă:"
+
+#: daemon/verify-crypt.c:184 daemon/verify-crypt.c:198
+#: daemon/verify-shadow.c:202 daemon/verify-shadow.c:216
+#, c-format
+msgid "Couldn't authenticate user \"%s\""
+msgstr "Nu am reuşit să autentific utilizatorul „%s“"
+
+#: daemon/verify-crypt.c:211 daemon/verify-pam.c:881
+#: daemon/verify-shadow.c:229
+#, c-format
+msgid "Root login disallowed on display '%s'"
+msgstr "Autentificarea ca „root” nu e permisă în ecranul „%s“"
+
+#: daemon/verify-crypt.c:213 daemon/verify-shadow.c:231
+msgid "The system administrator is not allowed to login from this screen"
+msgstr ""
+"Administratorului sistemului nu îi este permisă autentificare în acest ecran"
+
+#: daemon/verify-crypt.c:229 daemon/verify-crypt.c:253
+#: daemon/verify-shadow.c:247 daemon/verify-shadow.c:271
+#, c-format
+msgid "User %s not allowed to log in"
+msgstr "Autentificarea utilizatorului %s nu este permisă"
+
+#: daemon/verify-crypt.c:231 daemon/verify-crypt.c:255 daemon/verify-pam.c:927
+#: daemon/verify-pam.c:1211 daemon/verify-shadow.c:249
+#: daemon/verify-shadow.c:273
+msgid ""
+"\n"
+"The system administrator has disabled your account."
+msgstr ""
+"\n"
+"Administratorul sistemului v-a dezactivat contul."
+
+#: daemon/verify-crypt.c:278 daemon/verify-crypt.c:416 daemon/verify-pam.c:945
+#: daemon/verify-pam.c:1228 daemon/verify-shadow.c:296
+#: daemon/verify-shadow.c:434
+#, c-format
+msgid "Cannot set user group for %s"
+msgstr "Nu am reuşit să setez grupul de utilizatori pentru %s"
+
+#: daemon/verify-crypt.c:280 daemon/verify-crypt.c:419 daemon/verify-pam.c:947
+#: daemon/verify-pam.c:1231 daemon/verify-shadow.c:298
+#: daemon/verify-shadow.c:437
+msgid ""
+"\n"
+"Cannot set your user group, you will not be able to log in, please contact "
+"your system administrator."
+msgstr ""
+"\n"
+"Nu am reuşit să vă setez grupul de utilizatori. Nu vă veţi putea "
+"autentifica. Contactaţi administratorul sistemului."
+
+#: daemon/verify-crypt.c:291 daemon/verify-crypt.c:364
+#: daemon/verify-shadow.c:309 daemon/verify-shadow.c:383
+#, c-format
+msgid "Password of %s has expired"
+msgstr "Parola pentru %s a expirat"
+
+#: daemon/verify-crypt.c:293 daemon/verify-shadow.c:311
+msgid ""
+"You are required to change your password.\n"
+"Please choose a new one."
+msgstr ""
+"Trebuie să vă schimbaţi parola.\n"
+"Alegeţi o altă parolă."
+
+#: daemon/verify-crypt.c:304 daemon/verify-shadow.c:322
+msgid ""
+"\n"
+"Cannot change your password, you will not be able to log in, please try "
+"again later or contact your system administrator."
+msgstr ""
+"\n"
+"Nu am reuşit să vă schimb parola. Nu vă veţi putea autentifica. Încercaţi "
+"din nou mai târziu sau contactaţi administratorul sistemului."
+
+#: daemon/verify-crypt.c:347 daemon/verify-crypt.c:355
+#: daemon/verify-shadow.c:366 daemon/verify-shadow.c:374
+msgid ""
+"Your password has been changed but you may have to change it again, please "
+"try again later or contact your system administrator."
+msgstr ""
+"Aveţi o parolă nouă, dar s-ar putea să trebuiască să o schimbaţi încă o "
+"dată. Încercaţi din nou mai târziu sau contactaţi administratorul de sistem."
+
+#: daemon/verify-crypt.c:366 daemon/verify-shadow.c:385
+msgid ""
+"Your password has expired.\n"
+"Only a system administrator can now change it"
+msgstr ""
+"V-a expirat parola. \n"
+"Doar administratorul sistemului o mai poate schimba"
+
+#: daemon/verify-crypt.c:373 daemon/verify-shadow.c:392
+msgid "Internal error on passwdexpired"
+msgstr "Eroare internă la passwdexpired"
+
+#: daemon/verify-crypt.c:375 daemon/verify-shadow.c:394
+msgid ""
+"An internal error occured, you will not be able to log in.\n"
+"Please try again later or contact your system administrator."
+msgstr ""
+"A intervenit o eroare internă şi nu vă veţi mai putea autentifica.\n"
+"Încercaţi din nou mai târziu sau contactaţi administratorul sistemului."
+
+#: daemon/verify-crypt.c:411 daemon/verify-shadow.c:429
+#, c-format
+msgid "Cannot get passwd structure for %s"
+msgstr "Nu am reuşit să obţin structura passwd pentru %s"
+
+#: daemon/verify-pam.c:344
+msgid "You are required to change your password immediately (password aged)"
+msgstr "Vi se cere să schimbaţi chiar acum parola (e prea veche)"
+
+#: daemon/verify-pam.c:345
+msgid "You are required to change your password immediately (root enforced)"
+msgstr "Vi se cere să schimbaţi chiar acum parola (administratorul v-o cere)"
+
+#: daemon/verify-pam.c:346
+msgid "Your account has expired; please contact your system administrator"
+msgstr "V-a expirat contul. Contactaţi administratorul sistemului"
+
+#: daemon/verify-pam.c:347
+msgid "No password supplied"
+msgstr "Nu aţi introdus o parolă"
+
+#: daemon/verify-pam.c:348
+msgid "Password unchanged"
+msgstr "Parola este neschimbată"
+
+#: daemon/verify-pam.c:349
+msgid "Can not get username"
+msgstr "Nu am reuşit să obţin numele de utilizator"
+
+#: daemon/verify-pam.c:350
+msgid "Retype new UNIX password:"
+msgstr "Reintroduceţi noua parolă UNIX:"
+
+#: daemon/verify-pam.c:351
+msgid "Enter new UNIX password:"
+msgstr "Introduceţi o nouă parolă UNIX:"
+
+#: daemon/verify-pam.c:352
+msgid "(current) UNIX password:"
+msgstr "Parola UNIX (curentă):"
+
+#: daemon/verify-pam.c:353
+msgid "Error while changing NIS password."
+msgstr "Eroare la schimbarea parolei NIS."
+
+#: daemon/verify-pam.c:354
+msgid "You must choose a longer password"
+msgstr "Trebuie să alegeţi o parolă mai lungă"
+
+#: daemon/verify-pam.c:355
+msgid "Password has been already used. Choose another."
+msgstr "Parola este deja utilizată. Încercaţi o alta."
+
+#: daemon/verify-pam.c:356
+msgid "You must wait longer to change your password"
+msgstr "Trebuie să aşteptaţi mai mult pentru a schimba parola"
+
+#: daemon/verify-pam.c:357
+msgid "Sorry, passwords do not match"
+msgstr "Ne pare rău, parolele nu se potrivesc"
+
+#: daemon/verify-pam.c:651
+msgid "Cannot setup pam handle with null display"
+msgstr "Nu am reuşit să setez descriptorul Pam cu un ecran nul"
+
+#: daemon/verify-pam.c:668
+#, c-format
+msgid "Unable to establish service %s: %s\n"
+msgstr "Nu pot porni serviciul %s: %s\n"
+
+#: daemon/verify-pam.c:681
+#, c-format
+msgid "Can't set PAM_TTY=%s"
+msgstr "Nu am reuşit să setez PAM_TTY=%s"
+
+#: daemon/verify-pam.c:691
+#, c-format
+msgid "Can't set PAM_RHOST=%s"
+msgstr "Nu am reuşit să setez PAM_RHOST=%s"
+
+#. #endif
+#. PAM_FAIL_DELAY
+#. is not really an auth problem, but it will
+#. pretty much look as such, it shouldn't really
+#. happen
+#: daemon/verify-pam.c:838 daemon/verify-pam.c:856 daemon/verify-pam.c:1150
+#: daemon/verify-pam.c:1162
+msgid "Couldn't authenticate user"
+msgstr "Nu am reuşit să autentific utilizatorul"
+
+#: daemon/verify-pam.c:884
+msgid ""
+"\n"
+"The system administrator is not allowed to login from this screen"
+msgstr ""
+"\n"
+"Autentificarea administratorului de sistem nu este permisă de la acest ecran"
+
+#: daemon/verify-pam.c:908 daemon/verify-pam.c:1192
+#, c-format
+msgid "Authentication token change failed for user %s"
+msgstr "Schimbarea „token” de autentificare a eşuat pentru utilizatorul %s"
+
+#: daemon/verify-pam.c:910 daemon/verify-pam.c:1195
+msgid ""
+"\n"
+"The change of the authentication token failed. Please try again later or "
+"contact the system administrator."
+msgstr ""
+"\n"
+"Schimbarea „token”-ului de autentificare a eşuat. Încercaţi din nou mai "
+"târziu sau contactaţi administratorul de sistem."
+
+#: daemon/verify-pam.c:925 daemon/verify-pam.c:1208
+#, c-format
+msgid "User %s no longer permitted to access the system"
+msgstr "Utilizatorului %s nu i se mai permite accesarea sistemului"
+
+#: daemon/verify-pam.c:931 daemon/verify-pam.c:1214
+#, c-format
+msgid "User %s not permitted to gain access at this time"
+msgstr "Utilizatorului %s nu i se permite în acet moment accesarea sistemului"
+
+#: daemon/verify-pam.c:933
+msgid ""
+"\n"
+"The system administrator has disabled access to the system temporarily."
+msgstr ""
+"\n"
+"Administratorul sistemului v-a dezactivat temporar accesul la sistem."
+
+#: daemon/verify-pam.c:938 daemon/verify-pam.c:1221
+#, c-format
+msgid "Couldn't set acct. mgmt for %s"
+msgstr "Nu s-a putut seta „mgmt” cont pentru %s"
+
+#: daemon/verify-pam.c:966 daemon/verify-pam.c:1251
+#, c-format
+msgid "Couldn't set credentials for %s"
+msgstr "Nu s-a putut seta acreditivul pentru %s"
+
+#: daemon/verify-pam.c:980 daemon/verify-pam.c:1266
+#, c-format
+msgid "Couldn't open session for %s"
+msgstr "Nu s-a putut deschide o sesiune pentru %s"
+
+#: daemon/verify-pam.c:1034
+msgid ""
+"\n"
+"Authentication failed.  Letters must be typed in the correct case."
+msgstr ""
+"\n"
+"Autentificare eşuată. Majusculele sunt semnificative."
+
+#: daemon/verify-pam.c:1050 daemon/verify-pam.c:1153 daemon/verify-pam.c:1165
+msgid "Authentication failed"
+msgstr "Autentificare eşuată"
+
+#: daemon/verify-pam.c:1119
+msgid "Automatic login"
+msgstr "Autentificare automată"
+
+#: daemon/verify-pam.c:1217
+msgid ""
+"\n"
+"The system administrator has disabled your access to the system temporary."
+msgstr ""
+"\n"
+"Administratorul sistemului v-a dezactivat temporar accesul la sistem."
+
+#: daemon/verify-pam.c:1420 daemon/verify-pam.c:1422
+msgid "Can't find PAM configuration for gdm."
+msgstr "Nu am găsit fişierul de configurare PAM pentru GDM."
+
+#: daemon/xdmcp.c:369
+#, c-format
+msgid "%s: Could not get server hostname: %s!"
+msgstr "%s: Nu s-a putut obţine numele de gazdă al serverului: %s!"
+
+#: daemon/xdmcp.c:394
+#, c-format
+msgid "%s: Could not create socket!"
+msgstr "%s: Nu am reuşit să creez un soclu!"
+
+#: daemon/xdmcp.c:487
+#, c-format
+msgid "%s: Could not bind to XDMCP socket!"
+msgstr "%s: Nu am reuşit să mă leg la soclul XDMCP"
+
+#: daemon/xdmcp.c:559
+#, c-format
+msgid "%s: Could not create XDMCP buffer!"
+msgstr "%s: Nu am reuşit să creez un tampon XDMCP!"
+
+#: daemon/xdmcp.c:565
+#, c-format
+msgid "%s: Could not read XDMCP header!"
+msgstr "%s: Nu am reuşit să citesc antetul XDMCP!"
+
+#: daemon/xdmcp.c:572
+#, c-format
+msgid "%s: Incorrect XDMCP version!"
+msgstr "%s: Versiune XDMCP incorectă!"
+
+#: daemon/xdmcp.c:652 daemon/xdmcp.c:659
+#, c-format
+msgid "%s: Unknown opcode from host %s"
+msgstr "%s: „opcode” necunoscut de la gazda %s"
+
+#: daemon/xdmcp.c:693 daemon/xdmcp.c:1138
+#, c-format
+msgid "%s: Could not extract authlist from packet"
+msgstr "%s: Nu am reuşt să extrag lista „auth” din pachet"
+
+#: daemon/xdmcp.c:709 daemon/xdmcp.c:1158
+#, c-format
+msgid "%s: Error in checksum"
+msgstr "%s: Eroare în suma de verificare"
+
+#: daemon/xdmcp.c:1121
+#, c-format
+msgid "%s: Could not read display address"
+msgstr "%s: Nu am reuşit să citesc adresa"
+
+#: daemon/xdmcp.c:1129
+#, c-format
+msgid "%s: Could not read display port number"
+msgstr "%s: Nu am reuşit să citesc numărul portul ecranului"
+
+#: daemon/xdmcp.c:1169 daemon/xdmcp.c:1193
+#, c-format
+msgid "%s: Bad address"
+msgstr "%s: Adresă greşită"
+
+#: daemon/xdmcp.c:1352 daemon/xdmcp.c:1359
+#, c-format
+msgid "Denied XDMCP query from host %s"
+msgstr "Cerere XDMCP respinsă de gazda %s"
+
+#: daemon/xdmcp.c:1585 daemon/xdmcp.c:1592
+#, c-format
+msgid "%s: Got REQUEST from banned host %s"
+msgstr "%s: Am primit REQUEST de la gazda interzisă %s"
+
+#: daemon/xdmcp.c:1604 daemon/xdmcp.c:1980 daemon/xdmcp.c:2390
+#, c-format
+msgid "%s: Could not read Display Number"
+msgstr "%s: Nu am reuşit să citesc numărul ecranului"
+
+#: daemon/xdmcp.c:1611
+#, c-format
+msgid "%s: Could not read Connection Type"
+msgstr "%s: Nu am reuşit să citesc tipul conexiunii"
+
+#: daemon/xdmcp.c:1618
+#, c-format
+msgid "%s: Could not read Client Address"
+msgstr "%s: Nu am reuşit să citesc adresa clientului"
+
+#: daemon/xdmcp.c:1626
+#, c-format
+msgid "%s: Could not read Authentication Names"
+msgstr "%s: Nu reuşit să citesc numele de autentificare"
+
+#: daemon/xdmcp.c:1635
+#, c-format
+msgid "%s: Could not read Authentication Data"
+msgstr "%s: Nu am reuşit să citesc datele de autentificare"
+
+#: daemon/xdmcp.c:1645
+#, c-format
+msgid "%s: Could not read Authorization List"
+msgstr "%s: Nu am reuşit să citesc lista de autorizare"
+
+#: daemon/xdmcp.c:1662
+#, c-format
+msgid "%s: Could not read Manufacturer ID"
+msgstr "%s: Nu am reuşit să citesc „ID Manufacturer“"
+
+#: daemon/xdmcp.c:1688 daemon/xdmcp.c:1695
+#, c-format
+msgid "%s: Failed checksum from %s"
+msgstr "%s: Verificare eşuată a sumei de control de la %s"
+
+#: daemon/xdmcp.c:1956 daemon/xdmcp.c:1963
+#, c-format
+msgid "%s: Got Manage from banned host %s"
+msgstr "%s: Am primit MANAGE de la gazda interzisă %s"
+
+#: daemon/xdmcp.c:1973 daemon/xdmcp.c:2397
+#, c-format
+msgid "%s: Could not read Session ID"
+msgstr "%s: Nu am reuşit să citesc „ID Session“"
+
+#: daemon/xdmcp.c:1987
+#, c-format
+msgid "%s: Could not read Display Class"
+msgstr "%s: Nu am reuşit să citesc clasa ecranului"
+
+#: daemon/xdmcp.c:2108 daemon/xdmcp.c:2115 daemon/xdmcp.c:2127
+#: daemon/xdmcp.c:2237 daemon/xdmcp.c:2244 daemon/xdmcp.c:2256
+#, c-format
+msgid "%s: Could not read address"
+msgstr "%s: Nu am reuşit să citesc adresa"
+
+#: daemon/xdmcp.c:2367 daemon/xdmcp.c:2381
+#, c-format
+msgid "%s: Got KEEPALIVE from banned host %s"
+msgstr "%s: Am primit KEEPALIVE de la gazda interzisă %s"
+
+#: daemon/xdmcp.c:2690 daemon/xdmcp.c:2697 daemon/xdmcp.c:2703
+#, c-format
+msgid "%s: No XDMCP support"
+msgstr "%s: Suport XDMCP inexistent"
+
+#: gui/gdmXnestchooser.c:166 gui/gdmXnestchooser.c:173
+msgid "Xnest command line"
+msgstr "Linie comandă Xnest"
+
+#: gui/gdmXnestchooser.c:166 gui/gdmXnestchooser.c:173
+msgid "STRING"
+msgstr "STRING"
+
+#: gui/gdmXnestchooser.c:167 gui/gdmXnestchooser.c:174
+msgid "Extra options for Xnest"
+msgstr "Opţiuni în plus pentru Xnest"
+
+#: gui/gdmXnestchooser.c:167 gui/gdmXnestchooser.c:174
+msgid "OPTIONS"
+msgstr "OPTIONS"
+
+#: gui/gdmXnestchooser.c:168 gui/gdmXnestchooser.c:178
+msgid "Run in background"
+msgstr "Porneşte în fundal"
+
+#: gui/gdmXnestchooser.c:175
+msgid "Just run Xnest, no query (no chooser)"
+msgstr "Doar porneşte Xnet, fără cereri (fără gdmchooser)"
+
+#: gui/gdmXnestchooser.c:176
+msgid "Do direct query instead of indirect (chooser)"
+msgstr "Cereri directe, nu indirecte (gdmchooser)"
+
+#: gui/gdmXnestchooser.c:177
+msgid "Run broadcast instead of indirect (chooser)"
+msgstr "Porneşte la distanţă în loc de indirect (gdmchooser)"
+
+#: gui/gdmXnestchooser.c:179
+msgid "Don't check for running gdm"
+msgstr "Nu verifica dacă e pornit GDM"
+
+#. markup
+#: gui/gdmXnestchooser.c:521
+msgid "Xnest doesn't exist."
+msgstr "Nu există Xnest"
+
+#: gui/gdmXnestchooser.c:523
+msgid "Please ask your system administrator to install it."
+msgstr "Cereţi administratorului de sistem să-l instaleze."
+
+#. markup
+#: gui/gdmXnestchooser.c:549
+msgid "Indirect XDMCP is not enabled"
+msgstr "XDMCP indirect nu este activat"
+
+#: gui/gdmXnestchooser.c:551 gui/gdmXnestchooser.c:572
+msgid ""
+"Please ask your system administrator to enable it in the GDM configurator "
+"program."
+msgstr ""
+"Cereţi administratorului de sistem să-l activeze în programul de configurare "
+"GDM."
+
+#. markup
+#: gui/gdmXnestchooser.c:570
+msgid "XDMCP is not enabled"
+msgstr "XDMCP nu este activat "
+
+#. markup
+#: gui/gdmXnestchooser.c:604
+msgid "GDM is not running"
+msgstr "GDM nu este pornit"
+
+#: gui/gdmXnestchooser.c:606
+msgid "Please ask your system administrator to start it."
+msgstr "Cereţi administratorului de sistem să-l pornească."
+
+#. markup
+#: gui/gdmXnestchooser.c:623
+msgid "Could not find a free display number"
+msgstr "Nu am găsit un număr de ecran liber"
+
+#.
+#. * Translatable strings file generated by Glade.
+#. * Add this file to your project's POTFILES.in.
+#. * DO NOT compile it as part of your application.
+#.
+#: gui/gdmchooser-strings.c:7 gui/gdmchooser.glade.h:5
+msgid "GDM Host Chooser"
+msgstr "Selector gazde GDM"
+
+#: gui/gdmchooser-strings.c:8 gui/gdmchooser.glade.h:6
+msgid "How to use this application"
+msgstr "Mod de utilizare al acestei aplicaţii"
+
+#: gui/gdmchooser-strings.c:9 gui/gdmchooser.glade.h:8
+msgid "Probe the network"
+msgstr "Testare reţea"
+
+#: gui/gdmchooser-strings.c:10 gui/gdmchooser.glade.h:4
+msgid "Exit the application"
+msgstr "Ieşire din aplicaţie"
+
+#: gui/gdmchooser-strings.c:11 gui/gdmchooser.glade.h:7
+msgid "Open a session to the selected host"
+msgstr "Deschidere sesiune pe gazda selectată"
+
+#: gui/gdmchooser-strings.c:12 gui/gdmchooser.glade.h:3
+msgid "C_onnect"
+msgstr "C_onectare"
+
+#: gui/gdmchooser-strings.c:13 gui/gdmchooser.glade.h:10
+msgid "Status"
+msgstr "Stare"
+
+#: gui/gdmchooser-strings.c:14 gui/gdmchooser.glade.h:2
+msgid "A_dd host: "
+msgstr "Adăugare _gazdă:"
+
+#. EOF
+#: gui/gdmchooser-strings.c:15 gui/gdmchooser.glade.h:1
+#: gui/gdmsetup-strings.c:19 gui/gdmsetup-strings.c:21
+#: gui/gdmsetup-strings.c:26 gui/gdmsetup-strings.c:32
+#: gui/gdmsetup-strings.c:37 gui/gdmsetup-strings.c:47
+#: gui/gdmsetup-strings.c:85 gui/gdmsetup.glade.h:2
+msgid "*"
+msgstr "*"
+
+#: gui/gdmchooser-strings.c:16 gui/gdmchooser.glade.h:9
+msgid "Query and add this host to the above list"
+msgstr "Interoghează şi adaugă această gazdă în lista de mai sus"
+
+#: gui/gdmchooser-strings.c:17 gui/gdmchooser.glade.h:11
+msgid "_Add"
+msgstr "A_daugă"
+
+#: gui/gdmchooser.c:80
+msgid "Please wait: scanning local network..."
+msgstr "Aşteptaţi: scanez reţeaua locală..."
+
+#: gui/gdmchooser.c:81
+msgid "No serving hosts were found."
+msgstr "Nu s-a găsit nici o gazdă disponibilă."
+
+#: gui/gdmchooser.c:82
+msgid "Choose a ho_st to connect to:"
+msgstr "Alegeţi o _gazdă pentru conectare:"
+
+#. markup
+#: gui/gdmchooser.c:659
+msgid "Cannot connect to remote server"
+msgstr "Nu am reuşit să mă conectez la server"
+
+#: gui/gdmchooser.c:660
+#, c-format
+msgid ""
+"The host \"%s\" is not willing to support a login session right now.  Please "
+"try again later."
+msgstr ""
+"Gazda „%s” nu doreşte momentan să ofere o sesiune de autentificare. "
+"Încercaţi mai târziu."
+
+#. markup
+#: gui/gdmchooser.c:1284
+msgid "Did not receive response from server"
+msgstr "Nu am primit nici un răspuns de la server"
+
+#: gui/gdmchooser.c:1285
+#, c-format
+msgid ""
+"Did not receive any response from host \"%s\" in %d seconds.  Perhaps the "
+"host is not turned on, or is not willing to support a login session right "
+"now.  Please try again later."
+msgstr ""
+"Nu am primit nici un răspuns de la gazda „%s” de %d secunde. Poate nu este "
+"pornită sau nu doreşte momentan să ofere o sesiune de autentificare. "
+"Încercaţi mai târziu."
+
+#: gui/gdmchooser.c:1391
+msgid "Cannot find host"
+msgstr "Nu am găsit gazda"
+
+#: gui/gdmchooser.c:1392
+#, c-format
+msgid "I cannot find the host \"%s\", perhaps you have mistyped it."
+msgstr "Nu am găsit gazda „%s“, poate aţi scris-o greşit."
+
+#: gui/gdmchooser.c:1678
+msgid ""
+"The main area of this application shows the hosts on the local network that "
+"have \"XDMCP\" enabled. This allows users to login remotely to other "
+"machines as if they were logged on using the console.\n"
+"\n"
+"You can rescan the network for new hosts by clicking \"Refresh\".  When you "
+"have selected a host click \"Connect\" to open a session to that machine."
+msgstr ""
+"În aria principală a acestei ferestre sunt vizibile gazdele din reţeaua "
+"locală ce au XDMCP activat. Această setare permite utilizatorilor "
+"autentificări la distanţă la acele maşini ca şi cum ar fi ar fi în faţa "
+"lor.\n"
+"\n"
+"Puteţi scana din nou reţeaua pentru gazde noi selectând „Actualizează“. După "
+"ce selectaţi o gazdă apăsaţi „Conectare” pentru a deschide o sesiune pe acel "
+"calculator."
+
+#: gui/gdmchooser.c:1725
+#, c-format
+msgid "Can't open default host icon: %s"
+msgstr "Nu se poate deschide iconiţa implicită pentru gazde: %s"
+
+#: gui/gdmchooser.c:1950 gui/gdmlogin.c:3977 gui/gdmlogin.c:3984
+#: gui/greeter/greeter.c:1104 gui/greeter/greeter.c:1111
+msgid "Could not set signal mask!"
+msgstr "Nu am reuşit să setez masca semnalului!"
+
+#: gui/gdmchooser.c:1956
+msgid "Socket for xdm communication"
+msgstr "Soclu pentru comunicare xdm"
+
+#: gui/gdmchooser.c:1956
+msgid "SOCKET"
+msgstr "SOCKET"
+
+#: gui/gdmchooser.c:1959
+msgid "Client address to return in response to xdm"
+msgstr "Adresă client de returnat la o solicitare xdm"
+
+#: gui/gdmchooser.c:1959
+msgid "ADDRESS"
+msgstr "ADDRESS"
+
+#: gui/gdmchooser.c:1962
+msgid "Connection type to return in response to xdm"
+msgstr "Tip conexiune de returnat la o solicitare xdm"
+
+#: gui/gdmchooser.c:1962
+msgid "TYPE"
+msgstr "TYPE"
+
+#. markup
+#: gui/gdmchooser.c:2091
+msgid "Cannot run chooser"
+msgstr "Nu am reuşit să pornesc gdmchooser"
+
+#: gui/gdmchooser.c:2092
+#, c-format
+msgid ""
+"The chooser version (%s) does not match the daemon version (%s).  You have "
+"probably just upgraded gdm.  Please restart the gdm daemon or reboot the "
+"computer."
+msgstr ""
+"Versiunea gdmchooser (%s) nu se potriveşte cu cea a demonului GDM (%s). "
+"Probabil tocmai aţi actualizat instalarea GDM. Restartaţi demonul GDM sau "
+"reporniţi calculatorul."
+
+#. markup
+#: gui/gdmcomm.c:405 gui/gdmphotosetup.c:70
+msgid "GDM (The GNOME Display Manager) is not running."
+msgstr "GDM (Administratorul de ecrane GNOME) nu este pornit."
+
+#: gui/gdmcomm.c:408 gui/gdmphotosetup.c:73
+msgid ""
+"You might in fact be using a different display manager, such as KDM (KDE "
+"Display Manager) or xdm."
+msgstr ""
+"S-ar putea să utilizaţi un alt administrator de ecrane, cum ar KDM "
+"(Administratorul de ecrane KDE) sau xdm."
+
+#: gui/gdmcomm.c:411 gui/gdmphotosetup.c:76
+msgid ""
+"If you still wish to use this feature, either start GDM yourself or ask your "
+"system administrator to start GDM."
+msgstr ""
+"Dacă doriţi să utilizaţi această facilitate porniţi GDM sau cereţi-i "
+"administratorului de sistem să-l pornească."
+
+#. markup
+#: gui/gdmcomm.c:433 gui/gdmflexiserver.c:697
+msgid "Cannot communicate with GDM (The GNOME Display Manager)"
+msgstr "Nu am reuşit să comunic cu GDM (Administratorul de ecrane GNOME)"
+
+#: gui/gdmcomm.c:436 gui/gdmflexiserver.c:700
+msgid "Perhaps you have an old version of GDM running."
+msgstr "Poate aveţi o versiune veche GDM pornită"
+
+#: gui/gdmcomm.c:453 gui/gdmcomm.c:456
+msgid "Cannot communicate with gdm, perhaps you have an old version running."
+msgstr ""
+"Nu am reuşit să comunic cu GDM, poate aveţi o versiune veche GDM pornită"
+
+#: gui/gdmcomm.c:459
+msgid "The allowed limit of flexible X servers reached."
+msgstr "S-a atins numărul maxim de servere X flexibile."
+
+#: gui/gdmcomm.c:461
+msgid "There were errors trying to start the X server."
+msgstr "S-au întâlni erori la încercarea de pornire a serverului X."
+
+#: gui/gdmcomm.c:463
+msgid "The X server failed.  Perhaps it is not configured well."
+msgstr "Serverul X a eşuat. Poate nu este bine configurat."
+
+#: gui/gdmcomm.c:466
+msgid "Too many X sessions running."
+msgstr "Prea multe sesiuni X sunt pornite."
+
+#: gui/gdmcomm.c:468
+msgid ""
+"The nested X server (Xnest) cannot connect to your current X server.  You "
+"may be missing an X authorization file."
+msgstr ""
+"Serverul Xnest nu a reuşit să se conecteze la serverul X curent. Poate vă "
+"lipseşte un fişier de autorizare X."
+
+#: gui/gdmcomm.c:473
+msgid ""
+"The nested X server (Xnest) is not available, or gdm is badly configured.\n"
+"Please install the Xnest package in order to use the nested login."
+msgstr ""
+"Serverul Xnest nu este disponibil sau GDM este prost configurat.\n"
+"Instalaţi pachetul Xnest pentru o autentificare în fereastră imbricată."
+
+#: gui/gdmcomm.c:478
+msgid ""
+"The X server is not available, it is likely that gdm is badly configured."
+msgstr "Serverul X nu este disponibil, probabil GDM este prost configurat."
+
+#: gui/gdmcomm.c:482
+msgid ""
+"Trying to set an unknown logout action, or trying to set a logout action "
+"which is not available."
+msgstr ""
+"Încercare de setare a unei acţiuni de deautentificare necunoscută sau "
+"indisponibilă"
+
+#: gui/gdmcomm.c:485
+msgid "Virtual terminals not supported."
+msgstr "Terminalele virtuale nu sunt suportate."
+
+#: gui/gdmcomm.c:487
+msgid "Trying to change to an invalid virtual terminal number."
+msgstr "Încercare de a schimba într-un terminal virtual cu număr invalid."
+
+#: gui/gdmcomm.c:489
+msgid "Trying to update an unsupported configuration key."
+msgstr "Încerc să actualizez o cheie de configurare nesuportată."
+
+#: gui/gdmcomm.c:491
+msgid ""
+"You do not seem to have authentication needed be for this operation.  "
+"Perhaps your .Xauthority file is not set up correctly."
+msgstr ""
+"Se pare că nu aveţi autorizarea necesară pentru această operaţie. Poate "
+"fişierul .Xauthority nu vă este corect setat."
+
+#: gui/gdmcomm.c:495
+msgid "Too many messages were sent to gdm and it hung upon us."
+msgstr "Prea multe mesaje au fost trimise spre GDM şi acesta s-a blocat."
+
+#: gui/gdmcomm.c:498
+msgid "Unknown error occured."
+msgstr "A intervenit o eroare necunoscută."
+
+#: gui/gdmflexiserver-xnest.desktop.in.h:1
+msgid "Log in as another user inside a nested window"
+msgstr "Autentificare cu un alt cont în fereastră imbricată"
+
+#: gui/gdmflexiserver-xnest.desktop.in.h:2
+msgid "New Login in a Nested Window"
+msgstr "Autentificare nouă în fereastră imbricată"
+
+#. markup
+#: gui/gdmflexiserver.c:100
+msgid "Cannot change display"
+msgstr "Nu am reuşit să schimb ecran"
+
+#: gui/gdmflexiserver.c:177
+msgid "Nobody"
+msgstr "Nimeni"
+
+#: gui/gdmflexiserver.c:212
+#, c-format
+msgid "Display %s on virtual terminal %d"
+msgstr "Ecranul %s în terminalul virtal %d"
+
+#: gui/gdmflexiserver.c:217
+#, c-format
+msgid "Nested display %s on virtual terminal %d"
+msgstr "Ecran imbricat %s în terminalul virtual %d"
+
+#: gui/gdmflexiserver.c:247 gui/gdmlogin.c:2917
+#: gui/greeter/greeter_item_ulist.c:449
+msgid "Username"
+msgstr "Nume utilizator"
+
+#: gui/gdmflexiserver.c:256
+msgid "Display"
+msgstr "Ecran"
+
+#: gui/gdmflexiserver.c:310
+msgid "Open Displays"
+msgstr "Ecrane deschise"
+
+#. parent
+#. flags
+#: gui/gdmflexiserver.c:313
+msgid "_Open New Display"
+msgstr "_Deschide un nou ecran"
+
+#: gui/gdmflexiserver.c:315
+msgid "Change to _Existing Display"
+msgstr "Schimbă într-un ecran e_xistent"
+
+#: gui/gdmflexiserver.c:323
+msgid ""
+"There are some displays already open.  You can select one from the list "
+"below or open a new one."
+msgstr ""
+"Există unele ecrane deja deschise. Puteţi selecta unul din lista de mai jos "
+"sau puteţi deschide unul nou."
+
+#: gui/gdmflexiserver.c:390 gui/gdmflexiserver.c:785
+msgid "Can't lock screen"
+msgstr "Nu am reuşit să blochez ecranul"
+
+#: gui/gdmflexiserver.c:393 gui/gdmflexiserver.c:788
+msgid "Can't disable xscreensaver display hacks"
+msgstr "Nu am reuşit să dezactivez hack-urile xscrensaver"
+
+#: gui/gdmflexiserver.c:548
+msgid "Choose server"
+msgstr "Alegeţi serverul"
+
+#: gui/gdmflexiserver.c:559
+msgid "Choose the X server to start"
+msgstr "Selectaţi serverul X de pornit"
+
+#: gui/gdmflexiserver.c:565
+msgid "Standard server"
+msgstr "Server standard"
+
+#: gui/gdmflexiserver.c:632
+msgid "Send the specified protocol command to gdm"
+msgstr "Trimite comanda de protocol specificată către Gdm"
+
+#: gui/gdmflexiserver.c:632
+msgid "COMMAND"
+msgstr "COMMAND"
+
+#: gui/gdmflexiserver.c:633
+msgid "Xnest mode"
+msgstr "Mod Xnest"
+
+#: gui/gdmflexiserver.c:634
+msgid "Do not lock current screen"
+msgstr "Nu bloca ecranul curent"
+
+#: gui/gdmflexiserver.c:635
+msgid "Debugging output"
+msgstr "Ieşire pentru depanare"
+
+#: gui/gdmflexiserver.c:636
+msgid "Authenticate before running --command"
+msgstr "Autentifică înainte de a executa „--command“"
+
+#. markup
+#: gui/gdmflexiserver.c:725
+msgid "You do not seem to have the authentication needed for this operation"
+msgstr "Se pare că nu aveţi autorizarea necesară pentru această operaţie"
+
+#: gui/gdmflexiserver.c:729
+msgid "Perhaps your .Xauthority file is not set up correctly."
+msgstr "Poate fişierul .Xauthority nu este setat corect."
+
+#. markup
+#: gui/gdmflexiserver.c:753
+msgid "You do not seem to be logged in on the console"
+msgstr "Se pare că nu sunteţi autentificat în consolă"
+
+#: gui/gdmflexiserver.c:756
+msgid "Starting a new login only works correctly on the console."
+msgstr "Pornesc o nouă autentificare ce funcţionează corect doar în consolă."
+
+#. markup
+#: gui/gdmflexiserver.c:803
+msgid "Cannot start new display"
+msgstr "Nu am reuşit să pornesc un nou ecran"
+
+#: gui/gdmflexiserver.desktop.in.h:1
+msgid "Log in as another user without logging out"
+msgstr "Autentificare cu un nou cont fără deautentificare"
+
+#: gui/gdmflexiserver.desktop.in.h:2
+msgid "New Login"
+msgstr "Autentificare nouă"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:53
+msgid "A-M|Albanian"
+msgstr "A-M|Albaneză"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:55
+msgid "A-M|Amharic"
+msgstr "A-M|Amharic"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:57
+msgid "A-M|Arabic (Egypt)"
+msgstr "A-M|Arabă (Egipt)"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:59
+msgid "A-M|Arabic (Lebanon)"
+msgstr "A-M|Arabă (Liban)"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:61
+msgid "A-M|Armenian"
+msgstr "A-M|Armeană"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:63
+msgid "A-M|Azerbaijani"
+msgstr "A-M|Azeră"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:65
+msgid "A-M|Basque"
+msgstr "A-M|Bască"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:67
+msgid "A-M|Belarusian"
+msgstr "A-M|Bielorusă"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:69
+msgid "A-M|Bengali"
+msgstr "A-M|Bengali"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:71
+msgid "A-M|Bengali (India)"
+msgstr "A-M|Bengali (India)"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:73
+msgid "A-M|Bulgarian"
+msgstr "A-M|Bulgară"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:75
+msgid "A-M|Bosnian"
+msgstr "A-M|Bosniacă"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:77
+msgid "A-M|Catalan"
+msgstr "A-M|Catalană"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:79
+msgid "A-M|Chinese (simplified)"
+msgstr "A-M|Chineză (simplificată)"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:81
+msgid "A-M|Chinese (traditional)"
+msgstr "A-M|Chineză (tradiţională)"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:83
+msgid "A-M|Croatian"
+msgstr "A-M|Croată"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:85
+msgid "A-M|Czech"
+msgstr "A-M|Cehă"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:87
+msgid "A-M|Danish"
+msgstr "A-M|Daneză"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:89
+msgid "A-M|Dutch"
+msgstr "N-Z|Olandeză"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:91
+msgid "A-M|English"
+msgstr "A-M|Engleză"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:93
+msgid "A-M|English (USA)"
+msgstr "A-M|Engleză (S.U.A.)"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:95
+msgid "A-M|English (Australia)"
+msgstr "A-M|Engleză (Australia)"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:97
+msgid "A-M|English (UK)"
+msgstr "A-M|Engleză (Marea Britanie)"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:99
+msgid "A-M|English (Canada)"
+msgstr "A-M|Engleză (Canada)"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:101
+msgid "A-M|English (Ireland)"
+msgstr "A-M|Engleză (Irlanda)"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:103
+msgid "A-M|English (Denmark)"
+msgstr "A-M|Engleză (Danemarca)"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:105
+msgid "A-M|Estonian"
+msgstr "A-M|Estoniană"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:107
+msgid "A-M|Finnish"
+msgstr "A-M|Finlandeză"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:109
+msgid "A-M|French"
+msgstr "A-M|Franceză"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:111
+msgid "A-M|French (Belgium)"
+msgstr "A-M|Franceză (Belgia)"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:113
+msgid "A-M|French (Switzerland)"
+msgstr "A-M|Franceză (Elveţia)"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:115
+msgid "A-M|Galician"
+msgstr "A-M|Galician"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:117
+msgid "A-M|German"
+msgstr "A-M|Germană"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:119
+msgid "A-M|German (Austria)"
+msgstr "A-M|Germană (Austria)"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:121
+msgid "A-M|German (Switzerland)"
+msgstr "A-M|Germană (Elveţia)"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:123
+msgid "A-M|Greek"
+msgstr "A-M|Greacă"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:125
+msgid "A-M|Gujarati"
+msgstr "A-M|Gujarati"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:127 gui/gdmlanguages.c:129
+msgid "A-M|Hebrew"
+msgstr "A-M|Ebraică"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:131
+msgid "A-M|Hindi"
+msgstr "A-M|Hindi"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:133
+msgid "A-M|Hungarian"
+msgstr "A-M|Maghiară"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:135
+msgid "A-M|Icelandic"
+msgstr "A-M|Islandeză"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:137
+msgid "A-M|Indonesian"
+msgstr "A-M|Indoneziană"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:139
+msgid "A-M|Interlingua"
+msgstr "A-M|Interlingua"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:141
+msgid "A-M|Irish"
+msgstr "A-M|Irlandeză"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:143
+msgid "A-M|Italian"
+msgstr "A-M|Italiană"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:145
+msgid "A-M|Japanese"
+msgstr "A-M|Japoneză"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:147
+msgid "A-M|Kannada"
+msgstr "A-M|Kannada"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:149
+msgid "A-M|Korean"
+msgstr "A-M|Coreeană"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:151
+msgid "A-M|Latvian"
+msgstr "A-M|Letonă"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:153
+msgid "A-M|Lithuanian"
+msgstr "A-M|Lituaniană"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:155
+msgid "A-M|Macedonian"
+msgstr "A-M|Macedonă"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:157
+msgid "A-M|Malay"
+msgstr "A-M|Malay"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:159
+msgid "A-M|Malayalam"
+msgstr "A-M|Malayalam"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:161
+msgid "A-M|Marathi"
+msgstr "A-M|Marathi"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:163
+msgid "A-M|Mongolian"
+msgstr "A-M|Mongolă"
+
+#. Note translate the N-Z to the N-Z you used in the group label
+#: gui/gdmlanguages.c:165
+msgid "N-Z|Norwegian (bokmal)"
+msgstr "N-Z|Norvegiană (bøkmal)"
+
+#. Note translate the N-Z to the N-Z you used in the group label
+#: gui/gdmlanguages.c:167
+msgid "N-Z|Norwegian (nynorsk)"
+msgstr "N-Z|Norvegiană (nynorsk)"
+
+#. Note translate the N-Z to the N-Z you used in the group label
+#: gui/gdmlanguages.c:169
+msgid "N-Z|Oriya"
+msgstr "N-Z|Oriya"
+
+#. Note translate the N-Z to the N-Z you used in the group label
+#: gui/gdmlanguages.c:171
+msgid "N-Z|Panjabi"
+msgstr "N-Z|Panjabi"
+
+#. Note translate the N-Z to the N-Z you used in the group label
+#: gui/gdmlanguages.c:173
+msgid "N-Z|Persian"
+msgstr "N-Z|Persană"
+
+#. Note translate the N-Z to the N-Z you used in the group label
+#: gui/gdmlanguages.c:175
+msgid "N-Z|Polish"
+msgstr "N-Z|Poloneză"
+
+#. Note translate the N-Z to the N-Z you used in the group label
+#: gui/gdmlanguages.c:177
+msgid "N-Z|Portuguese"
+msgstr "N-Z|Portugheză"
+
+#. Note translate the N-Z to the N-Z you used in the group label
+#: gui/gdmlanguages.c:179
+msgid "N-Z|Portuguese (Brazilian)"
+msgstr "N-Z|Portugheză (Brazilia)"
+
+#. Note translate the N-Z to the N-Z you used in the group label
+#: gui/gdmlanguages.c:181
+msgid "N-Z|Romanian"
+msgstr "N-Z|Română"
+
+#. Note translate the N-Z to the N-Z you used in the group label
+#: gui/gdmlanguages.c:183
+msgid "N-Z|Russian"
+msgstr "N-Z|Rusă"
+
+#. Note translate the N-Z to the N-Z you used in the group label
+#: gui/gdmlanguages.c:185 gui/gdmlanguages.c:187
+msgid "N-Z|Serbian"
+msgstr "N-Z|Sârbă"
+
+#. Note translate the N-Z to the N-Z you used in the group label
+#: gui/gdmlanguages.c:189
+msgid "N-Z|Serbian (Latin)"
+msgstr "N-Z|Sârbă (Latină)"
+
+#. Note translate the N-Z to the N-Z you used in the group label
+#: gui/gdmlanguages.c:191
+msgid "N-Z|Serbian (Jekavian)"
+msgstr "N-Z|Sârbă (Jekavian)"
+
+#. Note translate the N-Z to the N-Z you used in the group label
+#: gui/gdmlanguages.c:193
+msgid "N-Z|Slovak"
+msgstr "N-Z|Slovacă"
+
+#. Note translate the N-Z to the N-Z you used in the group label
+#: gui/gdmlanguages.c:195
+msgid "N-Z|Slovenian"
+msgstr "N-Z|Slovenă"
+
+#. Note translate the N-Z to the N-Z you used in the group label
+#: gui/gdmlanguages.c:197
+msgid "N-Z|Spanish"
+msgstr "N-Z|Spaniolă"
+
+#. Note translate the N-Z to the N-Z you used in the group label
+#: gui/gdmlanguages.c:199
+msgid "N-Z|Spanish (Mexico)"
+msgstr "N-Z|Spaniolă (Mexic)"
+
+#. Note translate the N-Z to the N-Z you used in the group label
+#: gui/gdmlanguages.c:201
+msgid "N-Z|Swedish"
+msgstr "N-Z|Suedeză"
+
+#. Note translate the N-Z to the N-Z you used in the group label
+#: gui/gdmlanguages.c:203
+msgid "N-Z|Swedish (Finland)"
+msgstr "N-Z|Suedeză (Finlanda)"
+
+#. Note translate the N-Z to the N-Z you used in the group label
+#: gui/gdmlanguages.c:205
+msgid "N-Z|Tamil"
+msgstr "N-Z|Tamil"
+
+#. Note translate the N-Z to the N-Z you used in the group label
+#: gui/gdmlanguages.c:207
+msgid "N-Z|Telugu"
+msgstr "N-Z|Telugu"
+
+#. Note translate the N-Z to the N-Z you used in the group label
+#: gui/gdmlanguages.c:209
+msgid "N-Z|Thai"
+msgstr "N-Z|Thai"
+
+#. Note translate the N-Z to the N-Z you used in the group label
+#: gui/gdmlanguages.c:211
+msgid "N-Z|Turkish"
+msgstr "N-Z|Turcă"
+
+#. Note translate the N-Z to the N-Z you used in the group label
+#: gui/gdmlanguages.c:213
+msgid "N-Z|Ukrainian"
+msgstr "N-Z|Ucrainiană"
+
+#. Note translate the N-Z to the N-Z you used in the group label
+#: gui/gdmlanguages.c:215
+msgid "N-Z|Vietnamese"
+msgstr "N-Z|Vietnameză"
+
+#. Note translate the N-Z to the N-Z you used in the group label
+#: gui/gdmlanguages.c:217
+msgid "N-Z|Walloon"
+msgstr "N-Z|Valonă"
+
+#. Note translate the N-Z to the N-Z you used in the group label
+#: gui/gdmlanguages.c:219
+msgid "N-Z|Welsh"
+msgstr "N-Z|Galeză"
+
+#. Note translate the N-Z to the N-Z you used in the group label
+#: gui/gdmlanguages.c:221
+msgid "N-Z|Yiddish"
+msgstr "N-Z|Idiş"
+
+#. This is the POSIX/C locale for english, should really be in Other
+#: gui/gdmlanguages.c:223
+msgid "Other|POSIX/C English"
+msgstr "Alta|Engleză POSIX/C"
+
+#. This should be the same as in the front of the language strings
+#. * else the languages will appear in the "Other" submenu
+#: gui/gdmlanguages.c:419
+msgid "A-M"
+msgstr "A-M"
+
+#. This should be the same as in the front of the language strings
+#. * else the languages will appear in the "Other" submenu
+#: gui/gdmlanguages.c:427
+msgid "N-Z"
+msgstr "N-Z"
+
+#: gui/gdmlogin.c:222 gui/greeter/greeter_parser.c:1047
+#, c-format
+msgid "User %s will login in %d seconds"
+msgstr "Utilizatorul %s va fi autentificat în %d secunde"
+
+#: gui/gdmlogin.c:447
+#, c-format
+msgid "%s: String too long!"
+msgstr "%s: Şir prea lung!"
+
+#: gui/gdmlogin.c:449
+#, c-format
+msgid "%sWelcome to %s%s"
+msgstr "%sBine aţi venit la %s%s"
+
+#. markup
+#: gui/gdmlogin.c:537
+msgid "Could not fork a new process!"
+msgstr "Nu am reuşit să clonez un nou proces!"
+
+#: gui/gdmlogin.c:539
+msgid "You likely won't be able to log in either."
+msgstr "Probabil că nu veţi putea nici să vă autentificaţi."
+
+#: gui/gdmlogin.c:583 gui/greeter/greeter_system.c:45
+msgid "Are you sure you want to reboot the machine?"
+msgstr "Sunteţi sigur(ă) că doriţi să reporniţi calculatorul?"
+
+#. markup
+#: gui/gdmlogin.c:585 gui/gdmlogin.c:2781 gui/greeter/greeter_parser.c:1027
+#: gui/greeter/greeter_system.c:47 gui/greeter/greeter_system.c:168
+msgid "_Reboot"
+msgstr "_Repornire calculator"
+
+#: gui/gdmlogin.c:597 gui/greeter/greeter_system.c:58
+msgid "Are you sure you want to shut down the machine?"
+msgstr "Sunteţi sigur(ă) că doriţi să opriţi calculatorul?"
+
+#. markup
+#: gui/gdmlogin.c:599 gui/gdmlogin.c:2794 gui/greeter/greeter_parser.c:1017
+#: gui/greeter/greeter_system.c:60 gui/greeter/greeter_system.c:180
+msgid "Shut _Down"
+msgstr "_Oprire calculator"
+
+#: gui/gdmlogin.c:619 gui/greeter/greeter_system.c:70
+msgid "Are you sure you want to suspend the machine?"
+msgstr "Sunteţi sigur(ă) că doriţi să trimiteţi calculatorul în adormire?"
+
+#. markup
+#: gui/gdmlogin.c:621 gui/gdmlogin.c:2808 gui/greeter/greeter_system.c:72
+msgid "_Suspend"
+msgstr "_Adormire"
+
+#: gui/gdmlogin.c:685 gui/gdmlogin.c:3752 gui/greeter/greeter.c:164
+#: gui/greeter/greeter.c:858
+msgid "Welcome"
+msgstr "Bine aţi venit"
+
+#: gui/gdmlogin.c:688 gui/gdmlogin.c:3755 gui/greeter/greeter.c:167
+#: gui/greeter/greeter.c:861
+#, c-format
+msgid "Welcome to %n"
+msgstr "Bine aţi venit la %n"
+
+#: gui/gdmlogin.c:736 gui/greeter/greeter.c:192
+msgid "TimedLoginDelay was less than 5.  I'll just use 5."
+msgstr "TimedLoginDelay mai mică decât 5, se va utiliza 5."
+
+#: gui/gdmlogin.c:854 gui/greeter/greeter_session.c:119
+#, c-format
+msgid ""
+"Your preferred session type %s is not installed on this machine.\n"
+"Do you wish to make %s the default for future sessions?"
+msgstr ""
+"Tipul de sesiune %s pe care o preferaţi nu este instalat.\n"
+"Doriţi să faceţi sesiunea %s implicită în viitor?"
+
+#. markup
+#: gui/gdmlogin.c:860 gui/gdmlogin.c:887 gui/gdmlogin.c:965
+#: gui/greeter/greeter_action_language.c:143 gui/greeter/greeter_session.c:125
+#: gui/greeter/greeter_session.c:155
+msgid "Make _Default"
+msgstr "_Implicită"
+
+#: gui/gdmlogin.c:860 gui/greeter/greeter_session.c:125
+msgid "Just _Log In"
+msgstr "_Doar autentificare"
+
+#. never_encoding
+#. no_group
+#. untranslated
+#. markup
+#: gui/gdmlogin.c:879 gui/gdmlogin.c:959
+#: gui/greeter/greeter_action_language.c:137 gui/greeter/greeter_session.c:147
+#, c-format
+msgid ""
+"You have chosen %s for this session, but your default setting is %s.\n"
+"Do you wish to make %s the default for future sessions?"
+msgstr ""
+"Aţi ales limba %s pentru această sesiune, dar implicită este limba %s.\n"
+"Alegeţi „_Implicită” pentru a alege limba %s pentru sesiunile viitoare?"
+
+#: gui/gdmlogin.c:887 gui/gdmlogin.c:965
+#: gui/greeter/greeter_action_language.c:143 gui/greeter/greeter_session.c:155
+msgid "Just For _This Session"
+msgstr "Doar pentru _această sesiune"
+
+#: gui/gdmlogin.c:897 gui/greeter/greeter_session.c:168
+#, c-format
+msgid ""
+"You have chosen %s for this session.\n"
+"If you wish to make %s the default for future sessions,\n"
+"run the 'switchdesk' utility\n"
+"(System->Desktop Switching Tool from the panel menu)."
+msgstr ""
+"Aţi ales %s pentru această sesiune.\n"
+"Dacă doriţi să faceţi %s implicită pentru următoarele sesiuni,\n"
+"porniţi utilitarul „switchdesk“\n"
+"(„Unelte de sistem” -> „Unealtă comutare desktop” din meniul panoului)."
+
+#: gui/gdmlogin.c:941 gui/gdmlogin.c:950
+#: gui/greeter/greeter_action_language.c:53
+#: gui/greeter/greeter_action_language.c:121
+#: gui/greeter/greeter_action_language.c:129
+msgid "System Default"
+msgstr "Setări implicite"
+
+#: gui/gdmlogin.c:1074 gui/gdmlogin.c:1088 gui/gdmlogin.c:1875
+#: gui/gdmlogin.c:2373 gui/gdmlogin.c:3023
+msgid "_Username:"
+msgstr "Nume _utilizator:"
+
+#: gui/gdmlogin.c:1146
+#, c-format
+msgid "%s session selected"
+msgstr "Sesiunea %s selectată"
+
+#: gui/gdmlogin.c:1172 gui/gdmlogin.c:1482 gui/greeter/greeter_session.c:271
+msgid "_Last"
+msgstr "_Ultima"
+
+#: gui/gdmlogin.c:1183 gui/greeter/greeter_session.c:277
+msgid "Log in using the session that you have used last time you logged in"
+msgstr "Autentificare folosind sesiunea utilizată ultima oară"
+
+#: gui/gdmlogin.c:1194 gui/greeter/greeter_session.c:264
+msgid "Failsafe Gnome"
+msgstr "GNOME minimal"
+
+#: gui/gdmlogin.c:1195 gui/greeter/greeter_session.c:265
+msgid "Failsafe xterm"
+msgstr "Xterm minimal"
+
+#: gui/gdmlogin.c:1344 gui/greeter/greeter_session.c:429
+#, c-format
+msgid "%s: Session directory %s not found!"
+msgstr "%s: Directorul de sesiuni %s nu a fost găsit!."
+
+#: gui/gdmlogin.c:1350 gui/greeter/greeter_session.c:437
+msgid "Yaikes, nothing found in the session directory."
+msgstr "N-am găsit nimic în directorul de sesiuni..."
+
+#: gui/gdmlogin.c:1361 gui/greeter/greeter_session.c:449
+msgid "Failsafe _Gnome"
+msgstr "_GNOME minimal"
+
+#: gui/gdmlogin.c:1363 gui/greeter/greeter_session.c:451
+msgid ""
+"This is a failsafe session that will log you into GNOME.  No startup scripts "
+"will be read and it is only to be used when you can't log in otherwise.  "
+"GNOME will use the 'Default' session."
+msgstr ""
+"Aceasta este o sesiune minimală pentru autentificare în GNOME. Nici un "
+"script de pornire nu va fi citit. A se utiliza doar când nu vă puteţi "
+"autentifica altfel. GNOME va utiliza sesiunea implicită."
+
+#: gui/gdmlogin.c:1386 gui/greeter/greeter_session.c:473
+msgid "Failsafe _Terminal"
+msgstr "_Terminal minimal"
+
+#: gui/gdmlogin.c:1388 gui/greeter/greeter_session.c:475
+msgid ""
+"This is a failsafe session that will log you into a terminal.  No startup "
+"scripts will be read and it is only to be used when you can't log in "
+"otherwise.  To exit the terminal, type 'exit'."
+msgstr ""
+"Aceasta este o sesiune minimală pentru autentificarea într-un terminal. Nici "
+"un script de pornire nu va fi citit. A se utiliza doar când nu vă puteţi "
+"autentifica altfel. Pentru a ieşi din terminal, tastaţi „exit“."
+
+#: gui/gdmlogin.c:1409 gui/greeter/greeter_session.c:495
+msgid "No default session link found. Using Failsafe GNOME.\n"
+msgstr ""
+"Nu am găsit asocierea la sesiunea implicită. Utilizez „GNOME minimal“.\n"
+
+#. never_encoding
+#. no_group
+#. untranslated
+#. makrup
+#: gui/gdmlogin.c:1453
+#, c-format
+msgid "%s language selected"
+msgstr "Limbă selectată: %s"
+
+#: gui/gdmlogin.c:1493
+msgid "Log in using the language that you have used last time you logged in"
+msgstr "Autentificare utilizand limba selectată la ultima autentificare"
+
+#: gui/gdmlogin.c:1497
+msgid "_System Default"
+msgstr "_Setări implicite"
+
+#: gui/gdmlogin.c:1508
+msgid "Log in using the default system language"
+msgstr "Autentificare utilizând limba setată implicit"
+
+#: gui/gdmlogin.c:1528
+msgid "_Other"
+msgstr "_Alta"
+
+#: gui/gdmlogin.c:1906
+msgid "_Password:"
+msgstr "_Parolă:"
+
+#. markup
+#. translators:  This is a nice and evil eggie text, translate
+#. * to your favourite currency
+#: gui/gdmlogin.c:2130 gui/greeter/greeter.c:434
+msgid "Please insert 25 cents to log in."
+msgstr "Introduceţi o monedă de 5.000 de lei pentru a vă autentifica."
+
+#: gui/gdmlogin.c:2381
+msgid "Doubleclick on the user to log in"
+msgstr "Alegeţi utilizatorul dorit pentru autentificare"
+
+#: gui/gdmlogin.c:2506
+msgid "GNOME Desktop Manager"
+msgstr "Mediul desktop GNOME"
+
+#: gui/gdmlogin.c:2532 gui/greeter/greeter_item.c:139
+msgid "%a %b %d, %H:%M"
+msgstr "%a, %d %b, %H:%M"
+
+#: gui/gdmlogin.c:2534 gui/greeter/greeter_item.c:143
+msgid "%a %b %d, %l:%M %p"
+msgstr "%a, %d %b, %I:%M %p"
+
+#: gui/gdmlogin.c:2583
+msgid "Finger"
+msgstr "Finger"
+
+#: gui/gdmlogin.c:2689
+msgid "GDM Login"
+msgstr "Autentificare GDM"
+
+#: gui/gdmlogin.c:2732 gui/greeter/greeter_parser.c:997
+msgid "_Session"
+msgstr "_Sesiune"
+
+#: gui/gdmlogin.c:2739 gui/greeter/greeter_parser.c:992
+msgid "_Language"
+msgstr "_Limbă"
+
+#: gui/gdmlogin.c:2751 gui/greeter/greeter_system.c:134
+msgid "_XDMCP Chooser..."
+msgstr "Selector _XDMCP..."
+
+#: gui/gdmlogin.c:2758 gui/greeter/greeter_system.c:141
+#: gui/greeter/greeter_system.c:331
+msgid ""
+"Run an XDMCP chooser which will allow you to log into available remote "
+"machines, if there are any."
+msgstr ""
+"Porniţi un selector XDMCP ce vă va permite autentificarea la staţii aflate "
+"la distanţă, dacă acestea există."
+
+#: gui/gdmlogin.c:2767 gui/greeter/greeter_system.c:149
+msgid "_Configure Login Manager..."
+msgstr "_Configurare GDM..."
+
+#: gui/gdmlogin.c:2774 gui/greeter/greeter_system.c:156
+#: gui/greeter/greeter_system.c:351
+msgid ""
+"Configure GDM (this login manager). This will require the root password."
+msgstr ""
+"Configurare GDM (administratorul autentificărilor). Pentru aceasta aveţi "
+"nevoie de parola de „root“."
+
+#: gui/gdmlogin.c:2788 gui/greeter/greeter_system.c:175
+msgid "Reboot your computer"
+msgstr "Reporniţi calculatorul"
+
+#: gui/gdmlogin.c:2801 gui/greeter/greeter_system.c:187
+msgid "Shut down the system so that you may safely turn off the computer."
+msgstr "Opriţi calculatorul pentru a-l putea închide în siguranţă."
+
+#: gui/gdmlogin.c:2815 gui/greeter/greeter_system.c:200
+msgid "Suspend your computer"
+msgstr "Trimiteţi calculatorul în adormire"
+
+#: gui/gdmlogin.c:2821 gui/greeter/greeter_parser.c:1002
+msgid "_Actions"
+msgstr "_Acţiuni"
+
+#: gui/gdmlogin.c:2830
+msgid "_Theme"
+msgstr "_Temă"
+
+#: gui/gdmlogin.c:2841 gui/greeter/greeter_canvas_item.c:146
+#: gui/greeter/greeter_parser.c:1012
+msgid "_Quit"
+msgstr "_Ieşi"
+
+#: gui/gdmlogin.c:2843 gui/greeter/greeter_canvas_item.c:148
+#: gui/greeter/greeter_parser.c:1007
+msgid "D_isconnect"
+msgstr "_Deconectare"
+
+#: gui/gdmlogin.c:2910 gui/greeter/greeter_item_ulist.c:442
+msgid "Icon"
+msgstr "Iconiţă"
+
+#: gui/gdmlogin.c:3391
+#, c-format
+msgid "Can't open DefaultImage: %s. Suspending face browser!"
+msgstr "Nu pot deschide ImagineaImplicită: %s. Dezactivez selectorul de feţe!"
+
+#: gui/gdmlogin.c:3413 gui/gdmsetup.c:569 gui/greeter/greeter_item_ulist.c:297
+msgid "Too many users to list here..."
+msgstr "Prea mulţi utilizatori pentru a-i lista aici..."
+
+#. markup
+#: gui/gdmlogin.c:3831 gui/gdmlogin.c:3862 gui/gdmlogin.c:3906
+#: gui/greeter/greeter.c:637 gui/greeter/greeter.c:668
+#: gui/greeter/greeter.c:713
+msgid "Cannot start the greeter"
+msgstr "Nu am reuşit să pornesc gdmgreeter"
+
+#: gui/gdmlogin.c:3832 gui/gdmlogin.c:3863
+#, c-format
+msgid ""
+"The greeter version (%s) does not match the daemon version.  You have "
+"probably just upgraded gdm.  Please restart the gdm daemon or reboot the "
+"computer."
+msgstr ""
+"Versiunea gdmchooser (%s) nu se potriveşte cu cea a demonului GDM. Probabil "
+"tocmai aţi actualizat instalarea GDM. Restartaţi demonul GDM sau reporniţi "
+"calculatorul."
+
+#: gui/gdmlogin.c:3869 gui/gdmlogin.c:3915 gui/greeter/greeter.c:675
+#: gui/greeter/greeter.c:722
+msgid "Reboot"
+msgstr "Reporneşte"
+
+#: gui/gdmlogin.c:3907
+#, c-format
+msgid ""
+"The greeter version (%s) does not match the daemon version (%s).  You have "
+"probably just upgraded gdm.  Please restart the gdm daemon or reboot the "
+"computer."
+msgstr ""
+"Versiunea gdmgreeter (%s) nu se potriveşte cu cea a demonului GDM (%s). "
+"Probabil tocmai aţi actualizat instalarea GDM. Restartaţi demonul GDM sau "
+"reporniţi calculatorul."
+
+#: gui/gdmlogin.c:3913 gui/greeter/greeter.c:720
+msgid "Restart"
+msgstr "Restartează"
+
+#. markup
+#: gui/gdmlogin.c:4099 gui/greeter/greeter.c:1335
+msgid "Session directory is missing"
+msgstr "Directorul cu sesiuni lipseşte"
+
+#: gui/gdmlogin.c:4101 gui/greeter/greeter.c:1337
+msgid ""
+"Your session directory is missing or empty!  There are two available "
+"sessions you can use, but you should log in and correct the gdm "
+"configuration."
+msgstr ""
+"Directorul sesiunilor lipseşte sau e gol! Există totuşi două sesiuni "
+"disponibile pe care le puteţi utiliza, dar ar trebui să vă autentificaţi şi "
+"să remediaţi instalarea GDM."
+
+#. markup
+#: gui/gdmlogin.c:4125 gui/greeter/greeter.c:1362
+msgid "Configuration is not correct"
+msgstr "GDM nu este corect configurat"
+
+#: gui/gdmlogin.c:4127 gui/greeter/greeter.c:1364
+msgid ""
+"The configuration file contains an invalid command line for the login "
+"dialog, and thus I ran the default command.  Please fix your configuration."
+msgstr ""
+"Fişierul de configurare conţine o comandă invalidă pentru fereastra de "
+"autentificare, am executat comanda implicită. Remediaţi configurarea GDM."
+
+#. markup
+#: gui/gdmlogin.c:4152 gui/greeter/greeter.c:1391
+msgid "No configuration was found"
+msgstr "GDM nu are un fişier de configurare"
+
+#: gui/gdmlogin.c:4154 gui/greeter/greeter.c:1393
+msgid ""
+"The configuration was not found.  GDM is using defaults to run this "
+"session.  You should log in and create a configuration file with the GDM "
+"configuration program."
+msgstr ""
+"Fişierul de configurare nu a fost găsit. GDM utilizează setările implicite "
+"pentru această sesiune. Ar trebui să vă autentificaţi şi să creaţi un fişier "
+"de configurare cu programul de configurare GDM."
+
+#. markup
+#: gui/gdmphotosetup.c:144
+msgid "The face browser is not configured"
+msgstr "Selectorul de feţe nu este configurat"
+
+#: gui/gdmphotosetup.c:147
+msgid ""
+"The face browser is not configured in the GDM configuration.  Please ask "
+"your system administrator to enable it in the GDM configurator program."
+msgstr ""
+"Selectorul de feţe nu este configurat. Cereţi administratorului de sistem să-"
+"l activeze în programul de configurare GDM."
+
+#: gui/gdmphotosetup.c:157 gui/gdmphotosetup.desktop.in.h:2
+msgid "Login Photo"
+msgstr "Poză GDM"
+
+#: gui/gdmphotosetup.c:167
+msgid "Select a photograph to show in the facebrowser:"
+msgstr "Selectaţi o fotografie pentru a fi afişată în selectorul de feţe:"
+
+#: gui/gdmphotosetup.c:172
+msgid "Browse"
+msgstr "Selectaţi"
+
+#. markup
+#: gui/gdmphotosetup.c:206
+msgid "No picture selected."
+msgstr "Nu s-a selectat o poză."
+
+#. markup
+#: gui/gdmphotosetup.c:217
+msgid "Picture is too large"
+msgstr "Imaginea este prea mare"
+
+#: gui/gdmphotosetup.c:218
+#, c-format
+msgid ""
+"The system administrator disallowed pictures larger than %d bytes to show in "
+"the face browser"
+msgstr ""
+"Administratorul de sistem nu premite  poze mai mari de %d octeţi în "
+"selectorul de feţe din GDM"
+
+#. markup
+#: gui/gdmphotosetup.c:245 gui/gdmphotosetup.c:267
+msgid "Cannot open file"
+msgstr "Nu am reuşit să deschid fişierul"
+
+#: gui/gdmphotosetup.c:246
+#, c-format
+msgid ""
+"File %s cannot be open for reading\n"
+"Error: %s"
+msgstr ""
+"Fişierul %s nu a putut fi deschis pentru citire\n"
+"Eroare: %s"
+
+#: gui/gdmphotosetup.c:268
+#, c-format
+msgid ""
+"File %s cannot be open for writing\n"
+"Error: %s"
+msgstr ""
+"Fişierul %s nu a putut fi deschis pentru scriere\n"
+"Eroare: %s"
+
+#: gui/gdmphotosetup.desktop.in.h:1
+msgid ""
+"Change the picture that will show in the GDM (login manager) face browser"
+msgstr "Schimbaţi poza care va apărea în selectorul de feţe GDM"
+
+#.
+#. * Translatable strings file generated by Glade.
+#. * Add this file to your project's POTFILES.in.
+#. * DO NOT compile it as part of your application.
+#.
+#: gui/gdmsetup-strings.c:7 gui/gdmsetup.desktop.in.h:2
+#: gui/gdmsetup.glade.h:26
+msgid "Login Screen Setup"
+msgstr "Setări autentificare"
+
+#: gui/gdmsetup-strings.c:8 gui/gdmsetup.glade.h:22
+msgid "Greeter"
+msgstr "Salut"
+
+#: gui/gdmsetup-strings.c:9 gui/gdmsetup-strings.c:24
+#: gui/gdmsetup-strings.c:29 gui/gdmsetup-strings.c:36
+#: gui/gdmsetup-strings.c:39 gui/gdmsetup-strings.c:42
+#: gui/gdmsetup-strings.c:65 gui/gdmsetup-strings.c:71
+#: gui/gdmsetup-strings.c:73 gui/gdmsetup-strings.c:79
+#: gui/gdmsetup-strings.c:82 gui/gdmsetup-strings.c:90 gui/gdmsetup.glade.h:1
+msgid "    "
+msgstr "    "
+
+#: gui/gdmsetup-strings.c:10 gui/gdmsetup.glade.h:24
+msgid "L_ocal: "
+msgstr "L_ocal: "
+
+#: gui/gdmsetup-strings.c:11 gui/gdmsetup.glade.h:66
+msgid "_Remote: "
+msgstr "La _distanţă: "
+
+#: gui/gdmsetup-strings.c:12 gui/gdmsetup.glade.h:70
+msgid "_Welcome string: "
+msgstr "_Mesaj de salut: "
+
+#: gui/gdmsetup-strings.c:13 gui/gdmsetup.glade.h:43
+msgid "Re_mote welcome string: "
+msgstr "Mesa_j de salut la distanţă: "
+
+#: gui/gdmsetup-strings.c:14 gui/gdmsetup-strings.c:16
+#: gui/gdmsetup-strings.c:51 gui/gdmsetup.c:969 gui/gdmsetup.glade.h:50
+msgid "Standard greeter"
+msgstr "Salut standard"
+
+#: gui/gdmsetup-strings.c:15 gui/gdmsetup-strings.c:17
+#: gui/gdmsetup-strings.c:63 gui/gdmsetup.c:971 gui/gdmsetup.glade.h:21
+msgid "Graphical greeter"
+msgstr "Salut grafic"
+
+#: gui/gdmsetup-strings.c:18 gui/gdmsetup.glade.h:52
+#, no-c-format
+msgid ""
+"String to be shown in the greeter as welcome.  You can insert %n in here and "
+"it will be replaced by the name of your computer."
+msgstr ""
+"Şir de afişat ca salut în fereastra de autentificare. Aici puteţi insera „%"
+"n” şi va fi înlocuit cu numele calculatorului."
+
+#: gui/gdmsetup-strings.c:20 gui/gdmsetup.glade.h:54
+#, no-c-format
+msgid ""
+"String to be shown in the greeter for people logging in remotely with "
+"XDMCP.  You can insert %n in here and it will be replaced by the name of "
+"your computer."
+msgstr ""
+"Şir de afişat în fereastra de autentificare pentru cei ce se autentifică la "
+"distanţă cu XDMCP. Aici puteţi insera „%n” şi va fi înlocuit cu numele "
+"calculatorului."
+
+#: gui/gdmsetup-strings.c:22 gui/gdmsetup.glade.h:10
+msgid "Always use 24 hour cloc_k format"
+msgstr "Întotdeauna utilizează _formatul de 24 de ore pentru timp"
+
+#: gui/gdmsetup-strings.c:23 gui/gdmsetup.glade.h:12
+msgid "Automatic Login"
+msgstr "Autentificare automată"
+
+#: gui/gdmsetup-strings.c:25 gui/gdmsetup.glade.h:58
+msgid "_Automatic login username:"
+msgstr "_Utilizator pentru autentificare automată: "
+
+#: gui/gdmsetup-strings.c:27 gui/gdmsetup.glade.h:63
+msgid "_Login a user automatically on first bootup"
+msgstr "Autentificare automată la _prima pornire"
+
+#: gui/gdmsetup-strings.c:28 gui/gdmsetup.glade.h:55
+msgid "Timed Login"
+msgstr "Autentificare cronometrată"
+
+#: gui/gdmsetup-strings.c:30 gui/gdmsetup.glade.h:56
+msgid "Timed login us_ername:"
+msgstr "Utili_zator pentru autentificare cronometrată:"
+
+#: gui/gdmsetup-strings.c:31 gui/gdmsetup.glade.h:68
+msgid "_Seconds before login:"
+msgstr "_Secunde înainte de autentificare:"
+
+#: gui/gdmsetup-strings.c:33 gui/gdmsetup.glade.h:27
+msgid "Login a user automa_tically after a specified number of seconds"
+msgstr "Autentificare au_tomată după un număr specificat de secunde"
+
+#: gui/gdmsetup-strings.c:34 gui/gdmsetup.glade.h:20
+msgid "General"
+msgstr "Generale"
+
+#: gui/gdmsetup-strings.c:35 gui/gdmsetup.glade.h:28
+msgid "Logo"
+msgstr "Siglă"
+
+#: gui/gdmsetup-strings.c:38 gui/gdmsetup.glade.h:35
+msgid "Miscellaneous"
+msgstr "Diverse"
+
+#: gui/gdmsetup-strings.c:40 gui/gdmsetup.glade.h:47
+msgid "Show choosable user images (_face browser)"
+msgstr "Arată imaginile utili_zatorilor (selectorul de feţe)"
+
+#: gui/gdmsetup-strings.c:41 gui/gdmsetup.glade.h:13
+msgid "Background"
+msgstr "Fundal"
+
+#: gui/gdmsetup-strings.c:43 gui/gdmsetup.glade.h:64
+msgid "_No background"
+msgstr "_Fără fundal"
+
+#: gui/gdmsetup-strings.c:44 gui/gdmsetup.glade.h:61
+msgid "_Image"
+msgstr "_Imagine"
+
+#: gui/gdmsetup-strings.c:45 gui/gdmsetup.glade.h:14
+msgid "Co_lor"
+msgstr "C_uloare"
+
+#: gui/gdmsetup-strings.c:46 gui/gdmsetup.glade.h:67
+msgid "_Scale background image to fit"
+msgstr "_Scalează fundalul la dimensiunea ecranului"
+
+#: gui/gdmsetup-strings.c:48 gui/gdmsetup.glade.h:65
+msgid "_Only color on remote displays"
+msgstr "Fără fundal la autentificarea la _distanţă"
+
+#: gui/gdmsetup-strings.c:49 gui/gdmsetup.glade.h:59
+msgid "_Background color: "
+msgstr "Cul_oare fundal: "
+
+#: gui/gdmsetup-strings.c:50 gui/gdmsetup.glade.h:39
+msgid "Pick a color"
+msgstr "Selectaţi o culoare"
+
+#: gui/gdmsetup-strings.c:52 gui/gdmsetup.glade.h:42
+msgid "Preview:"
+msgstr "Previzualizare:"
+
+#: gui/gdmsetup-strings.c:53 gui/gdmsetup.glade.h:37
+msgid "No screenshot available"
+msgstr "Nu este disponibilă o captură de ecran"
+
+#: gui/gdmsetup-strings.c:54 gui/gdmsetup.glade.h:16
+msgid "Description:"
+msgstr "Descriere:"
+
+#: gui/gdmsetup-strings.c:55 gui/gdmsetup.glade.h:15
+msgid "Copyright:"
+msgstr "Drepturi de autor:"
+
+#: gui/gdmsetup-strings.c:56 gui/gdmsetup.glade.h:11
+msgid "Author:"
+msgstr "Autor"
+
+#: gui/gdmsetup-strings.c:57 gui/gdmsetup.glade.h:74
+msgid ""
+"description\n"
+"widget"
+msgstr ""
+"descriere\n"
+"widget"
+
+#: gui/gdmsetup-strings.c:59 gui/gdmsetup.glade.h:72
+msgid "author"
+msgstr "autor"
+
+#: gui/gdmsetup-strings.c:60 gui/gdmsetup.glade.h:73
+msgid "copyright"
+msgstr "drepturi de autor"
+
+#: gui/gdmsetup-strings.c:61 gui/gdmsetup.glade.h:62
+msgid "_Install new theme"
+msgstr "_Instalează o temă nouă"
+
+#: gui/gdmsetup-strings.c:62 gui/gdmsetup.glade.h:60
+msgid "_Delete theme"
+msgstr "Şter_ge tema"
+
+#: gui/gdmsetup-strings.c:64 gui/gdmsetup-strings.c:78 gui/gdmsetup.glade.h:38
+msgid "Options"
+msgstr "Opţiuni"
+
+#: gui/gdmsetup-strings.c:66 gui/gdmsetup.glade.h:5
+msgid "Allow _root to login with GDM"
+msgstr "Permite utilizatorului „_root” autentificarea în GDM"
+
+#: gui/gdmsetup-strings.c:67 gui/gdmsetup.glade.h:8
+msgid "Allow root to login r_emotely with GDM"
+msgstr "P_ermite utilizatorului „root” autentificarea la distanţă în GDM"
+
+#: gui/gdmsetup-strings.c:68 gui/gdmsetup.glade.h:7
+msgid "Allow remote _timed logins"
+msgstr "Permite autentificări de la _distanţă cronometrate"
+
+#: gui/gdmsetup-strings.c:69 gui/gdmsetup.glade.h:48
+msgid ""
+"Show the \"Actions\" menu (formerly known as the \"System\" menu).  If not "
+"set, none of the system commands will be available (this includes reboot, "
+"shutdown, configure, chooser)"
+msgstr ""
+"Arată meniul „Acţiuni” (vechiul meniu „Sistem“). Dacă nu, niciuna dintre "
+"comenzile de sistem nu va fi disponibilă (inclusiv restartare, oprire, "
+"configurare sau selectare)"
+
+#: gui/gdmsetup-strings.c:70 gui/gdmsetup.glade.h:46
+msgid "Show _actions menu"
+msgstr "Arată _meniul „Acţiuni“"
+
+#: gui/gdmsetup-strings.c:72 gui/gdmsetup.glade.h:6
+msgid "Allow c_onfiguration from the login screen"
+msgstr "Permite c_onfigurarea din fereastra de autentificare"
+
+#: gui/gdmsetup-strings.c:74 gui/gdmsetup.glade.h:4
+msgid "Allo_w running XDMCP chooser from the login screen"
+msgstr "Permite pornirea selectorului _XDMCP din fereastra de autentificare"
+
+#: gui/gdmsetup-strings.c:75 gui/gdmsetup.glade.h:9
+msgid ""
+"Always disallow TCP connections to _X server (disables all remote "
+"connections)"
+msgstr ""
+"_Nu permite niciodată conexiuni TCP la serverul X (dezactivează orice "
+"conectări la distanţă):"
+
+#: gui/gdmsetup-strings.c:76 gui/gdmsetup.glade.h:44
+msgid "Retry _delay (seconds) :"
+msgstr "Pau_ză între încercări (secunde): "
+
+#: gui/gdmsetup-strings.c:77 gui/gdmsetup.glade.h:45
+msgid "Security"
+msgstr "Securitate"
+
+#: gui/gdmsetup-strings.c:80 gui/gdmsetup.glade.h:19
+msgid "Enable _accessibility modules"
+msgstr "Activează modulele de _accesibilitate"
+
+#: gui/gdmsetup-strings.c:81 gui/gdmsetup.glade.h:29
+msgid "Make a _sound when login window is ready"
+msgstr "_Redă un sunet la autentificare"
+
+#: gui/gdmsetup-strings.c:83 gui/gdmsetup.glade.h:71
+msgid "acc_sound_file_box"
+msgstr "acc_sound_file_box"
+
+#: gui/gdmsetup-strings.c:84 gui/gdmsetup.glade.h:49
+msgid "Sound _file:"
+msgstr "_Fişier sunet:"
+
+#: gui/gdmsetup-strings.c:86 gui/gdmsetup.glade.h:69
+msgid "_Test sound"
+msgstr "_Testare"
+
+#: gui/gdmsetup-strings.c:87 gui/gdmsetup.glade.h:3
+msgid "Accessibility"
+msgstr "Accesibilitate"
+
+#: gui/gdmsetup-strings.c:88 gui/gdmsetup.glade.h:36
+msgid ""
+"No XDMCP support in the binary.  To enable XDMCP support you must recompile "
+"GDM with the XDMCP libraries."
+msgstr ""
+"Binarul GDM nu are suport XMDCP. Pentru a activa XDMCP trebuie să "
+"recompilaţi GDM cu bibliotecile XDMCP."
+
+#: gui/gdmsetup-strings.c:89 gui/gdmsetup.glade.h:18
+msgid "Enable _XDMCP"
+msgstr "Activează _XDMCP"
+
+#: gui/gdmsetup-strings.c:91 gui/gdmsetup.glade.h:23
+msgid "Honour _indirect requests"
+msgstr "Onorează cererile _indirecte"
+
+#: gui/gdmsetup-strings.c:92 gui/gdmsetup.glade.h:25
+msgid "Listen on _UDP port: "
+msgstr "Ascultă pe portul UD_P: "
+
+#: gui/gdmsetup-strings.c:93 gui/gdmsetup.glade.h:31
+msgid "Maximum _pending requests:"
+msgstr "Număr _maxim de cereri în aşteptare:"
+
+#: gui/gdmsetup-strings.c:94 gui/gdmsetup.glade.h:30
+msgid "Max p_ending indirect requests:"
+msgstr "_Număr maxim de cereri indirecte în aşteptare:"
+
+#: gui/gdmsetup-strings.c:95 gui/gdmsetup.glade.h:32
+msgid "Maximum _remote sessions:"
+msgstr "Număr maxim de sesiuni la _distanţă:"
+
+#: gui/gdmsetup-strings.c:96 gui/gdmsetup.glade.h:33
+msgid "Maximum _wait time:"
+msgstr "D_urata maximă de aşteptare:"
+
+#: gui/gdmsetup-strings.c:97 gui/gdmsetup.glade.h:34
+msgid "Maximum indirect w_ait time:"
+msgstr "Durata maximă d_e aşteptare indirectă:"
+
+#: gui/gdmsetup-strings.c:98 gui/gdmsetup.glade.h:17
+msgid "Displays per _host:"
+msgstr "Număr de ecrane pentru o _gazdă:"
+
+#: gui/gdmsetup-strings.c:99 gui/gdmsetup.glade.h:40
+msgid "Pin_g interval (seconds):"
+msgstr "Inter_val de ping (secunde):"
+
+#: gui/gdmsetup-strings.c:100 gui/gdmsetup.glade.h:41
+msgid "Ping interval (seconds):"
+msgstr "Interval de ping (secunde):"
+
+#: gui/gdmsetup-strings.c:101 gui/gdmsetup.glade.h:57
+msgid "XDMCP"
+msgstr "XDMCP"
+
+#. markup
+#: gui/gdmsetup.c:164
+msgid ""
+"An error occured while trying to contact the login screens.  Not all updates "
+"may have taken effect."
+msgstr ""
+"A intervenit o eroare la încercarea de a contacta ecranele de autentificare. "
+"Nu toate actualizărilor au intrat în acţiune."
+
+#. markup
+#: gui/gdmsetup.c:487
+msgid ""
+"Autologin or timed login to the superuser (root) account is not allowed."
+msgstr ""
+"Autentificările automate sau cronometrate nu sunt permise pentru "
+"utilizatorul „root”."
+
+#: gui/gdmsetup.c:1756
+msgid "Archive is not of a subdirectory"
+msgstr "Arhiva nu este un subdirector"
+
+#: gui/gdmsetup.c:1764
+msgid "Archive is not of a single subdirectory"
+msgstr "Arhiva nu are un singur subdirector"
+
+#: gui/gdmsetup.c:1788 gui/gdmsetup.c:1868
+msgid "File not a tar.gz or tar archive"
+msgstr "Fişierul nu este o arhivă „tar.gz” sau „tar“"
+
+#: gui/gdmsetup.c:1790
+msgid "Archive does not include a GdmGreeterTheme.info file"
+msgstr "Arhiva nu include un fişier „GdmGreeterTheme.info“"
+
+#: gui/gdmsetup.c:1812
+msgid "File does not exist"
+msgstr "Fişier inexistent"
+
+#. markup
+#: gui/gdmsetup.c:1926
+msgid "No file selected"
+msgstr "Nici un fişier selectat"
+
+#. markup
+#: gui/gdmsetup.c:1954
+msgid "Not a theme archive"
+msgstr "Nu este o temă arhivată"
+
+#: gui/gdmsetup.c:1955
+#, c-format
+msgid "Details: %s"
+msgstr "Detalii: %s"
+
+#. FIXME: if exists already perhaps we could also have an
+#. * option to change the dir name
+#: gui/gdmsetup.c:1973
+#, c-format
+msgid ""
+"Theme directory '%s' seems to be already installed, install again anyway?"
+msgstr "Directorul temei „%s” pare sa fie instalat deja, instalez încă o dată?"
+
+#. markup
+#: gui/gdmsetup.c:2059
+msgid "Some error occured when installing the theme"
+msgstr "A intervenit o eroare la instalarea temei"
+
+#: gui/gdmsetup.c:2105
+msgid "Select new theme archive to install"
+msgstr "Selectaţi pentru instalare noua temă arhivată"
+
+#: gui/gdmsetup.c:2109
+msgid "_Install"
+msgstr "_Instalează"
+
+#: gui/gdmsetup.c:2173
+#, c-format
+msgid "Do you really wish to remove theme '%s' from the system?"
+msgstr "Sunteţi sigur(ă) că doriţi să ştergeţi tema „%s“?"
+
+#. This is the temporary help dialog
+#: gui/gdmsetup.c:2386
+#, c-format
+msgid ""
+"This configuration window changes settings for the GDM daemon, which is the "
+"graphical login screen for GNOME.  Changes that you make will take effect "
+"immediately.\n"
+"\n"
+"Note that not all configuration options are listed here.  You may want to "
+"edit %s if you cannot find what you are looking for.\n"
+"\n"
+"For complete documentation see the GNOME help browser Under the category "
+"GNOME/System."
+msgstr ""
+"Această fereastră de configurare schimbă setările demonului GDM, "
+"administratorul autentificărilor GNOME. Schimbările vor intra în acţiune "
+"imediat.\n"
+"\n"
+"De reţinut că nu toate opţiunile de configurare sunt prezente aici. S-ar "
+"putea să trebuiască să editaţi %s pentru a găsi ceea ce căutaţi.\n"
+"\n"
+"Pentru o documentare completă consultaţi ajutorul GNOME la categoria GNOME/"
+"System"
+
+#. markup
+#: gui/gdmsetup.c:2797
+msgid "You must be the superuser (root) to configure GDM."
+msgstr "Trebuie sa fiţi autentificat ca „root” pentru a configura GDM."
+
+#. EOF
+#: gui/gdmsetup.desktop.in.h:1
+msgid "A graphical application for configuring the GNOME Display Manager (GDM)"
+msgstr "O aplicaţie grafică pentru a configura Gdm"
+
+#: gui/greeter/greeter.c:638 gui/greeter/greeter.c:669
+#, c-format
+msgid ""
+"The greeter version (%s) does not match the daemon version.\n"
+"You have probably just upgraded gdm.\n"
+"Please restart the gdm daemon or reboot the computer."
+msgstr ""
+"Versiunea gdmgreeter (%s) nu se potriveşte cu cea a demonului GDM. Probabil "
+"tocmai aţi actualizat instalarea GDM. Restartaţi demonul GDM sau reporniţi "
+"calculatorul."
+
+#: gui/greeter/greeter.c:714
+#, c-format
+msgid ""
+"The greeter version (%s) does not match the daemon version (%s).\n"
+"You have probably just upgraded gdm.\n"
+"Please restart the gdm daemon or reboot the computer."
+msgstr ""
+"Versiunea gdmgreeter (%s) nu se potriveşte cu cea a demonului GDM (%s). "
+"Probabil tocmai aţi actualizat instalarea Gdm. Restartaţi demonul GDM sau "
+"reporniţi calculatorul."
+
+#: gui/greeter/greeter.c:1173
+#, c-format
+msgid "There was an error loading the theme %s"
+msgstr "A intervenit o eroare la încărcarea temei %s"
+
+#. markup
+#: gui/greeter/greeter.c:1226
+msgid "The theme for the graphical greeter is corrupt"
+msgstr "Tema pentru salutul grafic este coruptă"
+
+#: gui/greeter/greeter.c:1229
+msgid ""
+"The theme does not contain definition for the username/password entry "
+"element."
+msgstr "Tema nu conţine setări pentru intrarea „nume utilizator/parolă“"
+
+#. markup
+#: gui/greeter/greeter.c:1262
+msgid ""
+"There was an error loading the theme, and the default theme also could not "
+"have been loaded, I will attempt to start the standard greeter"
+msgstr ""
+"A intervenit o eroare la încărcarea temei şi tema implicită nu a putut fi "
+"încărcată. Voi încerca să pornesc salutul standard"
+
+#. markup
+#: gui/greeter/greeter.c:1284
+msgid ""
+"I could not start the standard greeter.  This display will abort and you may "
+"have to login another way and fix the installation of gdm"
+msgstr ""
+"Nu am putut porni salutul standard. Acest ecran va fi abandonat şi va trebui "
+"să vă autentificaţi pe o altă cale pentru a remedia instalarea GDM."
+
+#: gui/greeter/greeter_action_language.c:46
+msgid "Last"
+msgstr "Ultima"
+
+#: gui/greeter/greeter_action_language.c:196
+msgid "Select a language"
+msgstr "Selectaţi o limbă"
+
+#: gui/greeter/greeter_action_language.c:215
+msgid "Select a language for your session to use:"
+msgstr "Selectaţi limba pe care doriţi să o utilizaţi în sesiune:"
+
+#: gui/greeter/greeter_canvas_item.c:125
+msgid "Select _Language..."
+msgstr "Selectaţi o _limbă..."
+
+#: gui/greeter/greeter_canvas_item.c:132
+msgid "Select _Session..."
+msgstr "Selectaţi o _sesiune..."
+
+#: gui/greeter/greeter_canvas_item.c:374
+msgid "Answer questions here and press Enter when done.  For a menu press F10."
+msgstr ""
+"Introduceţi aici datele cerute şi apoi apăsaţi „Enter”. Pentru un meniu "
+"apăsaţi F10."
+
+#: gui/greeter/greeter_item_ulist.c:279
+#, c-format
+msgid "Can't open DefaultImage: %s!"
+msgstr "Nu am reuşit să deschid imaginea implicită: %s!"
+
+#: gui/greeter/greeter_item_ulist.c:381
+msgid ""
+"Doubleclick on the user\n"
+"to log in"
+msgstr ""
+"Alegeţi un utilizator\n"
+"pentru autentificare"
+
+#: gui/greeter/greeter_parser.c:1022 gui/greeter/greeter_system.c:193
+msgid "Sus_pend"
+msgstr "A_dormire"
+
+#: gui/greeter/greeter_parser.c:1032
+msgid "_XDMCP Chooser"
+msgstr "Selector _XDMCP"
+
+#: gui/greeter/greeter_parser.c:1037
+msgid "_Configure"
+msgstr "_Configurare"
+
+#: gui/greeter/greeter_parser.c:1042
+msgid "You've got capslock on!"
+msgstr "Aveţi tasta „Caps Lock” apăsată!"
+
+#: gui/greeter/greeter_session.c:247
+msgid "Choose a Session"
+msgstr "Selectaţi o sesiune"
+
+#: gui/greeter/greeter_system.c:260
+msgid "Choose an Action"
+msgstr "Selectaţi o acţiune"
+
+#: gui/greeter/greeter_system.c:282
+msgid "Shut _down the computer"
+msgstr "_Oprire calculator"
+
+#: gui/greeter/greeter_system.c:285
+msgid "Shut down your computer so that you may turn it off."
+msgstr "Vă opreşte sau închide calculatorul."
+
+#: gui/greeter/greeter_system.c:300
+msgid "_Reboot the computer"
+msgstr "R_epornire calculator"
+
+#: gui/greeter/greeter_system.c:314
+msgid "Sus_pend the computer"
+msgstr "_Adormire calculator"
+
+#: gui/greeter/greeter_system.c:328
+msgid "Run _XDMCP chooser"
+msgstr "Porneşte selectorul _XDMCP"
+
+#: gui/greeter/greeter_system.c:348
+msgid "Confi_gure the login manager"
+msgstr "_Configurare GDM"
+
+#: gui/greeter/themes/circles/GdmGreeterTheme.desktop.in.h:1
+msgid "(c) 2002 Bond, James Bond"
+msgstr "© 2002 Bond, James Bond"
+
+#: gui/greeter/themes/circles/GdmGreeterTheme.desktop.in.h:2
+msgid "Bond, James Bond"
+msgstr "Bond, James Bond"
+
+#: gui/greeter/themes/circles/GdmGreeterTheme.desktop.in.h:3
+msgid "Circles"
+msgstr "Cercuri"
+
+#: gui/greeter/themes/circles/GdmGreeterTheme.desktop.in.h:4
+msgid "Theme with blue circles"
+msgstr "Temă cu cercuri albastre"
+
+#: gui/greeter/themes/happygnome-list/GdmGreeterTheme.desktop.in.h:1
+#: gui/greeter/themes/happygnome/GdmGreeterTheme.desktop.in.h:1
+msgid "(c) 2002 GNOME"
+msgstr "© 2002 GNOME"
+
+#: gui/greeter/themes/happygnome-list/GdmGreeterTheme.desktop.in.h:2
+msgid "GNOME Art variation of Circles with a Face Browser"
+msgstr "Variaţie a temei cu cercuri având un selector de feţe"
+
+#: gui/greeter/themes/happygnome-list/GdmGreeterTheme.desktop.in.h:3
+#: gui/greeter/themes/happygnome/GdmGreeterTheme.desktop.in.h:3
+msgid "GNOME Artists"
+msgstr "Artişti GNOME"
+
+#: gui/greeter/themes/happygnome-list/GdmGreeterTheme.desktop.in.h:4
+msgid "Happy GNOME with Browser"
+msgstr "„Happy GNOME” cu selector de feţe"
+
+#: gui/greeter/themes/happygnome/GdmGreeterTheme.desktop.in.h:2
+msgid "GNOME Art variation of Circles"
+msgstr "Variaţie a temei GNOME cu cercuri"
+
+#: gui/greeter/themes/happygnome/GdmGreeterTheme.desktop.in.h:4
+msgid "Happy GNOME"
+msgstr "Happy GNOME"
+
+#: gui/modules/dwellmouselistener.c:579 gui/modules/keymouselistener.c:674
+#, c-format
+msgid ""
+"Error while trying to run (%s)\n"
+"which is linked to (%s)"
+msgstr ""
+"Eroare la încercarea de pornire (%s)\n"
+"care este legat la (%s)"
+
+#: utils/gdmaskpass.c:26
+#, c-format
+msgid "gdmaskpass only runs as root\n"
+msgstr "gdmaskpass nu poate fi pornit decât de „root“\n"
+
+#: utils/gdmaskpass.c:42 utils/gdmaskpass.c:48
+#, c-format
+msgid "Authentication failure!\n"
+msgstr "Autentificare nereuşită!\n"
+
+#: vicious-extensions/glade-helper.c:83
+msgid "(memory buffer)"
+msgstr "(tampon memorie)"
+
+#: vicious-extensions/glade-helper.c:115 vicious-extensions/glade-helper.c:137
+#: vicious-extensions/glade-helper.c:157
+msgid "(memory buffer"
+msgstr "(tampon memorie"
+
+#. markup
+#: vicious-extensions/glade-helper.c:193 vicious-extensions/glade-helper.c:246
+#: vicious-extensions/glade-helper.c:289
+msgid "Cannot load user interface"
+msgstr "Nu am reuşit să încarc interfaţa utilizator"
+
+#: vicious-extensions/glade-helper.c:194
+#, c-format
+msgid ""
+"An error occured while loading the user interface element %s%s from file %"
+"s.  Possibly the glade interface description was corrupted.  %s cannot "
+"continue and will exit now.  You should check your installation of %s or "
+"reinstall %s."
+msgstr ""
+"A intervenit o eroare la încărcarea elementului de interfaţă %s%s din "
+"fişierul %s. Poate descrierea interfeţei Glade este coruptă. %s nu poate "
+"continua şi va ieşi acum. Ar trebui să verificaţi instalarea %s sau să "
+"reinstalaţi %s."
+
+#: vicious-extensions/glade-helper.c:210
+#, c-format
+msgid ""
+"Glade file is on crack! Make sure the correct file is installed!\n"
+"file: %s widget: %s"
+msgstr ""
+"Fişier Glade corupt! Asiguraţi-vă că este instalat fişierul corect!\n"
+"file: %s widget: %s"
+
+#: vicious-extensions/glade-helper.c:247
+#, c-format
+msgid ""
+"An error occured while loading the user interface element %s%s from file %"
+"s.  CList type widget should have %d columns.  Possibly the glade interface "
+"description was corrupted.  %s cannot continue and will exit now.  You "
+"should check your installation of %s or reinstall %s."
+msgstr ""
+"A intervenit o eroare la încărcarea elementului de interfaţă %s%s din "
+"fişierul %s. Widget-ul tip CList ar trebui să aibă %d coloane. Poate "
+"descrierea interfeţei Glade este coruptă. %s nu poate continua şi va ieşi "
+"acum. Ar trebui să verificaţi instalarea %s sau să reinstalaţi %s."
+
+#: vicious-extensions/glade-helper.c:265
+#, c-format
+msgid ""
+"Glade file is on crack! Make sure the correct file is installed!\n"
+"file: %s widget: %s expected clist columns: %d"
+msgstr ""
+"Fişier Glade corupt! Verificaţi dacă se indică un fişier corect!\n"
+"file: %s widget: %s expected clist columns: %d"
+
+#: vicious-extensions/glade-helper.c:290
+#, c-format
+msgid ""
+"An error occured while loading the user interface from file %s.  Possibly "
+"the glade interface description was not found.  %s cannot continue and will "
+"exit now.  You should check your installation of %s or reinstall %s."
+msgstr ""
+"A intervenit o eroare la încărcarea interfeţei utilizator din fişierul %s. "
+"Probabil nu s-a găsit descrierea interfeţei Glade. %s nu poate continua şi "
+"va ieşi acum. Verificaţi instalarea %s sau reinstalaţi %s."
+
+#: vicious-extensions/glade-helper.c:302
+#, c-format
+msgid "No interface could be loaded, BAD! (file: %s)"
+msgstr "Nu am reuşit să încarc nici o interfaţă. Nu e bine! (fişier: %s"
+
+#: vicious-extensions/ve-nongnome.c:135
+msgid "Too many alias levels for a locale, may indicate a loop"
+msgstr ""
+"Prea multe niveluri de alias pentru un „locale“, ar putea indica o buclă "
+"infinită"

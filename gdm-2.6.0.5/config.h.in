@@ -1,0 +1,192 @@
+/* config.h.in.  Generated from configure.in by autoheader.  */
+#undef PACKAGE
+#undef VERSION
+#undef HAVE_LIBSM
+#undef ENABLE_NLS
+#undef HAVE_CATGETS
+#undef HAVE_DEFOPEN
+#undef HAVE_FBCONSOLE
+#undef HAVE_GETTEXT
+#undef HAVE_LC_MESSAGES
+#undef HAVE_STPCPY
+#undef HAVE_PAM
+#undef HAVE_TCPWRAPPERS
+#undef HAVE_SHADOW
+#undef HAVE_CRYPT
+#undef HAVE_XINERAMA
+#undef HAVE_XFREE_XINERAMA
+#undef HAVE_SOLARIS_XINERAMA
+#undef HAVE_LIBXDMCP
+#undef HAVE_SETENV
+#undef HAVE_UNSETENV
+#undef HAVE_CLEARENV
+#undef HAVE_SETRESUID
+#undef EXPANDED_DATADIR
+#undef EXPANDED_PIXMAPDIR
+#undef EXPANDED_BINDIR
+#undef EXPANDED_SBINDIR
+#undef EXPANDED_LIBEXECDIR
+#undef EXPANDED_LIBDIR
+#undef EXPANDED_GDMCONFIGDIR
+#undef EXPANDED_LOCALEDIR
+#undef EXPANDED_AUTHDIR
+#undef EXPANDED_LOGDIR
+#undef EXPANDED_SYSCONFDIR
+#undef EXPANDED_SESSDIR
+#undef X_SERVER
+#undef X_SERVER_PATH
+#undef X_CONF_PATH
+#undef GETTEXT_PACKAGE
+#undef HAVE_LOGINCAP
+#undef HAVE_SYS_SOCKIO_H
+#undef HAVE_SCHED_YIELD
+#undef ENABLE_IPV6
+#undef HAVE_SELINUX
+#undef HAVE_PASSWDEXPIRED
+#undef HAVE_CHPASS
+#undef HAVE_LOGINRESTRICTIONS
+#undef HAVE_LOGINDEVPERM
+#undef HAVE_ADT
+
+/* Define this variable if the code to clear the ADMCHG flag can be compiled
+   */
+#undef CAN_CLEAR_ADMCHG
+
+/* Define this variable if the code to use the setpenv function can be
+   compiled and used */
+#undef CAN_USE_SETPENV
+
+/* always defined to indicate that i18n is enabled */
+#undef ENABLE_NLS
+
+/* Define to 1 if you have the `bind_textdomain_codeset' function. */
+#undef HAVE_BIND_TEXTDOMAIN_CODESET
+
+/* Define to 1 if you have the `chpass' function. */
+#undef HAVE_CHPASS
+
+/* Define to 1 if you have the `clearenv' function. */
+#undef HAVE_CLEARENV
+
+/* Define to 1 if you have the <crypt.h> header file. */
+#undef HAVE_CRYPT_H
+
+/* Define to 1 if you have the `dcgettext' function. */
+#undef HAVE_DCGETTEXT
+
+/* Define to 1 if you have the <dlfcn.h> header file. */
+#undef HAVE_DLFCN_H
+
+/* Define to 1 if you have the `endpwdb' function. */
+#undef HAVE_ENDPWDB
+
+/* Define if the GNU gettext() function is already present or preinstalled. */
+#undef HAVE_GETTEXT
+
+/* Define to 1 if you have the `getuserpw' function. */
+#undef HAVE_GETUSERPW
+
+/* Define to 1 if you have the <inttypes.h> header file. */
+#undef HAVE_INTTYPES_H
+
+/* Define if your <locale.h> file defines LC_MESSAGES. */
+#undef HAVE_LC_MESSAGES
+
+/* Define to 1 if you have the `pam' library (-lpam). */
+#undef HAVE_LIBPAM
+
+/* Define to 1 if you have the <linux/vt.h> header file. */
+#undef HAVE_LINUX_VT_H
+
+/* Define to 1 if you have the <locale.h> header file. */
+#undef HAVE_LOCALE_H
+
+/* Define to 1 if you have the `loginrestrictions' function. */
+#undef HAVE_LOGINRESTRICTIONS
+
+/* Define to 1 if you have the <memory.h> header file. */
+#undef HAVE_MEMORY_H
+
+/* Define to 1 if you have the `passwdexpired' function. */
+#undef HAVE_PASSWDEXPIRED
+
+/* Define to 1 if you have the `putuserpw' function. */
+#undef HAVE_PUTUSERPW
+
+/* Define to 1 if you have the <security/pam_appl.h> header file. */
+#undef HAVE_SECURITY_PAM_APPL_H
+
+/* Define to 1 if you have the <security/pam_misc.h> header file. */
+#undef HAVE_SECURITY_PAM_MISC_H
+
+/* Define to 1 if you have the `setenv' function. */
+#undef HAVE_SETENV
+
+/* Define to 1 if you have the `setpwdb' function. */
+#undef HAVE_SETPWDB
+
+/* Define to 1 if you have the `setresuid' function. */
+#undef HAVE_SETRESUID
+
+/* Define to 1 if you have the <stdint.h> header file. */
+#undef HAVE_STDINT_H
+
+/* Define to 1 if you have the <stdlib.h> header file. */
+#undef HAVE_STDLIB_H
+
+/* Define to 1 if you have the <strings.h> header file. */
+#undef HAVE_STRINGS_H
+
+/* Define to 1 if you have the <string.h> header file. */
+#undef HAVE_STRING_H
+
+/* Define to 1 if you have the <sys/sockio.h> header file. */
+#undef HAVE_SYS_SOCKIO_H
+
+/* Define to 1 if you have the <sys/stat.h> header file. */
+#undef HAVE_SYS_STAT_H
+
+/* Define to 1 if you have the <sys/types.h> header file. */
+#undef HAVE_SYS_TYPES_H
+
+/* Define to 1 if you have the <unistd.h> header file. */
+#undef HAVE_UNISTD_H
+
+/* Define to 1 if you have the `unsetenv' function. */
+#undef HAVE_UNSETENV
+
+/* Define to 1 if you have the <usersec.h> header file. */
+#undef HAVE_USERSEC_H
+
+/* Name of package */
+#undef PACKAGE
+
+/* Define to the address where bug reports for this package should be sent. */
+#undef PACKAGE_BUGREPORT
+
+/* Define to the full name of this package. */
+#undef PACKAGE_NAME
+
+/* Define to the full name and version of this package. */
+#undef PACKAGE_STRING
+
+/* Define to the one symbol short name of this package. */
+#undef PACKAGE_TARNAME
+
+/* Define to the version of this package. */
+#undef PACKAGE_VERSION
+
+/* Define to 1 if you have the ANSI C header files. */
+#undef STDC_HEADERS
+
+/* Version number of package */
+#undef VERSION
+
+/* Options used when launching xserver */
+#undef X_CONFIG_OPTIONS
+
+/* Define to 1 if the X Window System is missing or not being used. */
+#undef X_DISPLAY_MISSING
+
+/* Define to `size_t' if <sys/types.h> does not define. */
+#undef socklen_t

@@ -1,0 +1,436 @@
+# Makefile.in generated automatically by automake 1.4-p6 from Makefile.am
+
+# Copyright (C) 1994, 1995-8, 1999, 2001 Free Software Foundation, Inc.
+# This Makefile.in is free software; the Free Software Foundation
+# gives unlimited permission to copy and/or distribute it,
+# with or without modifications, as long as this notice is preserved.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY, to the extent permitted by law; without
+# even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+# PARTICULAR PURPOSE.
+
+
+SHELL = @SHELL@
+
+srcdir = @srcdir@
+top_srcdir = @top_srcdir@
+VPATH = @srcdir@
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+
+bindir = @bindir@
+sbindir = @sbindir@
+libexecdir = @libexecdir@
+datadir = @datadir@
+sysconfdir = @sysconfdir@
+sharedstatedir = @sharedstatedir@
+localstatedir = @localstatedir@
+libdir = @libdir@
+infodir = @infodir@
+mandir = @mandir@
+includedir = @includedir@
+oldincludedir = /usr/include
+
+DESTDIR =
+
+pkgdatadir = $(datadir)/@PACKAGE@
+pkglibdir = $(libdir)/@PACKAGE@
+pkgincludedir = $(includedir)/@PACKAGE@
+
+top_builddir = ..
+
+ACLOCAL = @ACLOCAL@
+AUTOCONF = @AUTOCONF@
+AUTOMAKE = @AUTOMAKE@
+AUTOHEADER = @AUTOHEADER@
+
+INSTALL = @INSTALL@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@ $(AM_INSTALL_PROGRAM_FLAGS)
+INSTALL_DATA = @INSTALL_DATA@
+INSTALL_SCRIPT = @INSTALL_SCRIPT@
+transform = @program_transform_name@
+
+NORMAL_INSTALL = :
+PRE_INSTALL = :
+POST_INSTALL = :
+NORMAL_UNINSTALL = :
+PRE_UNINSTALL = :
+POST_UNINSTALL = :
+host_alias = @host_alias@
+host_triplet = @host@
+AR = @AR@
+AS = @AS@
+CATALOGS = @CATALOGS@
+CATOBJEXT = @CATOBJEXT@
+CC = @CC@
+CONSOLE_HELPER = @CONSOLE_HELPER@
+CXX = @CXX@
+CXXCPP = @CXXCPP@
+DAEMON_CFLAGS = @DAEMON_CFLAGS@
+DAEMON_LIBS = @DAEMON_LIBS@
+DATADIRNAME = @DATADIRNAME@
+DLLTOOL = @DLLTOOL@
+ECHO = @ECHO@
+EGREP = @EGREP@
+EXEEXT = @EXEEXT@
+EXPANDED_AUTHDIR = @EXPANDED_AUTHDIR@
+EXPANDED_BINDIR = @EXPANDED_BINDIR@
+EXPANDED_DATADIR = @EXPANDED_DATADIR@
+EXPANDED_GDMCONFIGDIR = @EXPANDED_GDMCONFIGDIR@
+EXPANDED_LIBDIR = @EXPANDED_LIBDIR@
+EXPANDED_LIBEXECDIR = @EXPANDED_LIBEXECDIR@
+EXPANDED_LOCALEDIR = @EXPANDED_LOCALEDIR@
+EXPANDED_LOGDIR = @EXPANDED_LOGDIR@
+EXPANDED_PIXMAPDIR = @EXPANDED_PIXMAPDIR@
+EXPANDED_SBINDIR = @EXPANDED_SBINDIR@
+EXPANDED_SESSDIR = @EXPANDED_SESSDIR@
+EXPANDED_SYSCONFDIR = @EXPANDED_SYSCONFDIR@
+EXTRA_CHOOSER_LIBS = @EXTRA_CHOOSER_LIBS@
+EXTRA_DAEMON_LIBS = @EXTRA_DAEMON_LIBS@
+EXTRA_GDMASKPASS_LIBS = @EXTRA_GDMASKPASS_LIBS@
+F77 = @F77@
+GCJ = @GCJ@
+GCJFLAGS = @GCJFLAGS@
+GDMASKPASS = @GDMASKPASS@
+GDMCHOOSER = @GDMCHOOSER@
+GDMOPEN = @GDMOPEN@
+GDMXNESTCHOOSER = @GDMXNESTCHOOSER@
+GETTEXT_PACKAGE = @GETTEXT_PACKAGE@
+GMOFILES = @GMOFILES@
+GMSGFMT = @GMSGFMT@
+GREETER_CFLAGS = @GREETER_CFLAGS@
+GREETER_LIBS = @GREETER_LIBS@
+GUIGLADE_CFLAGS = @GUIGLADE_CFLAGS@
+GUIGLADE_LIBS = @GUIGLADE_LIBS@
+GUING_CFLAGS = @GUING_CFLAGS@
+GUING_LIBS = @GUING_LIBS@
+GUI_CFLAGS = @GUI_CFLAGS@
+GUI_LIBS = @GUI_LIBS@
+HAVE_LIB = @HAVE_LIB@
+INSTOBJEXT = @INSTOBJEXT@
+INTLLIBS = @INTLLIBS@
+INTLTOOL_CAVES_RULE = @INTLTOOL_CAVES_RULE@
+INTLTOOL_DESKTOP_RULE = @INTLTOOL_DESKTOP_RULE@
+INTLTOOL_DIRECTORY_RULE = @INTLTOOL_DIRECTORY_RULE@
+INTLTOOL_EXTRACT = @INTLTOOL_EXTRACT@
+INTLTOOL_KBD_RULE = @INTLTOOL_KBD_RULE@
+INTLTOOL_KEYS_RULE = @INTLTOOL_KEYS_RULE@
+INTLTOOL_MERGE = @INTLTOOL_MERGE@
+INTLTOOL_OAF_RULE = @INTLTOOL_OAF_RULE@
+INTLTOOL_PERL = @INTLTOOL_PERL@
+INTLTOOL_PONG_RULE = @INTLTOOL_PONG_RULE@
+INTLTOOL_PROP_RULE = @INTLTOOL_PROP_RULE@
+INTLTOOL_SCHEMAS_RULE = @INTLTOOL_SCHEMAS_RULE@
+INTLTOOL_SERVER_RULE = @INTLTOOL_SERVER_RULE@
+INTLTOOL_SHEET_RULE = @INTLTOOL_SHEET_RULE@
+INTLTOOL_SOUNDLIST_RULE = @INTLTOOL_SOUNDLIST_RULE@
+INTLTOOL_THEME_RULE = @INTLTOOL_THEME_RULE@
+INTLTOOL_UI_RULE = @INTLTOOL_UI_RULE@
+INTLTOOL_UPDATE = @INTLTOOL_UPDATE@
+INTLTOOL_XAM_RULE = @INTLTOOL_XAM_RULE@
+INTLTOOL_XML_RULE = @INTLTOOL_XML_RULE@
+LIB = @LIB@
+LIBTOOL = @LIBTOOL@
+LN_S = @LN_S@
+LTLIB = @LTLIB@
+MAINT = @MAINT@
+MAKEINFO = @MAKEINFO@
+MKINSTALLDIRS = @MKINSTALLDIRS@
+OBJDUMP = @OBJDUMP@
+OBJEXT = @OBJEXT@
+PACKAGE = @PACKAGE@
+PAM_PREFIX = @PAM_PREFIX@
+PKG_CONFIG = @PKG_CONFIG@
+POFILES = @POFILES@
+POSUB = @POSUB@
+PO_IN_DATADIR_FALSE = @PO_IN_DATADIR_FALSE@
+PO_IN_DATADIR_TRUE = @PO_IN_DATADIR_TRUE@
+RANLIB = @RANLIB@
+RC = @RC@
+STRIP = @STRIP@
+USE_NLS = @USE_NLS@
+UTILS_CFLAGS = @UTILS_CFLAGS@
+UTILS_LIBS = @UTILS_LIBS@
+VERSION = @VERSION@
+VRFY = @VRFY@
+WARN_CFLAGS = @WARN_CFLAGS@
+WARN_CXXFLAGS = @WARN_CXXFLAGS@
+XDMCP_LIBS = @XDMCP_LIBS@
+XINERAMA_LIBS = @XINERAMA_LIBS@
+X_CONFIG_OPTIONS = @X_CONFIG_OPTIONS@
+X_CONF_PATH = @X_CONF_PATH@
+X_PATH = @X_PATH@
+X_SERVER = @X_SERVER@
+X_SERVER_PATH = @X_SERVER_PATH@
+
+pixmapdir = $(datadir)/pixmaps
+confdir = $(sysconfdir)/gdm
+crossconfdir = $(sysconfdir)/dm
+localedir = $(sysconfdir)/gdm
+bisessdir = $(datadir)/gdm/BuiltInSessions
+instsessdir = $(datadir)/xsessions
+initdir = $(sysconfdir)/gdm/Init
+authdir = $(localstatedir)/gdm
+logdir = $(localstatedir)/log/gdm
+gnomercdir = $(sysconfdir)/gdm
+postdir = $(sysconfdir)/gdm/PostSession
+predir = $(sysconfdir)/gdm/PreSession
+postlogindir = $(sysconfdir)/gdm/PostLogin
+
+noinst_DATA = gdm.conf
+
+EXTRA_DIST =  	gdm.conf.in 	gnome.desktop.in 	default.desktop.in 	CDE.desktop.in 	Xsession.in 	gdm 	gdm-autologin 	locale.alias 	Default.in 	PostSession.in 	PreSession.in 	PostLogin 	XKeepsCrashing 	gettextfoo.h 	extract-shell.sh
+
+mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
+CONFIG_HEADER = ../config.h
+CONFIG_CLEAN_FILES =  gdm.conf Xsession Default PreSession PostSession
+DATA =  $(noinst_DATA)
+
+DIST_COMMON =  Default.in Makefile.am Makefile.in PostSession.in \
+PreSession.in Xsession.in gdm.conf.in
+
+
+DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
+
+TAR = gtar
+GZIP_ENV = --best
+all: all-redirect
+.SUFFIXES:
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
+	cd $(top_srcdir) && $(AUTOMAKE) --gnu --include-deps config/Makefile
+
+Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
+	cd $(top_builddir) \
+	  && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
+
+gdm.conf: $(top_builddir)/config.status gdm.conf.in
+	cd $(top_builddir) && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
+Xsession: $(top_builddir)/config.status Xsession.in
+	cd $(top_builddir) && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
+Default: $(top_builddir)/config.status Default.in
+	cd $(top_builddir) && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
+PreSession: $(top_builddir)/config.status PreSession.in
+	cd $(top_builddir) && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
+PostSession: $(top_builddir)/config.status PostSession.in
+	cd $(top_builddir) && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
+tags: TAGS
+TAGS:
+
+
+distdir = $(top_builddir)/$(PACKAGE)-$(VERSION)/$(subdir)
+
+subdir = config
+
+distdir: $(DISTFILES)
+	@for file in $(DISTFILES); do \
+	  d=$(srcdir); \
+	  if test -d $$d/$$file; then \
+	    cp -pr $$d/$$file $(distdir)/$$file; \
+	  else \
+	    test -f $(distdir)/$$file \
+	    || ln $$d/$$file $(distdir)/$$file 2> /dev/null \
+	    || cp -p $$d/$$file $(distdir)/$$file || :; \
+	  fi; \
+	done
+info-am:
+info: info-am
+dvi-am:
+dvi: dvi-am
+check-am: all-am
+check: check-am
+installcheck-am:
+installcheck: installcheck-am
+install-exec-am:
+install-exec: install-exec-am
+
+install-data-am:
+	@$(NORMAL_INSTALL)
+	$(MAKE) $(AM_MAKEFLAGS) install-data-hook
+install-data: install-data-am
+
+install-am: all-am
+	@$(MAKE) $(AM_MAKEFLAGS) install-exec-am install-data-am
+install: install-am
+uninstall-am:
+uninstall: uninstall-am
+all-am: Makefile $(DATA)
+all-redirect: all-am
+install-strip:
+	$(MAKE) $(AM_MAKEFLAGS) AM_INSTALL_PROGRAM_FLAGS=-s install
+installdirs:
+
+
+mostlyclean-generic:
+
+clean-generic:
+
+distclean-generic:
+	-rm -f Makefile $(CONFIG_CLEAN_FILES)
+	-rm -f config.cache config.log stamp-h stamp-h[0-9]*
+
+maintainer-clean-generic:
+mostlyclean-am:  mostlyclean-generic
+
+mostlyclean: mostlyclean-am
+
+clean-am:  clean-generic mostlyclean-am
+
+clean: clean-am
+
+distclean-am:  distclean-generic clean-am
+	-rm -f libtool
+
+distclean: distclean-am
+
+maintainer-clean-am:  maintainer-clean-generic distclean-am
+	@echo "This command is intended for maintainers to use;"
+	@echo "it deletes files that may require special tools to rebuild."
+
+maintainer-clean: maintainer-clean-am
+
+.PHONY: tags distdir info-am info dvi-am dvi check check-am \
+installcheck-am installcheck install-exec-am install-exec \
+install-data-am install-data install-am install uninstall-am uninstall \
+all-redirect all-am all installdirs mostlyclean-generic \
+distclean-generic clean-generic maintainer-clean-generic clean \
+mostlyclean distclean maintainer-clean
+
+
+gettextfoo.h: XKeepsCrashing Xsession.in
+	cat $^ | $(srcdir)/extract-shell.sh > gettextfoo.h
+
+@INTLTOOL_DESKTOP_RULE@
+
+install-data-hook: gdm.conf Xsession gnome.desktop default.desktop CDE.desktop Default PostSession PreSession
+	if test '!' -d $(DESTDIR)$(confdir); then \
+		$(mkinstalldirs) $(DESTDIR)$(confdir); \
+		chmod 755 $(DESTDIR)$(confdir); \
+	fi
+	if test '!' -d $(DESTDIR)$(crossconfdir); then \
+		$(mkinstalldirs) $(DESTDIR)$(crossconfdir); \
+		chmod 755 $(DESTDIR)$(crossconfdir); \
+	fi
+	-if cmp -s $(DESTDIR)$(confdir)/gdm.conf $(DESTDIR)$(confdir)/factory-gdm.conf > /dev/null 2>&1 ; then \
+		cp -f $(DESTDIR)$(confdir)/gdm.conf $(DESTDIR)$(confdir)/gdm.conf.orig; \
+		$(INSTALL_DATA) gdm.conf $(DESTDIR)$(confdir)/gdm.conf; \
+	fi
+	if test '!' -f $(DESTDIR)$(confdir)/gdm.conf; then \
+		$(INSTALL_DATA) gdm.conf $(DESTDIR)$(confdir)/gdm.conf; \
+	fi
+	$(INSTALL_DATA) gdm.conf $(DESTDIR)$(confdir)/factory-gdm.conf
+
+	$(INSTALL_SCRIPT) $(srcdir)/XKeepsCrashing $(DESTDIR)$(confdir)/XKeepsCrashing
+	$(INSTALL_SCRIPT) Xsession $(DESTDIR)$(confdir)/Xsession
+
+	-if test -f $(DESTDIR)$(localedir)/locale.alias; then \
+		cp -f $(DESTDIR)$(localedir)/locale.alias $(DESTDIR)$(localedir)/locale.alias.orig; \
+	fi
+	$(INSTALL_DATA) $(srcdir)/locale.alias $(DESTDIR)$(localedir)/locale.alias
+
+	if test '!' -d $(DESTDIR)$(bisessdir); then \
+		$(mkinstalldirs) $(DESTDIR)$(bisessdir); \
+		chmod 755 $(DESTDIR)$(bisessdir); \
+	fi
+
+	if test '!' -d $(DESTDIR)$(instsessdir); then \
+		$(mkinstalldirs) $(DESTDIR)$(instsessdir); \
+		chmod 755 $(DESTDIR)$(instsessdir); \
+	fi
+
+	-if test -f $(DESTDIR)$(bisessdir)/Default.desktop; then \
+		mv -f $(DESTDIR)$(bisessdir)/Default.desktop $(DESTDIR)$(bisessdir)/Default.desktop.orig; \
+	fi
+	-if test -f $(DESTDIR)$(bisessdir)/default.desktop; then \
+		cp -f $(DESTDIR)$(bisessdir)/default.desktop $(DESTDIR)$(bisessdir)/default.desktop.orig; \
+	fi
+	$(INSTALL_SCRIPT) default.desktop $(DESTDIR)$(bisessdir)/default.desktop
+
+	-if test -f $(DESTDIR)$(bisessdir)/gnome.desktop; then \
+		mv -f $(DESTDIR)$(bisessdir)/gnome.desktop $(DESTDIR)$(bisessdir)/gnome.desktop.orig; \
+	fi
+	-if test -f $(DESTDIR)$(instsessdir)/gnome.desktop; then \
+		cp -f $(DESTDIR)$(instsessdir)/gnome.desktop $(DESTDIR)$(instsessdir)/gnome.desktop.orig; \
+	fi
+	$(INSTALL_SCRIPT) gnome.desktop $(DESTDIR)$(instsessdir)/gnome.desktop
+
+	-if test -f /usr/dt/bin/Xsession; then \
+	   if test -f $(DESTDIR)$(bisessdir)/CDE.desktop; then \
+		mv -f $(DESTDIR)$(bisessdir)/CDE.desktop $(DESTDIR)$(bisessdir)/CDE.desktop.orig; \
+	   fi; \
+	   if test -f $(DESTDIR)$(instsessdir)/CDE.desktop; then \
+		cp -f $(DESTDIR)$(instsessdir)/CDE.desktop $(DESTDIR)$(instsessdir)/CDE.desktop.orig; \
+	   fi; \
+	   $(INSTALL_SCRIPT) CDE.desktop $(DESTDIR)$(instsessdir)/CDE.desktop; \
+	fi
+
+	if test '!' -d $(DESTDIR)$(initdir); then \
+		$(mkinstalldirs) $(DESTDIR)$(initdir); \
+		chmod 755 $(DESTDIR)$(initdir); \
+	fi
+	-if test -f $(DESTDIR)$(initdir)/Default; then \
+		cp -f $(DESTDIR)$(initdir)/Default $(DESTDIR)$(initdir)/Default.orig; \
+	fi
+	$(INSTALL_SCRIPT) Default $(DESTDIR)$(initdir)/Default
+
+	if test '!' -d $(DESTDIR)$(postlogindir); then \
+		$(mkinstalldirs) $(DESTDIR)$(postlogindir); \
+		chmod 755 $(DESTDIR)$(postlogindir); \
+	fi
+	$(INSTALL_SCRIPT) $(srcdir)/PostLogin $(DESTDIR)$(postlogindir)/Default.sample
+
+	if test '!' -d $(DESTDIR)$(predir); then \
+		$(mkinstalldirs) $(DESTDIR)$(predir); \
+		chmod 755 $(DESTDIR)$(predir); \
+	fi
+	-if test -f $(DESTDIR)$(predir)/Default; then \
+		cp -f $(DESTDIR)$(predir)/Default $(DESTDIR)$(predir)/Default.orig; \
+	fi
+	$(INSTALL_SCRIPT) PreSession $(DESTDIR)$(predir)/Default
+
+	if test '!' -d $(DESTDIR)$(postdir); then \
+		$(mkinstalldirs) $(DESTDIR)$(postdir); \
+		chmod 755 $(DESTDIR)$(postdir); \
+	fi
+	-if test -f $(DESTDIR)$(postdir)/Default; then \
+		cp -f $(DESTDIR)$(postdir)/Default $(DESTDIR)$(postdir)/Default.orig; \
+	fi
+	$(INSTALL_SCRIPT) PostSession $(DESTDIR)$(postdir)/Default
+
+	if test '!' -d $(DESTDIR)$(gnomercdir); then \
+		$(mkinstalldirs) $(DESTDIR)$(gnomercdir); \
+		chmod 755 $(DESTDIR)$(gnomercdir); \
+	fi
+
+	if test '!' -d $(DESTDIR)$(logdir); then \
+		$(mkinstalldirs) $(DESTDIR)$(logdir); \
+		chown root:root $(DESTDIR)$(logdir); \
+		chmod 755 $(DESTDIR)$(logdir); \
+	fi
+
+	if test '!' -d $(DESTDIR)$(authdir); then \
+		$(mkinstalldirs) $(DESTDIR)$(authdir); \
+		chown root:gdm $(DESTDIR)$(authdir); \
+		chmod 1770 $(DESTDIR)$(authdir); \
+	fi
+
+	system=`uname`; \
+	if test -f /usr/include/security/pam_appl.h; then \
+	  if test '!' -d $(DESTDIR)$(PAM_PREFIX)/pam.d; then \
+		$(mkinstalldirs) $(DESTDIR)$(PAM_PREFIX)/pam.d; \
+		chmod 755 $(DESTDIR)$(PAM_PREFIX)/pam.d; \
+	   fi; \
+	   if test $$system = Linux && test '!' -f $(DESTDIR)$(PAM_PREFIX)/pam.d/gdm; then \
+		$(INSTALL_DATA) gdm $(DESTDIR)$(PAM_PREFIX)/pam.d/gdm; \
+	   fi; \
+	   if test $$system = Linux && test '!' -f $(DESTDIR)$(PAM_PREFIX)/pam.d/gdm-autologin; then \
+		$(INSTALL_DATA) gdm-autologin $(DESTDIR)$(PAM_PREFIX)/pam.d/gdm-autologin; \
+	   fi; \
+	   if test $$system = SunOS; then \
+		echo "Please add PAM authentication for gdm and gdm-autologin in $(PAM_PREFIX)/pam.conf!"; \
+	   fi; \
+	fi
+
+# Tell versions [3.59,3.63) of GNU make to not export all variables.
+# Otherwise a system limit (for SysV at least) may be exceeded.
+.NOEXPORT:
