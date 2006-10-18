@@ -18,8 +18,6 @@ TESTS_ENVIRONMENT=	$(SHELL)
 
 EXTRA_DIST=	vasidmap.pp LICENCE rc.test $(man_MANS) pp
 
-dist-hook:
-	cp /data/rc/pub/rc/polypkg/pp $(distdir)/pp
 package: pp vasidmap.pp
 	test -n "$(DESTDIR)"
 	$(srcdir)/pp --destdir=$(DESTDIR) \
