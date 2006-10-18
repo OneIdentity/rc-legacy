@@ -1,10 +1,6 @@
 %set
     name="vasidmapd"
     description="VAS idmap module for Samba"
-    prefix=/opt/quest
-    bindir=$prefix/bin
-    sbindir=$prefix/sbin
-    mandir=$prefix/man
 
 #%depend
 #    libvas.so.4.2

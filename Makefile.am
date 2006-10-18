@@ -23,4 +23,7 @@ package: pp vasidmap.pp
 	$(srcdir)/pp --destdir=$(DESTDIR) \
 	    --install-script=install-vasidmap \
 	    $(srcdir)/vasidmap.pp \
-	    version="$(VERSION)"
+	    version="$(VERSION)" \
+	    bindir=$(bindir) \
+	    sbindir=$(sbindir) \
+	    mandir=$(mandir)
