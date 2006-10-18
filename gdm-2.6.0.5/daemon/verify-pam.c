@@ -68,6 +68,7 @@ static char *tmp_PAM_USER = NULL;
 
 /* this is another hack */
 static gboolean did_we_ask_for_password = FALSE;
+static gboolean did_we_ask_for_pin = FALSE;
 
 static char *selected_user = NULL;
 
@@ -356,6 +357,12 @@ perhaps_translate_message (const char *msg)
 		g_hash_table_insert (hash, "You must wait longer to change your password", _("You must wait longer to change your password"));
 		g_hash_table_insert (hash, "Sorry, passwords do not match", _("Sorry, passwords do not match"));
 		/* FIXME: what about messages which have some variables in them, perhaps try to do those as well */
+                g_hash_table_insert (hash, "User name:", _("Username:"));
+                g_hash_table_insert (hash, "user name:", _("Username:"));
+                g_hash_table_insert (hash, "PIN:", _("PIN:"));
+                g_hash_table_insert (hash, "pin:", _("PIN:"));
+                g_hash_table_insert (hash, "PIN", _("PIN:"));
+                g_hash_table_insert (hash, "pin", _("PIN:"));
 	}
 	s = g_strstrip (g_strdup (msg));
 	ret = g_hash_table_lookup (hash, s);
@@ -480,6 +487,9 @@ gdm_verify_pam_conv (int num_msg, const struct pam_message **msg,
 	case PAM_PROMPT_ECHO_OFF:
 	    if (strcmp (m, _("Password:")) == 0)
 		    did_we_ask_for_password = TRUE;
+            else if (strcmp (m, _("PIN:")) == 0)
+                    did_we_ask_for_pin = TRUE;
+
 	    /* PAM requested textual input with echo off */
 	    s = gdm_slave_greeter_ctl (GDM_NOECHO, m);
 	    if (gdm_slave_greeter_check_interruption ()) {
@@ -788,6 +798,7 @@ authenticate_again:
 #endif
 
     did_we_ask_for_password = FALSE;
+    did_we_ask_for_pin = FALSE;
 
     gdm_verify_select_user (NULL);
     /* Start authentication session */
@@ -1024,6 +1035,10 @@ authenticate_again:
 			    basemsg = _("\nIncorrect username or password.  "
 					"Letters must be typed in the correct "
 					"case.");
+                    } else if (did_we_ask_for_pin) {
+			    basemsg = _("\nIncorrect username or PIN.  "
+					"Letters must be typed in the correct "
+					"case.");
 		    } else {
 			    basemsg = _("\nAuthentication failed.  "
 					"Letters must be typed in the correct "
@@ -1139,6 +1154,7 @@ gdm_verify_setup_user (GdmDisplay *d, const gchar *login, const gchar *display,
 
     /* Start authentication session */
     did_we_ask_for_password = FALSE;
+    did_we_ask_for_pin = FALSE;
     if ((pamerr = pam_authenticate (pamh, null_tok)) != PAM_SUCCESS) {
 	    if (gdm_slave_action_pending ()) {
 		    gdm_error (_("Couldn't authenticate user"));
