@@ -75,6 +75,12 @@ static char *selected_user = NULL;
 static gboolean opened_session = FALSE;
 static gboolean did_setcred = FALSE;
 
+/** Flag indicating if an error message has already been displayed. If there
+ * is an authentication error and an error message has not already been 
+ * displayed, then a generic authentication error message is used.
+ */
+static gboolean error_msg_given = FALSE;
+
 #ifdef	HAVE_ADT
 #define	PW_FALSE	1	/* no password change */
 #define PW_TRUE		2	/* successful password change */
@@ -510,6 +516,8 @@ gdm_verify_pam_conv (int num_msg, const struct pam_message **msg,
 	    gdm_slave_greeter_ctl (GDM_ERRDLG, m);
 	    reply[replies].resp_retcode = PAM_SUCCESS;
 	    reply[replies].resp = NULL;
+            /* Note that an error message has been displayed */
+            error_msg_given = TRUE;
 	    break;
 	case PAM_TEXT_INFO:
 	    /* PAM sent a message that should displayed to the user */
@@ -724,7 +732,6 @@ gdm_verify_user (GdmDisplay *d,
     const void *p;
     char *login;
     struct passwd *pwent = NULL;
-    gboolean error_msg_given;
     gboolean credentials_set;
     gboolean started_timer;
     int null_tok;
