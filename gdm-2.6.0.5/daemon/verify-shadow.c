@@ -123,7 +123,6 @@ gdm_verify_user (GdmDisplay *d, const char *username, const gchar *display, gboo
 authenticate_again:
 	    /* Ask for the user's login */
 	    gdm_verify_select_user (NULL);
-	    gdm_slave_greeter_ctl_no_ret (GDM_MSG, _("Please enter your username"));
 	    login = gdm_slave_greeter_ctl (GDM_PROMPT, _("Username:"));
 	    if (login == NULL ||
 		gdm_slave_greeter_check_interruption ()) {

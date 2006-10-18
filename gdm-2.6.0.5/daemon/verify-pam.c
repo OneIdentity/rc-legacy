@@ -431,12 +431,6 @@ gdm_verify_pam_conv (int num_msg, const struct pam_message **msg,
 			       then I can afford. */
 			    s = g_strdup (selected_user);
 		    } else {
-			    /* this is an evil hack, but really there is no way we'll
-			    know this is a username prompt.  However we SHOULD NOT
-			    rely on this working.  The pam modules can set their
-			    prompt to whatever they wish to */
-			    gdm_slave_greeter_ctl_no_ret
-				    (GDM_MSG, _("Please enter your username"));
 			    s = gdm_slave_greeter_ctl (GDM_PROMPT, m);
 			    /* this will clear the message */
 			    gdm_slave_greeter_ctl_no_ret (GDM_MSG, "");

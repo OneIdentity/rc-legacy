@@ -26,6 +26,7 @@ gchar *greeter_current_user = NULL;
 gboolean require_quarter = FALSE;
 
 extern gboolean greeter_probably_login_prompt;
+static gboolean using_fallback_message = FALSE;
 
 void
 greeter_item_pam_set_user (const char *user)
@@ -173,12 +174,30 @@ greeter_item_pam_prompt (const char *message,
 			 int         entry_len,
 			 gboolean    entry_visible)
 {
+  GreeterItemInfo *message_info;
   GreeterItemInfo *conversation_info;
   GreeterItemInfo *entry_info;
   GtkWidget *entry;
 
+  message_info = greeter_lookup_id ("pam-message");
   conversation_info = greeter_lookup_id ("pam-prompt");
   entry_info = greeter_lookup_id ("user-pw-entry");
+
+  if (strcmp (message, _("Username:")) == 0 && message_info) 
+    {
+      gchar *text = NULL;
+      g_object_get (G_OBJECT (message_info->item), "text", &text, NULL);
+      if (ve_string_empty (text)) {
+        set_text (message_info, _("Please enter your username"));
+        using_fallback_message = TRUE;
+      }
+      g_free (text);
+    }
+  else if (using_fallback_message) 
+    {
+      set_text (message_info, "");
+      using_fallback_message = FALSE;
+    }
 
   if (conversation_info)
     {
@@ -219,6 +238,7 @@ greeter_item_pam_message (const char *message)
        * we try to collect them until the next prompt or reset or
        * whatnot */
       if ( ! replace_msg &&
+           ! using_fallback_message &&
 	   /* empty message is for clearing */
 	   ! ve_string_empty (message))
 	{
@@ -238,6 +258,7 @@ greeter_item_pam_message (const char *message)
         set_text (message_info, message);
     }
   replace_msg = FALSE;
+  using_fallback_message = FALSE;
 }
 
 

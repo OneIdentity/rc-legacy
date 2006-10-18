@@ -202,6 +202,7 @@ static gboolean selecting_user = TRUE;
 /* This is true if session dir doesn't exist or is whacked out
  * in some way or another */
 static gboolean session_dir_whacked_out = FALSE;
+static gboolean using_fallback_message = FALSE;
 
 static void login_window_resize (gboolean force);
 
@@ -1873,8 +1874,16 @@ gdm_login_ctrl_handler (GIOChannel *source, GIOCondition cond, gint fd)
 	if (strcmp (tmp, _("Username:")) == 0) {
 		gdm_common_login_sound ();
 		gtk_label_set_text_with_mnemonic (GTK_LABEL (label), _("_Username:"));
+                if (ve_string_empty(gtk_label_get_text (GTK_LABEL (msg)))) {
+                        gtk_label_set_text (GTK_LABEL (msg), _("Please enter your username"));
+                        using_fallback_message = TRUE;
+                }
 	} else {
 		gtk_label_set_text (GTK_LABEL (label), tmp);
+                if (using_fallback_message) {
+                        gtk_label_set_text (GTK_LABEL (msg), "");
+                        using_fallback_message = FALSE;
+                }
 	}
 	g_free (tmp);
 
@@ -1961,6 +1970,7 @@ gdm_login_ctrl_handler (GIOChannel *source, GIOCondition cond, gint fd)
 		g_free (tmp);
 	}
 	replace_msg = FALSE;
+        using_fallback_message = FALSE;
 
 	gtk_widget_show (GTK_WIDGET (msg));
 	printf ("%c\n", STX);
