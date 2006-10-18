@@ -2,7 +2,7 @@
 AUTOMAKE_OPTIONS =	foreign
 
 noinst_LIBRARIES =	libauthtest.a
-libauthtest_a_SOURCES =	colours.c authtest.h
+libauthtest_a_SOURCES =	colours.c privsep.c strtouid.c authtest.h
 
 bin_PROGRAMS =		kuserok gss-server gss-client
 man_MANS = 		kuserok.1 gss-server.1 gss-client.1

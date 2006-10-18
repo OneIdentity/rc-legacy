@@ -20,6 +20,7 @@
 #include "authtest.h"
 
 int pflag = 0;	    /* -p: privsep uid */
+int privsep_uid = -1;
 int rflag = 0;	    /* -r: use responses instead of prompting */
 char **responses;
 int sflag = 0;	    /* -s: skip pam_authenticate */
@@ -60,180 +61,6 @@ static struct err {
     ERRDECL(PAM_TRY_AGAIN),
     { -1, NULL }
 };
-
-/* Standout codes to distinguish PAM conversation from debugging */
-
-/*------------------------------------------------------------
- * getpass()
- * 
- * On some platforms, getpass() is totally broken.
- */
-#if __hpux
-# define getpass mygetpass
-# include <termios.h>
-
-struct termios gp_tsave;
-void (*gp_ssave)(int);
-
-void
-gp_restore()
-{
-    tcsetattr(fileno(stdin), TCSADRAIN, &gp_tsave);
-    (void)signal(SIGINT, gp_ssave);
-}
-
-void
-gp_sigint(int sig)
-{
-    gp_restore();
-    kill(getpid(), SIGINT);
-}
-
-void
-gp_noecho()
-{
-    struct termios tnew;
-
-    if ((gp_ssave = signal(SIGINT, gp_sigint)) == SIG_ERR) {
-	perror("signal");
-	exit(1);
-    }
-    tcgetattr(fileno(stdin), &gp_tsave);
-    memcpy(&tnew, &gp_tsave, sizeof tnew);
-    tnew.c_lflag &= ~(ECHO|ISIG);
-    tcsetattr(fileno(stdin), TCSADRAIN, &tnew);
-}
-
-char *
-getpass(char *prompt)
-{
-    static char buf[256];
-    char *s;
-
-    printf("%s", prompt);
-    fflush(stdout);
-    gp_noecho();
-    s = fgets(buf, sizeof buf, stdin);
-    gp_restore();
-    putchar('\n');
-    return s;
-}
-
-#endif /* hpux */
-
-/* Convert a username or integer to a uid */
-int
-touid(const char *s)
-{
-    struct passwd *pw;
-
-    if (*s >= '0' && *s <= '9')
-	return atoi(s);
-    pw = getpwnam(s);
-    if (!pw) {
-	fprintf(stderr, "bad username '%s'\n", s);
-	exit(1);
-    }
-    return pw->pw_uid;
-}
-
-/*------------------------------------------------------------
- * Unprivileged process. Forks a child process, drops privileges,
- * and sets up a pipe file on which printf/scanf will work.
- * Privileged caller calls privsep_start(), and if it returns
- * true performs the unprivileged code, writes a result to the
- * privsep_pipe FILE* and then calls _exit(0). If the function
- * returns false, then the caller should read from privsep_pipe
- * (it may return EOF) and then privsep_end() to clean up.
- */
-#include <sys/types.h>
-#include <signal.h>
-
-FILE *privsep_pipe;
-pid_t privsep_child;
-uid_t privsep_uid = 1;
-
-int
-privsep_start()
-{
-    int pipefd[2];
-
-    if (pipe(pipefd) < 0) {
-	perror("pipe");
-	exit(1);
-    }
-/*    if (signal(SIGCHLD, SIG_IGN) < 0)
-	perror("signal"); */
-
-    debug("[starting privsep]");
-    if ((privsep_child = fork()) < 0) {
-	perror("fork");
-	exit(1);
-    }
-    if (privsep_child == 0) {
-	close(pipefd[0]);
-	privsep_pipe = fdopen(pipefd[1], "w");
-	if (!privsep_pipe) {
-	    perror("fdopen");
-	    exit(1);
-	}
-	if (setreuid(privsep_uid, privsep_uid) < 0)
-	    perror("setreuid");
-	debug("[uid=%d euid=%d]", getuid(), geteuid());
-	return 1;
-    } else {
-	close(pipefd[1]);
-	privsep_pipe = fdopen(pipefd[0], "r");
-	if (!privsep_pipe) {
-	    perror("fdopen");
-	    exit(1);
-	}
-	return 0;
-    }
-}
-
-void
-privsep_end()
-{
-    int status;
-
-    if (privsep_child == 0) {
-	fclose(privsep_pipe);
-	_exit(0);
-    } else {
-	if (waitpid(privsep_child, &status, 0) < 0) {
-	    perror("waitpid");
-	    exit(1);
-	}
-	debug("[ending privsep]");
-	if (WIFEXITED(status)) {
-	    if (WEXITSTATUS(status) != 0) 
-		fprintf(stderr, "[unpriv child exit %d]\n", 
-			WEXITSTATUS(status));
-	} else if (WIFSIGNALED(status))
-	    fprintf(stderr, "[unpriv child killed %d]\n", WTERMSIG(status));
-	else
-	    fprintf(stderr, "[unpriv child unknown status]\n");
-    }
-    fclose(privsep_pipe);
-}
-
-void
-privsep_return(int ok)
-{
-	fprintf(privsep_pipe, "%u", ok);
-	privsep_end();
-}
-
-int
-privsep_wait()
-{
-	int ok;
-	if (fscanf(privsep_pipe, "%u", &ok) < 1) 
-	    ok = -1;
-	privsep_end();
-	return ok;
-}
 
 /*------------------------------------------------------------
  * PAM logging and error printing
@@ -313,47 +140,54 @@ convfn(int n, struct pam_message **m, struct pam_response **r, void *data)
     /* fprintf(stderr, "conv: m=%p r=%p *r=%p\n", m, r, r?*r:0); */
     debug("[conversation start, %d message%s]",  n, n == 1 ? "" : "s");
 
+    if (!n)
+	debug_err("zero messages passed to conversation function");
+
     /* I hope someone frees this */
     *r = (struct pam_response *)malloc(n * sizeof (struct pam_response));
 
     for (i = 0; i < n; i++) {
+	const char *msg = m[i]->msg;
+	if (msg == NULL) {
+	    debug_err("  NULL pam_message field #%d", i);
+	    msg = "(null)";
+	}
 	switch (m[i]->msg_style) {
 	    case PAM_PROMPT_ECHO_OFF:
-		debug("{style=prompt_echo_off}");
+		debug_nonl("  {style=prompt_echo_off}");
 		if (responses && *responses) {
 		    s = *responses++;
-		    printf("%s%s%s%s\n", m[i]->msg, 
-                            col_SO_INP, s, col_SE);
+		    printf("%s%s%s%s\n", msg, col_SO_INP, s, col_SE);
 		} else
 		    s = getpass(m[i]->msg);
-		if (!s) { fprintf(stderr, "eof from getpass()\n"); exit(1); }
+		if (!s) { fprintf(stderr, "  eof from getpass()\n"); exit(1); }
 		r[i]->resp = strdup(s);
 		break;
 	    case PAM_PROMPT_ECHO_ON:
-		debug("{style=prompt_echo_on}");
-		printf("%s", m[i]->msg);
+		debug_nonl("  {style=prompt_echo_on}");
+		printf("%s", msg);
 		if (responses && *responses) {
 		    s = *responses++;
 		    printf("%s%s%s\n", col_SO_INP, s, col_SE);
 		} else
 		    s = fgets(buf, sizeof buf, stdin);
-		if (!s) { fprintf(stderr, "eof from fgets()\n"); exit(1); }
+		if (!s) { debug_err("  eof from fgets()"); exit(1); }
 		l = strlen(s);
 		r[i]->resp = strdup(s);
 		if (l > 0 && s[l-1] == '\n')
 		    r[i]->resp[l-1] = '\0';
 		break;
 	    case PAM_ERROR_MSG:
-		debug("{style=error_msg}");
-                printf("%s\n", m[i]->msg);
+		debug_nonl("  {style=error_msg}");
+                printf("%s\n", msg);
 		break;
 	    case PAM_TEXT_INFO:
-		debug("{style=text_info}");
-                printf("%s\n", m[i]->msg);
+		debug_nonl("  {style=text_info}");
+                printf("%s\n", msg);
 		break;
 	    default:
-		fprintf(stderr, "Bad conversation message style %d\n",
-				m[i]->msg_style);
+		debug_err("  Bad conversation message style %d, (msg=%s)",
+				m[i]->msg_style, msg);
 		exit(1);
 	}
     }
@@ -381,7 +215,7 @@ main(int argc, char *argv[])
     while ((ch = getopt(argc, argv, "n:p:rsu:")) != -1) 
 	switch (ch) {
 	    case 'n': svcname = optarg; break;
-	    case 'p': privsep_uid = touid(optarg); 
+	    case 'p': privsep_uid = strtouid(optarg); 
 		      pflag = 1; break;
 	    case 's': sflag = 1; break;  /* skip authentication */
 	    case 'u': user = optarg; break;
@@ -412,11 +246,11 @@ main(int argc, char *argv[])
     CHECK(pamh, pam_start(svcname, user, &conv, &pamh));
 
     /* run as unprivileged if -p is given */
-    if (pflag && !privsep_start()) {
+    if (pflag && privsep_fork(privsep_uid) == PRIVSEP_PARENT) {
 	/* Forked. Now we wait for the privsep_return() call below */
-	int ok = privsep_wait();
-	if (ok != 1) {
-	    fprintf(stderr, "[unpriv child failed: %d]\n", ok);
+	int ret = privsep_wait();
+	if (ret != 1) {
+	    fprintf(stderr, "[unpriv child failed: %d]\n", ret);
 	    exit(1);
 	}
 	goto end_privsep;
@@ -432,13 +266,15 @@ main(int argc, char *argv[])
 
     /* pam_acct_mgmt() */
     error = LOG(pamh, pam_acct_mgmt(pamh, 0));
+
+    /* pam_chauthtok */
     if (error == PAM_NEW_AUTHTOK_REQD)
 	CHECK(pamh, pam_chauthtok(pamh, 0));
     else if (error != PAM_SUCCESS)
 	exit(1);
 
     if (pflag)
-	privsep_return(1);	     /* Terminates privsep child */
+	privsep_exit(1);	     /* Terminates privsep child, ret=1 */
 end_privsep:
 
     /* (END PRIVILEGED) */

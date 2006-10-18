@@ -44,4 +44,9 @@ AM_CONDITIONAL(HAVE_LAM, test x$have_lam = xtrue)
 
 AC_CHECK_FUNCS([getenv setreuid getpwnam getpass])
 
+# HP-UX's getpass is broken; hard to test
+if test x`uname -s 2>/dev/null` = x"HP-UX"; then
+    AC_LIBOBJ([getpass])
+fi
+
 AC_OUTPUT

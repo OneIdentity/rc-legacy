@@ -44,11 +44,27 @@ debug(fmt)
 {
     va_list ap;
 
+    fflush(stdout);
     fprintf(stderr, "%s", col_SO);
     va_start(ap, fmt);
     vfprintf(stderr, fmt, ap);
     va_end(ap);
     fprintf(stderr, "%s\n", col_SE);
+}
+
+/* Prints a message surrounded by col_SO and col_SE to stderr */
+void
+debug_nonl(fmt)
+    const char *fmt;
+{
+    va_list ap;
+
+    fflush(stdout);
+    fprintf(stderr, "%s", col_SO);
+    va_start(ap, fmt);
+    vfprintf(stderr, fmt, ap);
+    va_end(ap);
+    fprintf(stderr, "%s", col_SE);
 }
 
 
@@ -59,6 +75,7 @@ debug_err(fmt)
 {
     va_list ap;
 
+    fflush(stdout);
     fprintf(stderr, "%s", col_SO_ERR);
     va_start(ap, fmt);
     vfprintf(stderr, fmt, ap);
