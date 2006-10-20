@@ -16,6 +16,7 @@
  *   -h hostname       Specify the hostname to log. [none]
  *   -t tty            Port (TTY) name to log. [none]
  *   -r                Restart if auth fails.
+ *   -s                Skip authenticate()
  *
  * David.Leonard@quest.com 
  */
@@ -124,10 +125,11 @@ main(argc, argv)
 	int failreason = AUDIT_FAIL;
 	char *nocred[] = {NULL};
         int rflag = 0;
+        int sflag = 0;
 
         authtest_init();
 
-	while ((ch = getopt(argc, argv, "h:lm:p:rt:")) != -1)
+	while ((ch = getopt(argc, argv, "h:lm:p:rst:")) != -1)
 	    switch (ch) {
 	    case 'h':
 		hostname = optarg;
@@ -146,12 +148,15 @@ main(argc, argv)
 		   error = 1;
 		}
 		break;
-	    case 'r':
-                rflag = 1;
-                break;
 	    case 'p':
 		arg_response = optarg;	/* initial auth response */
 		break;
+	    case 'r':
+                rflag = 1;
+                break;
+	    case 's':
+                sflag = 1;
+                break;
 	    case 't':
 		tty = optarg;
 		break;
@@ -163,7 +168,7 @@ main(argc, argv)
 	    arg_username = argv[optind++];
 	
 	if (error || optind < argc) {
-	    fprintf(stderr, "usage: %s [-lr] [-m mode] [-p passwd]"
+	    fprintf(stderr, "usage: %s [-lrs] [-m mode] [-p passwd]"
 			    " [-t tty] [-h host] [username]\n",
 		argv[0]);
 	    exit(1);
@@ -177,6 +182,10 @@ main(argc, argv)
         response = arg_response;
 
 	if (!username) {
+	    if (sflag) {
+		fprintf(stderr, "%s: -s option requires a username\n", argv[0]);
+		exit(1);
+	    }
 	    username = readline("username: ");
 	    if (!username)
 		exit(1);
@@ -206,24 +215,29 @@ main(argc, argv)
 	 * 1. authenticate
 	 */
 
-	reenter = 1;
-	while (reenter) {
+	if (!sflag) {
+	    reenter = 1;
+	    while (reenter) {
 		debug("calling authenticate(%s, %s,,)",
 			str(username), response ? "<response>" : "NULL");
 		error = authenticate(username, response, &reenter, &message);
 		debug("  authenticate() -> %d; reenter=%d message=%s",
 			error, reenter, str(message));
 		if (!error && reenter) {
-		    response = getpass(message);
+		    if (!message)
+			debug_err("NULL message");
+		    response = getpass(message ? message : "(null)");
+		    if (message) {
+			free(message);
+			message = NULL;
+		    }
 		    if (!response) {
-                        if (message) {
-                            free(message);
-                            message = NULL;
-                        }
 			goto fail;
                     }
 		}
+		/* Sometimes there is a leftover message from authenticate */
                 if (message) {
+		    printf("%s", message);
                     free(message);
                     message = NULL;
                 }
@@ -233,7 +247,9 @@ main(argc, argv)
 		    failreason = AUDIT_FAIL_AUTH;
 		    goto fail;
 		}
-	}
+	    }
+	} else
+	    debug("-s: skipping authenticate()");
 
 	/*
 	 * 2. passwdexpired
@@ -322,7 +338,10 @@ main(argc, argv)
          * 6. Change password
          *     - must run with the real uid of the user
          */
-        if (must_chpass) {
+        if (must_chpass && sflag) {
+	    debug("password expired but -s flag given: terminating\n");
+	    exit(1);
+	} else if (must_chpass) {
 	    debug("changing password");
 
             debug("getuid()=%d geteuid()=%d", getuid(), geteuid());
