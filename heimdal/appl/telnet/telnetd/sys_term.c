@@ -1318,7 +1318,7 @@ start_login(const char *host, int autologin, char *name)
 	
 	gettimeofday (&utmpx.ut_tv, NULL);
 	if (pututxline(&utmpx) == NULL)
-	    fatal(net, "pututxline failed");
+	    fatal(net, "pututxline failed, is telnetd running as root?");
     }
 #endif
 
