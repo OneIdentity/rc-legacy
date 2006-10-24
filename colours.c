@@ -39,8 +39,7 @@ authtest_init()
 
 /* Prints a message surrounded by col_SO and col_SE \n to stderr */
 void
-debug(fmt)
-    const char *fmt;
+debug(const char *fmt, ...)
 {
     va_list ap;
 
@@ -54,8 +53,7 @@ debug(fmt)
 
 /* Prints a message surrounded by col_SO and col_SE to stderr */
 void
-debug_nonl(fmt)
-    const char *fmt;
+debug_nonl(const char *fmt, ...)
 {
     va_list ap;
 
@@ -70,8 +68,7 @@ debug_nonl(fmt)
 
 /* Prints a message surrounded by col_SO_ERR and col_SE \n to stderr */
 void
-debug_err(fmt)
-    const char *fmt;
+debug_err(const char *fmt, ...)
 {
     va_list ap;
 
