@@ -26,7 +26,7 @@ INCLUDES = \
 #	-DGNOME_DISABLE_DEPRECATED			\
 #
 
-noinst_LIBRARIES = libgdmwm.a libgdmcommon.a
+noinst_LIBRARIES = libgdmwm.a libgdmcommon.a libgdmpromptplugin.a
 
 bin_PROGRAMS = \
 	@GDMCHOOSER@ 		\
@@ -61,6 +61,10 @@ libgdmcommon_a_SOURCES = \
 	misc.h			\
 	gdmcommon.c		\
 	gdmcommon.h
+
+libgdmpromptplugin_a_SOURCES = \
+	gdm_prompt_plugin.h	\
+	gdm_prompt_plugin.c
 
 gdmchooser_SOURCES = \
 	gdmchooser.c		\
