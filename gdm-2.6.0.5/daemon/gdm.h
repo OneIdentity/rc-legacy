@@ -108,6 +108,8 @@ enum {
 #define GDM_SAVEDIE    '!' /* Save wm order and die (and set busy cursor) */
 #define GDM_QUERY_CAPSLOCK 'Q' /* Is capslock on? */
 
+#define GDM_PROMPT_PLUGIN 'Z' /* Handle a PAM prompt plugin */
+
 /* Different login interruptions */
 #define GDM_INTERRUPT_TIMED_LOGIN 'T'
 #define GDM_INTERRUPT_CONFIGURE   'C'

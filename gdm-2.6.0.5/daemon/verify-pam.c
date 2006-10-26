@@ -436,6 +436,10 @@ gdm_verify_pam_conv (int num_msg, const struct pam_message **msg,
 	    
 	/* PAM requested textual input with echo on */
 	case PAM_PROMPT_ECHO_ON:
+            /* Start prompt plugin */
+            gdm_slave_greeter_ctl_no_ret(GDM_PROMPT_PLUGIN,
+                                         "PAM_PROMPT_ECHO_ON");
+
  	    if (strcmp(m, _("Username:")) == 0) {
 		    if ( ! ve_string_empty (selected_user)) {
 			    /* Sometimes we are just completely on crack,
@@ -452,6 +456,10 @@ gdm_verify_pam_conv (int num_msg, const struct pam_message **msg,
 	    } else {
 		    s = gdm_slave_greeter_ctl (GDM_PROMPT, m);
 	    }
+
+            /* Terminate prompt plugin */
+            gdm_slave_greeter_ctl_no_ret(GDM_PROMPT_PLUGIN, NULL);
+
 
 	    if (gdm_slave_greeter_check_interruption ()) {
 		    g_free (s);
@@ -496,8 +504,16 @@ gdm_verify_pam_conv (int num_msg, const struct pam_message **msg,
             else if (strcmp (m, _("PIN:")) == 0)
                     did_we_ask_for_pin = TRUE;
 
+            /* Start prompt plugin */
+            gdm_slave_greeter_ctl_no_ret(GDM_PROMPT_PLUGIN,
+                                         "PAM_PROMPT_ECHO_OFF");
+
 	    /* PAM requested textual input with echo off */
 	    s = gdm_slave_greeter_ctl (GDM_NOECHO, m);
+
+            /* Terminate prompt plugin */
+            gdm_slave_greeter_ctl_no_ret(GDM_PROMPT_PLUGIN, "");
+            
 	    if (gdm_slave_greeter_check_interruption ()) {
 		    g_free (s);
 		    for (i = 0; i < replies; i++)
