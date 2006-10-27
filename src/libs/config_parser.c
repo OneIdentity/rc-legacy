@@ -63,6 +63,12 @@ const char *gdm_prompt_config_get_string(const char *config_file,
     const char *property = NULL;
     const char *value = NULL;
 
+    /* Pre-condition checks */
+    if (config_file == NULL || key == NULL)
+    {
+        goto FINISH;
+    }
+
     /* Load the configuration file */
     if ((fp = fopen(config_file, "r")) == NULL)
     {
@@ -162,12 +168,3 @@ FINISH:
     return value;
 }
 
-#if 0
-int main(int argc, char **argv)
-{
-   const char *value = gdm_prompt_config_get_string(argv[1], argv[2]);
-   printf("value = '%s'\n", value);
-   if (value != NULL) { free((void *) value); }
-   return 0;
-}
-#endif
