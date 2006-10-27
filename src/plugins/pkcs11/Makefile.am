@@ -8,9 +8,7 @@ DEFS = @DEFS@ \
 INCLUDES = \
 	-I$(srcdir)/.					\
 	-I$(srcdir)/include				\
-	-I$(top_srcdir)/src/include			\
-	-I$(top_srcdir)/src/libs/vicious-extensions 	\
-	$(GUI_CFLAGS)
+	-I$(top_srcdir)/src/include
 
 libpromptpkcs11_la_SOURCES = \
 	gdm_prompt_pkcs11.c
