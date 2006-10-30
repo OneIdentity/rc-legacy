@@ -11,6 +11,7 @@ INCLUDES = \
 	-I$(top_srcdir)/src/include
 
 libpromptpkcs11_la_SOURCES = \
+	pkcs11_defs.h					\
 	gdm_prompt_pkcs11.c
 
 libpromptpkcs11_la_LDFLAGS =        			\
@@ -24,4 +25,4 @@ pluginsdir=$(libdir)/gdm/plugins
 plugins_LTLIBRARIES =            \
 	libpromptpkcs11.la 
 
-
+EXTRA_DIST=include
