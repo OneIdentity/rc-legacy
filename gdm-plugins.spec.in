@@ -1,0 +1,38 @@
+%define sysconfdir	/etc
+%define pam_version	0.68
+
+Summary: PAM prompt plugins for the Gnome Display Manager (GDM)
+Name: gdm-plugins
+Version: @VERSION@
+Release: 1
+Epoch: 1
+License: LGPL/GPL
+Group: User Interface/X
+# TODO replace URL below with a Resource Central url
+Source: ftp://ftp.vintela.com/pub/gdm-plugins-%{PACKAGE_VERSION}.tar.gz
+BuildRoot: %{_tmppath}/gdm-plugins-%{version}-root
+Requires: pam >= 0:%{pam_version}
+
+%description
+The GDM PAM prompt plugins are a collection of plugins
+for handling PAM prompts within the Gnome Display Manager
+(GDM). 
+
+%prep
+%setup -q
+
+%build
+./configure --prefix=%{_prefix} --sysconfdir=%{sysconfdir}/X11
+make
+
+%install
+rm -rf $RPM_BUILD_ROOT
+make prefix=$RPM_BUILD_ROOT%{_prefix} install
+     
+%clean
+[ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
+
+%files
+
+%doc AUTHORS COPYING ChangeLog NEWS README
+%{_libdir}/gdm/plugins/*

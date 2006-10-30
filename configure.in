@@ -38,5 +38,6 @@ AC_CONFIG_FILES([Makefile
                  src/libs/Makefile
                  src/plugins/Makefile
                  src/plugins/pkcs11/Makefile
-                 src/plugins/pcsc/Makefile])
+                 src/plugins/pcsc/Makefile
+                 gdm-plugins.spec])
 AC_OUTPUT
