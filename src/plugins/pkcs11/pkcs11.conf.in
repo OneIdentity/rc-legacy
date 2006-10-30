@@ -1,0 +1,7 @@
+# An example configuration file for the PKCS#11 plugin
+
+[pkcs11]
+# Uncomment the following line and replace "some-pkcs11-library.so" with
+# the path to the PKCS#11 library.
+#
+#  library=some-pkcs11-library.so
