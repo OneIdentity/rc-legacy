@@ -225,6 +225,7 @@ fi
 rm -f $NEWTEXT
 
 #set a fake ldap password
+#(this will change with the new IDMAP subsystem in newer versions of Samba)
 /opt/quest/bin/smbpasswd -w secret > /dev/null 2>&1
 
 ##########################
@@ -236,6 +237,8 @@ CONFMOD=${VASCONF}.mod
 #Must do this before calling any check_* function
 cp ${VASCONF} ${CONFMOD}
 
+#FIXME: change this in 3.1 to make vas change the password and use
+#       a script, to make it available for samba
 if check_and_fix "password-change-interval" "0" "${CONFMOD}"; then
         rm ${CONFMOD}
 else
@@ -251,6 +254,8 @@ if [ "$DEBUG" -ne "0" ]; then
 	echo "Exit before changing the password during debug"
 	exit 0
 fi
+
+#FIXME: Make password change optional
 
 #Generate a secret key from the hex form of current key material
 SECRET='X!'`$VASTOOL ktutil list --keys | 
