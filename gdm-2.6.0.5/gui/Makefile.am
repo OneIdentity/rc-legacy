@@ -100,6 +100,7 @@ gdmchooser_LDADD = \
 gdmlogin_LDADD = \
 	libgdmwm.a		\
 	libgdmcommon.a		\
+	libgdmpromptplugin.a    \
 	$(GUING_LIBS)		\
 	$(X_LIBS)		\
 	-lX11			\

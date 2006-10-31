@@ -49,6 +49,8 @@
 #include "gdmcommon.h"
 #include "misc.h"
 
+#include "gdm_prompt_plugin.h"
+
 /* set the DOING_GDM_DEVELOPMENT env variable if you aren't running
  * within the protocol */
 static gboolean DOING_GDM_DEVELOPMENT = FALSE;
@@ -2290,6 +2292,20 @@ gdm_login_ctrl_handler (GIOChannel *source, GIOCondition cond, gint fd)
 
 	break;
 	
+    case GDM_PROMPT_PLUGIN:
+        /* Get the argument: "PAM_PROMPT_ECHO_ON", "PAM_PROMPT_ECHO_OFF",
+           or NULL */
+        g_io_channel_read_chars (source, buf, PIPE_SIZE-1, &len, NULL);
+        buf[len-1] = '\0';
+
+        syslog(LOG_DEBUG, "[%s] PROMPT_PLUGIN='%s'", __FUNCTION__, buf);
+
+        gdm_prompt_plugin_handle(buf);
+
+        printf("%c\n", STX);
+        fflush(stdout);
+        break;
+
     default:
 	gdm_common_abort ("Unexpected greeter command received: '%c'", buf[0]);
 	break;
