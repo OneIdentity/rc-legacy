@@ -156,6 +156,12 @@ if check_parm "use spnego" "${CONFMOD}"; then
            echo "  use spnego = yes" >> $NEWTEXT
 fi
 
+check_and_fix "domain master" "no" "${CONFMOD}" ||
+       echo "  domain master = no" >> $NEWTEXT
+
+check_and_fix "domain logons" "no" "${CONFMOD}" ||
+       echo "  domain logons = no" >> $NEWTEXT
+
 check_and_fix "use kerberos keytab" "yes" "${CONFMOD}" ||
        echo "  use kerberos keytab = yes" >> $NEWTEXT
 
