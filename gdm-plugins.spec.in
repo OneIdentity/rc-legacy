@@ -1,4 +1,3 @@
-%define sysconfdir	/etc
 %define pam_version	0.68
 
 Summary: PAM prompt plugins for the Gnome Display Manager (GDM)
@@ -22,12 +21,13 @@ for handling PAM prompts within the Gnome Display Manager
 %setup -q
 
 %build
-./configure --prefix=%{_prefix} --sysconfdir=%{sysconfdir}/X11
+./configure --prefix=%{_prefix} --sysconfdir=%{_sysconfdir}
 make
 
 %install
 rm -rf $RPM_BUILD_ROOT
-make prefix=$RPM_BUILD_ROOT%{_prefix} install
+make prefix=$RPM_BUILD_ROOT%{_prefix} \
+     sysconfdir=$RPM_BUILD_ROOT%{_sysconfdir} install
      
 %clean
 [ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
@@ -36,3 +36,5 @@ make prefix=$RPM_BUILD_ROOT%{_prefix} install
 
 %doc AUTHORS COPYING ChangeLog NEWS README
 %{_libdir}/gdm/plugins/*
+%config %{_sysconfdir}/gdm/plugins/*
+
