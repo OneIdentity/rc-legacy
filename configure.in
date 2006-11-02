@@ -1,5 +1,5 @@
 AC_PREREQ(2.59)
-AC_INIT(gdm-plugins,0.1.0)
+AC_INIT(gdm-plugins,1.0.0)
 AC_CONFIG_SRCDIR([config.h.in])
 AC_CONFIG_HEADER([config.h])
 AM_INIT_AUTOMAKE
