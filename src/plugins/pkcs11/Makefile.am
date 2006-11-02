@@ -27,4 +27,14 @@ pluginsdir=$(libdir)/gdm/plugins
 plugins_LTLIBRARIES =            \
 	libpromptpkcs11.la 
 
+pluginsconfdir=$(sysconfdir)/gdm/plugins
+
 EXTRA_DIST=pkcs11.conf.in
+
+# Install pkcs11.conf in ${pluginsconfdir}. 
+install-data-hook: pkcs11.conf.in
+	if test '!' -d $(DESTDIR)$(pluginsconfdir); then \
+		$(mkinstalldirs) $(DESTDIR)$(pluginsconfdir); \
+		chmod 755 $(DESTDIR)$(pluginsconfdir); \
+	fi 
+	$(INSTALL_DATA) pkcs11.conf.in $(DESTDIR)$(pluginsconfdir)/pkcs11.conf

@@ -26,4 +26,14 @@ pluginsdir=$(libdir)/gdm/plugins
 plugins_LTLIBRARIES =            \
 	libpromptpcsc.la 
 
+pluginsconfdir=$(sysconfdir)/gdm/plugins
+
 EXTRA_DIST=pcsc.conf.in
+
+# Install pcsc.conf in ${pluginsconfdir}.
+install-data-hook: pcsc.conf.in
+	if test '!' -d $(DESTDIR)$(pluginsconfdir); then \
+		$(mkinstalldirs) $(DESTDIR)$(pluginsconfdir); \
+		chmod 755 $(DESTDIR)$(pluginsconfdir); \
+	fi
+	$(INSTALL_DATA) pcsc.conf.in $(DESTDIR)$(pluginsconfdir)/pcsc.conf
