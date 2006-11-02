@@ -24,4 +24,4 @@ pluginsdir=$(libdir)/gdm/plugins
 plugins_LTLIBRARIES =            \
 	libpromptpcsc.la 
 
-EXTRA_DIST=include
+EXTRA_DIST=include pcsc.conf.in
