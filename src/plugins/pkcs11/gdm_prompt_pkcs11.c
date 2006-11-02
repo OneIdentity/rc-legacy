@@ -19,6 +19,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <dlfcn.h>
+#include <errno.h>
 #include <pthread.h>
 #include <syslog.h>
 #include <string.h>
@@ -38,22 +39,24 @@
 /* Copied from gdm.h */
 #define STX 0x2                 /* Start of txt */
 
+#define CK_SLOT_ID_ANY   ((CK_SLOT_ID) -1)
+
 typedef struct {
   CK_FUNCTION_LIST *fns;  /**< The PKCS#11 function list */
   int prompt_type;        /**< The PAM prompt type */
   int _initialized;       /**< Has PKCS#11 library been initialized? */
   int _running;           /**< Should PKCS#11 thread keep running? */
   pthread_mutex_t mutex;  /**< Mutex for accessing flags */
+  CK_SLOT_ID slot;        /**< The PKCS#11 slot (default CK_SLOT_ID_ANY) */
 } pkcs11_data_t;
 
 static pthread_t G_thread = (pthread_t) 0;
 
-#if 1
+#ifndef NDEBUG
 #define log(format, args...) \
 	syslog(LOG_DEBUG, "[GDM_PROMPT_PKCS11] " format , ##args)
 #else
-#define log(format, args...) \
-	printf("[GDM_PROMPT_PKCS11] " format , ##args); printf("\n")
+#define log(format, args...) 
 #endif
 
 /** Get the run state of the PKCS#11 thread */
@@ -115,6 +118,14 @@ static int handle_event(pkcs11_data_t *pkcs11, CK_SLOT_ID slot)
     CK_SLOT_INFO info;
     CK_RV rv;
     int rval = -1;
+
+    /* Check that the slot matches the configured slot */
+    if (pkcs11->slot != CK_SLOT_ID_ANY && slot != pkcs11->slot)
+    {
+        log("Event did not occur on slot %ld -- ignoring", pkcs11->slot);
+        rval = 0;
+        goto FINISH;
+    }
 
     /* Get information about the slot */
     if ((rv = pkcs11->fns->C_GetSlotInfo(slot, &info)) != CKR_OK)
@@ -326,6 +337,7 @@ static int configure_pkcs11(pkcs11_data_t *pkcs11)
 {
     const char *lib = NULL;
     void *handle = NULL;
+    const char *s = NULL;
     CK_C_GetFunctionList get_function_list = NULL;
     CK_RV rv;
     int rval = 1;
@@ -339,6 +351,23 @@ static int configure_pkcs11(pkcs11_data_t *pkcs11)
         log("No PKCS#11 library defined");
         rval = 1;
         goto FINISH;
+    }
+
+    /* Get the PKCS#11 slot (if specified) from the configuration */
+    s = gdm_prompt_config_get_string(PKCS11_PLUGIN_CONFIG_FILE,
+                                     "pkcs11/slot");
+    if (s != NULL)
+    {
+        long slot = atol(s);
+        if (errno == ERANGE || errno == EINVAL || slot < 0)
+        {
+            log("Invalid value for slot ID: '%s'", s);
+        }
+        else
+        {
+            log("Only recognizing events on slot %ld", slot);
+            pkcs11->slot = (CK_SLOT_ID) slot;
+        }
     }
 
     /* Load the library */
@@ -394,6 +423,9 @@ static pkcs11_data_t *pkcs11_data_alloc(void)
         log("Memory allocation failure");
         goto FINISH;
     }
+
+    /* Use any slot */
+    pkcs11->slot = CK_SLOT_ID_ANY;
 
     /* Create the mutex that controls access to the PKCS#11 state */
     pthread_mutex_init(&pkcs11->mutex, NULL);
