@@ -25,4 +25,4 @@ pluginsdir=$(libdir)/gdm/plugins
 plugins_LTLIBRARIES =            \
 	libpromptpkcs11.la 
 
-EXTRA_DIST=include
+EXTRA_DIST=include pkcs11.conf.in
