@@ -1,7 +1,24 @@
-# An example configuration file for the PKCS#11 plugin
+# An example configuration file for the PKCS#11 plugin.
 
 [pkcs11]
-# Uncomment the following line and replace "some-pkcs11-library.so" with
-# the path to the PKCS#11 library.
+
+# The 'library' field represents the path to the PKCS#11 library.
 #
-#  library=some-pkcs11-library.so
+# This field is REQUIRED.
+#
+# Replace "some-pkcs11-library.so" below with the path to the PKCS#11 library.
+library=some-pkcs11-library.so
+
+# The 'slot' field represents the ID of the slot to be recognized.
+#
+# Sometimes it is necessary to restrict insertion/removal to a specific
+# slot. For example, if there are multiple readers attached to a PC, then
+# it may be necessary to only recognize events on slot 1.
+#
+# This field is OPTIONAL. If it is not specified, then events on any slot
+# shall be recognized.
+#
+# Uncomment the following line and add a valid slot ID if only events on 
+# the specified slot should be recognized.
+#
+# slot=
