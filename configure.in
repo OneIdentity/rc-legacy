@@ -35,9 +35,13 @@ AC_CHECK_FUNCS([memset strchr strdup])
 
 AC_CONFIG_FILES([Makefile
                  src/Makefile
+                 src/include/Makefile
                  src/libs/Makefile
                  src/plugins/Makefile
                  src/plugins/pkcs11/Makefile
+                 src/plugins/pkcs11/include/Makefile
                  src/plugins/pcsc/Makefile
+                 src/plugins/pcsc/include/Makefile
+                 src/plugins/pcsc/include/PCSC/Makefile
                  gdm-plugins.spec])
 AC_OUTPUT

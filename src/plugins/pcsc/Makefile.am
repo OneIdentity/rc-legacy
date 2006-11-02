@@ -1,3 +1,5 @@
+SUBDIRS=include
+
 DEFS = @DEFS@ \
         -DPREFIX=\"@prefix@\" \
         -DSYSCONFDIR=\"@sysconfdir@\" \
@@ -24,4 +26,4 @@ pluginsdir=$(libdir)/gdm/plugins
 plugins_LTLIBRARIES =            \
 	libpromptpcsc.la 
 
-EXTRA_DIST=include pcsc.conf.in
+EXTRA_DIST=pcsc.conf.in

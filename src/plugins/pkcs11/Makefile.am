@@ -1,3 +1,5 @@
+SUBDIRS=include
+
 DEFS = @DEFS@ \
         -DPREFIX=\"@prefix@\" \
         -DSYSCONFDIR=\"@sysconfdir@\" \
@@ -25,4 +27,4 @@ pluginsdir=$(libdir)/gdm/plugins
 plugins_LTLIBRARIES =            \
 	libpromptpkcs11.la 
 
-EXTRA_DIST=include pkcs11.conf.in
+EXTRA_DIST=pkcs11.conf.in
