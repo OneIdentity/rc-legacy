@@ -28,11 +28,19 @@
 #include <winscard.h>
 
 #include <gdm_prompt_plugin.h>
+#include <gdm_prompt_config.h>
 
 #define GET_FUNCTIONS_SYM    "C_GetFunctionList"
 
 /* Copied from gdm.h */
 #define STX 0x2                 /* Start of txt */
+
+#ifndef NDEBUG 
+#define log(format, args...) \
+        syslog(LOG_DEBUG, "[GDM_PROMPT_PKCS11] " format , ##args)
+#else
+#define log(format, args...) 
+#endif
 
 /** Structure containing functions from PC/SC API */
 typedef struct {
@@ -67,6 +75,7 @@ typedef struct {
   int prompt_type;        /**< The PAM prompt type */
   int _running;           /**< Should PC/SC thread keep running? */
   pthread_mutex_t mutex;  /**< Mutex for accessing flags */
+  const char *reader;     /**< Reader (if any) to watch */
 } pcsc_data_t;
 
 static pthread_t G_thread = (pthread_t) 0;
@@ -148,8 +157,7 @@ static int get_symbol(void *module, const char *name, void **p_symbol)
 
     if ((symbol = dlsym(module, name)) == NULL)
     {
-        syslog(LOG_DEBUG, "[%s] failed to load symbol '%s'",
-               __FILE__, name);
+        log("Failed to load symbol '%s'", name);
         return 0;
     }
 
@@ -160,19 +168,31 @@ static int get_symbol(void *module, const char *name, void **p_symbol)
 
 static int configure_pcsc(pcsc_data_t *pcsc)
 {
-    const char *lib = "/usr/lib/libpcsclite.so";
+    const char *lib = NULL;
+    const char *reader = NULL;
     void *handle = NULL;
     int rval = 1;
+
+    log("Getting config from file '%s'", PCSC_PLUGIN_CONFIG_FILE);
+
+    /* Get the PC/SC library from the configuration */
+    lib = gdm_prompt_config_get_string(PCSC_PLUGIN_CONFIG_FILE,
+                                       "pcsc/library");
+    if (lib == NULL || strcmp(lib, "") == 0)
+    {
+        log("No PC/SC library defined");
+        rval = 1;
+        goto FINISH;
+    }
 
     /* Load the library */
     dlerror();
     if ((handle = dlopen(lib, RTLD_NOW)) == NULL)
     {
-        syslog(LOG_DEBUG, "[%s] failed to load PC/SC library '%s': %s",
-                          __FILE__, lib, dlerror());
+        log("Failed to load PC/SC library '%s': %s", lib, dlerror());
         goto FINISH;
     }
-    syslog(LOG_DEBUG, "[%s] loaded token library '%s'", __FILE__, lib);
+    log("Loaded token library '%s'", lib);
 
     /* Get the functions from the library */
     if (!get_symbol(handle, "SCardEstablishContext",
@@ -187,6 +207,19 @@ static int configure_pcsc(pcsc_data_t *pcsc)
                     (void **) &pcsc->fns.SCardGetStatusChange))
     {
         goto FINISH;
+    }
+
+    /* Check if a reader has been specified */
+    reader = gdm_prompt_config_get_string(PCSC_PLUGIN_CONFIG_FILE,
+                                          "pcsc/reader");
+    if (reader != NULL)
+    {
+        /* Copy the reader name */
+        if ((pcsc->reader = strdup(reader)) == NULL)
+        {
+            log("Memory error copying reader name");
+            goto FINISH;
+        }
     }
 
     /* Success */
@@ -206,6 +239,10 @@ static void pcsc_data_free(pcsc_data_t *pcsc)
 {
     if (pcsc != NULL)
     {
+        if (pcsc->reader != NULL)
+        {
+            free((void *) pcsc->reader);
+        }
         pthread_mutex_destroy(&pcsc->mutex);
         free(pcsc);
     }
@@ -217,7 +254,7 @@ static pcsc_data_t *pcsc_data_alloc(void)
 
     if ((pcsc = calloc(1, sizeof(*pcsc))) == NULL)
     {
-        syslog(LOG_DEBUG, "[%s] memory allocation failure", __FILE__);
+        log("Memory allocation failure");
         goto FINISH;
     }
     pthread_mutex_init(&pcsc->mutex, NULL);
@@ -282,14 +319,14 @@ GetReaderListInfo (pcsc_data_t *pcsc,
     }
 
     /* Waiting for reader availability */
-    syslog(LOG_DEBUG, "[%s] Waiting for a reader ...", __FUNCTION__);
+    log("Waiting for status change ...");
     lRetVal = pcsc->fns.SCardGetStatusChange(pcsc->hContext, 
                                              INFINITE , 
                                              NULL, 
                                              0);
     if ( lRetVal != SCARD_S_SUCCESS )
     {
-        syslog(LOG_DEBUG, "[%s] SCardGetStatusChange() failed", __FILE__);
+        log("SCardGetStatusChange() failed: 0x%04lX", lRetVal);
         return -1;
     }
 
@@ -331,9 +368,7 @@ GetReaderListInfo (pcsc_data_t *pcsc,
         TempReaderList += strlen (TempReaderList) + 1;
     }
 
-    syslog(LOG_DEBUG, 
-           "[%s] There are %d readers available",
-           __FUNCTION__, iReaderCount);
+    log("There are %d readers available", iReaderCount);
 
     ReaderStates = (SCARD_READERSTATE *) malloc (sizeof (SCARD_READERSTATE) *
         iReaderCount);
@@ -411,16 +446,30 @@ static int notify_token_inserted(pcsc_data_t *pcsc, const char *name)
 {
     int rval = 0;
 
-    syslog(LOG_DEBUG, "[%s] token inserted into reader '%s'", __FILE__, name);
+    log("Token inserted into reader '%s'", name);
 
-    if (pcsc->prompt_type == PAM_PROMPT_ECHO_ON)
+    /* Check that reader is suitable */
+    if (pcsc->reader != NULL && strcmp(pcsc->reader, name) != 0)
     {
-        syslog(LOG_DEBUG, "[%s] sending 'matlock' to stdout", __FILE__);
-        printf("%cmatlock\n", STX);
-        fflush(stdout);
-        rval = 1;
+        log("Ignoring event: required reader is '%s'", pcsc->reader);
+        goto FINISH;
     }
 
+    /* Check that prompt type is suitable */
+    if (pcsc->prompt_type != PAM_PROMPT_ECHO_ON)
+    {
+        log("Ignoring insertion events");
+        goto FINISH;
+    }
+
+    /* Write empty string to stdout */
+    printf("%c\n", STX);
+    fflush(stdout);
+
+    /* Success */
+    rval = 1;
+
+FINISH:
     return rval;
 }
 
@@ -428,16 +477,30 @@ static int notify_token_removed(pcsc_data_t *pcsc, const char *name)
 {
     int rval = 0;
 
-    syslog(LOG_DEBUG, "[%s] token removed from reader '%s'", __FILE__, name);
+    log("Token removed from reader '%s'", name);
 
-    if (pcsc->prompt_type == PAM_PROMPT_ECHO_OFF)
+    /* Check that reader is suitable */
+    if (pcsc->reader != NULL && strcmp(pcsc->reader, name) != 0)
     {
-        syslog(LOG_DEBUG, "[%s] sending 'matlock' to stdout", __FILE__);
-        printf("matlock%c\n", STX);
-        fflush(stdout);
-        rval = 1;
+        log("Ignoring event: required reader is '%s'", pcsc->reader);
+        goto FINISH;
     }
 
+    /* Check that prompt type is suitable */
+    if (pcsc->prompt_type != PAM_PROMPT_ECHO_OFF)
+    {
+        log("Ignoring removal events");
+        goto FINISH;
+    }
+
+    /* Write empty string to stdout */
+    printf("%c\n", STX);
+    fflush(stdout);
+
+    /* Success */
+    rval = 1;
+
+FINISH:
     return rval;
 }
 
@@ -461,13 +524,10 @@ static void *monitor_pcsc_thread(void *p)
 
     pcsc = (pcsc_data_t *) p;
 
-    syslog(LOG_DEBUG,
-           "[%s] Starting, event = %s, running = %d",
-           __FUNCTION__,
-           (pcsc->prompt_type == PAM_PROMPT_ECHO_ON)
-               ? "token insertion"
-               : "token removal",
-           pcsc_thread_running(pcsc));
+    log("Starting PC/SC thread, event = %s",
+        (pcsc->prompt_type == PAM_PROMPT_ECHO_ON)
+            ? "token insertion"
+            : "token removal");
 
     /* Initialize the PC/SC context */
     if ((lRetVal = pcsc_lib_initialize(pcsc)) != SCARD_S_SUCCESS)
@@ -488,13 +548,15 @@ static void *monitor_pcsc_thread(void *p)
     /* Loop until told to stop, or matching token event occurs */
     while (pcsc_thread_running(pcsc))
     {
-        syslog(LOG_DEBUG, "[%s] Waiting on status change ...", __FUNCTION__);
+        log("Waiting on status change ...");
         lRetVal = pcsc->fns.SCardGetStatusChange (pcsc->hContext, 
                                                   INFINITE,
                                                   pMasterStates, 
                                                   iMasterReaderCount);
-        printf("[%s] SCardGetStatusChange() = 0x%0lX\n", 
-               __FUNCTION__, lRetVal);
+        if (lRetVal != SCARD_S_SUCCESS)
+        {
+            log("SCardGetStatusChange() failed: 0x%0lX", lRetVal);
+        }
 
         if (lRetVal == SCARD_E_INVALID_VALUE ||
             lRetVal == SCARD_E_INVALID_HANDLE ||
@@ -508,16 +570,10 @@ static void *monitor_pcsc_thread(void *p)
         {
             for (i = 0; i < iMasterReaderCount; i++)
             {
-                syslog(LOG_DEBUG, 
-                       "[%s] reader %s:", 
-                       __FUNCTION__, pMasterStates[i].szReader);
-                syslog(LOG_DEBUG, 
-                       "[%s]    current state = %s",
-                       __FUNCTION__, 
-                       get_state_string(pMasterStates[i].dwCurrentState));
-                syslog(LOG_DEBUG, 
-                       "[%s]    event state   = %s",
-                       __FUNCTION__, 
+                log("reader %s:", pMasterStates[i].szReader);
+                log("  current state = %s",
+                    get_state_string(pMasterStates[i].dwCurrentState));
+                log("  event state   = %s",
                        get_state_string(pMasterStates[i].dwEventState));
 
                 if ((pMasterStates[i].dwEventState &
@@ -594,7 +650,7 @@ FINISH:
     pcsc_thread_stop(pcsc);
 
     /* Exit the thread */
-    syslog(LOG_DEBUG, "[%s] exiting %s()", __FILE__, __FUNCTION__);
+    log("Exitting PC/SC thread %ld", pthread_self());
     pthread_exit(NULL);
 
     return NULL;
@@ -608,9 +664,7 @@ int gdm_prompt_plugin_start(gdm_prompt_plugin_t *module, int prompt_type)
     /* Pre-condition checks */
     if (module == NULL)
     {
-        syslog(LOG_DEBUG,
-               "[%s] no 'module' parameter provided",
-               __FILE__);
+        log("No 'module' parameter provided");
         goto FINISH;
     }
 
@@ -651,21 +705,16 @@ int gdm_prompt_plugin_stop(gdm_prompt_plugin_t *module)
     /* Pre-condition checks */
     if (module == NULL)
     {
-        syslog(LOG_DEBUG,
-               "[%s] no 'module' parameter provided",
-               __FILE__);
+        log("No 'module' parameter provided");
         goto FINISH;
     }
     if (module->data == NULL)
     {
-        syslog(LOG_DEBUG,
-               "[%s] no 'module->data' parameter provided",
-               __FILE__);
+        log("No 'module->data' parameter provided");
         goto FINISH;
     }
 
-    syslog(LOG_DEBUG, "[%s] request made to stop PC/SC thread %ld",
-           __FILE__, G_thread);
+    log("Request made to stop PC/SC thread %ld", G_thread);
 
     /* End thread */
     if (G_thread != (pthread_t) 0)
