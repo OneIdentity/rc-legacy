@@ -3,7 +3,7 @@ DEFS = @DEFS@ \
         -DSYSCONFDIR=\"@sysconfdir@\" \
         -DDATADIR=\"@datadir@\" \
         -DLIBDIR=\"@libdir@\" \
-        -DPKCS11_PLUGIN_CONFIG_FILE=\"@sysconfdir@/pcsc.conf\" 
+        -DPCSC_PLUGIN_CONFIG_FILE=\"@sysconfdir@/pcsc.conf\" 
 
 INCLUDES = \
 	-I$(srcdir)/.					\
