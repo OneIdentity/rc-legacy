@@ -1,0 +1,13 @@
+1.0.0
+-----
+
+- Initial implementation, providing:
+
+  - PKCS#11 plugin: 
+    - waits for a PKCS#11 slot event
+    - can specify the PKCS#11 library, and optionally the PKCS#11 slot
+
+  - PC/SC plugin: 
+    - waits for a PC/SC event
+    - can specify the PC/SC library, and optionally the PC/SC reader
+    
