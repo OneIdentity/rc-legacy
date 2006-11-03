@@ -5,7 +5,7 @@ DEFS = @DEFS@ \
         -DSYSCONFDIR=\"@sysconfdir@\" \
         -DDATADIR=\"@datadir@\" \
         -DLIBDIR=\"@libdir@\" \
-        -DPCSC_PLUGIN_CONFIG_FILE=\"@sysconfdir@/pcsc.conf\" 
+        -DPCSC_PLUGIN_CONFIG_FILE=\"@sysconfdir@/gdm/plugins/pcsc.conf\" 
 
 INCLUDES = \
 	-I$(srcdir)/.					\

@@ -5,7 +5,7 @@ DEFS = @DEFS@ \
         -DSYSCONFDIR=\"@sysconfdir@\" \
         -DDATADIR=\"@datadir@\" \
         -DLIBDIR=\"@libdir@\" \
-        -DPKCS11_PLUGIN_CONFIG_FILE=\"@sysconfdir@/pkcs11.conf\" 
+        -DPKCS11_PLUGIN_CONFIG_FILE=\"@sysconfdir@/gdm/plugins/pkcs11.conf\" 
 
 INCLUDES = \
 	-I$(srcdir)/.					\
