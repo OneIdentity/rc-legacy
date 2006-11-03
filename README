@@ -1,0 +1,67 @@
+README
+------
+
+This package provides a number of plugins for handling GDM PAM prompts.
+
+Plugins are installed into the /usr/lib/gdm/plugins directory.
+
+1. PKCS#11 Plugin
+-----------------
+
+Provides     : /usr/lib/gdm/plugins/libpromptpkcs11.so
+Configuration: /etc/gdm/plugins/pkcs11.conf
+
+This plugin monitors PKCS#11 events. A PKCS#11 event includes token inserted
+into a slot, and token removde from a slot.
+
+If the prompt is PAM_PROMPT_ECHO_ON, then the plugin will wait until a token
+has been inserted. It will then return an empty string. Typically, this will
+represent an empty username.
+
+If the prompt is PAM_PROMPT_ECHO_OFF, then the plugin will wait until a token 
+has been removed. It will then return an empty string. Typically, this will
+represent an empty PIN.
+
+The configuration file /etc/gdm/plugins/pkcs11.conf must be modified so 
+that the location of the PKCS#11 library is specified. See the comments in
+the configuration file for further details.
+
+2. PC/SC Plugin
+---------------
+
+Provides     : /usr/lib/gdm/plugins/libpromptpcsc.so
+Configuration: /etc/gdm/plugins/pcsc.conf
+
+This plugin monitors PC/SC events. A PC/SC event includes card inserted into
+a reader, and card removed from a reader. The PC/SC plugin may be used for
+recognizing lower-level events than the PKCS#11 plugin, and may (for some
+implementations) be faster. However, the PKCS#11 plugin is recommended.
+
+If the prompt is PAM_PROMPT_ECHO_ON, then the plugin will wait until a card
+has been inserted into a reader. It will then return an empty string. 
+Typically, this will represent an empty username.
+
+If the prompt is PAM_PROMPT_ECHO_OFF, then the plugin will wait until a card
+has been removed from a reader. It will then return an empty string. Typically,
+this will represent an empty PIN.
+
+The configuration file /etc/gdm/plugins/pcsc.conf must be modified so 
+that the location of the PC/SC library is specified. See the comments in
+the configuration file for further details.
+
+
+
+Installation
+------------
+
+Add the following option in the [greeter] section of the GDM configuration 
+file:
+
+  PromptPlugin=<plugin.so>
+
+where <plugin.so> is the location of the PKCS#11 prompt plugin or the PC/SC
+prompt plugin. 
+
+GDM may need to be restarted.
+
+
