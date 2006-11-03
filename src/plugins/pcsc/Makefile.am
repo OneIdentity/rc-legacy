@@ -36,4 +36,7 @@ install-data-hook: pcsc.conf.in
 		$(mkinstalldirs) $(DESTDIR)$(pluginsconfdir); \
 		chmod 755 $(DESTDIR)$(pluginsconfdir); \
 	fi
+	if test -f $(DESTDIR)$(pluginsconfdir)/pcsc.conf; then \
+		cp -f $(DESTDIR)$(pluginsconfdir)/pcsc.conf $(DESTDIR)$(pluginsconfdir)/pcsc.conf.orig; \
+	fi
 	$(INSTALL_DATA) pcsc.conf.in $(DESTDIR)$(pluginsconfdir)/pcsc.conf

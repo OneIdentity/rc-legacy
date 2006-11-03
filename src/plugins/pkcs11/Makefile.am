@@ -37,4 +37,7 @@ install-data-hook: pkcs11.conf.in
 		$(mkinstalldirs) $(DESTDIR)$(pluginsconfdir); \
 		chmod 755 $(DESTDIR)$(pluginsconfdir); \
 	fi 
+	if test -f $(DESTDIR)$(pluginsconfdir)/pkcs11.conf; then \
+		cp -f $(DESTDIR)$(pluginsconfdir)/pkcs11.conf $(DESTDIR)$(pluginsconfdir)/pkcs11.conf.orig; \
+        fi
 	$(INSTALL_DATA) pkcs11.conf.in $(DESTDIR)$(pluginsconfdir)/pkcs11.conf
