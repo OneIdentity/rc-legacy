@@ -1,9 +1,18 @@
 README
 ------
 
-This package provides a number of plugins for handling GDM PAM prompts.
+This package provides a number of plugins for handling GDM PAM prompts. 
+
+These plugins are called when a username or password/PIN are required in GDM 
+for authentication. Typically the plugin will wait for a external event (such 
+as inserting or removing a smartcard) and return an empty username/password 
+back to GDM.
 
 Plugins are installed into the /usr/lib/gdm/plugins directory.
+
+Note that a specially-modified version of GDM is required to load and handle 
+any prompt plugins. TODO specify where to download modified GDM
+ 
 
 1. PKCS#11 Plugin
 -----------------
@@ -25,6 +34,9 @@ represent an empty PIN.
 The configuration file /etc/gdm/plugins/pkcs11.conf must be modified so 
 that the location of the PKCS#11 library is specified. See the comments in
 the configuration file for further details.
+
+It is recommended that the PKCS#11 plugin should be used if the application
+that calls GDM (typically, a PAM module) is also making PKCS#11 calls. 
 
 2. PC/SC Plugin
 ---------------
@@ -49,6 +61,12 @@ The configuration file /etc/gdm/plugins/pcsc.conf must be modified so
 that the location of the PC/SC library is specified. See the comments in
 the configuration file for further details.
 
+It is recommended that the PC/SC plugin should be used if the application that
+calls GDM (typically, a PAM module) is also making PC/SC calls. If the
+application uses a PKCS#11 library that relies on a PC/SC daemon, then PC/SC
+events may be communicated back to the application before the underlying 
+PKCS#11 library receives notification of these events. This may lead to 
+inconsistencies between the application and the PKCS#11 library.
 
 
 Installation
@@ -60,7 +78,7 @@ file:
   PromptPlugin=<plugin.so>
 
 where <plugin.so> is the location of the PKCS#11 prompt plugin or the PC/SC
-prompt plugin. 
+prompt plugin.  
 
 GDM may need to be restarted.
 
