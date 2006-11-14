@@ -206,10 +206,7 @@ dnl AC_ROKEN(10,[/usr/heimdal /usr/athena],[lib/roken],[$(top_builddir)/lib/roke
 
 rk_ROKEN(lib/roken)
 
-# XXX Hack so we pick up version and roken from existing kerb libs. We should
-# really be checking for these
-#LIB_roken="\$(top_builddir)/lib/vers/libvers.la $LIB_roken"
-LIB_roken= 
+LIB_roken="\$(top_builddir)/lib/vers/libvers.la $LIB_roken"
 
 dnl rk_OTP
 

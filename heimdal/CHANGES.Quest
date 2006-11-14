@@ -1,3 +1,9 @@
+vas-apps (UNRELEASED)
+
+  * Fixed bug #149: Does not work with VAS 3.1.
+
+ -- Ted Percival <ted.percival@quest.com>  Tue, 14 Nov 2006 13:41:24 +1000
+
 vas-apps (0.7.2q4)
   
   * telnetd: Enable (fix) encryption.
