@@ -8,11 +8,11 @@ endif
 
 AM_CPPFLAGS += $(ROKEN_RENAME)
 
-man_MANS = editline.3
+noinst_MANS = editline.3
 
-lib_LTLIBRARIES = libeditline.la
+noinst_LTLIBRARIES = libeditline.la
 if el_compat
-noinst_LTLIBRARIES = libel_compat.la
+noinst_LTLIBRARIES += libel_compat.la
 endif
 
 noinst_PROGRAMS = testit
@@ -25,7 +25,7 @@ testit_LDADD = \
 	$(LIB_tgetent) \
 	$(LIB_roken)
 
-include_HEADERS = editline.h
+noinst_HEADERS = editline.h
 
 libeditline_la_SOURCES = \
 	complete.c \

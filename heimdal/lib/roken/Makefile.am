@@ -6,7 +6,7 @@ ACLOCAL_AMFLAGS = -I ../../cf
 
 CLEANFILES = roken.h make-roken.c $(XHEADERS)
 
-lib_LTLIBRARIES = libroken.la
+noinst_LTLIBRARIES = libroken.la
 libroken_la_LDFLAGS = -version-info 17:0:1
 libroken_la_CPPFLAGS = -DBUILD_ROKEN_LIB
 
@@ -30,7 +30,7 @@ TESTS = $(check_PROGRAMS)
 LDADD = libroken.la $(LIB_crypt)
 make_roken_LDADD = 
 
-noinst_LTLIBRARIES = libtest.la
+noinst_LTLIBRARIES += libtest.la
 libtest_la_SOURCES = strftime.c strptime.c snprintf.c
 libtest_la_CFLAGS = -DTEST_SNPRINTF
 
@@ -148,7 +148,7 @@ endif
 XHEADERS = $(err_h) $(fnmatch_h) $(glob_h) $(ifaddrs_h) $(vis_h)
 CLEANFILES += err.h fnmatch.h glob.h ifaddrs.h vis.h
 
-include_HEADERS = 				\
+noinst_HEADERS = 				\
 	base64.h				\
 	getarg.h				\
 	hex.h					\
@@ -163,9 +163,9 @@ include_HEADERS = 				\
 
 build_HEADERZ = test-mem.h
 
-nodist_include_HEADERS = roken.h
+noinst_HEADERS += roken.h
 
-man_MANS = getarg.3 parse_time.3 rtbl.3
+noinst_MANS = getarg.3 parse_time.3 rtbl.3
 
 SUFFIXES += .hin
 .hin.h:
