@@ -20,6 +20,8 @@ libdes_la_SOURCES =	\
 	aes.h		\
 	des.c		\
 	des.h		\
+	des-tables.h	\
+	hash.h		\
 	md4.c		\
 	md4.h		\
 	md5.c		\
