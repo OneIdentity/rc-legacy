@@ -5,9 +5,7 @@ include $(top_srcdir)/Makefile.am.common
 noinst_LTLIBRARIES = libdes.la
 libdes_la_LDFLAGS = -version-info 3:1:0
 
-#include_HEADERS = des.h md4.h md5.h sha.h rc2.h rc4.h aes.h
-
-build_HEADERZ = $(include_HEADERS)
+build_HEADERZ = des.h md4.h md5.h sha.h rc2.h rc4.h aes.h
 
 check_PROGRAMS = destest mdtest rctest rc2test #md5crypt_test 
 
