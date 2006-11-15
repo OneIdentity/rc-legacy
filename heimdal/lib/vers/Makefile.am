@@ -10,6 +10,8 @@ build_HEADERZ		= vers.h
 
 noinst_PROGRAMS		= make-print-version
 
+noinst_HEADERS		= $(build_HEADERZ)
+
 if KRB4
 if KRB5
 ## need to link with des here; otherwise, if krb4 is shared the link

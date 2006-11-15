@@ -39,7 +39,7 @@ parse_reply_test_CFLAGS  = -DTEST_RESOLVE
 
 test_readenv_SOURCES = test-readenv.c test-mem.c
 
-parse_time_test_SOURCES = parse_time-test.c test-mem.c
+parse_time_test_SOURCES = parse_time-test.c test-mem.c test-mem.h
 
 strpftime_test_SOURCES	= strpftime-test.c
 strpftime_test_LDADD = libtest.la $(LDADD)
@@ -98,6 +98,7 @@ libroken_la_SOURCES =		\
 
 EXTRA_libroken_la_SOURCES =	\
 	err.hin			\
+	fnmatch.hin		\
 	glob.hin		\
 	ifaddrs.hin		\
 	vis.hin	

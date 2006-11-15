@@ -6,7 +6,7 @@ AM_CPPFLAGS += $(INCLUDE_krb4)
 
 bin_PROGRAMS = rcp
 
-rcp_SOURCES  = rcp.c util.c
+rcp_SOURCES  = rcp.c util.c rcp_locl.h extern.h
 
 LDADD = $(LIB_roken) \
 		$(top_builddir)/lib/vers/libvers.la

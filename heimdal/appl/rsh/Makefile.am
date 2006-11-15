@@ -12,7 +12,10 @@ libexec_PROGRAMS = rshd
 
 rsh_SOURCES  = rsh.c common.c rsh_locl.h
 
-rshd_SOURCES = rshd.c common.c login_access.c rsh_locl.h
+rshd_SOURCES = rshd.c common.c login_access.c rsh_locl.h login_locl.h \
+	       login_protos.h
+
+EXTRA_DIST = $(man_MANS)
 
 login_access.c:
 	$(LN_S) $(srcdir)/../login/login_access.c .

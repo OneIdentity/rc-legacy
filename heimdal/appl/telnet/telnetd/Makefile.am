@@ -13,6 +13,8 @@ telnetd_SOURCES  = telnetd.c state.c termstat.c slc.c sys_term.c \
 
 man_MANS = telnetd.8
 
+EXTRA_DIST = $(man_MANS)
+
 LDADD = \
 	../libtelnet/libtelnet.a \
 	$(top_builddir)/lib/vers/libvers.la \

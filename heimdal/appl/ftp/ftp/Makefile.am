@@ -37,6 +37,8 @@ EXTRA_ftp_SOURCES = krb4.c gssapi.c
 
 man_MANS = ftp.1
 
+EXTRA_DIST = $(man_MANS)
+
 LDADD = \
 	../common/libcommon.a \
 	$(top_builddir)/lib/vers/libvers.la \

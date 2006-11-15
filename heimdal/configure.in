@@ -170,7 +170,7 @@ AM_CONDITIONAL(do_roken_rename, true)
 AC_DEFINE(KRB5, 1, [Enable Kerberos 5 support in applications.])dnl
 AC_SUBST(LIB_kdb)dnl
 
-KRB_CRYPTO
+#KRB_CRYPTO
 
 KRB_PTHREADS
 
@@ -466,7 +466,6 @@ AC_CONFIG_FILES(Makefile 		\
 	include/Makefile		\
 	lib/Makefile			\
 	lib/roken/Makefile		\
-	lib/des/Makefile		\
 	lib/editline/Makefile		\
 	lib/vers/Makefile		\
 	appl/Makefile			\
