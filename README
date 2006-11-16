@@ -11,7 +11,9 @@ back to GDM.
 Plugins are installed into the /usr/lib/gdm/plugins directory.
 
 Note that a specially-modified version of GDM is required to load and handle 
-any prompt plugins. TODO specify where to download modified GDM
+any prompt plugins. 
+
+TODO specify where to download modified GDM
  
 
 1. PKCS#11 Plugin
