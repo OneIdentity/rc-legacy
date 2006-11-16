@@ -88,7 +88,7 @@ if [ "$VMAJOR" != "3" ]; then
 fi
 
 if [ "$1" = "-f" ]; then #force change password without prompting
-    PWDCHANGE="force"
+    OPTFORCE="force"
 fi
 
 # First of all check if we are joined
@@ -146,6 +146,32 @@ TODAY=`date +"%Y%m%d"`
 /etc/init.d/smbd-quest stop
 /etc/init.d/vasidmapd stop
 /etc/init.d/nmbd-quest stop
+
+
+if [ "$OPTFORCE" = "force" ]; then
+    PAMOPT="yes"
+else
+    echo ""
+    echo "   Samba can be configured to check for pam"
+    echo "   restrictions by calling the account and session"
+    echo "   stacks, this will make it possible to enforce"
+    echo "   vas restrictions on user authentication"
+    echo ""
+    echo "Do you want samba to obey pam restrictions? [yes]/no"
+
+    # Should we use a timeout here?
+    read
+
+    if [ "$REPLY" = "" ]; then
+        PAMOPT="yes"
+    elif [ "$REPLY" = "y" ]; then
+        PAMOPT="yes"
+    elif [ "$REPLY" = "yes" ]; then
+        PAMOPT="yes"
+    else
+        PAMOPT="no"
+    fi
+fi
 
 ##########################
 # Verify/Modify smb.conf #
@@ -206,6 +232,12 @@ check_parm "idmap gid" "${CONFMOD}" ||
 check_parm "idmap expire time" "${CONFMOD}" ||
     echo "  idmap expire time = 300   # Expire the tdb cache every 5 minutes" \
         >> $NEWTEXT
+
+if [ "$PAMOPT" = "yes" ]; then
+    check_and_fix "obey pam restrictions" "yes" "${CONFMOD}" ||
+           echo "  obey pam restrictions = yes" >> $NEWTEXT
+fi
+
 
 #-- insert the new text at the end of the [global] section
 if test -s $NEWTEXT; then
@@ -289,7 +321,7 @@ if [ "$DEBUG" -ne "0" ]; then
 	exit 0
 fi
 
-if [ "$PWDCHANGE" = "force" ]; then
+if [ "$OPTFORCE" = "force" ]; then
     PWDCHANGE="yes"
 else
     echo ""
