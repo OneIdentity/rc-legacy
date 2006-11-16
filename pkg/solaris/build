@@ -4,6 +4,9 @@ set -ex
 
 PSTAMP=`hostname``date +'%Y%m%d%H%M%S'`
 ARCH=`uname -p`
+if [ `uname -r` = "5.6" ]; then
+    ARCH="${ARCH}26"
+fi
 PKGVERSION="${VERSION}-${BUILDNO}"
 SCRIPTDIR=`pwd`
 SCRIPTDIR=`dirname ${SCRIPTDIR}/$0`
