@@ -6,12 +6,13 @@
 #    libvas.so.4.2
 #    vasclnt 3.0.2
 
-%check
-    %(quest_require_vas 3.0.2)
+#%check
+#    %(quest_require_vas 3.0.2)
 
 %files
     $bindir/vasidmap-config
-    $bindir/vasidmap-preload
+    $bindir/vas-samba-config
+    $bindir/vas-set-samba-password
     $bindir/vasidmap
     $sbindir/vasidmapd
     $mandir/man8/vasidmapd.8

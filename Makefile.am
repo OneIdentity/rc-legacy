@@ -7,7 +7,7 @@ AM_CFLAGS =  $(VAS_CFLAGS)
 
 sbin_PROGRAMS=		vasidmapd
 bin_PROGRAMS=		vasidmap
-dist_bin_SCRIPTS=	vasidmap-preload vasidmap-config
+dist_bin_SCRIPTS=	vasidmap-config vas-samba-config vas-set-samba-password
 man_MANS =              vasidmapd.8
 
 vasidmap_LDADD  =   $(LIBOBJS)
