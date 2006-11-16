@@ -12,4 +12,6 @@ endif
 ## ACLOCAL = @ACLOCAL@ -I cf
 ACLOCAL_AMFLAGS = -I cf
 
-EXTRA_DIST = Makefile.am.common #krb5.conf
+doc_DATA = LICENCE.Quest CHANGES.Quest README.Quest
+
+EXTRA_DIST = Makefile.am.common $(doc_DATA)
