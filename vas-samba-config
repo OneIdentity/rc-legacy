@@ -267,27 +267,11 @@ fi
 
 #-- insert the new text at the end of the [vasd] section
 if test -s $NEWTEXT; then
-    SAVEIFS="$IFS"
-    IFS=""
-    INVASD=false
-    while read ILINE; do
-        if echo "$ILINE" | grep -i "^$SP*\[vasd\]" >/dev/null; then
-            INVASD=true
-        elif $INVASD && echo "$ILINE" | grep -i "^$SP*\[.*\]" >/dev/null; then
-            echo
-            echo "  ;--- begin options added by vas-samba-config ($TODAY) ---"
-            cat $NEWTEXT
-            echo "  ;--- end options added by vas-samba-config ($TODAY) ---"
-            echo
-            echo "$ILINE"
-            cat
-            break
-        fi
-        echo "$ILINE"
-    done < ${CONFMOD} > ${CONFMOD}.new
-    IFS="$SAVEIFS"
+    echo "" >> ${CONFMOD}
+    echo "[vasd]" >> ${CONFMOD}
+    cat $NEWTEXT >> ${CONFMOD}
     mv ${VASCONF} ${VASCONF}.${TODAY}.$$
-    mv ${CONFMOD}.new ${VASCONF}
+    mv ${CONFMOD} ${VASCONF}
     rm -f ${CONFMOD}
     echo "$VASCONF: updated"
 elif cmp $CONFMOD $VASCONF >/dev/null; then
@@ -300,7 +284,6 @@ fi
 rm -f $NEWTEXT
 
 
-
 if [ "$DEBUG" -ne "0" ]; then
 	echo "Exit before changing the password during debug"
 	exit 0
@@ -309,10 +292,11 @@ fi
 if [ "$PWDCHANGE" = "force" ]; then
     PWDCHANGE="yes"
 else
-    echo "The first time you configure samba you should"
-    echo "do a host password change to enable samba to"
-    echo "directly connect to AD and also provide NTLM"
-    echo "fallback authentication."
+    echo ""
+    echo "   The first time you configure samba you should"
+    echo "   do a host password change to enable samba to"
+    echo "   directly connect to AD and also provide NTLM"
+    echo "   fallback authentication."
     echo ""
     echo "Do you want to change the host password? [yes]/no"
 
