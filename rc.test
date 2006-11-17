@@ -147,7 +147,7 @@ trymap -un $uname <<.
 $usid
 .
 
-trymap -gn $gname <<.
+trymap -gn "$gname" <<.
 $gsid
 .
 
