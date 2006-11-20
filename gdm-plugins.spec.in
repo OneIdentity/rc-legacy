@@ -28,13 +28,13 @@ make
 rm -rf $RPM_BUILD_ROOT
 make prefix=$RPM_BUILD_ROOT%{_prefix} \
      sysconfdir=$RPM_BUILD_ROOT%{_sysconfdir} install
-     
+
 %clean
 [ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
 
 %files
 
-%doc AUTHORS COPYING ChangeLog NEWS README
+%doc AUTHORS COPYING NEWS README
 %{_libdir}/gdm/plugins/*
-%config %{_sysconfdir}/gdm/plugins/*
+%config %{_sysconfdir}/X11/gdm/plugins/*
 
