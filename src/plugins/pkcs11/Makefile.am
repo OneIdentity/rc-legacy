@@ -5,7 +5,7 @@ DEFS = @DEFS@ \
         -DSYSCONFDIR=\"@sysconfdir@\" \
         -DDATADIR=\"@datadir@\" \
         -DLIBDIR=\"@libdir@\" \
-        -DPKCS11_PLUGIN_CONFIG_FILE=\"@sysconfdir@/gdm/plugins/pkcs11.conf\" 
+        -DPKCS11_PLUGIN_CONFIG_FILE=\"@sysconfdir@/X11/gdm/plugins/pkcs11.conf\" 
 
 INCLUDES = \
 	-I$(srcdir)/.					\
@@ -27,7 +27,7 @@ pluginsdir=$(libdir)/gdm/plugins
 plugins_LTLIBRARIES =            \
 	libpromptpkcs11.la 
 
-pluginsconfdir=$(sysconfdir)/gdm/plugins
+pluginsconfdir=$(sysconfdir)/X11/gdm/plugins
 
 EXTRA_DIST=pkcs11.conf.in
 

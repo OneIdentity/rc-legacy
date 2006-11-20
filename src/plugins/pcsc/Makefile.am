@@ -5,7 +5,7 @@ DEFS = @DEFS@ \
         -DSYSCONFDIR=\"@sysconfdir@\" \
         -DDATADIR=\"@datadir@\" \
         -DLIBDIR=\"@libdir@\" \
-        -DPCSC_PLUGIN_CONFIG_FILE=\"@sysconfdir@/gdm/plugins/pcsc.conf\" 
+        -DPCSC_PLUGIN_CONFIG_FILE=\"@sysconfdir@/X11/gdm/plugins/pcsc.conf\" 
 
 INCLUDES = \
 	-I$(srcdir)/.					\
@@ -26,7 +26,7 @@ pluginsdir=$(libdir)/gdm/plugins
 plugins_LTLIBRARIES =            \
 	libpromptpcsc.la 
 
-pluginsconfdir=$(sysconfdir)/gdm/plugins
+pluginsconfdir=$(sysconfdir)/X11/gdm/plugins
 
 EXTRA_DIST=pcsc.conf.in
 
