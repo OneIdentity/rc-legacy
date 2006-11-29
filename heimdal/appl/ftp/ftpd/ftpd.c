@@ -153,7 +153,10 @@ static int	 checkaccess (char *);
 static FILE	*dataconn (const char *, off_t, const char *);
 static void	 dolog (struct sockaddr *sa, int len);
 static void	 end_login (void);
-static FILE	*getdatasock (const char *, int);
+#ifdef HAVE_IPV6
+static int	 addr4to6(const struct sockaddr_in *, struct sockaddr_in6 *);
+#endif
+static FILE	*getdatasock (const char *);
 static char	*gunique (char *);
 static RETSIGTYPE	 lostconn (int);
 static int	 receive_data (FILE *, FILE *);
@@ -1305,21 +1308,52 @@ done:
 	LOGBYTES(*mode == 'w' ? "put" : "append", name, byte_count);
 }
 
-
-/* Get a data socket
- * The domain parameter specifies the type of socket to create.
- * Use PF_UNSPEC to choose one of the same type as ctrl_addr.
+#ifdef HAVE_IPV6
+/*
+ * Convert an IPv4 address into a 4-in-6 mapped IPv6 address.
+ * The incoming pointers may point to the same memory.
+ * Only modifies sin6_out if the conversion was successful.
+ * Returns zero on success or nonzero on error.
  */
+int
+addr4to6(const struct sockaddr_in *sin4, struct sockaddr_in6 *sin6_out)
+{
+	struct sockaddr_in6 sin6;
+
+	if (sin4->sin_family != AF_INET)
+		return 1;
+
+	memset(&sin6, '\0', sizeof(sin6));
+	sin6.sin6_family = AF_INET6;
+	sin6.sin6_port = sin4->sin_port;
+
+	sin6.sin6_addr.s6_addr16[5] = 0xffff;
+	sin6.sin6_addr.s6_addr32[3] = sin4->sin_addr.s_addr;
+
+	memcpy(sin6_out, &sin6, sizeof(sin6));
+	
+	return 0;
+}
+#endif
 
 static FILE *
-getdatasock(const char *mode, int domain)
+getdatasock(const char *mode)
 {
 	int s, t, tries;
 
 	if (data >= 0)
 		return (fdopen(data, mode));
 	seteuid(0);
-	s = socket((domain == PF_UNSPEC) ? ctrl_addr->sa_family : domain, SOCK_STREAM, 0);
+	/* Assuming AF_INET* == PF_INET* */
+	s = socket(data_source->sa_family, SOCK_STREAM, 0);
+
+#ifdef HAVE_IPV6
+	if (data_dest->sa_family == AF_INET && data_source->sa_family == AF_INET6) {
+	    if (0 != addr4to6((struct sockaddr_in*)data_dest, (struct sockaddr_in6*)data_dest))
+		goto bad;
+	}
+#endif /* HAVE_IPV6 */
+
 	if (s < 0)
 		goto bad;
 	socket_set_reuseaddr (s, 1);
@@ -1375,7 +1409,7 @@ dataconn(const char *name, off_t size, const char *mode)
 {
 	char sizebuf[32];
 	FILE *file;
-	int domain, retry = 0;
+	int retry = 0;
 
 	file_size = size;
 	byte_count = 0;
@@ -1422,15 +1456,8 @@ dataconn(const char *name, off_t size, const char *mode)
 	if (usedefault)
 		data_dest = his_addr;
 	usedefault = 1;
-	/*
-	 * Default to using the same socket type as the ctrl address,
-	 * unless we know the type of the data address.
-	 */
-	domain = data_dest->sa_family;
-	if (domain == PF_UNSPEC)
-	    domain = ctrl_addr->sa_family;
 
-	file = getdatasock(mode, domain);
+	file = getdatasock(mode);
 	if (file == NULL) {
 		char data_addr[256];
 
