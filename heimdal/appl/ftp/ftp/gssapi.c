@@ -505,7 +505,9 @@ gss_auth(void *app_data, char *host)
 		     * the server. gss_display_name is only really
 		     * meant to display a meaningful name to the user.
 		     */
-		    strlcpy(username, localname.value, sizeof username);
+		    if (username)
+			free(username);
+		    username = estrdup(localname.value);
 		    gss_release_buffer(&min_stat, &localname);
 		}
 		printf(".\n");

@@ -71,7 +71,7 @@ int macnum;			/* number of defined macros */
 struct macel macros[16];
 char macbuf[4096];
 
-char username[32];
+char *username;
 
 /* these are set in ruserpass */
 char myhostname[MaxHostNameLen];

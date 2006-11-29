@@ -191,7 +191,7 @@ login (char *host)
 	return (0);
     }
 
-    if (username[0] == '\0') { /* might already have been set during auth */
+    if (!username || username[0] == '\0') { /* might already have been set during auth */
 	while (user == NULL) {
 	    if (myname)
 		printf ("Name (%s:%s): ", host, myname);
@@ -205,7 +205,9 @@ login (char *host)
 	    else
 		user = tmp;
 	}
-	strlcpy(username, user, sizeof(username));
+	if (username)
+	    free(username);
+	username = estrdup(user);
     }
     else {
 	user = username;

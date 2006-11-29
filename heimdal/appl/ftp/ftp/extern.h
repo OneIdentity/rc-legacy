@@ -163,7 +163,7 @@ extern char	reply_string[];
 extern off_t	restart_point;
 extern int	NCMDS;
 
-extern char 	username[32];
+extern char	*username;
 extern char	myhostname[];
 extern char	*mydomain;
 
