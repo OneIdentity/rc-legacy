@@ -69,6 +69,41 @@ RCSID("$Id: logwtmp.c,v 1.15 2000/09/19 13:17:05 assar Exp $");
 #endif
 #endif
 
+#include "ftpd_locl.h"
+extern char ttyline[TTYLINE_SIZE];
+
+/**
+ * Try to find a utmp ut_line that can be reused.
+ * Callers must call the appropriate endut*ent() function after this.
+ */
+static void
+get_ttyline()
+{
+#ifdef _PATH_UTMPX
+    struct utmpx *ut;
+#else
+    struct utmp *ut;
+#endif
+
+#ifdef _PATH_UTMPX
+    setutxent();
+    while ((ut = getutxent())) {
+#else
+    setutent();
+    while ((ut = getutent())) {
+#endif
+	if (	   ut->ut_type == DEAD_PROCESS
+		&& ut->ut_pid > 0
+		&& !strncmp(ut->ut_line, "ftp", 3)
+		/* See if the process is no longer alive */
+		&& -1 == kill(ut->ut_pid, 0)
+		&& errno == ESRCH) {
+	    strlcpy(ttyline, ut->ut_line, sizeof(ttyline));
+		return;
+	}
+    }
+}
+
 void
 ftpd_logwtmp(char *line, char *name, char *host)
 {
@@ -81,6 +116,9 @@ ftpd_logwtmp(char *line, char *name, char *host)
 #ifdef WTMPX_FILE
     struct utmpx utx;
 #endif
+
+    if (name[0])
+	get_ttyline();
 
     memset(&ut, 0, sizeof(struct utmp));
 #ifdef HAVE_STRUCT_UTMP_UT_TYPE
@@ -100,9 +138,11 @@ ftpd_logwtmp(char *line, char *name, char *host)
     ut.ut_time = time(NULL);
 
 #ifdef WTMPX_FILE
+    memset(&utx, 0, sizeof(struct utmpx));
     strncpy(utx.ut_line, line, sizeof(utx.ut_line));
     strncpy(utx.ut_user, name, sizeof(utx.ut_user));
     strncpy(utx.ut_host, host, sizeof(utx.ut_host));
+    utx.ut_pid = getpid();
 #ifdef HAVE_STRUCT_UTMPX_UT_SYSLEN
     utx.ut_syslen = strlen(host) + 1;
     if (utx.ut_syslen > sizeof(utx.ut_host))
@@ -135,4 +175,14 @@ ftpd_logwtmp(char *line, char *name, char *host)
 	write(fdx, &utx, sizeof(struct utmpx));
 #endif	
     }
+
+#ifdef _PATH_UTMPX
+    setutxent();
+    pututxline(&utx);
+    endutxent();
+#else
+    setutent();
+    pututline(&ut);
+    endutent();
+#endif
 }

@@ -102,7 +102,7 @@ int	guest_umask = 0777;	/* Paranoia for anonymous users */
 char	tmpline[10240];
 char	hostname[MaxHostNameLen];
 char	remotehost[MaxHostNameLen];
-static char ttyline[20];
+char	ttyline[TTYLINE_SIZE];
 
 #define AUTH_PLAIN	(1 << 0) /* allow sending passwords */
 #define AUTH_OTP	(1 << 1) /* passwords are one-time */
@@ -2030,7 +2030,6 @@ dologout(int status)
     urgflag = 0;
     if (logged_in) {
 	seteuid((uid_t)0);
-	ftpd_logwtmp(ttyline, "", "");
 #ifdef KRB4
 	cond_kdestroy();
 #endif
@@ -2045,6 +2044,7 @@ dologout(int status)
 	    syslog(LOG_FTP | LOG_DEBUG, "Programmer error: pamhandle is NULL on logout.");
 	}
 #endif /* HAVE_LIBPAM */
+	ftpd_logwtmp(ttyline, "", "");
     }
     /* beware of flushing buffers after a SIGPIPE */
 #ifdef XXX

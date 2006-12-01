@@ -176,4 +176,6 @@ int yyparse(void);
 #define LOG_FTP LOG_DAEMON
 #endif
 
+#define TTYLINE_SIZE 20
+
 #endif /* __ftpd_locl_h__ */
