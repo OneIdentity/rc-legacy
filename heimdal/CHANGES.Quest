@@ -1,3 +1,11 @@
+vas-apps (0.7.2q6)
+
+  * Fixed bug #86: Delegated credentials disappear with multiple FTP sessions.
+  * Fixed bug #164: FTPD truncates usernames to 31 characters.
+  * Fixed bug #35: FTP server fails to establish active connection.
+
+ -- Ted Percival <ted.percival@quest.com>  Fri,  1 Dec 2006 17:59:42 +1000
+
 vas-apps (0.7.2q5)
 
   * Fixed bug #149: Does not work with VAS 3.1.
