@@ -1327,8 +1327,10 @@ addr4to6(const struct sockaddr_in *sin4, struct sockaddr_in6 *sin6_out)
 	sin6.sin6_family = AF_INET6;
 	sin6.sin6_port = sin4->sin_port;
 
-	sin6.sin6_addr.s6_addr16[5] = 0xffff;
-	sin6.sin6_addr.s6_addr32[3] = sin4->sin_addr.s_addr;
+	/* RFC 2553 only defines the uint8_t s6_addr member */
+	sin6.sin6_addr.s6_addr[10] = 0xff;
+	sin6.sin6_addr.s6_addr[11] = 0xff;
+	memcpy(&sin6.sin6_addr.s6_addr[12], &sin4->sin_addr, sizeof(sin4->sin_addr));
 
 	memcpy(sin6_out, &sin6, sizeof(sin6));
 	
