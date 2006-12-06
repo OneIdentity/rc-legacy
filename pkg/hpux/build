@@ -31,7 +31,7 @@ gunzip -c "$SCRIPTDIR/../$NAME-$VERSION.tar.gz" | tar xf -
 
 # configure
 cd "$NAME-$VERSION"
-./configure --cache-file=/var/tmp/config.cache --prefix=$DESTDIR --mandir=$DESTDIR/man
+./configure -C --prefix=$DESTDIR --mandir=$DESTDIR/man
 
 # build
 make

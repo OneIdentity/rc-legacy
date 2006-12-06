@@ -8,7 +8,7 @@ URL: http://rc.vintela.com/topics/vas-apps/
 Group: Applications/Internet
 Packager: Ted Percival <ted.percival@quest.com>
 Prefix: /opt/quest
-Source: vas_apps-@[VERSION].tar.gz
+Source: vas-apps-@[VERSION].tar.gz
 Requires: libvas.so.4
 
 %description
@@ -50,7 +50,7 @@ rshd, telnetd and ftpd.
 %define _infodir %{_prefix}/info
 
 %prep
-%setup -n vas_apps-@[VERSION]
+%setup -n vas-apps-@[VERSION]
 
 %build
 rm -rf $RPM_BUILD_ROOT

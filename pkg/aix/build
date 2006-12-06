@@ -9,17 +9,18 @@ set -ex
 
 SCRIPTDIR=$(dirname $(pwd)/$0)
 
-OUTPUTDIR=/var/tmp/vas-apps/output
-BUILDDIR=/var/tmp/vas-apps/build
+WORKDIR=/var/tmp/vas-apps
+OUTPUTDIR=$WORKDIR/output
+BUILDDIR=$WORKDIR/build
 PKGDIR=$PKGDIR/aix
 PREFIX=/opt/quest # must begin with a slash
 VAS_DEP_VERSION=3.0.1.3
 
 CC='/usr/local/bin/ccache /usr/bin/gcc'
 
-sudo rm -rf $OUTPUTDIR $BUILDDIR
+sudo rm -rf $WORKDIR
 
-mkdir -p $OUTPUTDIR $BUILDDIR $PKGDIR
+mkdir -p $WORKDIR $OUTPUTDIR $BUILDDIR $PKGDIR
 
 ## FUNCTION DEFS
 
@@ -44,7 +45,7 @@ gunzip -c $SCRIPTDIR/../*.tar.gz | tar -xf -
 
 # configure
 cd $NAME-$VERSION
-./configure --cache-file=/var/tmp/config.cache --prefix=$OUTPUTDIR$PREFIX --sysconfdir=$OUTPUTDIR/etc/opt/quest --mandir=$OUTPUTDIR$PREFIX/man
+./configure -C --prefix=$OUTPUTDIR$PREFIX --sysconfdir=$OUTPUTDIR/etc/opt/quest --mandir=$OUTPUTDIR$PREFIX/man
 
 # build
 make

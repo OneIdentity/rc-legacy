@@ -10,9 +10,10 @@ fi
 PKGVERSION="${VERSION}-${BUILDNO}"
 SCRIPTDIR=`pwd`
 SCRIPTDIR=`dirname ${SCRIPTDIR}/$0`
-BUILDDIR=/var/tmp/vas-apps/build
+WORKDIR=/var/tmp/vas-apps
+BUILDDIR=$WORKDIR/build
 # OUTPUTDIR _must_ be the same as the real dir specified in the Prototype files
-OUTPUTDIR=/var/tmp/vas-apps/output
+OUTPUTDIR=$WORKDIR/output
 PACKAGES_DEST="/data/rc/builds/vas-apps/solaris.${ARCH}"
 CC=/usr/local/bin/gcc
 PATH=/usr/local/bin:$PATH
@@ -31,6 +32,8 @@ pkginfo_create() {
 	    $1 > $2
 }
 
+sudo rm -rf $WORKDIR
+
 ## Begin work
 mkdir -p ${BUILDDIR} ${OUTPUTDIR}
 cd ${BUILDDIR}
@@ -38,7 +41,7 @@ cd ${BUILDDIR}
 gunzip -c "${SCRIPTDIR}/../${NAME}-${VERSION}.tar.gz" | tar -xf -
 cd ${NAME}-${VERSION}
 
-./configure --cache-file=/var/tmp/config.cache --prefix=/opt/quest --mandir=\${prefix}/man
+./configure -C --prefix=/opt/quest --mandir=\${prefix}/man
 make
 make install DESTDIR="$OUTPUTDIR"
 
