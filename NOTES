@@ -1,0 +1,13 @@
+Random notes from this project. 
+
+DB2 takes three different sections. Client, Server, and Group. 
+
+They can be three seperate libraries, or all in one library. 
+Using the latter.
+
+I had tried sym-linking the libraries in the three subdirectories to one, that filed, might have been a reletive path issue, not sure, never gone back to that method. 
+
+DB2 loads the PluginInit function for the section it is looking for, and uses that to determine to use the plugin or not. 
+
+Usually a db2stop is sufficent, but sometimes a db2 terminate needs to be run when uninstalling ( just setting the settings back to NULL, then stop/start might not clear it ). 
+
