@@ -20,8 +20,8 @@ INSTANCEHOME="`eval echo ~${1}`"
 PLUGINPATH32="${INSTANCEHOME}/sqllib/security32/plugin"
 PLUGINPATH64="${INSTANCEHOME}/sqllib/security64/plugin"
 LIBFILE=sys-auth.so
-LIBFILE32=sys-auth32.so
-LIBFILE64=sys-auth64.so
+LIBFILE32=sys-auth32.so.@VERSION@
+LIBFILE64=sys-auth64.so.@VERSION@
 AUTHFILE32=sys-auth32
 AUTHFILE64=sys-auth64
 
@@ -70,33 +70,36 @@ then
     fi
 fi
 
-if [ ! -d ${PLUGINPATH32} ]
+if [ ! -d ${PLUGINPATH32} -a ! -d ${PLUGINPATH64} ]
 then
-        echo "Directory $PLUGINPATH32 not found!"
+        echo "Directory $PLUGINPATH32 or $PLUGINPATH64 not found!"
         echo "Do you have the right name for an instance owner?"
         exit 1
 fi
 
-echo "Everything checks out, installing the 32-bit files."
-echo "First the cleanup, delete the old versions if they exist."
-rm -f ${PLUGINPATH32}/server/${LIBFILE}
-rm -f ${PLUGINPATH32}/client/${LIBFILE}
-rm -f ${PLUGINPATH32}/group/${LIBFILE}
-rm -f ${PLUGINPATH32}/${AUTHFILE32}
-# Clean up old files as well.
-rm -f ${PLUGINPATH32}/*/${LIBFILE32}
+if [ -d ${PLUGINPATH32} ] ; then
+    echo "Everything checks out, installing the 32-bit files."
 
-echo "Now copy over the ${LIBFILE32} to ${PLUGINPATH32}/server&client&group/${LIBFILE}."
-cp ${LIBFILE32} ${PLUGINPATH32}/server/${LIBFILE}
-cp ${LIBFILE32} ${PLUGINPATH32}/client/${LIBFILE}
-cp ${LIBFILE32} ${PLUGINPATH32}/group/${LIBFILE}
-echo "Copy ${AUTH32} to ${PLUGINPATH32}/${AUTHFILE32}"
-cp ${AUTH32} ${PLUGINPATH32}/${AUTHFILE32}
-echo "And fix the ownerships/permissions. WARNING!!! ${PLUGINPATH32}/${AUTHFILE32} is setuid root becasue it has to be to do authentications. Just so you know."
-chown ${1} ${PLUGINPATH32}/server/${LIBFILE} ${PLUGINPATH32}/client/${LIBFILE} ${PLUGINPATH32}/group/${LIBFILE}
-chmod 0755 ${PLUGINPATH32}/server/${LIBFILE} ${PLUGINPATH32}/client/${LIBFILE} ${PLUGINPATH32}/group/${LIBFILE}
-chown root ${PLUGINPATH32}/${AUTHFILE32} 
-chmod 4755 ${PLUGINPATH32}/${AUTHFILE32} 
+    echo "First the cleanup, delete the old versions if they exist."
+    rm -f ${PLUGINPATH32}/server/${LIBFILE}
+    rm -f ${PLUGINPATH32}/client/${LIBFILE}
+    rm -f ${PLUGINPATH32}/group/${LIBFILE}
+    rm -f ${PLUGINPATH32}/${AUTHFILE32}
+# Clean up old files as well.
+    rm -f ${PLUGINPATH32}/*/${LIBFILE32}
+
+    echo "Now copy over the ${LIBFILE32} to ${PLUGINPATH32}/server&client&group/${LIBFILE}."
+    cp ${LIBFILE32} ${PLUGINPATH32}/server/${LIBFILE}
+    cp ${LIBFILE32} ${PLUGINPATH32}/client/${LIBFILE}
+    cp ${LIBFILE32} ${PLUGINPATH32}/group/${LIBFILE}
+    echo "Copy ${AUTH32} to ${PLUGINPATH32}/${AUTHFILE32}"
+    cp ${AUTH32} ${PLUGINPATH32}/${AUTHFILE32}
+    echo "And fix the ownerships/permissions. WARNING!!! ${PLUGINPATH32}/${AUTHFILE32} is setuid root becasue it has to be to do authentications. Just so you know."
+    chown ${1} ${PLUGINPATH32}/server/${LIBFILE} ${PLUGINPATH32}/client/${LIBFILE} ${PLUGINPATH32}/group/${LIBFILE}
+    chmod 0755 ${PLUGINPATH32}/server/${LIBFILE} ${PLUGINPATH32}/client/${LIBFILE} ${PLUGINPATH32}/group/${LIBFILE}
+    chown root ${PLUGINPATH32}/${AUTHFILE32} 
+    chmod 4755 ${PLUGINPATH32}/${AUTHFILE32} 
+fi
 
 if [ "${TYPE}" = "64" ]
 then

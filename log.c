@@ -194,7 +194,7 @@ void slog_init( )
     else
     {
         int val = atoi( value );
-        if( val > SLOG_ALL || val < SLOG_NORMAL )
+        if( val > SLOG_ALL || val < SLOG_CRIT )
             G_log_level = SLOG_NORMAL;
         else
             G_log_level = val;

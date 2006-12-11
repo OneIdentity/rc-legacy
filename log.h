@@ -41,6 +41,9 @@
  */
 #define MAX_LINE_LENGTH     1027
 
+// Things that should log even if logging is turned off ( debug-level = 0 )
+#define SLOG_CRIT   0
+
 // Authentication requests only.
 #define SLOG_NORMAL 1
 
@@ -62,5 +65,8 @@ void slog( int level, const char* msg, ... );
 char *GetEntryFromFile( const char*, const char* );
 
 #define func_start() slog( SLOG_DEBUG, "%s: starting", __FUNCTION__)
+
+#define test_mem() if( vas_db2_plugin_test_memory( __FUNCTION__ ) ) \
+                       return DB2SEC_PLUGIN_NOMEM
 
 #endif

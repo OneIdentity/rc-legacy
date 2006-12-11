@@ -1,26 +1,26 @@
 4-21-06: Moving to a configure/make/make dist setup. 
 
 5-25-06: Quite a few changes. 
-            Fixed a Solaris seg-fault when debug level was 3 or higher.
-            Now a sys-auth.conf in the users homedir takes precedence.
-            The plug-in will read its logging level every minute for changes.
+Fixed a Solaris seg-fault when debug level was 3 or higher.
+Now a sys-auth.conf in the users homedir takes precedence.
+The plug-in will read its logging level every minute for changes.
 
 5-30-06: Not sure where I lost the changes at, but put back in some fixes. 
-            When accessed in client auth mode from an AD machine, the username
-            included @<short domain> which wasn't recognized by the system. Fixed.
+When accessed in client auth mode from an AD machine, the username
+included @<short domain> which wasn't recognized by the system. Fixed.
 
-            When accessed cross-instance (not sure how, somehow tables are linked),
-            certain things are bypassed, and a get groups happens on the upper
-            cased name, which would fail. Explicitly lower that name.
-           
+When accessed cross-instance (not sure how, somehow tables are linked),
+certain things are bypassed, and a get groups happens on the upper
+cased name, which would fail. Explicitly lower that name.
+
 5-30-06: Made all internal functions name-safe. Seen where if the authentication
-         through db2sysc, there is possible a name collision against an internal 
-         DB2 function checkUser, that doesn't return what the plugin is expecting, 
-         making users appear to have failed when they shouldn't.  
+through db2sysc, there is possible a name collision against an internal 
+DB2 function checkUser, that doesn't return what the plugin is expecting, 
+making users appear to have failed when they shouldn't.  
 
 
 06-05-06: Moving to a versioning of the library, tracked in the syslog output. 
-          Now changelog will work off the version.
+Now changelog will work off the version.
 
 1.0.0:
 * Remove the func_start() from PluginTerminate, as the instance is not always valid
@@ -46,3 +46,55 @@
   authentications, should not be noticable unless a user is in multiple systems and has many group 
   overlaps, at which point it might add a few seconds to just the auth, as DB2 will store the group 
   membership info for the duration of the connection. AIX only.
+
+1.0.3 (07-14-06):
+* Add a memory check to some function calls. 
+* Only lower the username during the check_password function if the original name wasn't found. 
+* Remove the use of the DB2DEFAULTUSER env variable. This was a carry-over from the base code
+  sample used, only UID should be considered for determining who the user is. If the user
+  is to be different from the current user, then change the processes effective UID. 
+* Use the effective UID when in the db2secGetDefaultLoginContext function instead of the 
+  normal UID ( geteuid() vs. getuid() ).
+
+1.0.4 (07-14-06):
+* Thanks to IBM support, re-wrote the get?uid() to trigger off the useridType field.
+
+1.0.5 (07-17-06):
+* Revert old behavior of assuming ENOENT for errno == 0 when getpwnam fails. 
+  This is likely from pthreads putting errno in a differnt namespace, so the 
+  errno the plugin reads isn't the one set, making it return UNKNOWNERROR
+  instead of BADUSER. The UNKNOWNERROR makes quite a few things complain. 
+
+1.0.6 (07-18-06):
+* Added an upgrade.sh script that can be run by the instance owner
+  to replace the libraries. 
+* Added the function char *vas_db2_plugin_get_version() to the
+  sys-auth library, modified it to build with the version number, 
+  install/upgrade now use it, and added tests for the version.
+* Changed the memory test size to 11K, to put it at an odd allocation
+  to differentiate it from other allocs.
+
+1.0.7 (10-25-06):
+* Some fixes for minor issues found in code review. 
+* Added a Troubleshooting document.
+* Added some specific debugging for a Stored Procedure issue.
+
+1.0.8 (10-26-06):
+* Refactor groups_for_user function to need no additional getpwnam calls, 
+  instead storing the users pgid from the user_check to test group 
+  membership with.
+* Found the cause of the issue mentioned in 1.0.7. The SP had a grant 
+  on a non-existent user, and the code was returning the wrong error
+  code. Due to losing errno between functions, returned UNKNOWN_ERROR
+  instead of BAD_USER. Fixed.
+
+1.0.9 (11-1-06):
+* Add an explicite lower to the check_user function. This fixes 
+  grants on non-VAS users, as they come through upper-cased, 
+  making the getpwnam not match. 
+
+1.0.10 (11-21-06):
+* Add 64-bit linux.     
+
+1.0.11 (12-1-06):
+* Added s390x Linux ( zSeries OS )

@@ -91,7 +91,7 @@ int pam_auth_user( const char *name, const char *password ) {
 
 int main(int argc, char* argv[])
 {
-        int retval;
+        int retval, result = 0;
         struct passwd *pwd = NULL;
         char password[128];
         char *cptr = NULL;
@@ -113,11 +113,12 @@ int main(int argc, char* argv[])
         }
 
         /* Read password from stdin */
-        if( read(STDIN_FILENO, password, 128) <= 0 )
+        if( ( result = read(STDIN_FILENO, password, 128) ) <= 0 )
         {
                 slog( SLOG_EXTEND, "%s: error reading password from std_in for user <%s>, errno <%d>", __FUNCTION__, argv[1], errno );
                 exit( EIO );
         }
+        password[result] = '\0';
 
         /* Check and trim \n if present. */
         if(  ( cptr = (char *)memchr( password,'\n', strlen(password) ) ) != NULL ) {

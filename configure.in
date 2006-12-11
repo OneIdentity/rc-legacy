@@ -1,5 +1,5 @@
-AC_INIT(sys-auth, 1.0.2)
-VERSION="1.0.2"
+AC_INIT(sys-auth, 1.0.11)
+VERSION="1.0.11"
 AC_CONFIG_HEADER(config.h)
 
 dnl Find and test the C compiler
@@ -24,10 +24,13 @@ case `uname -a | awk '{print $1}'` in
         LINUX_TRUE=''
         LINUX_FALSE=#
         CC=gcc
-        uname -m | grep -q x86_64
-        if test $? -eq 1 ; then
+        uname -m | grep x86_64 >/dev/null 2>&1
+        if test $? -eq 1 -a ! `uname -m` = "s390x" ; then
             B64_TRUE=#
             B64_FALSE=''
+            echo "Found 32-bit"
+        else
+            echo "Found a 64-bit machine"
         fi
         ;;
     "SunOS")
@@ -61,6 +64,17 @@ AC_CHECK_FUNCS(vsyslog snprintf asprintf asnprintf vasprintf vasnprintf vsnprint
 
 CFLAGS="-D${OS} -fpic"
 case $OS in 
+    "LINUX")
+        CC="gcc -m32"
+        CC64="gcc -m64"
+        if test `uname -m` = "x86_64" ; then
+            OS=LINUX_64
+        fi
+        if test `uname -m` = "s390x" ; then
+            OS=LINUX_s390x
+            CC="gcc"
+        fi
+        ;;
     "AIX")
         if test `uname -a | awk '{print $3}'` -eq 3 ; then 
             OS=AIX_53    
@@ -103,4 +117,5 @@ AC_SUBST(VERSION)
 dnl read Makefile.in and write Makefile
 AC_OUTPUT(Makefile)
 AC_OUTPUT(install.sh)
-chmod u+x install.sh
+AC_OUTPUT(upgrade.sh)
+chmod u+x install.sh upgrade.sh
