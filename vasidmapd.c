@@ -131,11 +131,11 @@
 static void usage(const char *prog);
 static int search_result_ok(ber_int_t msgid, struct berval **reply);
 static int vlmapd_sid_to_id(vas_ctx_t *vasctx, vas_id_t *vasid, 
-        ber_int_t msgid, char *sid, struct berval **reply);
+        ber_int_t msgid, char *sid, BerElement *berep);
 static int vlmapd_uid_to_sid(vas_ctx_t *vasctx, vas_id_t *vasid, 
-        ber_int_t msgid, char *val, struct berval **reply);
+        ber_int_t msgid, char *val, BerElement *berep);
 static int vlmapd_gid_to_sid(vas_ctx_t *vasctx, vas_id_t *vasid,
-        ber_int_t msgid, char *val, struct berval **reply);
+        ber_int_t msgid, char *val, BerElement *berep);
 static int vlmapd_search_idpool(ber_int_t msgid, struct berval **reply);
 static int vlmapd_search(vas_ctx_t *vasctx, vas_id_t *vasid, ber_int_t msgid,
         BerElement *be, struct berval **reply);
@@ -176,12 +176,11 @@ FINISHED:
 /* Common failure macro; logs a message and returns an empty search result */
 #define FAIL(level, fmt, va...) do { \
         DEBUG(level, fmt , ## va); \
-        ret = search_result_ok(msgid, reply); \
         goto FINISHED; \
     } while (0);
 
 static int vlmapd_sid_to_id(vas_ctx_t *vasctx, vas_id_t *vasid,
-                            ber_int_t msgid, char *sid, struct berval **reply)
+                            ber_int_t msgid, char *sid, BerElement *berep)
 {
     char num[12];
     char *attr;
@@ -315,17 +314,12 @@ SUCCESS:
           pwent?"UID":"GID", 
           num);
 
-    /* TRICKY: BERVAL_PRINTF sets ret */
-    BERVAL_PRINTF(reply, "{it{s{{s{s}}{s{s}}{s{s}}}}}{it{eoo}}",
+    ret = ber_printf(berep, "{it{s{{s{s}}{s{s}}{s{s}}}}}",
                   msgid, LDAP_RES_SEARCH_ENTRY,
                   "CN=VAS-Idmapper",
                   "sambaSID",sid,
                   "objectClass", "sambaIdmapEntry",
-                  attr, num,
-                  msgid, LDAP_RES_SEARCH_RESULT,
-                  LDAP_SUCCESS,
-                  NULL, 0,
-                  NULL, 0);
+                  attr, num);
 
 FINISHED:
     if ( vasuser ) vas_user_free( vasctx, vasuser );
@@ -337,7 +331,7 @@ FINISHED:
 }
 
 static int vlmapd_uid_to_sid(vas_ctx_t *vasctx, vas_id_t *vasid, 
-        ber_int_t msgid, char *val, struct berval **reply)
+        ber_int_t msgid, char *val, BerElement *berep)
 {
 	vas_user_t *vasuser;
 	struct passwd *pwent = NULL;
@@ -354,7 +348,7 @@ static int vlmapd_uid_to_sid(vas_ctx_t *vasctx, vas_id_t *vasid,
 	}
 	if ((pwent = getpwuid(uid)) == NULL) {
 		DEBUG(1, "ERROR: uid (%d) not found!\n", uid);
-		return search_result_ok(msgid, reply);
+		return 0;
 	}
 
 	if ((vas_user_init(vasctx, vasid, pwent->pw_name,
@@ -364,7 +358,7 @@ static int vlmapd_uid_to_sid(vas_ctx_t *vasctx, vas_id_t *vasid,
                          "            [%s]\n",
                          pwent->pw_name,
                          vas_err_get_string(vasctx, 1));
-		return search_result_ok(msgid, reply);
+		return 0;
 	}
 
 	if ((vas_user_get_sid(vasctx, vasid, vasuser, &sid)) != VAS_ERR_SUCCESS) {
@@ -373,28 +367,24 @@ static int vlmapd_uid_to_sid(vas_ctx_t *vasctx, vas_id_t *vasid,
 			 sid,
 			 vas_err_get_string(vasctx, 1));
 		vas_user_free(vasctx, vasuser);
-		return search_result_ok(msgid, reply);
+		return 0;
 	}
 
 	vas_user_free(vasctx, vasuser);
 
 	DEBUG(1, "SUCCESS: converted UID " UID_T_FMT " to SID %s.\n", uid, sid);
 
-	BERVAL_PRINTF(reply, "{it{s{{s{s}}{s{s}}{s{s}}}}}{it{eoo}}",
-		 msgid, LDAP_RES_SEARCH_ENTRY,
+        ret = ber_printf(berep, "{it{s{{s{s}}{s{s}}{s{s}}}}}",
+		        msgid, LDAP_RES_SEARCH_ENTRY,
 			"CN=VAS-Idmapper",
 			"sambaSID", sid,
 			"objectClass", "sambaIdmapEntry",
-			"uidNumber", val,
-		 msgid, LDAP_RES_SEARCH_RESULT,
-			LDAP_SUCCESS,
-			NULL, 0,
-			NULL, 0);
-FINISHED:
+			"uidNumber", val);
+
 	return ret;
 }
 
-static int vlmapd_gid_to_sid(vas_ctx_t *vasctx, vas_id_t *vasid, ber_int_t msgid, char *val, struct berval **reply)
+static int vlmapd_gid_to_sid(vas_ctx_t *vasctx, vas_id_t *vasid, ber_int_t msgid, char *val, BerElement *berep)
 {
 	vas_group_t *vasgrp;
 	struct group *grent = NULL;
@@ -411,7 +401,7 @@ static int vlmapd_gid_to_sid(vas_ctx_t *vasctx, vas_id_t *vasid, ber_int_t msgid
 	}
 	if ((grent = getgrgid(gid)) == NULL) {
 		DEBUG(1, "ERROR: gid " GID_T_FMT " not found!\n", gid);
-		return search_result_ok(msgid, reply);
+		return 0;
 	}
 
 	if ((vas_group_init(vasctx, vasid, grent->gr_name,
@@ -421,7 +411,7 @@ static int vlmapd_gid_to_sid(vas_ctx_t *vasctx, vas_id_t *vasid, ber_int_t msgid
                          "            [%s]\n",
                          grent->gr_name,
                          vas_err_get_string(vasctx, 1));
-		return search_result_ok(msgid, reply);
+		return 0;
 	}
 
 	if ((vas_group_get_sid(vasctx, vasid, vasgrp, &sid)) != VAS_ERR_SUCCESS) {
@@ -431,24 +421,20 @@ static int vlmapd_gid_to_sid(vas_ctx_t *vasctx, vas_id_t *vasid, ber_int_t msgid
 			 sid,
 			 vas_err_get_string(vasctx, 1));
 		vas_group_free(vasctx, vasgrp);
-		return search_result_ok(msgid, reply);
+		return 0;
 	}
 
 	vas_group_free(vasctx, vasgrp);
 
         DEBUG(1, "SUCCESS: converted GID " GID_T_FMT " to SID %s.\n", gid, sid);
 
-	BERVAL_PRINTF(reply, "{it{s{{s{s}}{s{s}}{s{s}}}}}{it{eoo}}",
-		 msgid, LDAP_RES_SEARCH_ENTRY,
+        ret = ber_printf(berep, "{it{s{{s{s}}{s{s}}{s{s}}}}}",
+		        msgid, LDAP_RES_SEARCH_ENTRY,
 			"CN=VAS-Idmapper",
 			"sambaSID", sid,
 			"objectClass", "sambaIdmapEntry",
-			"gidNumber", val,
-		 msgid, LDAP_RES_SEARCH_RESULT,
-			LDAP_SUCCESS,
-			NULL, 0,
-			NULL, 0);
-FINISHED:
+			"gidNumber", val);
+
 	return ret;
 }
 
@@ -472,15 +458,18 @@ FINISHED:
 }
 
 #define FILTER_TAG_AND              0xA0
+#define FILTER_TAG_OR               0xA1
 #define FILTER_TAG_EQUALITY_MATCH   0xA3
 
 /* Handles an LDAP search request, and constructs a reply. */
 static int vlmapd_search(vas_ctx_t *vasctx, vas_id_t *vasid, 
         ber_int_t msgid, BerElement *be, struct berval **reply)
 {
-	ber_tag_t ft;
+	BerElement *berep;
+	ber_tag_t ft, tag;
 	char name[4096], val[4096];
 	int nl, vl;
+	int multi = 0;
 	int ret;
 
 	/* Skip everything up to the Filter 
@@ -518,50 +507,104 @@ static int vlmapd_search(vas_ctx_t *vasctx, vas_id_t *vasid,
 		break;
 
 	case FILTER_TAG_AND:
+                berep = ber_alloc_t(BER_USE_DER);
+                if (berep == NULL) {
+                        warnx("ber_alloc_t failed");
+                        return -1;
+                }
+
 		/* and filter we need further investigation */
 		nl = sizeof name;
                 vl = sizeof val;
 		ret = ber_scanf(be, "{{ss}", name, &nl, val, &vl);
 		if (ret == -1) {
                         warnx("expected filter (&(=)...)");
+			ber_free(berep, 1);
 			return -1;
 		}
 
                 DEBUG(3, "(&(%.*s=%.*s)...)\n", nl, name, vl, val);
 
-		if (strncasecmp(name, "objectclass", nl) == 0 &&
-                    strncasecmp(val, "sambaIdmapEntry", vl) == 0) {
+		if (strncasecmp(name, "objectclass", nl) != 0 ||
+                    strncasecmp(val, "sambaIdmapEntry", vl) != 0) {
+			/* return nothing for everything else */
+			ret = search_result_ok(msgid, reply);
+			break;
+		}
+
+		tag = ber_peek_tag(be, &nl);
+		if (tag == FILTER_TAG_OR) {
+			multi = 1;
+			ret = ber_scanf(be, "{");
+		} else if (tag == FILTER_TAG_EQUALITY_MATCH) {
+			multi = 0;
+		} else {
+			warnx("invalid filter tag, expected (=) or (|...)");
+			ber_free(berep, 1);
+			return -1;
+		}
+		ret = 0;
+
+		while (ret != -1) {
                         nl = sizeof name;
                         vl = sizeof val;
-                        ret = ber_scanf(be, "{ss}}", name, &nl, val, &vl);
+                        ret = ber_scanf(be, "{ss}", name, &nl, val, &vl);
                         if (ret == -1) {
-                                warnx("expected filter (&(=)(=))");
-                                return -1;
+				/* end of sequence? */
+				continue;
                         }
                         DEBUG(3, "(&...(%.*s=%.*s))\n", nl, name, vl, val);
 
                         if (strncasecmp(name, "sambaSID", nl) == 0) {
-                                ret = vlmapd_sid_to_id(vasctx, vasid, 
-                                        msgid, val, reply);
+                                vlmapd_sid_to_id(vasctx, vasid, msgid, val, berep);
+
                         } else if (strncasecmp(name, "uidNumber", nl) == 0) {
-                                ret = vlmapd_uid_to_sid(vasctx, vasid, 
-                                        msgid, val, reply);
+                                vlmapd_uid_to_sid(vasctx, vasid, msgid, val, berep);
+
                         } else if (strncasecmp(name, "gidNumber", nl) == 0) {
-                                ret = vlmapd_gid_to_sid(vasctx, vasid, 
-                                        msgid, val, reply);
+                                vlmapd_gid_to_sid(vasctx, vasid, msgid, val, berep);
+
                         } else {
-                                ret = search_result_ok(msgid, reply);
+                                DEBUG(1, "skipping unexpected attribute request: [%s]\n", name);
                         }
-                        break;
 		}
 
+		ret = ber_scanf(be, "}");
+		if (ret == -1) {
+			warnx("expected filter end");
+			ber_free(berep, 1);
+			return -1;
+		}
+		if (multi) {
+			ret = ber_scanf(be, "}");
+			if (ret == -1) {
+				warnx("expected filter end");
+				ber_free(berep, 1);
+				return -1;
+			}
+		}
 
-		/* return nothing for everything else */
-		ret = search_result_ok(msgid, reply);
+                /* end results message */
+                ret = ber_printf(berep, "{it{eoo}}",
+                                 msgid, LDAP_RES_SEARCH_RESULT,
+                                 LDAP_SUCCESS,
+                                 NULL, 0,
+                                 NULL, 0);
+		if (ret == -1) {
+                        warnx("ber_printf failed");
+                        ber_free(berep, 1);
+		}
+	
+                ret = ber_flatten(berep, reply);
+                ber_free(berep, 1);
+                if (ret == -1) {
+                        warnx("ber_flatten failed");
+			return -1;
+                }
 		break;
-		
+
 	default:
-		/* answer we found nothing */
+		/* answer all is ok */
 		ret = search_result_ok(msgid, reply);
 		break;
 	}
