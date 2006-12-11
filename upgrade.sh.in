@@ -1,0 +1,51 @@
+#!/bin/sh
+echo "This script will upgrade vas_db2_plugin in this instance to @VERSION@"
+if [ ! -d ~/sqllib/security32/plugin ] ; then
+    echo Is this an instance owner?
+    exit 2
+fi
+
+if [ ! -f sys-auth32.so.@VERSION@ ] ; then
+    echo "Are you in the right directory? Can't find sys-auth32.so.@VERSION@"
+    exit 2
+fi
+
+if [ ! -f ~/sqllib/security32/plugin/group/sys-auth.so ] ; then
+    echo "Previous plugin not found, please use the install script."
+fi
+
+db2gcf -s
+RESULT=$?
+if [ "$RESULT" -eq 1 ] ; then
+    echo "Instance looks to be stopped, continuing."
+else
+    if [ "$RESULT" -eq 0 ] ; then
+        echo "Instance appears to still be running (db2gcf -s), please stop it before attempting to upgrade."
+    else
+        echo "'db2gcf -s' returned $RESULT, please fix that before continuing."
+    fi
+    exit 2
+fi    
+        
+
+echo "Copying over the 32-bit library."
+
+rm -f ~/sqllib/security32/plugin/group/sys-auth.so
+cp sys-auth32.so.@VERSION@ ~/sqllib/security32/plugin/group/sys-auth.so
+rm -f ~/sqllib/security32/plugin/server/sys-auth.so
+cp sys-auth32.so.@VERSION@ ~/sqllib/security32/plugin/server/sys-auth.so
+rm -f ~/sqllib/security32/plugin/client/sys-auth.so
+cp sys-auth32.so.@VERSION@ ~/sqllib/security32/plugin/client/sys-auth.so
+
+if [ -f sys-auth64.so.@VERSION@ -a -d ~/sqllib/security64 ] ; then
+    echo "Copying over the 64-bit library."
+    rm -f ~/sqllib/security64/plugin/group/sys-auth.so
+    rm -f ~/sqllib/security64/plugin/server/sys-auth.so
+    rm -f ~/sqllib/security64/plugin/client/sys-auth.so
+    cp sys-auth64.so.@VERSION@ ~/sqllib/security64/plugin/group/sys-auth.so
+    cp sys-auth64.so.@VERSION@ ~/sqllib/security64/plugin/server/sys-auth.so
+    cp sys-auth64.so.@VERSION@ ~/sqllib/security64/plugin/client/sys-auth.so
+fi
+
+echo "Upgraded the library files, the instance can be started now."
+
