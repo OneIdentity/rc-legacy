@@ -203,9 +203,10 @@ if $installed; then
     echo "(using running vasidmapd service)"
 else
     desc "start vasidmapd"
+        set -m -b
         ${SUDO} ${builddir}/vasidmapd -F -A $host -p $port $debug &
         pid=$!
-        trap "rm -f $expfile $outfile; ${SUDO} kill $pid && wait" 0 
+        trap "rm -rf ${tmpdir}; ${SUDO} kill $pid && wait 2>/dev/null" 0 
         sleep 1
         ${SUDO} kill -0 $pid 2>/dev/null
     required
