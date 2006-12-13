@@ -40,8 +40,21 @@ fatal () { fail; exit 1; }
 required () { test $? -eq 0 && pass || fatal; }
 verbose () { test -n "$debug" && echo "[4m+ $*[m" >&2; "$@"; }
 
-expfile=${TMPDIR:-/tmp}/test.$$.expect
-outfile=${TMPDIR:-/tmp}/test.$$.result
+#-- a place for our temporary files
+tmpdir=${TMPDIR:-/tmp}/vasidmap.test.$$
+mkdir -p ${tmpdir}
+chmod 777 ${tmpdir}
+trap "rm -rf ${tmpdir}" 0
+
+expfile=${tmpdir}/expfile
+outfile=${tmpdir}/outfile
+
+#-- obtain host/ TGT so these tests can run automated
+KRB5CCNAME=FILE:${tmpdir}/krb5cc_host_vasidmap; export KRB5CCNAME
+${SUDO} rm -f ${KRB5CCNAME#FILE:}
+${SUDO} ${vastool} kinit host/ || fail "Can't obtain host keytab"
+${SUDO} chmod 666 ${KRB5CCNAME#FILE:}
+#${vastool} klist
 
 #-- used SID/GID/UIDs for testing
 uid=`$vastool list users | awk -F: '{print $3; exit;}'`
@@ -50,6 +63,13 @@ usid=`vastool attrs -b -u $uname objectSid | awk '{print $2}'`
 gid=`$vastool list groups | awk -F: '{print $3; exit;}'`
 gsid=`$vastool list -s groups | awk -F: '$3 == gid {print $5; exit;}' gid=$gid`
 gname=`$vastool list -s groups | awk -F: '$3 == gid {print $1; exit;}' gid=$gid`
+
+uid2=`$vastool list users | awk -F: '$3 != uid {print $3; exit;}' uid=$uid`
+uname2=`$vastool nss getpwuid $uid2 | awk -F: '{print $1}'` 
+usid2=`vastool attrs -b -u $uname2 objectSid | awk '{print $2}'`
+gid2=`$vastool list groups | awk -F: '$3 != gid {print $3; exit;}' gid=$gid`
+gsid2=`$vastool list -s groups | awk -F: '$3 == gid2 {print $5; exit;}' gid2=$gid2`
+gname2=`$vastool list -s groups | awk -F: '$3 == gid2 {print $1; exit;}' gid2=$gid2`
 
 #-- unused SID/UID/GIDs for testing
 findid () {
@@ -69,12 +89,21 @@ badgid=`findid getgrgid`
 
 if test -n "$debug"; then
     cat <<. >&2
+
         uname=    $uname
         uid=      $uid
         usid=     $usid
         gname=    $gname
         gid=      $gid
         gsid=     $gsid
+
+        uname2=   $uname2
+        uid2=     $uid2
+        usid2=    $usid2
+        gname2=   $gname2
+        gid2=     $gid2
+        gsid2=    $gsid2
+
         badsid=   $badsid
         baduname= $baduname
         baduid=   $baduid
@@ -105,8 +134,6 @@ trycommand () {
 
 #------------------------------------------------------------
 # vasidmap tests
-
-trap "rm -f $expfile $outfile" 0
 
 if $installed; then
     vasidmap=$prefix/bin/vasidmap
@@ -246,5 +273,44 @@ gidNumber: $gid
 tryfilterfail "(&(objectClass=sambaIdmapEntry)(sambaSID=$badsid))"
 tryfilterfail "(&(objectClass=sambaIdmapEntry)(uidNumber=$baduid))"
 tryfilterfail "(&(objectClass=sambaIdmapEntry)(gidNumber=$badgid))"
+
+#-- disjunction tests
+tryfilter "(&(objectClass=sambaIdmapEntry)(|(gidNumber=$gid)(gidNumber=$gid2)))" <<.
+dn: CN=VAS-Idmapper
+sambaSID: $gsid
+objectClass: sambaIdmapEntry
+gidNumber: $gid
+
+dn: CN=VAS-Idmapper
+sambaSID: $gsid2
+objectClass: sambaIdmapEntry
+gidNumber: $gid2
+.
+
+tryfilter "(&(objectClass=sambaIdmapEntry)(|(uidNumber=$uid)(uidNumber=$uid2)))" <<.
+dn: CN=VAS-Idmapper
+sambaSID: $usid
+objectClass: sambaIdmapEntry
+uidNumber: $uid
+
+dn: CN=VAS-Idmapper
+sambaSID: $usid2
+objectClass: sambaIdmapEntry
+uidNumber: $uid2
+.
+
+tryfilter "(&(objectClass=sambaIdmapEntry)(|(sambaSID=$gsid)(sambaSID=$usid)))" <<.
+dn: CN=VAS-Idmapper
+sambaSID: $gsid
+objectClass: sambaIdmapEntry
+gidNumber: $gid
+
+dn: CN=VAS-Idmapper
+sambaSID: $usid
+objectClass: sambaIdmapEntry
+uidNumber: $uid
+.
+
+#tryfilter "(&(objectClass=sambaIdmapEntry)(|(uidNumber=$uid)(uidNumber=$uid)))"
 
 exit $EXIT
