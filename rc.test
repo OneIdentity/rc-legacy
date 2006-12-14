@@ -299,6 +299,18 @@ objectClass: sambaIdmapEntry
 uidNumber: $uid2
 .
 
+tryfilter "(&(objectClass=sambaIdmapEntry)(|(uidNumber=$uid)(gidNumber=$gid)))" <<.
+dn: CN=VAS-Idmapper
+sambaSID: $usid
+objectClass: sambaIdmapEntry
+uidNumber: $uid
+
+dn: CN=VAS-Idmapper
+sambaSID: $gsid
+objectClass: sambaIdmapEntry
+gidNumber: $gid
+.
+
 tryfilter "(&(objectClass=sambaIdmapEntry)(|(sambaSID=$gsid)(sambaSID=$usid)))" <<.
 dn: CN=VAS-Idmapper
 sambaSID: $gsid
@@ -311,6 +323,49 @@ objectClass: sambaIdmapEntry
 uidNumber: $uid
 .
 
-#tryfilter "(&(objectClass=sambaIdmapEntry)(|(uidNumber=$uid)(uidNumber=$uid)))"
+tryfilter "(&(objectClass=sambaIdmapEntry)(|(uidNumber=$uid)(uidNumber=$baduid)))" <<.
+.
+
+tryfilter "(&(objectClass=sambaIdmapEntry)(|(uidNumber=$uid)(uidNumber=$uid2)(gidNumber=$gid)(gidNumber=$gid2)(sambaSID=$usid)(sambaSID=$usid2)(sambaSID=$gsid)(sambaSID=$gsid2)))" <<.
+dn: CN=VAS-Idmapper
+sambaSID: $usid
+objectClass: sambaIdmapEntry
+uidNumber: $uid
+
+dn: CN=VAS-Idmapper
+sambaSID: $usid2
+objectClass: sambaIdmapEntry
+uidNumber: $uid2
+
+dn: CN=VAS-Idmapper
+sambaSID: $gsid
+objectClass: sambaIdmapEntry
+gidNumber: $gid
+
+dn: CN=VAS-Idmapper
+sambaSID: $gsid2
+objectClass: sambaIdmapEntry
+gidNumber: $gid2
+
+dn: CN=VAS-Idmapper
+sambaSID: $usid
+objectClass: sambaIdmapEntry
+uidNumber: $uid
+
+dn: CN=VAS-Idmapper
+sambaSID: $usid2
+objectClass: sambaIdmapEntry
+uidNumber: $uid2
+
+dn: CN=VAS-Idmapper
+sambaSID: $gsid
+objectClass: sambaIdmapEntry
+gidNumber: $gid
+
+dn: CN=VAS-Idmapper
+sambaSID: $gsid2
+objectClass: sambaIdmapEntry
+gidNumber: $gid2
+.
 
 exit $EXIT
