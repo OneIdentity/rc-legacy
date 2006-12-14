@@ -324,6 +324,17 @@ uidNumber: $uid
 .
 
 tryfilter "(&(objectClass=sambaIdmapEntry)(|(uidNumber=$uid)(uidNumber=$baduid)))" <<.
+dn: CN=VAS-Idmapper
+sambaSID: $usid
+objectClass: sambaIdmapEntry
+uidNumber: $uid
+.
+
+tryfilter "(&(objectClass=sambaIdmapEntry)(|(uidNumber=$baduid)(uidNumber=$uid)))" <<.
+dn: CN=VAS-Idmapper
+sambaSID: $usid
+objectClass: sambaIdmapEntry
+uidNumber: $uid
 .
 
 tryfilter "(&(objectClass=sambaIdmapEntry)(|(uidNumber=$uid)(uidNumber=$uid2)(gidNumber=$gid)(gidNumber=$gid2)(sambaSID=$usid)(sambaSID=$usid2)(sambaSID=$gsid)(sambaSID=$gsid2)))" <<.
