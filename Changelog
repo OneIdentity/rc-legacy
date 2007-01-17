@@ -1,10 +1,15 @@
+0.9.9
+* bug 191: fix the way the host password is updated
+* Fix vas-samba-config script on Solaris
+* Change Solaris package name to QSFTidmap
+
 0.9.8
 * Add OR filter support for recent Samba3 changes
 * Handle PAM restrictions parameters in smb.conf
 * Simplify the way vas.conf is updated
 
 0.9.7
-* Fix bug 78, user SIDs being detected as groups with VAS < 3.1
+* bug 78: user SIDs being detected as groups with VAS < 3.1
 
 0.9.5
 * Improved performance in SID translation code
