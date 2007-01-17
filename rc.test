@@ -50,10 +50,11 @@ expfile=${tmpdir}/expfile
 outfile=${tmpdir}/outfile
 
 #-- obtain host/ TGT so these tests can run automated
-KRB5CCNAME=FILE:${tmpdir}/krb5cc_host_vasidmap; export KRB5CCNAME
-${SUDO} rm -f ${KRB5CCNAME#FILE:}
+krb5ccfile=${tmpdir}/krb5cc_host_vasidmap
+KRB5CCNAME=FILE:${krb5ccfile}; export KRB5CCNAME
+${SUDO} rm -f ${krb5ccfile}
 ${SUDO} ${vastool} kinit host/ || fail "Can't obtain host keytab"
-${SUDO} chmod 666 ${KRB5CCNAME#FILE:}
+${SUDO} chmod 666 ${krb5ccfile}
 #${vastool} klist
 
 #-- used SID/GID/UIDs for testing
