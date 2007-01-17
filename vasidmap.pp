@@ -1,6 +1,7 @@
 %set
     name="vasidmapd"
     description="VAS idmap module for Samba"
+    pp_solaris_name=QSFTidmap
 
 #%depend
 #    libvas.so.4.2
