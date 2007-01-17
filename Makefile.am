@@ -9,7 +9,7 @@ sbin_PROGRAMS=		vasidmapd
 bin_PROGRAMS=		vasidmap
 dist_bin_SCRIPTS=	vasidmap-config vas-samba-config
 dist_sbin_SCRIPTS=	vas-set-samba-password
-man_MANS =              vasidmapd.8
+man_MANS =              vasidmapd.8 vasidmap.1
 
 vasidmap_LDADD  =   $(LIBOBJS)
 vasidmapd_LDADD =   $(LIBOBJS)

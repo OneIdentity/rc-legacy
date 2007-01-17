@@ -1,5 +1,5 @@
 %set
-    name="vasidmapd"
+    name="quest-vasidmap"
     description="VAS idmap module for Samba"
     pp_solaris_name=QSFTidmap
 
@@ -17,6 +17,7 @@
     $sbindir/vasidmapd
     $sbindir/vas-set-samba-password
     $mandir/man8/vasidmapd.8
+    $mandir/man1/vasidmap.1
 
 %service vasidmapd
     cmd="$sbindir/vasidmapd -F"

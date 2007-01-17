@@ -1,0 +1,74 @@
+.\" (c) 2006, Quest Software, Inc. All rights reserved.
+.TH VASIDMAP 1
+.SH NAME
+vasidmap \- Security ID (SID) to user and group ID (UID/GID) query tool
+.SH SYNOPSIS
+.B vasidmap
+[\-f]
+.RI [ domain \e] user
+.br
+.B vasidmap
+[\-f] \-u
+.I uid
+.br
+.B vasidmap
+[\-f] \-g
+.I gid
+.br
+.B vasidmap
+[\-f] -un
+.I user-name
+.br
+.B vasidmap
+[\-f] -gn
+.I group-name
+.br
+.B vasidmap
+[\-f] -sU
+.I user-SID
+.br
+.B vasidmap
+[\-f] -gU
+.I group-SID
+.SH DESCRIPTION
+The
+.B vasidmap
+utility queries VAS to translate between NT domain usernames, 
+unix usernames, user IDs (UIDs), groups, group IDs (GIDs) and 
+Active Directory security identifiers (SIDs).
+.PP
+.SS OPTIONS
+.TP
+.RI \-f
+If specified, forces
+.B vasidmap
+to obtain credentials.
+If the program is run as root, then the
+.I host/
+keytab is used to obtain the computer account credentials.
+.B vasidmapd
+to operate as a daemon.
+.TP
+.RI \-u\  uid
+Converts a unix user identifier into a SID.
+.TP
+.RI \-g\  gid
+Converts a unix group identifier into a SID.
+.TP
+.RI \-un\  user-name
+Converts a unix username into a SID.
+.TP
+.RI \-gn\  group-name
+Converts a unix group name into a SID.
+.TP
+.RI \-sU\  user-sid
+Converts a SID into a unix user identifier. The SID must refer to a user.
+.TP
+.RI \-sG\  group-sid
+Converts a SID into a unix group identifier. The SID must refer to a group.
+.SH "SEE ALSO"
+vastool(1),
+vasidmapd(8),
+.I http://rc.vintela.com/topics/samba/
+.SH AUTHORS
+Simo Sorce, Quest Software, Inc.
