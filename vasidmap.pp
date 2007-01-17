@@ -13,9 +13,9 @@
 %files
     $bindir/vasidmap-config
     $bindir/vas-samba-config
-    $bindir/vas-set-samba-password
     $bindir/vasidmap
     $sbindir/vasidmapd
+    $sbindir/vas-set-samba-password
     $mandir/man8/vasidmapd.8
 
 %service vasidmapd

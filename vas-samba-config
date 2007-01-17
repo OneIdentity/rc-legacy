@@ -4,7 +4,7 @@
 VASTOOL="/opt/quest/bin/vastool"
 SAMBACONF="/etc/opt/quest/samba/smb.conf"
 VASCONF="/etc/opt/quest/vas/vas.conf"
-PWDCHGSCRIPT="/opt/quest/bin/vas-set-samba-password"
+PWDCHGSCRIPT="/opt/quest/sbin/vas-set-samba-password"
 
 DEBUG=0
 SP='[ 	]'
@@ -123,6 +123,8 @@ yesorno () {
 #          MAIN          #
 ##########################
 
+echo "Checking for VAS..."
+
 # Determine VAS Version
 VERSION=`${VASTOOL} -v |grep Version |cut -d " " -f 4`
 VMAJOR=`echo $VERSION | cut -d "." -f 1`
@@ -190,6 +192,7 @@ fi
 TODAY=`date +"%Y%m%d"`
 
 ### Make sure samba services are stopped while checking and updating configuration
+echo "Stopping Samba services..."
 /etc/init.d/winbindd-quest stop  >/dev/null
 /etc/init.d/smbd-quest stop      >/dev/null
 /etc/init.d/vasidmapd stop       >/dev/null
@@ -394,6 +397,8 @@ DOMSID=`/opt/quest/bin/vasidmap -u -n "$DOMUSER" | cut -d '-' -f 1-7`
 
 if [ "$PWDCHANGE" = "yes" ]; then
 
+    echo "Renewing the computer account password..."
+
     #Generate a secret key from the hex form of current key material
     SECRET='X!'`$VASTOOL ktutil list --keys | 
         awk 'NR==4{print substr($4,0,16);exit}'`
@@ -405,6 +410,7 @@ if [ "$PWDCHANGE" = "yes" ]; then
 fi
 
 ### Finally restart samba services
+echo "Starting Samba services..."
 /etc/init.d/vasidmapd start
 /etc/init.d/nmbd-quest start
 /etc/init.d/smbd-quest start
