@@ -1,7 +1,8 @@
 0.9.9
 * bug 191: fix the way the host password is updated
 * Fix vas-samba-config script on Solaris
-* Change Solaris package name to QSFTidmap
+* Add manual page for vasidmap(1)
+* Change package name to quest-vasidmap (and QSFTidmap for Solaris)
 
 0.9.8
 * Add OR filter support for recent Samba3 changes
