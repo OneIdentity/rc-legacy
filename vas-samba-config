@@ -71,6 +71,54 @@ check_and_fix () {
 	return 0
 }
 
+#-- figure out how to echo without newlines
+echo1 () { echo -n "$*"; }
+echo2 () { echo "$*\\c"; }
+echo3 () { echo "$* +"; }
+if test "x`echo1 y`z" = "xyz"; then
+    echon() { echo1 "$*"; }
+elif test "x`echo2 y`z" = "xyz"; then
+    echon () { echo2 "$*"; }
+else
+    echon () { echo3 "$*"; }
+fi
+
+#-- die with an error
+die () {
+    echo "ERROR: $*" >&2
+    exit 1;
+}
+
+#-- prompt user for information
+#   usage: query prompt varname [default]
+query () {
+    eval $2=
+    while eval "test ! -n \"\$$2\""; do
+#	if eval 'read xx?yy' <$0 2>/dev/null; then
+#	    eval "read \"$2?$1${3+ [$3]}: \"" || die "(end of file)"
+#	else
+	    echon "$1${3+ [$3]}: "
+	    eval "read $2" || die "(end of file)"
+#	fi
+	eval : "\${$2:=\$3}"
+    done
+}
+
+#-- returns true if user selects yes
+#   usage: yesorno "question" [default]
+yesorno () {
+    echo "";
+    while :; do
+	query "$1" YESORNO $2
+	case "$YESORNO" in
+	    Y*|y*) echo; return 0;;
+	    N*|n*) echo; return 1;;
+	    *) echo "Please enter 'y' or 'n'" >&2;;
+	esac
+    done
+}
+
+
 ##########################
 #          MAIN          #
 ##########################
@@ -142,40 +190,16 @@ fi
 TODAY=`date +"%Y%m%d"`
 
 ### Make sure samba services are stopped while checking and updating configuration
-/etc/init.d/winbindd-quest stop
-/etc/init.d/smbd-quest stop
-/etc/init.d/vasidmapd stop
-/etc/init.d/nmbd-quest stop
-
-
-if [ "$OPTFORCE" = "force" ]; then
-    PAMOPT="yes"
-else
-    echo ""
-    echo "   Samba can be configured to check for pam"
-    echo "   restrictions by calling the account and session"
-    echo "   stacks, this will make it possible to enforce"
-    echo "   vas restrictions on user authentication"
-    echo ""
-    echo "Do you want samba to obey pam restrictions? [yes]/no"
-
-    # Should we use a timeout here?
-    read
-
-    if [ "$REPLY" = "" ]; then
-        PAMOPT="yes"
-    elif [ "$REPLY" = "y" ]; then
-        PAMOPT="yes"
-    elif [ "$REPLY" = "yes" ]; then
-        PAMOPT="yes"
-    else
-        PAMOPT="no"
-    fi
-fi
+/etc/init.d/winbindd-quest stop  >/dev/null
+/etc/init.d/smbd-quest stop      >/dev/null
+/etc/init.d/vasidmapd stop       >/dev/null
+/etc/init.d/nmbd-quest stop      >/dev/null
 
 ##########################
 # Verify/Modify smb.conf #
 ##########################
+
+echo "Checking $SAMBACONF..."
 
 CONFMOD=${SAMBACONF}.mod
 NEWTEXT=/tmp/newtext$$.tmp
@@ -183,6 +207,25 @@ NEWTEXT=/tmp/newtext$$.tmp
 #Must do this before calling any check_* function
 cp ${SAMBACONF} ${CONFMOD}
 : >$NEWTEXT
+
+if [ "$OPTFORCE" = "force" ]; then
+    PAMOPT="yes"
+elif check_parm "obey pam restrictions" ${CONFMOD}; then
+    : obey pam restrictions is already in place
+else
+    cat <<-.
+
+	  Samba can use PAM for user access control. This works
+	  by calling the PAM account and session stacks whenever
+	  a Samba share is mounted. This is a recommended option.
+.
+    if yesorno "Enable 'obey pam restrictions' option?" yes; then
+        PAMOPT="yes"
+    else
+        PAMOPT="no"
+    fi
+fi
+
 
 check_and_fix "workgroup" "${WORKGROUP}" "${CONFMOD}" ||
        echo "  workgroup = ${WORKGROUP}" >> $NEWTEXT
@@ -281,6 +324,8 @@ rm -f $NEWTEXT
 # Verify/Modify vas.conf #
 ##########################
 
+echo "Checking $VASCONF..."
+
 CONFMOD=${VASCONF}.mod
 
 #Must do this before calling any check_* function
@@ -291,10 +336,12 @@ if [ $VMINOR -eq 0 ]; then #VAS 3.0.x, make passowrd permanent
 
     check_and_fix "password-change-interval" "0" "${CONFMOD}" ||
         echo " password-change-interval = 0" >> $NEWTEXT
+
 else # VAS 3.1 or greater, use password change script
 
     check_and_fix "password-change-script" "${PWDCHGSCRIPT}" "${CONFMOD}" ||
         echo " password-change-script = ${PWDCHGSCRIPT}" >> $NEWTEXT
+    check_and_fix "password-change-interval" "30" "${CONFMOD}"
 fi
 
 #-- insert the new text at the end of the [vasd] section
@@ -324,22 +371,15 @@ fi
 if [ "$OPTFORCE" = "force" ]; then
     PWDCHANGE="yes"
 else
-    echo ""
-    echo "   The first time you configure samba you should"
-    echo "   do a host password change to enable samba to"
-    echo "   directly connect to AD and also provide NTLM"
-    echo "   fallback authentication."
-    echo ""
-    echo "Do you want to change the host password? [yes]/no"
+    cat <<-.
 
-    # Should we use a timeout here?
-    read
-
-    if [ "$REPLY" = "" ]; then
-        PWDCHANGE="yes"
-    elif [ "$REPLY" = "y" ]; then
-        PWDCHANGE="yes"
-    elif [ "$REPLY" = "yes" ]; then
+	  Samba can support NTLM (non-Kerberos) authentication for users,
+	  but this requires that the local host password be renewed (set to
+	  a new random string) during installation. Renewing the host
+	  password is a normal operation that is performed periodically
+	  by vasd.
+.
+    if yesorno "Reset the local host key now for NTLM support?" yes; then
         PWDCHANGE="yes"
     else
         PWDCHANGE="no"
