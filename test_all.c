@@ -12,10 +12,18 @@ char test_conf[512] = "./test.conf";
 
 void *handle = NULL;
 char filename[512] = "./sys-auth32.so."VERSION;
-char *funcNameAuth = "db2secServerAuthPluginInit";
+char *funcNameClient = "db2secClientAuthPluginInit";
+char *funcNameServer = "db2secServerAuthPluginInit";
 char *funcNameGroup = "db2secGroupPluginInit";
 char *funcNameVersion = "vas_db2_plugin_get_version";
 int  do_version = 0;
+
+SQL_API_RC SQL_API_FN( *ClientInit )(
+                       db2int32,
+                       void*,
+                       db2secLogMessage*,
+                       char**,
+                       db2int32* ); 
 
 SQL_API_RC SQL_API_FN( *ServerInit )(
                        db2int32,
@@ -34,7 +42,9 @@ SQL_API_RC SQL_API_FN( *GroupInit )(
 
 const char *( *GetVersion)( );
 
-struct userid_password_server_auth_functions_1 fnsA;
+struct userid_password_client_auth_functions_1 fnsC;
+
+struct userid_password_server_auth_functions_1 fnsS;
 
 struct group_functions_1 fnsG;
 
@@ -45,12 +55,23 @@ void testOpen( Test *pTest )
     ct_test( pTest, handle != NULL );
 }
 
-void testLoadA( Test *pTest )
+void testLoadC( Test *pTest )
 {
     char *err = NULL;
     if( handle )
     {
-        ServerInit = dlsym( handle, funcNameAuth );
+        ClientInit = dlsym( handle, funcNameClient );
+        ct_test( pTest, ( ( err = dlerror( ) ) == NULL ) );
+    }
+    putenv( "DB2AUTHPATH='./pamAuth32'" );
+}
+
+void testLoadS( Test *pTest )
+{
+    char *err = NULL;
+    if( handle )
+    {
+        ServerInit = dlsym( handle, funcNameServer );
         ct_test( pTest, ( ( err = dlerror( ) ) == NULL ) );
     }
     putenv( "DB2AUTHPATH='./pamAuth32'" );
@@ -90,13 +111,23 @@ void testCheckV( Test *pTest )
     ct_test( pTest, ptr && strcmp( ptr, VERSION ) == 0 );
 }
 
-void testFillfnsA( Test *pTest )
+void testFillfnsC( Test *pTest )
 {
     db2int32 version = 1;
     int rval = 0;
     db2int32 msgLen = 0;
     char *errMsg = NULL;
-    ServerInit( version, (void*)&fnsA, NULL, NULL, &errMsg, &msgLen );
+    ClientInit( version, (void*)&fnsC, NULL, &errMsg, &msgLen );
+    ct_test( pTest, msgLen == 0 );
+}
+
+void testFillfnsS( Test *pTest )
+{
+    db2int32 version = 1;
+    int rval = 0;
+    db2int32 msgLen = 0;
+    char *errMsg = NULL;
+    ServerInit( version, (void*)&fnsS, NULL, NULL, &errMsg, &msgLen );
     ct_test( pTest, msgLen == 0 );
 }
 
@@ -116,7 +147,7 @@ void testAuthBadPW( Test *pTest )
     int rval = 0;
     db2int32 msgLen = 0;
     char *errMsg = NULL;
-    rval = fnsA.db2secValidatePassword( "root", 5, NULL, 0, 0, "bad", 8, NULL, 0, NULL, 0, 0, NULL, &errMsg, &msgLen);
+    rval = fnsS.db2secValidatePassword( "root", 5, NULL, 0, 0, "bad", 8, NULL, 0, NULL, 0, 0, NULL, &errMsg, &msgLen);
     ct_test( pTest, rval == DB2SEC_PLUGIN_BADPWD );
 }
 
@@ -126,7 +157,7 @@ void testAuthBadUser( Test *pTest )
     int rval = 0;
     db2int32 msgLen = 0;
     char *errMsg = NULL;
-    rval = fnsA.db2secValidatePassword( "%123", 4, NULL, 0, 0, "", 0, NULL, 0, NULL, 0, 0, NULL, &errMsg, &msgLen);
+    rval = fnsS.db2secValidatePassword( "%123", 4, NULL, 0, 0, "", 0, NULL, 0, NULL, 0, 0, NULL, &errMsg, &msgLen);
     ct_test( pTest, rval == DB2SEC_PLUGIN_BADUSER );
 }
 
@@ -141,7 +172,7 @@ void testAuthNoPWBAD( Test *pTest )
     struct passwd *pwd = getpwuid( uid );
     if( pwd )
         username = strdup( pwd->pw_name );
-    rval = fnsA.db2secValidatePassword( username?username:"bad", 
+    rval = fnsS.db2secValidatePassword( username?username:"bad", 
                                        username?strlen(username):0, 
                                        NULL, 
                                        0, 
@@ -171,7 +202,7 @@ void testAuthNoPW( Test *pTest )
     struct passwd *pwd = getpwuid( uid );
     if( pwd )
         username = strdup( pwd->pw_name );
-    rval = fnsA.db2secValidatePassword( username?username:"bad", 
+    rval = fnsS.db2secValidatePassword( username?username:"bad", 
                                        username?strlen(username):0, 
                                        NULL, 
                                        0, 
@@ -202,7 +233,7 @@ void testAuthGood( Test *pTest )
     char *password = (char*)GetEntryFromFile( test_conf, "password" );
     if( password )
         password = (char *)strdup( password );
-    rval = fnsA.db2secValidatePassword( username?username:"bad", 
+    rval = fnsS.db2secValidatePassword( username?username:"bad", 
                                        username?strlen(username):0, 
                                        NULL, 
                                        0, 
@@ -235,7 +266,7 @@ void testUserExists( Test *pTest )
         free_user = 1;
         user = (char *)strdup( user );
     }
-    rval = fnsA.db2secDoesAuthIDExist( user?user:"baduser",
+    rval = fnsS.db2secDoesAuthIDExist( user?user:"baduser",
                                        user?strlen(user):0,
                                        &errMsg,
                                        &msgLen );
@@ -252,7 +283,7 @@ void testUserUpperExists( Test *pTest )
     char *errMsg = NULL;
     char *user = "Root";
 
-    rval = fnsA.db2secDoesAuthIDExist( user?user:"baduser",
+    rval = fnsS.db2secDoesAuthIDExist( user?user:"baduser",
                                        user?strlen(user):0,
                                        &errMsg,
                                        &msgLen );
@@ -526,7 +557,7 @@ void testCloseAuth( Test *pTest )
 {
     db2int32 msgLen = 0;
     char *errMsg = NULL;
-    fnsA.db2secServerAuthPluginTerm( &errMsg,
+    fnsS.db2secServerAuthPluginTerm( &errMsg,
                                      &msgLen );
     ct_test( pTest, msgLen == 0 );
 }
@@ -616,11 +647,11 @@ Test *GetStartTests()
 {
     Test* pTest = ct_create( "library loading tests", NULL );
     bool rc = ct_addTestFun( pTest, testOpen );
-    rc = ct_addTestFun( pTest, testLoadA );
+    rc = ct_addTestFun( pTest, testLoadS );
     rc = ct_addTestFun( pTest, testLoadG );
     rc = ct_addTestFun( pTest, testLoadV );
     rc = ct_addTestFun( pTest, testCheckV );
-    rc = ct_addTestFun( pTest, testFillfnsA );
+    rc = ct_addTestFun( pTest, testFillfnsS );
     rc = ct_addTestFun( pTest, testFillfnsG );
     assert( rc );
     return pTest;

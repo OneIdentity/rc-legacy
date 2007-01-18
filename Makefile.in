@@ -20,7 +20,7 @@ CC = @CC@
 CC64 = @CC64@
 CFLAGS = @CFLAGS@ @DEFS@ -g -DVERSION=\"$(VERSION)\"
 DB2PATH = $(HOME)/sqllib
-INCLUDES = -I. -I/opt/IBM/db2/V8.1/include/
+INCLUDES = -I/opt/IBM/db2/V8.1/include -I.
 LDFLAGS = @LDFLAGS@
 PROG = @PACKAGE_NAME@
 PROG32 = $(PROG)32
@@ -32,21 +32,27 @@ MAKE = @MAKE@
 @AIX_FALSE@@B64_FALSE@all : $(PROG32).so.@VERSION@ pamAuth32
 
 check: all test_all
-@LINUX_TRUE@	sudo ./test_all "./sys-auth32.so.@VERSION@"
+@LINUX_TRUE@@LINUX_S390X_TRUE@	sudo ./test_all "./sys-auth64.so.@VERSION@"
+@LINUX_TRUE@@LINUX_S390X_FALSE@	sudo ./test_all "./sys-auth32.so.@VERSION@"
 @LINUX_FALSE@	./test_all "./sys-auth32.so.@VERSION@"
     
-test_all: ctest.o csuite.o test_all.o log.o all
-@HPUX_TRUE@	$(CC) -o test_all test_all.o ctest.o csuite.o log.o vsyslog32.o -ldld
-@HPUX_FALSE@	$(CC) -o test_all test_all.o ctest.o csuite.o log.o vsyslog32.o -ldl 
+test_all: ctest.o csuite.o test_all.o all
+@HPUX_TRUE@	$(CC) -o test_all test_all.o ctest.o csuite.o log32.o vsyslog32.o -ldld
+@LINUX_S390X_TRUE@@HPUX_FALSE@	$(CC64) -o test_all test_all.o ctest.o csuite.o log64.o vsyslog64.o -ldl 
+@LINUX_S390X_FALSE@@HPUX_FALSE@	$(CC) -o test_all test_all.o ctest.o csuite.o log32.o vsyslog32.o -ldl 
 
 test_all.o: test_all.c
-	$(CC) $(CFLAGS) $(INCLUDES) -o test_all.o -c test_all.c -g
+@LINUX_S390X_TRUE@	$(CC64) $(CFLAGS) $(INCLUDES) -o test_all.o -c test_all.c -g
+@LINUX_S390X_FALSE@	$(CC) $(CFLAGS) $(INCLUDES) -o test_all.o -c test_all.c -g
+	
     
 ctest.o: ctest.h ctest.c bool.h
-	$(CC) -c ctest.c -o ctest.o -g
+@LINUX_S390X_TRUE@	$(CC64) -c ctest.c -o ctest.o -g
+@LINUX_S390X_FALSE@	$(CC) -c ctest.c -o ctest.o -g
 
 csuite.o: ctest.h ctest.c bool.h csuite.c csuite.h
-	$(CC) -c csuite.c -o csuite.o -g
+@LINUX_S390X_TRUE@	$(CC64) -c csuite.c -o csuite.o -g
+@LINUX_S390X_FALSE@	$(CC) -c csuite.c -o csuite.o -g
 
 clean:
 	rm -f *.o *.so.@VERSION@ pamAuth32 pamAuth64 lamAuth32 lamAuth64 test/*.o test_all
@@ -130,3 +136,6 @@ install: all
 	@echo "Please run './install.sh <instance name> [LAM]'"
 	@echo 
 	@echo 
+
+build: 
+	@./buildall.exp

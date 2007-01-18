@@ -1,5 +1,5 @@
-AC_INIT(sys-auth, 1.0.11)
-VERSION="1.0.11"
+AC_INIT(sys-auth, 1.0.12)
+VERSION="1.0.12"
 AC_CONFIG_HEADER(config.h)
 
 dnl Find and test the C compiler
@@ -9,6 +9,8 @@ AC_LANG_C
 AIX_TRUE=#
 HPUX_TRUE=#
 LINUX_TRUE=#
+LINUX_S390X_TRUE=#
+LINUX_S390X_FALSE=''
 SOLARIS_TRUE=#
 AIX_FALSE=''
 HPUX_FALSE=''
@@ -72,7 +74,10 @@ case $OS in
         fi
         if test `uname -m` = "s390x" ; then
             OS=LINUX_s390x
-            CC="gcc"
+            CC="gcc -m31"
+            CC64="gcc -m64 -D__64BIT__"
+            LINUX_S390X_TRUE=''
+            LINUX_S390X_FALSE='#'
         fi
         ;;
     "AIX")
@@ -94,6 +99,8 @@ AC_SUBST(OS)
 AC_SUBST(AIX_TRUE)
 AC_SUBST(HPUX_TRUE)
 AC_SUBST(LINUX_TRUE)
+AC_SUBST(LINUX_S390X_TRUE)
+AC_SUBST(LINUX_S390X_FALSE)
 AC_SUBST(SOLARIS_TRUE)
 AC_SUBST(AIX_FALSE)
 AC_SUBST(HPUX_FALSE)

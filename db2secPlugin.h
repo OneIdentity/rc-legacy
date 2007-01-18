@@ -32,20 +32,32 @@
 #define _DB2SECPLUGIN_H
 
 
+/* Start modifications by Seth */
 //#include "gssapi_krb5.h"
 //#include "db2ApiDf.h"
 //#include "gssapiDB2.h" 
+/* End modifications by Seth */
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/* #define's from other includes, so only this file is needed. */
+/* Start modifications by Seth */
+#ifdef __64BIT__
+#define db2Is64bit
+    typedef int             sqlint32;
+    typedef unsigned int    sqluint32;
+#else
+    typedef long            sqlint32;
+    typedef unsigned long   sqluint32;
+#endif
+
 #define SQL_API_RC      int
-#define db2int32        int
-#define db2Uint32       unsigned int    
+typedef sqlint32        db2int32;
+typedef sqluint32       db2Uint32;       
 #define SQL_API_FN    
 #define SQL_AUTHID_SZ          30
+/* End modifications by Seth */
 
 #define DB2SEC_API_VERSION_1 1
 #define DB2SEC_API_VERSION DB2SEC_API_VERSION_1

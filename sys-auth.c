@@ -31,7 +31,6 @@
 #include <stdarg.h>
 #include <syslog.h>
 
-//#include "sqlenv.h"
 #include "db2secPlugin.h"
 
 #include "log.h"
@@ -188,19 +187,18 @@ int vas_db2_plugin_auth_user(char *username, char *password) {
 
         if( access( prog_path, X_OK ) != 0 )
         {
-#ifndef __64BIT__
-            slog( SLOG_NORMAL, "%s: FAILED finding auth program <%s>, trying pamAuth32 in the current directory", __FUNCTION__, prog_path );
+            slog( SLOG_NORMAL, "%s: FAILED finding auth program <%s>, trying pamAuth in the current directory", __FUNCTION__, prog_path );
             getcwd( prog_path, MAX_C_BUFF);
+#ifdef __64BIT__
+            strcat( prog_path, "/pamAuth64" );
+#else    
             strcat( prog_path, "/pamAuth32" );
+#endif
             if( access( prog_path, X_OK ) != 0 )
             {
                 slog( SLOG_NORMAL, "%s: FAILED finding auth program <%s>", __FUNCTION__, prog_path );
                 return( FAILURE );
             }
-#else
-            slog( SLOG_NORMAL, "%s: FAILED finding auth program <%s>", __FUNCTION__, prog_path );
-            return( FAILURE );
-#endif
         }
         
         slog( SLOG_DEBUG, "%s: executing program <%s> from path <%s>", __FUNCTION__, prog_file, prog_path );
@@ -1129,6 +1127,8 @@ SQL_API_RC SQL_API_FN db2secClientAuthPluginInit (db2int32 version,
                                        db2int32 *errorMessageLength)
 {
     db2secUseridPasswordClientAuthFunctions_1 *p;
+
+    memset( client_fns, 0, sizeof( db2secUseridPasswordClientAuthFunctions_1 ) );
 
     p = (db2secUseridPasswordClientAuthFunctions_1 *)client_fns;
 

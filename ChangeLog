@@ -98,3 +98,7 @@ Now changelog will work off the version.
 
 1.0.11 (12-1-06):
 * Added s390x Linux ( zSeries OS )
+     
+1.0.12 (12-11-06):
+* Fixed s390x Linux. For unknown reason gcc wasn't setting __64BIT__ macro, 
+  so some structure member sizes were off, leading to DB2 rejecting the plugin.  
