@@ -1,6 +1,6 @@
 # (c) 2006 Quest Software, Inc. All rights reserved.
 
-AC_INIT([vasidmap],
+AC_INIT([quest-vasidmap],
 	[0.9.9.]esyscmd((svnversion . /trunk||echo 0)|tr : _|tr -d \\012),
 	[samba@rc.vintela.com])
 AM_INIT_AUTOMAKE()
