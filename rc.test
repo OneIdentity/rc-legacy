@@ -50,12 +50,29 @@ expfile=${tmpdir}/expfile
 outfile=${tmpdir}/outfile
 
 #-- obtain host/ TGT so these tests can run automated
-krb5ccfile=${tmpdir}/krb5cc_host_vasidmap
-KRB5CCNAME=FILE:${krb5ccfile}; export KRB5CCNAME
+krb5ccfile=${tmpdir}/cc
 ${SUDO} rm -f ${krb5ccfile}
-${SUDO} $vastool kinit host/ || fail "Can't obtain host keytab"
-${SUDO} chmod 666 ${krb5ccfile}
-#$vastool klist
+KRB5CCNAME=FILE:${krb5ccfile}
+export KRB5CCNAME
+$vastool -v
+echo "Obtaining host/ key -> $KRB5CCNAME"
+set -x
+${SUDO} /bin/sh -c 'echo inside sudo KRB5CCNAME is $KRB5CCNAME'
+${SUDO} $vastool kinit host/ || fatal "Can't obtain host tgt"
+${SUDO} cat ${krb5ccfile} > ${krb5ccfile}.x || fatal "Can't get host ccache"
+${SUDO} rm -f ${krb5ccfile}
+mv ${krb5ccfile}.x ${krb5ccfile}
+chmod 600 ${krb5ccfile}
+env | grep KRB5CCNAME
+ls -la ${krb5ccfile}
+$vastool klist || {
+    #-- ugh.. some builds of vastool ignored KRB5CCNAME
+    mv $krb5ccfile /tmp/krb5cc_501; 
+    krb5ccfile=/tmp/krb5cc_501
+    KRB5CCNAME=FILE:$krb5ccfile; export KRB5CCNAME
+    $vastool klist || fatal "cannot get VAS to see the host/ ccache"
+}
+set +x
 
 #-- used SID/GID/UIDs for testing
 uid=`$vastool list users | awk -F: '{print $3; exit;}'`
@@ -111,7 +128,9 @@ badgid=`findid getgrgid`
         baduid=   $baduid
         badgname= $badgname
         badgid=   $badgid
+
 .
+case ":$uid:$uname:$usid:$gid:$gsid:$gname:$uid2:$uname2:$usid2:$gid2:$gsid2:$gname2:" in *::*) fatal "one or more of the test parameters is empty";; esac
 
 #-- usage: trycommand "desc" command... <expected-output
 trycommand () {
