@@ -2386,12 +2386,15 @@ case $OS in
             OS=AIX_53
         fi
         ;;
-    "HP-UX")
-        if test `uname -a | awk '{print $3}'` = "ia64" ; then
+    "HPUX")
+        if test "`uname -m`" = "ia64" ; then
             OS=HPUX_IA64
+            else
+            OS=HPUX_9000
         fi
         ;;
     *)
+        echo "Unknown OS <$OS>"
         ;;
 esac
 LDFLAGS='-static-libgcc -shared -Bsymbolic -lc'

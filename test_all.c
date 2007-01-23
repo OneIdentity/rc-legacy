@@ -548,9 +548,16 @@ void testGroupBadUser( Test *pTest )
 
 void testCloseLib( Test *pTest )
 {
-    char *err = NULL;
-    dlclose( handle );
-    ct_test( pTest, ( ( err = dlerror( ) ) == NULL ) );
+    int rc = 0;
+    if( handle )
+    {
+        rc = dlclose( handle );
+        ct_test( pTest, rc == 0 );
+        if( rc )
+            fprintf( stderr, "%s: dlclose error <%s>\n", __FUNCTION__, dlerror() );
+    }
+    else
+        ct_test( pTest, /* NO HANDLE */ 0 );
 }
 
 void testCloseAuth( Test *pTest )

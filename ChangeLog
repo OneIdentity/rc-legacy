@@ -102,3 +102,6 @@ Now changelog will work off the version.
 1.0.12 (12-11-06):
 * Fixed s390x Linux. For unknown reason gcc wasn't setting __64BIT__ macro, 
   so some structure member sizes were off, leading to DB2 rejecting the plugin.  
+
+1.0.13 ( 1-23-07):
+* Added HP Itanium builds. Seperated into HPUX_9000 and HPUX_IA64 packages.    
