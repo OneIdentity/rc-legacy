@@ -135,6 +135,7 @@ dnl read Makefile.in and write Makefile
 AC_OUTPUT(Makefile)
 AC_OUTPUT(install.sh)
 AC_OUTPUT(upgrade.sh)
+AC_OUTPUT(Troubleshooting)
 chmod u+x install.sh upgrade.sh
 if test -f make_all.exp.in ; then
     AC_OUTPUT(make_all.exp)

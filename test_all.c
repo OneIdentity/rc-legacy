@@ -62,8 +62,9 @@ void testLoadC( Test *pTest )
     {
         ClientInit = dlsym( handle, funcNameClient );
         ct_test( pTest, ( ( err = dlerror( ) ) == NULL ) );
+        if( err != NULL )
+            fprintf( stderr, "%s: dlsym error <%s>\n", __FUNCTION__, err );
     }
-    putenv( "DB2AUTHPATH='./pamAuth32'" );
 }
 
 void testLoadS( Test *pTest )
@@ -73,8 +74,10 @@ void testLoadS( Test *pTest )
     {
         ServerInit = dlsym( handle, funcNameServer );
         ct_test( pTest, ( ( err = dlerror( ) ) == NULL ) );
+        if( err != NULL )
+            fprintf( stderr, "%s: dlsym error <%s>\n", __FUNCTION__, err );
+
     }
-    putenv( "DB2AUTHPATH='./pamAuth32'" );
 }
 
 void testLoadG( Test *pTest )
@@ -84,6 +87,8 @@ void testLoadG( Test *pTest )
     {
         GroupInit = dlsym( handle, funcNameGroup );
         ct_test( pTest, ( ( err = dlerror( ) ) == NULL ) );
+        if( err != NULL )
+            fprintf( stderr, "%s: dlsym error <%s>\n", __FUNCTION__, err );
     }
 }
 
@@ -147,7 +152,7 @@ void testAuthBadPW( Test *pTest )
     int rval = 0;
     db2int32 msgLen = 0;
     char *errMsg = NULL;
-    rval = fnsS.db2secValidatePassword( "root", 5, NULL, 0, 0, "bad", 8, NULL, 0, NULL, 0, 0, NULL, &errMsg, &msgLen);
+    rval = fnsS.db2secValidatePassword( "root", 5, NULL, 0, 0, "bad", 3, NULL, 0, NULL, 0, 0, NULL, &errMsg, &msgLen);
     ct_test( pTest, rval == DB2SEC_PLUGIN_BADPWD );
 }
 
@@ -157,7 +162,7 @@ void testAuthBadUser( Test *pTest )
     int rval = 0;
     db2int32 msgLen = 0;
     char *errMsg = NULL;
-    rval = fnsS.db2secValidatePassword( "%123", 4, NULL, 0, 0, "", 0, NULL, 0, NULL, 0, 0, NULL, &errMsg, &msgLen);
+    rval = fnsS.db2secValidatePassword( "%123", 3, NULL, 0, 0, "bad", 3, NULL, 0, NULL, 0, 0, NULL, &errMsg, &msgLen);
     ct_test( pTest, rval == DB2SEC_PLUGIN_BADUSER );
 }
 
@@ -278,7 +283,6 @@ void testUserUpperExists( Test *pTest )
 {
     db2int32 version = 1;
     int rval = 0;
-    int free_user = 0;
     db2int32 msgLen = 0;
     char *errMsg = NULL;
     char *user = "Root";
@@ -288,7 +292,40 @@ void testUserUpperExists( Test *pTest )
                                        &errMsg,
                                        &msgLen );
     ct_test( pTest, rval == DB2SEC_PLUGIN_OK );
-    if( free_user ) free( user );                                  
+}
+
+void testGetLoginContextEffictive( Test *pTest )
+{
+    db2int32 msgLen = 0;
+    char *errMsg = NULL;
+    struct passwd *pwd= NULL;
+    char authID[32]; /* Going off of SQL_AUTHID_SZ limit */
+    db2int32 authIDLength = 0;
+    char userid[32]; /* Going off of SQL_AUTHID_SZ limit */
+    db2int32 useridLength = 0;
+    int rval = 0;
+
+    if( ( pwd = getpwuid(geteuid()) ) == NULL )
+    {
+        ct_test( pTest, /* FAILED to get euid */ 0 );
+        return;
+    }
+
+    rval = fnsC.db2secGetDefaultLoginContext( authID,
+                                              &authIDLength,
+                                              userid,
+                                              &useridLength,
+                                              DB2SEC_PLUGIN_EFFECTIVE_USER_NAME,
+                                              NULL, /* domain */
+                                              NULL, /* domain length */
+                                              NULL, /* domain type */
+                                              NULL, /* database name */
+                                              0 , /* database name length */
+                                              NULL, /* token */
+                                              &errMsg,
+                                              &msgLen );
+    ct_test( pTest, ( rval == DB2SEC_PLUGIN_OK ) && ( strcmp( authID, pwd->pw_name ) == 0 ) && ( strcmp( userid, pwd->pw_name ) == 0 ) );
+
 }
 
 void testGroupExists( Test *pTest )
@@ -312,6 +349,27 @@ void testGroupExists( Test *pTest )
     if( free_group ) free( group );                                  
 }
 
+void testBadGroupExists( Test *pTest )
+{
+    db2int32 version = 1;
+    int rval = 0;
+    int free_group = 0;
+    db2int32 msgLen = 0;
+    char *errMsg = NULL;
+    char *group = (char*)GetEntryFromFile( test_conf, "bad_group" );
+    if( group ) 
+    {
+        free_group = 1;
+        group = (char *)strdup( group );
+    }
+    rval = fnsG.db2secDoesGroupExist( group?group:"badgroup",
+                                      group?strlen(group):0,
+                                      &errMsg,
+                                      &msgLen );
+    ct_test( pTest, rval == DB2SEC_PLUGIN_INVALIDUSERORGROUP );
+    if( free_group ) free( group );                                  
+}
+
 void testGroupMember( Test *pTest )
 {
     db2int32 version = 1;
@@ -327,6 +385,8 @@ void testGroupMember( Test *pTest )
     char *group = (char*)GetEntryFromFile( test_conf, "user_in_group" );
     if( group ) 
         group = (char *)strdup( group );
+    else
+        group = "bad";
     rval = fnsG.db2secGetGroupsForUser( username?username:"bad", //authid
                                         username?strlen(username):0, //authidlen
                                         NULL, //userid
@@ -395,6 +455,8 @@ void testGroupNotMember( Test *pTest )
     char *group = (char*)GetEntryFromFile( test_conf, "user_not_in_group" );
     if( group ) 
         group = (char *)strdup( group );
+    else
+        group = "bad";
     rval = fnsG.db2secGetGroupsForUser( username?username:"bad", //authid
                                         username?strlen(username):0, //authidlen
                                         NULL, //userid
@@ -542,6 +604,9 @@ void testGroupBadUser( Test *pTest )
                                         &errMsg, 
                                         &msgLen);
     ct_test( pTest, rval == DB2SEC_PLUGIN_BADUSER );
+    fnsG.db2secFreeGroupListMemory( groupList,
+                                    &errMsg,
+                                    &msgLen );
 
     if( username ) free( username );
 }
@@ -661,45 +726,51 @@ Test *GetLogTests()
 
 Test *GetStartTests()
 {
-    Test* pTest = ct_create( "library loading tests", NULL );
+    Test* pTest = ct_create( "Library loading tests", NULL );
     bool rc = ct_addTestFun( pTest, testOpen );
     rc = ct_addTestFun( pTest, testLoadS );
     rc = ct_addTestFun( pTest, testLoadC );
     rc = ct_addTestFun( pTest, testLoadG );
     rc = ct_addTestFun( pTest, testLoadV );
-    rc = ct_addTestFun( pTest, testCheckV );
     rc = ct_addTestFun( pTest, testFillfnsS );
     rc = ct_addTestFun( pTest, testFillfnsC );
     rc = ct_addTestFun( pTest, testFillfnsG );
+    rc = ct_addTestFun( pTest, testCheckV );
     assert( rc );
     return pTest;
 }
 
-Test *GetAuthTests()
+Test *GetServerTests()
 {
-    Test* pTest = ct_create( "Sys-auth library authentications", NULL );
+    Test* pTest = ct_create( "Sys-auth library Server", NULL );
     bool rc = ct_addTestFun( pTest, testAuthBadPW );
     rc = ct_addTestFun( pTest, testAuthBadUser );
     rc = ct_addTestFun( pTest, testAuthNoPW );
     rc = ct_addTestFun( pTest, testAuthNoPWBAD );
     rc = ct_addTestFun( pTest, testAuthGood );
+    rc = ct_addTestFun( pTest, testUserExists );
+    rc = ct_addTestFun( pTest, testUserUpperExists );
     assert( rc );
     return pTest;
 }
 
-Test *GetUserTests()
+/* Client only really has Validate password and GetDefaultNamingContext, and we
+ * already test validate password in Server ( same function ), so just the one
+ * explicite test. 
+*/
+Test *GetClientTests()
 {
-    Test* pTest = ct_create( "Sys-auth library user functions", NULL );
-    bool rc = ct_addTestFun( pTest, testUserExists );
-    rc = ct_addTestFun( pTest, testUserUpperExists );
+    Test* pTest = ct_create( "Sys-auth library Client", NULL );
+    bool rc = ct_addTestFun( pTest, testGetLoginContextEffictive );
     assert( rc );
     return pTest;
 }
     
 Test *GetGroupTests()
 {
-    Test* pTest = ct_create( "Sys-auth library group functions", NULL );
+    Test* pTest = ct_create( "Sys-auth library Group", NULL );
     bool rc = ct_addTestFun( pTest, testGroupExists );
+    rc = ct_addTestFun( pTest, testBadGroupExists);
     rc = ct_addTestFun( pTest, testGroupMemberList );
     rc = ct_addTestFun( pTest, testGroupMember );
     rc = ct_addTestFun( pTest, testGroupNotMember );
@@ -710,7 +781,7 @@ Test *GetGroupTests()
 
 Test *GetCloseTests()
 {
-    Test* pTest = ct_create( "cleanup", NULL );
+    Test* pTest = ct_create( "Cleanup", NULL );
     bool rc = ct_addTestFun( pTest, testCloseServer );
     rc = ct_addTestFun( pTest, testCloseClient );
     rc = ct_addTestFun( pTest, testCloseGroup );
@@ -749,8 +820,8 @@ int main(int argc, char **argv) {
     cs_setStream( s, stderr );
     cs_addTest( s, GetStartTests() );
     cs_addTest( s, GetLogTests() );
-    cs_addTest( s, GetAuthTests() );
-    cs_addTest( s, GetUserTests() );
+    cs_addTest( s, GetServerTests() );
+    cs_addTest( s, GetClientTests() );
     cs_addTest( s, GetGroupTests() );
     cs_addTest( s, GetCloseTests() );
     cs_run( s );

@@ -243,6 +243,7 @@ int vas_db2_plugin_auth_user(char *username, char *password) {
             break;
         }
         close( stdin_fds[1] );
+        fclose( stream );
         slog( SLOG_DEBUG, "%s: child process returned with value <%d>", __FUNCTION__, retval );
         sigaction(SIGCHLD, &osigact, NULL);
         sigaction(SIGPIPE, &osigact, NULL);
@@ -767,17 +768,12 @@ exit:
  * Determine the default user identity associated with the current
  * process context.
  *
- * For simplicity this plugin returns the string found in the
- * DB2DEFAULTUSER environment variable, or an error if that variable
- * is undefined.
- *
- * Modification: read getuid(), unless DB2DEFAULTUSER is set.
  */
 SQL_API_RC SQL_API_FN vas_db2_plugin_who_am_i(char authID[],
                   db2int32 *authIDLength,
                   char userid[],
                   db2int32 *useridLength,
-                  db2int32 useridType,              /* ignored */
+                  db2int32 useridType,              /* real or effective */
                   char domain[],
                   db2int32 *domainLength,
                   db2int32 *domainType,
@@ -798,9 +794,9 @@ SQL_API_RC SQL_API_FN vas_db2_plugin_who_am_i(char authID[],
     *authIDLength = 0;
     userid[0] = '\0';
     *useridLength = 0;
-    domain[0] = '\0';
-    *domainLength = 0;
-    *domainType = DB2SEC_USER_NAMESPACE_UNDEFINED;
+    if( domain ) domain[0] = '\0';
+    if( domainLength ) *domainLength = 0;
+    if( domainType ) *domainType = DB2SEC_USER_NAMESPACE_UNDEFINED;
     int uid;
     struct passwd *pwd = NULL; 
     func_start();
@@ -823,9 +819,9 @@ SQL_API_RC SQL_API_FN vas_db2_plugin_who_am_i(char authID[],
 #endif
     {
         if (DB2SEC_PLUGIN_REAL_USER_NAME == useridType) 
-            pwd = getpwuid(getuid()); 
+            pwd = getpwuid((uid = getuid())); 
         else 
-            pwd = getpwuid(geteuid()); 
+            pwd = getpwuid((uid = geteuid())); 
 
         if( pwd != NULL )
         {

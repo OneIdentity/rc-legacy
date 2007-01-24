@@ -46,9 +46,11 @@ Suite* cs_create(const char* name)
                 {
                         pSuite->maxTests = CHUNK;
                         /* Allocate test name: */
-                        pSuite->name = malloc(strlen(name) + 1);
                         if (name)
+                        {
+                                pSuite->name = malloc(strlen(name) + 1);
                                 strcpy(pSuite->name, name);
+                        }
                         else
                                 ++backOutLevel;
                 }

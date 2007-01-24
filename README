@@ -50,3 +50,9 @@ This will hit VAS's 64-bit PAM library.
 The pamAuth.c have been changed to use sys-auth32/64 as the service name.
 
 On Linux, a new /etc/pam.d/sys-auth32 file should be made, otherwise it will use the default other, which on most linux distros is denied by default. 
+
+Solaris 10 issue:
+VAS 2.6 and earlier versions of 3 only create the 64-bit directory /opt/quest/lib/security/sparcv9 for pam_vas.so to exist in. 
+On Solaris 10, its $ISA macro is 64 instead of sparcv9, so a 64-bit application looks for pam_vas in
+/opt/quest/lib/security/64/pam_vas.so. Which doesnt' exist. To fix, run:
+ln -s /opt/quest/lib/security/sparcv9 /opt/quest/lib/security/64

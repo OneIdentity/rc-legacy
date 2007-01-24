@@ -10,88 +10,89 @@ CHUNK	csuite.c	/^enum {CHUNK = 10};$/;"	e	file:
 CHUNK	ctest.c	/^enum {CHUNK = 10};$/;"	e	file:
 CSUITE_H	csuite.h	16;"	d
 CTEST_H	ctest.h	17;"	d
-DB2SEC_API_VERSION	db2secPlugin.h	51;"	d
-DB2SEC_API_VERSION_1	db2secPlugin.h	50;"	d
-DB2SEC_CLIENT_SIDE	db2secPlugin.h	196;"	d
-DB2SEC_CONNECTION_ISLOCAL	db2secPlugin.h	145;"	d
-DB2SEC_GENERIC	db2secPlugin.h	182;"	d
-DB2SEC_GSSAPI_CTX_HANDLE	db2secPlugin.h	183;"	d
-DB2SEC_ID_TYPE_AUTHID	db2secPlugin.h	204;"	d
-DB2SEC_ID_TYPE_ROLE	db2secPlugin.h	205;"	d
-DB2SEC_LOG_CRITICAL	db2secPlugin.h	216;"	d
-DB2SEC_LOG_ERROR	db2secPlugin.h	217;"	d
-DB2SEC_LOG_INFO	db2secPlugin.h	219;"	d
-DB2SEC_LOG_NONE	db2secPlugin.h	215;"	d
-DB2SEC_LOG_WARNING	db2secPlugin.h	218;"	d
-DB2SEC_MAX_AUTHID_LENGTH	db2secPlugin.h	114;"	d
-DB2SEC_MAX_DBNAME_LENGTH	db2secPlugin.h	120;"	d
-DB2SEC_MAX_PASSWORD_LENGTH	db2secPlugin.h	117;"	d
-DB2SEC_MAX_PRINCIPAL_NAME_LENGTH	db2secPlugin.h	118;"	d
-DB2SEC_MAX_USERID_LENGTH	db2secPlugin.h	115;"	d
-DB2SEC_MAX_USERNAMESPACE_LENGTH	db2secPlugin.h	116;"	d
-DB2SEC_NAMESPACE_SAM_COMPATIBLE	db2secPlugin.h	169;"	d
-DB2SEC_NAMESPACE_USER_PRINCIPAL	db2secPlugin.h	170;"	d
-DB2SEC_PLUGIN_BADPWD	db2secPlugin.h	76;"	d
-DB2SEC_PLUGIN_BADUSER	db2secPlugin.h	62;"	d
-DB2SEC_PLUGIN_BAD_INPUT_PARAMETERS	db2secPlugin.h	98;"	d
-DB2SEC_PLUGIN_BAD_NEWPASSWORD	db2secPlugin.h	77;"	d
-DB2SEC_PLUGIN_BAD_PRINCIPAL_NAME	db2secPlugin.h	92;"	d
-DB2SEC_PLUGIN_CANTLOADLIBRARY	db2secPlugin.h	84;"	d
-DB2SEC_PLUGIN_CANT_OPEN_FILE	db2secPlugin.h	85;"	d
-DB2SEC_PLUGIN_CHANGEPASSWORD_NOTSUPPORTED	db2secPlugin.h	78;"	d
-DB2SEC_PLUGIN_CONNECTION_DISALLOWED	db2secPlugin.h	88;"	d
-DB2SEC_PLUGIN_CRED_EXPIRED	db2secPlugin.h	91;"	d
-DB2SEC_PLUGIN_DISKERROR	db2secPlugin.h	81;"	d
-DB2SEC_PLUGIN_EFFECTIVE_USER_NAME	db2secPlugin.h	131;"	d
-DB2SEC_PLUGIN_FILENOTFOUND	db2secPlugin.h	86;"	d
-DB2SEC_PLUGIN_GROUPSTATUSNOTKNOWN	db2secPlugin.h	69;"	d
-DB2SEC_PLUGIN_INCOMPATIBLE_VER	db2secPlugin.h	99;"	d
-DB2SEC_PLUGIN_INVALIDUSERORGROUP	db2secPlugin.h	67;"	d
-DB2SEC_PLUGIN_NETWORKERROR	db2secPlugin.h	83;"	d
-DB2SEC_PLUGIN_NOMEM	db2secPlugin.h	80;"	d
-DB2SEC_PLUGIN_NOPERM	db2secPlugin.h	82;"	d
-DB2SEC_PLUGIN_NO_CON_DETAILS	db2secPlugin.h	96;"	d
-DB2SEC_PLUGIN_NO_CRED	db2secPlugin.h	90;"	d
-DB2SEC_PLUGIN_NO_LICENSES	db2secPlugin.h	102;"	d
-DB2SEC_PLUGIN_OK	db2secPlugin.h	59;"	d
-DB2SEC_PLUGIN_PROCESS_LIMIT	db2secPlugin.h	101;"	d
-DB2SEC_PLUGIN_PWD_EXPIRED	db2secPlugin.h	72;"	d
-DB2SEC_PLUGIN_REAL_USER_NAME	db2secPlugin.h	130;"	d
-DB2SEC_PLUGIN_TYPE_GROUP	db2secPlugin.h	157;"	d
-DB2SEC_PLUGIN_TYPE_GSSAPI	db2secPlugin.h	155;"	d
-DB2SEC_PLUGIN_TYPE_KERBEROS	db2secPlugin.h	156;"	d
-DB2SEC_PLUGIN_TYPE_USERID_PASSWORD	db2secPlugin.h	154;"	d
-DB2SEC_PLUGIN_UID_EXPIRED	db2secPlugin.h	71;"	d
-DB2SEC_PLUGIN_UNKNOWNERROR	db2secPlugin.h	60;"	d
-DB2SEC_PLUGIN_USERSTATUSNOTKNOWN	db2secPlugin.h	68;"	d
-DB2SEC_PLUGIN_USER_REVOKED	db2secPlugin.h	73;"	d
-DB2SEC_PLUGIN_USER_SUSPENDED	db2secPlugin.h	74;"	d
-DB2SEC_SERVER_SIDE	db2secPlugin.h	195;"	d
-DB2SEC_USERID_FROM_OS	db2secPlugin.h	144;"	d
-DB2SEC_USER_NAMESPACE_UNDEFINED	db2secPlugin.h	168;"	d
-DB2SEC_VALIDATING_ON_SERVER_SIDE	db2secPlugin.h	146;"	d
+ClientInit	test_all.c	/^SQL_API_RC SQL_API_FN( *ClientInit )($/;"	v
+DB2SEC_API_VERSION	db2secPlugin.h	63;"	d
+DB2SEC_API_VERSION_1	db2secPlugin.h	62;"	d
+DB2SEC_CLIENT_SIDE	db2secPlugin.h	208;"	d
+DB2SEC_CONNECTION_ISLOCAL	db2secPlugin.h	157;"	d
+DB2SEC_GENERIC	db2secPlugin.h	194;"	d
+DB2SEC_GSSAPI_CTX_HANDLE	db2secPlugin.h	195;"	d
+DB2SEC_ID_TYPE_AUTHID	db2secPlugin.h	216;"	d
+DB2SEC_ID_TYPE_ROLE	db2secPlugin.h	217;"	d
+DB2SEC_LOG_CRITICAL	db2secPlugin.h	228;"	d
+DB2SEC_LOG_ERROR	db2secPlugin.h	229;"	d
+DB2SEC_LOG_INFO	db2secPlugin.h	231;"	d
+DB2SEC_LOG_NONE	db2secPlugin.h	227;"	d
+DB2SEC_LOG_WARNING	db2secPlugin.h	230;"	d
+DB2SEC_MAX_AUTHID_LENGTH	db2secPlugin.h	126;"	d
+DB2SEC_MAX_DBNAME_LENGTH	db2secPlugin.h	132;"	d
+DB2SEC_MAX_PASSWORD_LENGTH	db2secPlugin.h	129;"	d
+DB2SEC_MAX_PRINCIPAL_NAME_LENGTH	db2secPlugin.h	130;"	d
+DB2SEC_MAX_USERID_LENGTH	db2secPlugin.h	127;"	d
+DB2SEC_MAX_USERNAMESPACE_LENGTH	db2secPlugin.h	128;"	d
+DB2SEC_NAMESPACE_SAM_COMPATIBLE	db2secPlugin.h	181;"	d
+DB2SEC_NAMESPACE_USER_PRINCIPAL	db2secPlugin.h	182;"	d
+DB2SEC_PLUGIN_BADPWD	db2secPlugin.h	88;"	d
+DB2SEC_PLUGIN_BADUSER	db2secPlugin.h	74;"	d
+DB2SEC_PLUGIN_BAD_INPUT_PARAMETERS	db2secPlugin.h	110;"	d
+DB2SEC_PLUGIN_BAD_NEWPASSWORD	db2secPlugin.h	89;"	d
+DB2SEC_PLUGIN_BAD_PRINCIPAL_NAME	db2secPlugin.h	104;"	d
+DB2SEC_PLUGIN_CANTLOADLIBRARY	db2secPlugin.h	96;"	d
+DB2SEC_PLUGIN_CANT_OPEN_FILE	db2secPlugin.h	97;"	d
+DB2SEC_PLUGIN_CHANGEPASSWORD_NOTSUPPORTED	db2secPlugin.h	90;"	d
+DB2SEC_PLUGIN_CONNECTION_DISALLOWED	db2secPlugin.h	100;"	d
+DB2SEC_PLUGIN_CRED_EXPIRED	db2secPlugin.h	103;"	d
+DB2SEC_PLUGIN_DISKERROR	db2secPlugin.h	93;"	d
+DB2SEC_PLUGIN_EFFECTIVE_USER_NAME	db2secPlugin.h	143;"	d
+DB2SEC_PLUGIN_FILENOTFOUND	db2secPlugin.h	98;"	d
+DB2SEC_PLUGIN_GROUPSTATUSNOTKNOWN	db2secPlugin.h	81;"	d
+DB2SEC_PLUGIN_INCOMPATIBLE_VER	db2secPlugin.h	111;"	d
+DB2SEC_PLUGIN_INVALIDUSERORGROUP	db2secPlugin.h	79;"	d
+DB2SEC_PLUGIN_NETWORKERROR	db2secPlugin.h	95;"	d
+DB2SEC_PLUGIN_NOMEM	db2secPlugin.h	92;"	d
+DB2SEC_PLUGIN_NOPERM	db2secPlugin.h	94;"	d
+DB2SEC_PLUGIN_NO_CON_DETAILS	db2secPlugin.h	108;"	d
+DB2SEC_PLUGIN_NO_CRED	db2secPlugin.h	102;"	d
+DB2SEC_PLUGIN_NO_LICENSES	db2secPlugin.h	114;"	d
+DB2SEC_PLUGIN_OK	db2secPlugin.h	71;"	d
+DB2SEC_PLUGIN_PROCESS_LIMIT	db2secPlugin.h	113;"	d
+DB2SEC_PLUGIN_PWD_EXPIRED	db2secPlugin.h	84;"	d
+DB2SEC_PLUGIN_REAL_USER_NAME	db2secPlugin.h	142;"	d
+DB2SEC_PLUGIN_TYPE_GROUP	db2secPlugin.h	169;"	d
+DB2SEC_PLUGIN_TYPE_GSSAPI	db2secPlugin.h	167;"	d
+DB2SEC_PLUGIN_TYPE_KERBEROS	db2secPlugin.h	168;"	d
+DB2SEC_PLUGIN_TYPE_USERID_PASSWORD	db2secPlugin.h	166;"	d
+DB2SEC_PLUGIN_UID_EXPIRED	db2secPlugin.h	83;"	d
+DB2SEC_PLUGIN_UNKNOWNERROR	db2secPlugin.h	72;"	d
+DB2SEC_PLUGIN_USERSTATUSNOTKNOWN	db2secPlugin.h	80;"	d
+DB2SEC_PLUGIN_USER_REVOKED	db2secPlugin.h	85;"	d
+DB2SEC_PLUGIN_USER_SUSPENDED	db2secPlugin.h	86;"	d
+DB2SEC_SERVER_SIDE	db2secPlugin.h	207;"	d
+DB2SEC_USERID_FROM_OS	db2secPlugin.h	156;"	d
+DB2SEC_USER_NAMESPACE_UNDEFINED	db2secPlugin.h	180;"	d
+DB2SEC_VALIDATING_ON_SERVER_SIDE	db2secPlugin.h	158;"	d
 DEFAULT_CONF_FILE	log.c	/^static char DEFAULT_CONF_FILE[MAX_LINE_LENGTH] = "\/etc\/sys-auth.conf";$/;"	v	file:
 EXAMPLE_PAM_SERVICE_NAME	pamAuth.c	32;"	d	file:
 EXAMPLE_PAM_SERVICE_NAME	pamAuth.c	34;"	d	file:
-FAILURE	sys-auth.c	55;"	d	file:
+FAILURE	sys-auth.c	54;"	d	file:
 FALSE	bool.h	6;"	d
 GOOD_VALUE	test_all.c	9;"	d	file:
 G_last_check_time	log.c	/^static time_t G_last_check_time = 0;$/;"	v	file:
 G_log_level	log.c	/^static int G_log_level = -1;$/;"	v	file:
 G_log_to_syslog	log.c	/^static int G_log_to_syslog = -1;$/;"	v	file:
-GetAuthTests	test_all.c	/^Test *GetAuthTests()$/;"	f
+GetClientTests	test_all.c	/^Test *GetClientTests()$/;"	f
 GetCloseTests	test_all.c	/^Test *GetCloseTests()$/;"	f
 GetEntryFromFile	log.c	/^char* GetEntryFromFile( const char *filename, const char *entry )$/;"	f
 GetGroupTests	test_all.c	/^Test *GetGroupTests()$/;"	f
 GetLogTests	test_all.c	/^Test *GetLogTests()$/;"	f
+GetServerTests	test_all.c	/^Test *GetServerTests()$/;"	f
 GetStartTests	test_all.c	/^Test *GetStartTests()$/;"	f
-GetUserTests	test_all.c	/^Test *GetUserTests()$/;"	f
 GetVersion	test_all.c	/^const char *( *GetVersion)( );$/;"	v
 GroupInit	test_all.c	/^SQL_API_RC SQL_API_FN( *GroupInit )($/;"	v
 LOG_H	log.h	20;"	d
-MAX_C_BUFF	sys-auth.c	57;"	d	file:
+MAX_C_BUFF	sys-auth.c	56;"	d	file:
 MAX_LINE_LENGTH	log.h	42;"	d
-MAX_LINE_LENGTH	sys-auth.c	49;"	d	file:
+MAX_LINE_LENGTH	sys-auth.c	48;"	d	file:
 PARSE_INT_FORMAT	vsyslog.c	324;"	d	file:
 PARSE_INT_FORMAT	vsyslog.c	336;"	d	file:
 SLOG_ALL	log.h	58;"	d
@@ -99,10 +100,10 @@ SLOG_CRIT	log.h	45;"	d
 SLOG_DEBUG	log.h	55;"	d
 SLOG_EXTEND	log.h	51;"	d
 SLOG_NORMAL	log.h	48;"	d
-SQL_API_FN	db2secPlugin.h	47;"	d
-SQL_API_RC	db2secPlugin.h	44;"	d
-SQL_AUTHID_SZ	db2secPlugin.h	48;"	d
-SUCCESS	sys-auth.c	54;"	d	file:
+SQL_API_FN	db2secPlugin.h	58;"	d
+SQL_API_RC	db2secPlugin.h	55;"	d
+SQL_AUTHID_SZ	db2secPlugin.h	59;"	d
+SUCCESS	sys-auth.c	53;"	d	file:
 ServerInit	test_all.c	/^SQL_API_RC SQL_API_FN( *ServerInit )($/;"	v
 Suite	csuite.c	/^struct Suite$/;"	s	file:
 Suite	csuite.h	/^typedef struct Suite Suite;$/;"	t
@@ -158,8 +159,9 @@ ct_run	ctest.c	/^long ct_run(Test* pTest)$/;"	f
 ct_setStream	ctest.c	/^void ct_setStream(Test* pTest, FILE* pStream)$/;"	f
 ct_succeed	ctest.c	/^void ct_succeed(Test* pTest)$/;"	f
 ct_test	ctest.h	22;"	d
-db2Uint32	db2secPlugin.h	46;"	d
-db2int32	db2secPlugin.h	45;"	d
+db2Is64bit	db2secPlugin.h	47;"	d
+db2Uint32	db2secPlugin.h	/^typedef sqluint32       db2Uint32;       $/;"	t
+db2int32	db2secPlugin.h	/^typedef sqlint32        db2int32;$/;"	t
 db2secClientAuthPluginInit	sys-auth.c	/^SQL_API_RC SQL_API_FN db2secClientAuthPluginInit (db2int32 version,$/;"	f
 db2secClientAuthPluginTerm	db2secPlugin.h	/^     SQL_API_RC ( SQL_API_FN *db2secClientAuthPluginTerm) $/;"	m	struct:userid_password_client_auth_functions_1
 db2secDoesAuthIDExist	db2secPlugin.h	/^     SQL_API_RC ( SQL_API_FN *db2secDoesAuthIDExist) $/;"	m	struct:userid_password_server_auth_functions_1
@@ -191,11 +193,13 @@ dbname	db2secPlugin.h	/^  char dbname[DB2SEC_MAX_DBNAME_LENGTH + 1];$/;"	m	struc
 dbnameLen	db2secPlugin.h	/^  db2int32  dbnameLen;$/;"	m	struct:db2sec_con_details_1
 do_version	test_all.c	/^int  do_version = 0;$/;"	v
 filename	test_all.c	/^char filename[512] = ".\/sys-auth32.so."VERSION;$/;"	v
-fnsA	test_all.c	/^struct userid_password_server_auth_functions_1 fnsA;$/;"	v
+fnsC	test_all.c	/^struct userid_password_client_auth_functions_1 fnsC;$/;"	v
 fnsG	test_all.c	/^struct group_functions_1 fnsG;$/;"	v
+fnsS	test_all.c	/^struct userid_password_server_auth_functions_1 fnsS;$/;"	v
 format_flags	vsyslog.c	/^enum format_flags {$/;"	g	file:
-funcNameAuth	test_all.c	/^char *funcNameAuth = "db2secServerAuthPluginInit";$/;"	v
+funcNameClient	test_all.c	/^char *funcNameClient = "db2secClientAuthPluginInit";$/;"	v
 funcNameGroup	test_all.c	/^char *funcNameGroup = "db2secGroupPluginInit";$/;"	v
+funcNameServer	test_all.c	/^char *funcNameServer = "db2secServerAuthPluginInit";$/;"	v
 funcNameVersion	test_all.c	/^char *funcNameVersion = "vas_db2_plugin_get_version";$/;"	v
 func_start	log.h	67;"	d
 group_functions_1	db2secPlugin.h	/^typedef struct group_functions_1$/;"	s
@@ -242,6 +246,10 @@ sn_reserve	vsyslog.c	/^sn_reserve (struct snprintf_state *state, size_t n)$/;"	f
 snprintf	vsyslog.c	/^snprintf (char *str, size_t sz, const char *format, ...)$/;"	f
 snprintf_state	vsyslog.c	/^struct snprintf_state {$/;"	s	file:
 space_flag	vsyslog.c	/^    space_flag     =  4,$/;"	e	enum:format_flags	file:
+sqlint32	db2secPlugin.h	/^    typedef int             sqlint32;$/;"	t
+sqlint32	db2secPlugin.h	/^    typedef long            sqlint32;$/;"	t
+sqluint32	db2secPlugin.h	/^    typedef unsigned int    sqluint32;$/;"	t
+sqluint32	db2secPlugin.h	/^    typedef unsigned long   sqluint32;$/;"	t
 str	vsyslog.c	/^    unsigned char *str;$/;"	m	struct:snprintf_state	file:
 sz	vsyslog.c	/^    size_t sz;$/;"	m	struct:snprintf_state	file:
 testAuthBadPW	test_all.c	/^void testAuthBadPW( Test *pTest )$/;"	f
@@ -249,10 +257,12 @@ testAuthBadUser	test_all.c	/^void testAuthBadUser( Test *pTest )$/;"	f
 testAuthGood	test_all.c	/^void testAuthGood( Test *pTest )$/;"	f
 testAuthNoPW	test_all.c	/^void testAuthNoPW( Test *pTest )$/;"	f
 testAuthNoPWBAD	test_all.c	/^void testAuthNoPWBAD( Test *pTest )$/;"	f
+testBadGroupExists	test_all.c	/^void testBadGroupExists( Test *pTest )$/;"	f
 testCheckV	test_all.c	/^void testCheckV( Test *pTest )$/;"	f
-testCloseAuth	test_all.c	/^void testCloseAuth( Test *pTest )$/;"	f
+testCloseClient	test_all.c	/^void testCloseClient( Test *pTest )$/;"	f
 testCloseGroup	test_all.c	/^void testCloseGroup( Test *pTest )$/;"	f
 testCloseLib	test_all.c	/^void testCloseLib( Test *pTest )$/;"	f
+testCloseServer	test_all.c	/^void testCloseServer( Test *pTest )$/;"	f
 testConfBackwards	test_all.c	/^void testConfBackwards( Test *pTest )$/;"	f
 testConfEmpty	test_all.c	/^void testConfEmpty( Test *pTest )$/;"	f
 testConfMissing	test_all.c	/^void testConfMissing( Test *pTest )$/;"	f
@@ -261,15 +271,18 @@ testConfWSCommentEmpty	test_all.c	/^void testConfWSCommentEmpty( Test *pTest )$/
 testConfWSEmpty	test_all.c	/^void testConfWSEmpty( Test *pTest )$/;"	f
 testConfWSEnd	test_all.c	/^void testConfWSEnd( Test *pTest )$/;"	f
 testConfWSFront	test_all.c	/^void testConfWSFront( Test *pTest )$/;"	f
-testFillfnsA	test_all.c	/^void testFillfnsA( Test *pTest )$/;"	f
+testFillfnsC	test_all.c	/^void testFillfnsC( Test *pTest )$/;"	f
 testFillfnsG	test_all.c	/^void testFillfnsG( Test *pTest )$/;"	f
+testFillfnsS	test_all.c	/^void testFillfnsS( Test *pTest )$/;"	f
+testGetLoginContextEffictive	test_all.c	/^void testGetLoginContextEffictive( Test *pTest )$/;"	f
 testGroupBadUser	test_all.c	/^void testGroupBadUser( Test *pTest )$/;"	f
 testGroupExists	test_all.c	/^void testGroupExists( Test *pTest )$/;"	f
 testGroupMember	test_all.c	/^void testGroupMember( Test *pTest )$/;"	f
 testGroupMemberList	test_all.c	/^void testGroupMemberList( Test *pTest )$/;"	f
 testGroupNotMember	test_all.c	/^void testGroupNotMember( Test *pTest )$/;"	f
-testLoadA	test_all.c	/^void testLoadA( Test *pTest )$/;"	f
+testLoadC	test_all.c	/^void testLoadC( Test *pTest )$/;"	f
 testLoadG	test_all.c	/^void testLoadG( Test *pTest )$/;"	f
+testLoadS	test_all.c	/^void testLoadS( Test *pTest )$/;"	f
 testLoadV	test_all.c	/^void testLoadV( Test *pTest )$/;"	f
 testOpen	test_all.c	/^void testOpen( Test *pTest )$/;"	f
 testUserExists	test_all.c	/^void testUserExists( Test *pTest )$/;"	f
