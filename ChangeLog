@@ -105,3 +105,6 @@ Now changelog will work off the version.
 
 1.0.13 ( 1-23-07):
 * Added HP Itanium builds. Seperated into HPUX_9000 and HPUX_IA64 packages.    
+* Better named the various packages.
+* Made sure all OSes get __64BIT__ set if 64-bit, that macro is only guaranteed on AIX
+  it seems.

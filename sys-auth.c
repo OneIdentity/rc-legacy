@@ -188,7 +188,13 @@ int vas_db2_plugin_auth_user(char *username, char *password) {
         if( access( prog_path, X_OK ) != 0 )
         {
             slog( SLOG_NORMAL, "%s: FAILED finding auth program <%s>, trying pamAuth in the current directory", __FUNCTION__, prog_path );
-            getcwd( prog_path, MAX_C_BUFF);
+            memset( prog_path, 0, MAX_C_BUFF);
+            if( getcwd( prog_path, MAX_C_BUFF) == NULL )
+            {
+                slog( SLOG_NORMAL, "%s: getcwd FAILED with errno <%d> string <%s>. Trying .", __FUNCTION__, errno, strerror( errno ) );
+                strcpy( prog_path, "." );
+            }
+            
 #ifdef __64BIT__
             strcat( prog_path, "/pamAuth64" );
 #else    
@@ -196,7 +202,7 @@ int vas_db2_plugin_auth_user(char *username, char *password) {
 #endif
             if( access( prog_path, X_OK ) != 0 )
             {
-                slog( SLOG_NORMAL, "%s: FAILED finding auth program <%s>", __FUNCTION__, prog_path );
+                slog( SLOG_NORMAL, "%s: FAILED finding auth program <%s> in current directory", __FUNCTION__, prog_path );
                 return( FAILURE );
             }
         }
@@ -657,8 +663,9 @@ SQL_API_RC SQL_API_FN vas_db2_plugin_get_auth_ids(const char *userid,
     memset(user, '\0', sizeof(user));
 
     /* Check for a domain name, and make sure the userid length is ok. */
+
     /* Don't use domain name, DB2 puts in the short name, which would 
-     * not be recognized by VAS */
+     * not be recognized by VAS ( hence the '&& 0' here ) */
     if (domain != NULL && domainLength > 0 && 0 )
     {
         if ( (useridLength + 1 + domainLength) > SQL_AUTHID_SZ )
@@ -802,6 +809,10 @@ SQL_API_RC SQL_API_FN vas_db2_plugin_who_am_i(char authID[],
       // can get on the machine and run export DB2DEFAULTUSER=<instance owner> will BE
       // the instance owner the the box. I sure hope I am not understanding this, and it 
       // isn't the gaping security hole it seems.
+
+    // It doesn't seem as bad, as you can't set the ENV of the process this runs in ( DB2 seems
+    // to keep a pool of 'auth' threads going, it isn't going to make one jstu for you, and
+    // even if it did, it woudl be spawned by another environment, so the export is useless )
     user = getenv("DB2DEFAULTUSER");
 
     if( user )

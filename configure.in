@@ -1,5 +1,5 @@
-AC_INIT(sys-auth, 1.0.12)
-VERSION="1.0.12"
+AC_INIT(sys-auth, 1.0)
+VERSION="1.0.`cat ./build-number.txt`"
 AC_CONFIG_HEADER(config.h)
 
 dnl Find and test the C compiler
@@ -40,14 +40,14 @@ case `uname -a | awk '{print $1}'` in
         SOLARIS_TRUE=''
         SOLARIS_FALSE=#
         CC="gcc -m32"
-        CC64="gcc -m64"
+        CC64="gcc -m64 -D__64BIT__"
         ;;
     "HP-UX")
         OS=HPUX
         HPUX_TRUE=''
         HPUX_FALSE=#
         if test -f /usr/lib/hpux64/libpam.so ; then
-            CC64="gcc -mlp64"
+            CC64="gcc -mlp64 -D__64BIT__"
         else
             B64_TRUE=#
             B64_FALSE=''
@@ -58,7 +58,7 @@ case `uname -a | awk '{print $1}'` in
         AIX_TRUE=''
         AIX_FALSE=#
         CC=gcc
-        CC64="gcc -maix64"
+        CC64="gcc -maix64 -D__64BIT__"
         ;;
 esac        
 
@@ -68,12 +68,14 @@ CFLAGS="-D${OS} -fpic"
 case $OS in 
     "LINUX")
         CC="gcc -m32"
-        CC64="gcc -m64"
+        CC64="gcc -m64 -D__64BIT__"
         if test `uname -m` = "x86_64" ; then
-            OS=LINUX_64
+            OS=LINUX_X86_64
+        else
+            OS=LINUX_X86
         fi
         if test `uname -m` = "s390x" ; then
-            OS=LINUX_s390x
+            OS=LINUX_S390X
             CC="gcc -m31"
             CC64="gcc -m64 -D__64BIT__"
             LINUX_S390X_TRUE=''
@@ -81,8 +83,10 @@ case $OS in
         fi
         ;;
     "AIX")
-        if test `uname -a | awk '{print $3}'` -eq 3 ; then 
+        if test "`uname -r`" -eq "3" ; then 
             OS=AIX_53    
+        else
+            OS="AIX_51-52"
         fi
         ;;
     "HPUX")
@@ -91,6 +95,9 @@ case $OS in
             else
             OS=HPUX_9000
         fi    
+        ;;
+    "SOLARIS")
+        OS=SOLARIS_SPARC
         ;;
     *)
         echo "Unknown OS <$OS>"
@@ -129,3 +136,7 @@ AC_OUTPUT(Makefile)
 AC_OUTPUT(install.sh)
 AC_OUTPUT(upgrade.sh)
 chmod u+x install.sh upgrade.sh
+if test -f make_all.exp.in ; then
+    AC_OUTPUT(make_all.exp)
+    chmod u+x make_all.exp
+fi

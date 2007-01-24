@@ -2,6 +2,27 @@ A list of things I know this needs for the move to fully supported:
 
 1) Re-org the test framework to be by library ( server, client, and group )
 2) Expand the test caces to be first functionally complete, then procedurally complete ( whoami, auth, getgroups cycle ).
-3) configure.in to handle s390 better for testing ( its 64-bit ONLY, 31 bit needs to be skipped on this platform ONLY ).
-4) Make sure the failover auth for non-DB2 testing works on AIX for LAM, so the machien doesn't need PAM setup to function. 
-5) Once 2 is done, look for more fringe/edge cases to be tested. 
+3) Make sure the failover auth for non-DB2 testing works on AIX for LAM, so the machien doesn't need PAM setup to function. 
+4) Once 2 is done, look for more fringe/edge cases to be tested. 
+5) Fix upgrade script for s390x ( no 32-bit directory ).
+
+For #2, here is a list of missed functionality/new cases to work on:
+A) Add bad DoesGroupExist test.
+B) Test both REAL and EFFECTIVE flags for GetDefaultLogonContext.
+C) Test GetAuthIDs.
+D) Add bad DoesAuthIDExist test.
+E) Make sure there is a test for groupsForUser when the case of the username is wrong. 
+
+So, that means out of 20 functions, only 2 are not currently tested. so 90% code coverage so far. 
+
+Of those, one is a real simple getuid/geteuid, then return name function, the other just plugs the given value into other fields.
+( If this supported domain, which is doesn't, as DB2 uses NETBIOS domain names, and VAS picks up the names jstu fine without, 
+  then this last function might have needed to be more complicated ). 
+
+Then adding two more tests, so each test checks at least a basic does it work when its good info, and 
+a does it fail correctly when its bad info, and for those that apply, when its 'different' ( usually case-related issues) info. 
+
+Once all this is done, should be 100% complete, born by the lack of any real issues since 1.0.9 ( just porting work now it seems, 
+ there might be a Solaris sparc 64-bit issue, will know tomorrow I think whats going on there ). 
+
+And I get to work on DB2 UDB v9.1 this week as well, we shall see if this stuff just works, or if something changed and need a new plugin. 

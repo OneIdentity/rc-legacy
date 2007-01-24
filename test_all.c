@@ -560,11 +560,20 @@ void testCloseLib( Test *pTest )
         ct_test( pTest, /* NO HANDLE */ 0 );
 }
 
-void testCloseAuth( Test *pTest )
+void testCloseServer( Test *pTest )
 {
     db2int32 msgLen = 0;
     char *errMsg = NULL;
     fnsS.db2secServerAuthPluginTerm( &errMsg,
+                                     &msgLen );
+    ct_test( pTest, msgLen == 0 );
+}
+
+void testCloseClient( Test *pTest )
+{
+    db2int32 msgLen = 0;
+    char *errMsg = NULL;
+    fnsC.db2secClientAuthPluginTerm( &errMsg,
                                      &msgLen );
     ct_test( pTest, msgLen == 0 );
 }
@@ -655,10 +664,12 @@ Test *GetStartTests()
     Test* pTest = ct_create( "library loading tests", NULL );
     bool rc = ct_addTestFun( pTest, testOpen );
     rc = ct_addTestFun( pTest, testLoadS );
+    rc = ct_addTestFun( pTest, testLoadC );
     rc = ct_addTestFun( pTest, testLoadG );
     rc = ct_addTestFun( pTest, testLoadV );
     rc = ct_addTestFun( pTest, testCheckV );
     rc = ct_addTestFun( pTest, testFillfnsS );
+    rc = ct_addTestFun( pTest, testFillfnsC );
     rc = ct_addTestFun( pTest, testFillfnsG );
     assert( rc );
     return pTest;
@@ -684,7 +695,6 @@ Test *GetUserTests()
     assert( rc );
     return pTest;
 }
-
     
 Test *GetGroupTests()
 {
@@ -701,14 +711,13 @@ Test *GetGroupTests()
 Test *GetCloseTests()
 {
     Test* pTest = ct_create( "cleanup", NULL );
-    bool rc = ct_addTestFun( pTest, testCloseAuth );
+    bool rc = ct_addTestFun( pTest, testCloseServer );
+    rc = ct_addTestFun( pTest, testCloseClient );
     rc = ct_addTestFun( pTest, testCloseGroup );
     rc = ct_addTestFun( pTest, testCloseLib );
     assert( rc );
     return pTest;
 }
-
-
 
 int main(int argc, char **argv) {
     int rc = 0;
