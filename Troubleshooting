@@ -36,7 +36,7 @@ tail -f /tmp/auth.notice
 Once verified it is logging, go through the steps to demonstrate the issue being investigated. 
 Make sure to mark the exact time of the failure. If the DB instance is busy, this will help make sure the right section of the log is examined. 
 
-Copy off the log file at that point, and send it into support with:
+Copy off the log file at that point, and send it into Quest Support with:
 1) Version of the plugin ( should be in the logs )
 2) Explain the steps used to reproduce the issue.
 3) The parts being used, like any 3rd party applications involved. 
@@ -45,11 +45,8 @@ Copy off the log file at that point, and send it into support with:
 6) Time the issue occured.
 7) Any other facts relevent to the issue.
 
-Or send directly to me at seth.ellsworth@quest.com. You lose out on bug numbers and tracking, but probably gain a little time, as they would eventally get to me anyway. 
 
-Anyway, my first troubleshooting guide, let me know what you think, if it was helpful, or needs serious improvement. 
-If you find a bug, I will do my best to get it fixed as soon as I can, and a new verion made quickly. 
-Assuming the debug covers the possible issue, and/or ability to reproduce myself. 
-If it doesn't, then I might be sending a new version with additional debugging. 
+If the issue is with getting the plugin to load, firts off make sure you have the latest verion ( 1.0.13 currently ). 
+It fixes some 64-bit issues, where non-AIX were not using the right variable size, leading to some interesting issues. 
 
-
+For that, gather 1, 2, 3, 4, 6, and 7, and add db2diag logging of the error, with the debug level set to 4. 

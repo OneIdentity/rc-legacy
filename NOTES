@@ -16,9 +16,10 @@ at the beginning pushed off all the funciton pointers after. This isnt' the flag
 
 On s390x, the test has to be done 64-bit, seems we are missing a TON of 32 ( 31 ) bit stuff. DB2 is 64-bit only anyways on that platform.
 
-We don't build on IA, not sure we need to. Not sure anyone is even using DB2 on HP. At least noone has asked/complained about that lack.
+We don't build on IA, not sure we need to. Not sure anyone is even using DB2 on HP. At least noone has asked/complained about that lack. Except now they have, so back in it goes. 
 
 There were build issues, dealt with I think HP bugs, where when using the ssh remote the way I di, it fails, yet when doign it manually it works. I think it ran out of memory in the psuedo shell that is called. Maybe wrap the make in a bash -c "cmds" ?. Oh well, to think about when someone asks. 
+It seems AIX is the only platform guaranteed to set __64BIT__, so manually set that on the others to make sure we don't have another s390x type issue. 
 
-DB2 loads the client_init function, that returns a struct with funciton pointers to what it really uses. 
+DB2 loads the section_init function, that returns a struct with funciton pointers to what it really uses. 
 

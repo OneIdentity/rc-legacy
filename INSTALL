@@ -1,6 +1,6 @@
 Simple setup:
 For this example:
-	On AIX
+	On AIX 5.1 or 5.2
         instance owner name: db2inst1
         Package is in /tmp
         You are installing the LAM library
@@ -8,7 +8,7 @@ For this example:
 
 As root:
     cd /tmp
-    gzip -c -d DB2_AIX_bin.tar.gz | tar -xvf -
+    gzip -c -d DB2_AIX_51-52.tar.gz | tar -xvf -
     cd DB2_sys-auth
     ./install.sh db2inst1 LAM
     (This copies the files, and does a setuid on lamAuth64 so authentication can work.)
@@ -22,16 +22,18 @@ As root:
 
 Making:
     As the instance owner, download and untar/gzip the src package. 
-    ./configure
-    make
+    Run:
+        ./configure
+        make
+    Note: This will require the DB2 SDK installed.     
 
 Testing:
-    I am still working on the test framework, at the moment its pretty basic. 
-    And have the sys-auth32.so library in the same directory. 
-    If DB2INSTANCE is not set, or it does not have pamAuth32, the test will look for pamAuth32 in the current directory. 
+    Read TESTING.
 
 If you are on AIX 5.1, and want to use PAM, you will need to install the AIX PAM libraries, namely pam_aix.
 
 Both AIX 5.1 and 5.2 do not provide pam.conf, a sample aix.pam.conf is in this package.
 
 AIX pam_aix is 32-bit only, meaning if you are running a 64-bit instance, do not use PAM if you need to authenticate local users. 
+
+More about this in README.

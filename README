@@ -41,8 +41,6 @@ An entry of debug-level = <1-4> will increase/decrese the debug level.
 3 is debug, shouldn't be needed. 
 4 is everything I could think of. 
 
-This plugin will now never record passwords. It should never have, I was doing so when I was working out how to pass them securely from the library to the helper program. 
-
 WARNING: AIX's pam_vas library on 5.2 is 32-bit only. If you have a 64-bit instance, and want to run PAM, you can only do so against VAS/Others of 64-bit, and add similiar to:
 sys-auth64 auth sufficient /opt/vas/lib/security/pam_vas64.so get_tgt create_homedir
 to /etc/pam.conf.
