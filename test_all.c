@@ -280,6 +280,97 @@ void testUserExists( Test *pTest )
     if( free_user ) free( user );                                  
 }
 
+void testBadUserExists( Test *pTest )
+{
+    db2int32 version = 1;
+    int rval = 0;
+    int free_user = 0;
+    db2int32 msgLen = 0;
+    char *errMsg = NULL;
+    char *user = (char*)GetEntryFromFile( test_conf, "bad_user" );
+    if( user ) 
+    {
+        free_user = 1;
+        user = (char *)strdup( user );
+    }
+    rval = fnsS.db2secDoesAuthIDExist( user?user:"baduser",
+                                       user?strlen(user):0,
+                                       &errMsg,
+                                       &msgLen );
+    ct_test( pTest, rval == DB2SEC_PLUGIN_BADUSER );
+    if( free_user ) free( user );                                  
+}
+
+void testGetAuthIDs( Test *pTest )
+{
+    int rval = 0;
+    db2int32 msgLen = 0;
+    char *errMsg = NULL;
+    char authID[32]; /* Going off of SQL_AUTHID_SZ limit */
+    db2int32 authIDLength = 0;
+    char sauthID[32]; /* Going off of SQL_AUTHID_SZ limit */
+    db2int32 sauthIDLength = 0;
+    char userid[32]; /* Going off of SQL_AUTHID_SZ limit */
+    db2int32 useridLength = 0;
+    db2int32 sessionType = 0;
+    char *name = "bobSmith";
+    int len = strlen( name );
+    rval = fnsS.db2secGetAuthIDs( name,
+                                  len,
+                                  "",
+                                  0,
+                                  0,
+                                  "",
+                                  0,
+                                  NULL,
+                                  authID,
+                                  &authIDLength,
+                                  sauthID,
+                                  &sauthIDLength,
+                                  userid,
+                                  &useridLength,
+                                  &sessionType,
+                                  &errMsg,
+                                  &msgLen );
+                               
+    ct_test( pTest, rval == DB2SEC_PLUGIN_OK && !strncmp( name, authID, len ) && !strncmp( name, sauthID, len ) && !strncmp( name, userid, len ) );
+}
+
+void testGetAuthIDsBAD( Test *pTest )
+{
+    int rval = 0;
+    db2int32 msgLen = 0;
+    char *errMsg = NULL;
+    char authID[32]; /* Going off of SQL_AUTHID_SZ limit */
+    db2int32 authIDLength = 0;
+    char sauthID[32]; /* Going off of SQL_AUTHID_SZ limit */
+    db2int32 sauthIDLength = 0;
+    char userid[32]; /* Going off of SQL_AUTHID_SZ limit */
+    db2int32 useridLength = 0;
+    db2int32 sessionType = 0;
+    /* What makes this bad is a username longer then allowed, so it should return BADUSER  */
+    char *name = "ReallyLongUserNameLongerThen32Char";
+    rval = fnsS.db2secGetAuthIDs( name,
+                                  strlen( name ),
+                                  "",
+                                  0,
+                                  0,
+                                  "",
+                                  0,
+                                  NULL,
+                                  authID,
+                                  &authIDLength,
+                                  sauthID,
+                                  &sauthIDLength,
+                                  userid,
+                                  &useridLength,
+                                  &sessionType,
+                                  &errMsg,
+                                  &msgLen );
+                               
+    ct_test( pTest, rval == DB2SEC_PLUGIN_BADUSER );
+}
+
 void testUserUpperExists( Test *pTest )
 {
     db2int32 version = 1;
@@ -317,6 +408,40 @@ void testGetLoginContextEffictive( Test *pTest )
                                               userid,
                                               &useridLength,
                                               DB2SEC_PLUGIN_EFFECTIVE_USER_NAME,
+                                              NULL, /* domain */
+                                              NULL, /* domain length */
+                                              NULL, /* domain type */
+                                              NULL, /* database name */
+                                              0 , /* database name length */
+                                              NULL, /* token */
+                                              &errMsg,
+                                              &msgLen );
+    ct_test( pTest, ( rval == DB2SEC_PLUGIN_OK ) && ( strcmp( authID, pwd->pw_name ) == 0 ) && ( strcmp( userid, pwd->pw_name ) == 0 ) );
+
+}
+
+void testGetLoginContextReal( Test *pTest )
+{
+    db2int32 msgLen = 0;
+    char *errMsg = NULL;
+    struct passwd *pwd= NULL;
+    char authID[32]; /* Going off of SQL_AUTHID_SZ limit */
+    db2int32 authIDLength = 0;
+    char userid[32]; /* Going off of SQL_AUTHID_SZ limit */
+    db2int32 useridLength = 0;
+    int rval = 0;
+
+    if( ( pwd = getpwuid(geteuid()) ) == NULL )
+    {
+        ct_test( pTest, /* FAILED to get euid */ 0 );
+        return;
+    }
+
+    rval = fnsC.db2secGetDefaultLoginContext( authID,
+                                              &authIDLength,
+                                              userid,
+                                              &useridLength,
+                                              DB2SEC_PLUGIN_REAL_USER_NAME,
                                               NULL, /* domain */
                                               NULL, /* domain length */
                                               NULL, /* domain type */
@@ -612,6 +737,47 @@ void testGroupBadUser( Test *pTest )
     if( username ) free( username );
 }
 
+void testGroupUserCase( Test *pTest )
+{
+    db2int32 version = 1;
+    int rval = 0;
+    db2int32 msgLen = 0;
+    char *errMsg = NULL;
+    char *groupList = NULL;
+    db2int32 numGroups = 0;
+    char *username = (char*)GetEntryFromFile( test_conf, "username" );
+    if( username )
+    {
+        username = (char *)strdup( username );
+        username[0] = toupper( username[0] );
+    }
+    char *show_groups = NULL;
+    rval = fnsG.db2secGetGroupsForUser( username?username:"bad", //authid
+                                        username?strlen(username):0, //authidlen
+                                        NULL, //userid
+                                        0, //useridlen
+                                        NULL, //usernamespace
+                                        0, //usernamespacelen
+                                        0, //usernamespacetype
+                                        NULL, //dbname
+                                        0, //dbnamlen
+                                        NULL, //token
+                                        0, //tokentype
+                                        0, //location
+                                        NULL, //authpluginname
+                                        0, //authpluginnamelen
+                                        (void **)&groupList,
+                                        &numGroups,
+                                        &errMsg, 
+                                        &msgLen);
+    ct_test( pTest, rval == DB2SEC_PLUGIN_OK );
+    fnsG.db2secFreeGroupListMemory( groupList,
+                                    &errMsg,
+                                    &msgLen );
+
+    if( username ) free( username );
+}
+
 void testCloseLib( Test *pTest )
 {
     int rc = 0;
@@ -750,7 +916,10 @@ Test *GetServerTests()
     rc = ct_addTestFun( pTest, testAuthNoPWBAD );
     rc = ct_addTestFun( pTest, testAuthGood );
     rc = ct_addTestFun( pTest, testUserExists );
+    rc = ct_addTestFun( pTest, testBadUserExists );
     rc = ct_addTestFun( pTest, testUserUpperExists );
+    rc = ct_addTestFun( pTest, testGetAuthIDs );
+    rc = ct_addTestFun( pTest, testGetAuthIDsBAD );
     assert( rc );
     return pTest;
 }
@@ -763,6 +932,7 @@ Test *GetClientTests()
 {
     Test* pTest = ct_create( "Sys-auth library Client", NULL );
     bool rc = ct_addTestFun( pTest, testGetLoginContextEffictive );
+    rc = ct_addTestFun( pTest, testGetLoginContextReal );   
     assert( rc );
     return pTest;
 }
@@ -776,6 +946,7 @@ Test *GetGroupTests()
     rc = ct_addTestFun( pTest, testGroupMember );
     rc = ct_addTestFun( pTest, testGroupNotMember );
     rc = ct_addTestFun( pTest, testGroupBadUser );
+    rc = ct_addTestFun( pTest, testGroupUserCase );
     assert( rc );
     return pTest;
 }

@@ -12,7 +12,7 @@ proc prep { } {
     runOn $backup_server "cd $backup_dir && if test -f DB2_sys-auth.tar.gz ; then cp DB2_sys-auth.tar.gz DB2_sys-auth.bak.$version.`date +%Y-%m-%d_%H-%M-%S` ; fi"
     runOn $main_box "rm -rf ~/binaries/*"
     spawn bash
-    send "make distclean; cd .. ; tar -cvzf DB2_sys-auth.tar.gz DB2_sys-auth/* && scp DB2_sys-auth.tar.gz $backup_server:$backup_dir/\r" 
+    send "./bootstrap.sh ; make distclean; cd .. ; tar -cvzf DB2_sys-auth.tar.gz DB2_sys-auth/* && scp DB2_sys-auth.tar.gz $backup_server:$backup_dir/\r" 
     eat
     send "exit\r"
     expect EOF

@@ -23,3 +23,5 @@ It seems AIX is the only platform guaranteed to set __64BIT__, so manually set t
 
 DB2 loads the section_init function, that returns a struct with funciton pointers to what it really uses. 
 
+
+Tested on v9.1, worked jsut fine. Nothing seems to have changed as far as the plugin is concerned.

@@ -111,3 +111,4 @@ Now changelog will work off the version.
 
 1.0.14 ( 1-24-07 ):
 * Final set of coverity fixes, mostly in the test code.     
+* 100% code complete test_all, and various fringe cases. 42 tests all told.
