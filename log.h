@@ -40,7 +40,7 @@
 /* The internal max line length includes room for a line
  * separator (CR/LF on Windows, LF on UNIX) and a NULL byte.
  */
-#define MAX_LINE_LENGTH     1027
+#define MAX_LINE_LENGTH     (1024 + 3)
 
 // Things that should log even if logging is turned off ( debug-level = 0 )
 #define SLOG_CRIT   0

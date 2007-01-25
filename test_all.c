@@ -153,7 +153,8 @@ void testAuthBadPW( Test *pTest )
     int rval = 0;
     db2int32 msgLen = 0;
     char *errMsg = NULL;
-    rval = fnsS.db2secValidatePassword( "root", 5, NULL, 0, 0, "bad", 3, NULL, 0, NULL, 0, 0, NULL, &errMsg, &msgLen);
+    rval = fnsS.db2secValidatePassword( "root", 5, NULL, 0, 0, "bad", 3, 
+	    NULL, 0, NULL, 0, 0, NULL, &errMsg, &msgLen);
     ct_test( pTest, rval == DB2SEC_PLUGIN_BADPWD );
 }
 
@@ -163,7 +164,8 @@ void testAuthBadUser( Test *pTest )
     int rval = 0;
     db2int32 msgLen = 0;
     char *errMsg = NULL;
-    rval = fnsS.db2secValidatePassword( "%123", 3, NULL, 0, 0, "bad", 3, NULL, 0, NULL, 0, 0, NULL, &errMsg, &msgLen);
+    rval = fnsS.db2secValidatePassword( "%123", 3, NULL, 0, 0, "bad", 3, 
+	    NULL, 0, NULL, 0, 0, NULL, &errMsg, &msgLen);
     ct_test( pTest, rval == DB2SEC_PLUGIN_BADUSER );
 }
 
@@ -333,7 +335,10 @@ void testGetAuthIDs( Test *pTest )
                                   &errMsg,
                                   &msgLen );
                                
-    ct_test( pTest, rval == DB2SEC_PLUGIN_OK && !strncmp( name, authID, len ) && !strncmp( name, sauthID, len ) && !strncmp( name, userid, len ) );
+    ct_test( pTest, rval == DB2SEC_PLUGIN_OK && 
+	    !strncmp( name, authID, len ) && 
+	    !strncmp( name, sauthID, len ) && 
+	    !strncmp( name, userid, len ) );
 }
 
 void testGetAuthIDsBAD( Test *pTest )
@@ -348,7 +353,9 @@ void testGetAuthIDsBAD( Test *pTest )
     char userid[32]; /* Going off of SQL_AUTHID_SZ limit */
     db2int32 useridLength = 0;
     db2int32 sessionType = 0;
-    /* What makes this bad is a username longer then allowed, so it should return BADUSER  */
+    /*
+     * What makes this bad is a username longer then allowed, so it 
+     * should return BADUSER  */
     char *name = "ReallyLongUserNameLongerThen32Char";
     rval = fnsS.db2secGetAuthIDs( name,
                                   strlen( name ),
@@ -416,7 +423,9 @@ void testGetLoginContextEffictive( Test *pTest )
                                               NULL, /* token */
                                               &errMsg,
                                               &msgLen );
-    ct_test( pTest, ( rval == DB2SEC_PLUGIN_OK ) && ( strcmp( authID, pwd->pw_name ) == 0 ) && ( strcmp( userid, pwd->pw_name ) == 0 ) );
+    ct_test( pTest, ( rval == DB2SEC_PLUGIN_OK ) && 
+	    ( strcmp( authID, pwd->pw_name ) == 0 ) && 
+	    ( strcmp( userid, pwd->pw_name ) == 0 ) );
 
 }
 
@@ -450,7 +459,9 @@ void testGetLoginContextReal( Test *pTest )
                                               NULL, /* token */
                                               &errMsg,
                                               &msgLen );
-    ct_test( pTest, ( rval == DB2SEC_PLUGIN_OK ) && ( strcmp( authID, pwd->pw_name ) == 0 ) && ( strcmp( userid, pwd->pw_name ) == 0 ) );
+    ct_test( pTest, ( rval == DB2SEC_PLUGIN_OK ) && 
+	    ( strcmp( authID, pwd->pw_name ) == 0 ) && 
+	    ( strcmp( userid, pwd->pw_name ) == 0 ) );
 
 }
 
@@ -544,7 +555,10 @@ void testGroupMember( Test *pTest )
         ptr = &groupList[1];
         do 
         {   
-            // Need to store off the next groups size first, before we overwrite with '\0'
+            /*
+	     * Need to store off the next groups size first, 
+	     * before we overwrite with '\0'
+	     */
             int oldsize = groupsize;
             groupsize = (int)ptr[oldsize];
             ptr[ oldsize ] = '\0';
@@ -614,7 +628,10 @@ void testGroupNotMember( Test *pTest )
         ptr = &groupList[1];
         do 
         {   
-            // Need to store off the next groups size first, before we overwrite with '\0'
+	    /*
+             * Need to store off the next groups size first, 
+	     * before we overwrite with '\0'
+	     */
             int oldsize = groupsize;
             groupsize = (int)ptr[oldsize];
             ptr[ oldsize ] = '\0';
@@ -680,10 +697,14 @@ void testGroupMemberList( Test *pTest )
         int groupsize = 0;
         groupsize = (int)groupList[0];
         ptr = &groupList[1];
-        fprintf( stdout, "User <%s> is in the following groups:\n", username?username:"bad" );
+        fprintf( stdout, "User <%s> is in the following groups:\n", 
+		username?username:"bad" );
         do 
         {   
-            // Need to store off the next groups size first, before we overwrite with '\0'
+	    /*
+             * Need to store off the next groups size first, 
+	     * before we overwrite with '\0'
+	     */
             int oldsize = groupsize;
             groupsize = (int)ptr[oldsize];
             ptr[ oldsize ] = '\0';
@@ -786,7 +807,8 @@ void testCloseLib( Test *pTest )
         rc = dlclose( handle );
         ct_test( pTest, rc == 0 );
         if( rc )
-            fprintf( stderr, "%s: dlclose error <%s>\n", __FUNCTION__, dlerror() );
+            fprintf( stderr, "%s: dlclose error <%s>\n", __FUNCTION__, 
+		    dlerror() );
     }
     else
         ct_test( pTest, /* NO HANDLE */ 0 );
