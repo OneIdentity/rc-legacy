@@ -10,6 +10,7 @@
  * 
  * Modified: 
  *        By Seth Ellsworth @ Quest.
+ * (c) 2007 Quest Software, Inc. All rights reserved.
  *             
  */
 #include "ctest.h"

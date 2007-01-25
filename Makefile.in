@@ -10,8 +10,9 @@
 #*          PAM 32/64 bit authentication.
 #*
 #* Legal:   This script is provided under the terms of the
-#*          "Vintela Resouce Central License" avaliable in
-#*          the included LICENSE file.
+#*          "Resouce Central License" avaliable at
+#*          http://rc.vintela.com/topics/db2_sys-auth/license.php
+#*          or in the included LICENSE file.
 #********************************************************************/
 
 # The compile options were made for gcc

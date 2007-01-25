@@ -1,4 +1,5 @@
 #!/bin/sh
+# (c) 2007 Quest Software, Inc. All rights reserved.
 
 # Uncomment for debug info.
 # set -x
@@ -145,5 +146,5 @@ echo ""
 echo ""
 echo "If the instance partitioned the install script will needs to be run on each machine that hosts a partition."
 echo ""
-echo "Any issues, please use the general mailing list general@rc.vintela.com"
-echo "after signing up at http://rc.vintela.com/mailman/listinfo/general"
+echo "Any issues, please ask for help in the general Resource Central forums at"
+echo "   http://vintela.inside.quest.com/forum.jspa?forumID=78"

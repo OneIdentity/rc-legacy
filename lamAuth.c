@@ -1,5 +1,5 @@
 /********************************************************************
-* Copyright (c) 2005 Quest Software, Inc.
+* Copyright (c) 2007 Quest Software, Inc.
 * All rights reserved.
 *
 * Author:  Seth Ellsworth
@@ -10,8 +10,9 @@
 *          root when run by non-root users.
 *
 * Legal:   This script is provided under the terms of the
-*          "Vintela Resouce Central License" avaliable in
-*          the included LICENSE file.
+*          "Resouce Central License" avaliable at
+*          http://rc.vintela.com/topics/db2_sys-auth/license.php
+*          or in the included LICENSE file.
 ********************************************************************/
 
 

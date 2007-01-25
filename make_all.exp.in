@@ -1,4 +1,5 @@
 #!/usr/bin/expect -f
+# (c) 2007 Quest Software, Inc. All rights reserved.
 set prompt "(%|#|\\$|>)( |\\t)*$"
 set main_box "sethe.vintela.com"
 set timeout 60

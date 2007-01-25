@@ -1,3 +1,4 @@
+/* (c) 2007 Quest Software, Inc. All rights reserved. */
 #include <stdio.h>
 #include <dlfcn.h>
 #include <assert.h>

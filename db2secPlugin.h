@@ -25,6 +25,7 @@
 /**********************************************************************
 * Modified by Seth Ellsworth <seth.ellsworth@quest.com> for building 
 * the VAS DB2 plugin. Namely, trimming out unneeded files/declarations. 
+* (c) 2007 Quest Software, Inc. All rights reserved.
 ***********************************************************************/
 
 

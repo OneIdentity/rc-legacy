@@ -1,10 +1,10 @@
 /********************************************************************
-* Copyright (c) 2005 Vintela, Inc.
+* (c) 2007 Quest Software, Inc. All rights reserved.
 * All rights reserved.
 *
 * Author:  Seth Ellsworth
 * 
-* Company: Vintela, Inc.
+* Company: Quest Software, Inc.
 * 
 * Purpose: Try a user/pw against PAM.
 *
@@ -12,9 +12,10 @@
 *          If you get a warning on line 71, probably means you need
 *          to set the OS correctly in the Makefile.
 *
-* Legal:   This script is provided under the terms of the 
-*          "Vintela Resouce Central License" avaliable at
-*          http://rc.vintela.com/topics/openssh/license.php#vintela
+* Legal:   This script is provided under the terms of the
+*          "Resouce Central License" avaliable at
+*          http://rc.vintela.com/topics/db2_sys-auth/license.php
+*          or in the included LICENSE file.
 ********************************************************************/
 
 #include <stdio.h>

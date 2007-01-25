@@ -11,7 +11,8 @@
  * 
  * Modified: 
  *       By Seth Ellsworth @ Quest.
-*/
+ * (c) 2007 Quest Software, Inc. All rights reserved.
+ */
 #ifndef CSUITE_H
 #define CSUITE_H
 

@@ -12,6 +12,7 @@
  *
  * 
  *              Defines a test framework for C projects.
+ * (c) 2007 Quest Software, Inc. All rights reserved.
  */
 #ifndef CTEST_H
 #define CTEST_H

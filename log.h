@@ -1,5 +1,5 @@
 /********************************************************************
-* Copyright (c) 2005 Quest Software, Inc. 
+* (c) 2007 Quest Software, Inc. All rights reserved.
 * Portions of this code are derived from IBM Sample Programs, 
 * (C) Copyright IBM Corp. 1997-2004.
 * All rights reserved.
@@ -12,8 +12,9 @@
 *          DB2 8.2. 
 *
 * Legal:   This script is provided under the terms of the
-*          "Vintela Resouce Central License" avaliable in
-*          the included LICENSE file.
+*          "Resouce Central License" avaliable at
+*          http://rc.vintela.com/topics/db2_sys-auth/license.php
+*          or in the included LICENSE file.
 ********************************************************************/
 
 #ifndef LOG_H
