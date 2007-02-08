@@ -2,7 +2,7 @@
 
 AC_INIT([quest-vasidmap],
 	[0.9.9.]esyscmd((svnversion . /trunk||echo 0)|tr : _|tr -d \\012),
-	[samba@rc.vintela.com])
+	[support@quest.com])
 AM_INIT_AUTOMAKE()
 AC_CONFIG_SRCDIR([vasidmap.c])
 AC_CONFIG_FILES([Makefile])
