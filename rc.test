@@ -23,6 +23,14 @@ else
     installed=false
 fi
 
+if [ x"$1" = x"-runashost" ]; then
+    runashost=true
+    echo "Note: will obtain host/ credentials to run test"
+    shift
+else
+    runashost=false
+fi
+
 if [ $# -gt 0 ]; then
     builddir="$1"
     shift
@@ -49,6 +57,7 @@ trap "rm -rf ${tmpdir}" 0
 expfile=${tmpdir}/expfile
 outfile=${tmpdir}/outfile
 
+if $runashost; then
 #-- obtain host/ TGT so these tests can run automated
 krb5ccfile=${tmpdir}/cc
 ${SUDO} rm -f ${krb5ccfile}
@@ -73,6 +82,7 @@ $vastool klist || {
     $vastool klist || fatal "cannot get VAS to see the host/ ccache"
 }
 set +x
+fi
 
 #-- used SID/GID/UIDs for testing
 uid=`$vastool list users | awk -F: '{print $3; exit;}'`
