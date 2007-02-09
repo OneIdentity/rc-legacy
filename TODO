@@ -2,5 +2,4 @@ A list of things I know this needs for the move to fully supported:
 
 1) Fix upgrade script for s390x ( no 32-bit directory ).
 2) Make sure the failover auth for non-DB2 testing works on AIX for LAM, so the machien doesn't need PAM setup to function. 
-
-And I get to work on DB2 UDB v9.1 this week as well, we shall see if this stuff just works, or if something changed and need a new plugin. 
+3) Make a 64-bit test_all as well. 

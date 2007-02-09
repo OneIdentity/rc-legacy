@@ -30,22 +30,27 @@ fi
         
 
 echo "Copying over the 32-bit library."
+LIBFILE=sys-auth.so
+LIBFILE32=sys-auth32.so.@VERSION@
+LIBFILE64=sys-auth64.so.@VERSION@
 
 rm -f ~/sqllib/security32/plugin/group/sys-auth.so
-cp sys-auth32.so.@VERSION@ ~/sqllib/security32/plugin/group/sys-auth.so
 rm -f ~/sqllib/security32/plugin/server/sys-auth.so
-cp sys-auth32.so.@VERSION@ ~/sqllib/security32/plugin/server/sys-auth.so
 rm -f ~/sqllib/security32/plugin/client/sys-auth.so
-cp sys-auth32.so.@VERSION@ ~/sqllib/security32/plugin/client/sys-auth.so
+cp ${LIBFILE32} ~/sqllib/security32/plugin/${LIBFILE32}
+ln -s ~/sqllib/security32/plugin/${LIBFILE32} ~/sqllib/security32/plugin/server/${LIBFILE}
+ln -s ~/sqllib/security32/plugin/${LIBFILE32} ~/sqllib/security32/plugin/client/${LIBFILE}
+ln -s ~/sqllib/security32/plugin/${LIBFILE32} ~/sqllib/security32/plugin/group/${LIBFILE}
 
 if [ -f sys-auth64.so.@VERSION@ -a -d ~/sqllib/security64 ] ; then
     echo "Copying over the 64-bit library."
-    rm -f ~/sqllib/security64/plugin/group/sys-auth.so
-    rm -f ~/sqllib/security64/plugin/server/sys-auth.so
-    rm -f ~/sqllib/security64/plugin/client/sys-auth.so
-    cp sys-auth64.so.@VERSION@ ~/sqllib/security64/plugin/group/sys-auth.so
-    cp sys-auth64.so.@VERSION@ ~/sqllib/security64/plugin/server/sys-auth.so
-    cp sys-auth64.so.@VERSION@ ~/sqllib/security64/plugin/client/sys-auth.so
+    rm -f ~/sqllib/security64/plugin/group/${LIBFILE}
+    rm -f ~/sqllib/security64/plugin/server/${LIBFILE}
+    rm -f ~/sqllib/security64/plugin/client/${LIBFILE}
+    cp ${LIBFILE64} ~/sqllib/security64/plugin/${LIBFILE64}
+    ln -s ~/sqllib/security64/plugin/${LIBFILE64} ~/sqllib/security64/plugin/server/${LIBFILE}
+    ln -s ~/sqllib/security64/plugin/${LIBFILE64} ~/sqllib/security64/plugin/client/${LIBFILE}
+    ln -s ~/sqllib/security64/plugin/${LIBFILE64} ~/sqllib/security64/plugin/group/${LIBFILE}
 fi
 
 echo "Upgraded the library files, the instance can be started now."

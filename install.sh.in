@@ -90,16 +90,17 @@ if [ -d ${PLUGINPATH32} ] ; then
     rm -f ${PLUGINPATH32}/*/${LIBFILE32}
 
     echo "Now copy over the ${LIBFILE32} to ${PLUGINPATH32}/server&client&group/${LIBFILE}."
-    cp ${LIBFILE32} ${PLUGINPATH32}/server/${LIBFILE}
-    cp ${LIBFILE32} ${PLUGINPATH32}/client/${LIBFILE}
-    cp ${LIBFILE32} ${PLUGINPATH32}/group/${LIBFILE}
+    cp ${LIBFILE32} ${PLUGINPATH32}/${LIBFILE32}
+    ln -s ${PLUGINPATH32}/${LIBFILE32} ${PLUGINPATH32}/server/${LIBFILE}
+    ln -s ${PLUGINPATH32}/${LIBFILE32} ${PLUGINPATH32}/client/${LIBFILE}
+    ln -s ${PLUGINPATH32}/${LIBFILE32} ${PLUGINPATH32}/group/${LIBFILE}
     echo "Copy ${AUTH32} to ${PLUGINPATH32}/${AUTHFILE32}"
     cp ${AUTH32} ${PLUGINPATH32}/${AUTHFILE32}
     echo "And fix the ownerships/permissions. WARNING!!! ${PLUGINPATH32}/${AUTHFILE32} is setuid root becasue it has to be to do authentications. Just so you know."
-    chown ${1} ${PLUGINPATH32}/server/${LIBFILE} ${PLUGINPATH32}/client/${LIBFILE} ${PLUGINPATH32}/group/${LIBFILE}
-    chmod 0755 ${PLUGINPATH32}/server/${LIBFILE} ${PLUGINPATH32}/client/${LIBFILE} ${PLUGINPATH32}/group/${LIBFILE}
+    chown ${1} ${PLUGINPATH32}/${LIBFILE32}
+    chmod 0555 ${PLUGINPATH32}/${LIBFILE32}
     chown root ${PLUGINPATH32}/${AUTHFILE32} 
-    chmod 4755 ${PLUGINPATH32}/${AUTHFILE32} 
+    chmod 4555 ${PLUGINPATH32}/${AUTHFILE32} 
 fi
 
 if [ "${TYPE}" = "64" ]
@@ -114,16 +115,17 @@ then
     rm -f ${PLUGINPATH64}/*/${LIBFILE64}
 	
     echo "Now copy over the ${LIBFILE64} to ${PLUGINPATH64}/server&client&group/${LIBFILE}."
-	cp ${LIBFILE64} ${PLUGINPATH64}/server/${LIBFILE}
-	cp ${LIBFILE64} ${PLUGINPATH64}/client/${LIBFILE}
-	cp ${LIBFILE64} ${PLUGINPATH64}/group/${LIBFILE}
+	cp ${LIBFILE64} ${PLUGINPATH64}/${LIBFILE64}
+    ln -s ${PLUGINPATH64}/${LIBFILE64} ${PLUGINPATH64}/server/${LIBFILE}
+    ln -s ${PLUGINPATH64}/${LIBFILE64} ${PLUGINPATH64}/client/${LIBFILE}
+    ln -s ${PLUGINPATH64}/${LIBFILE64} ${PLUGINPATH64}/group/${LIBFILE}
     echo "Copy ${AUTH64} to ${PLUGINPATH64}/${AUTHFILE64}"
 	cp ${AUTH64} ${PLUGINPATH64}/${AUTHFILE64}
     echo "And fix the ownerships/permissions. WARNING!!! ${PLUGINPATH64}/${AUTHFILE64} is setuid root becasue it has to be to do authentications. Just so you know."
-	chown ${1} ${PLUGINPATH64}/server/${LIBFILE} ${PLUGINPATH64}/client/${LIBFILE} ${PLUGINPATH64}/group/${LIBFILE}
-	chmod 0755 ${PLUGINPATH64}/server/${LIBFILE} ${PLUGINPATH64}/client/${LIBFILE} ${PLUGINPATH64}/group/${LIBFILE}
+	chown ${1} ${PLUGINPATH64}/${LIBFILE64}
+	chmod 0555 ${PLUGINPATH64}/${LIBFILE64}
 	chown root ${PLUGINPATH64}/${AUTHFILE64} 
-	chmod 4755 ${PLUGINPATH64}/${AUTHFILE64} 
+	chmod 4555 ${PLUGINPATH64}/${AUTHFILE64} 
 fi
 
 echo ""

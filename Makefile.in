@@ -59,7 +59,7 @@ clean:
 	rm -f *.o *.so.@VERSION@ pamAuth32 pamAuth64 lamAuth32 lamAuth64 test/*.o test_all
 
 distclean: clean
-	rm -rf config.h config.log config.status Makefile upgrade.sh install.sh install DB2*
+	rm -rf config.h config.log config.status Makefile upgrade.sh install.sh install DB2* Troubleshooting autom4te.cache
 
 $(PROG32).so.@VERSION@: $(PROG32).o log32.o
 	$(CC) $(LDFLAGS) -o $(PROG32).so.@VERSION@ $(PROG32).o vsyslog32.o log32.o
@@ -112,6 +112,7 @@ vsyslog64.o: vsyslog.c vsyslog.h
 bin_dist: all test_all
 	@rm -rf DB2_sys-auth
 	@mkdir DB2_sys-auth
+	@chmod +x upgrade.sh install.sh
 @AIX_TRUE@	@cp sys-auth32.so.@VERSION@ sys-auth64.so.@VERSION@ upgrade.sh install.sh INSTALL README LICENSE pamAuth32 pamAuth64 lamAuth32 lamAuth64 NEWS AUTHORS TESTING ChangeLog pam.conf.aix test_all test.conf Troubleshooting DB2_sys-auth/ 
 @AIX_FALSE@@B64_TRUE@	@cp sys-auth32.so.@VERSION@ sys-auth64.so.@VERSION@ upgrade.sh install.sh INSTALL LICENSE README pamAuth32 pamAuth64 NEWS AUTHORS TESTING ChangeLog pam.conf.aix test_all test.conf Troubleshooting DB2_sys-auth/
 @AIX_FALSE@@B64_FALSE@	@cp sys-auth32.so.@VERSION@ upgrade.sh install.sh INSTALL README LICENSE pamAuth32 NEWS AUTHORS TESTING ChangeLog pam.conf.aix test_all test.conf Troubleshooting DB2_sys-auth/

@@ -133,12 +133,4 @@ AC_HEADER_STDC
 AC_SUBST(VERSION)
 
 dnl read Makefile.in and write Makefile
-AC_OUTPUT(Makefile)
-AC_OUTPUT(install.sh)
-AC_OUTPUT(upgrade.sh)
-AC_OUTPUT(Troubleshooting)
-chmod u+x install.sh upgrade.sh
-if test -f make_all.exp.in ; then
-    AC_OUTPUT(make_all.exp)
-    chmod u+x make_all.exp
-fi
+AC_OUTPUT(Makefile Troubleshooting install.sh upgrade.sh make_all.exp)

@@ -349,7 +349,7 @@ int vas_db2_plugin_is_user_in_group( const char* username, struct group *grp,
 
     while( *members && ( retval != SUCCESS ) ) 
     {
-        if( strcmp(username, *members) == 0 )
+        if( strcasecmp(username, *members) == 0 )
             retval = SUCCESS;
         ++members;
     }    

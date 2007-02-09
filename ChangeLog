@@ -112,3 +112,7 @@ Now changelog will work off the version.
 1.0.14 ( 1-24-07 ):
 * Final set of coverity fixes, mostly in the test code.     
 * 100% code complete test_all, and various fringe cases. 42 tests all told.
+* Added case insensitive group membership search. Fixes issue with control/access groups
+  and VAS users whos names are uppercased. 
+* Moved to sym links for the libraris. This makes telling what version is 
+  installed much easier. 
