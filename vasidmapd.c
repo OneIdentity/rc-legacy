@@ -460,6 +460,7 @@ FINISHED:
 #define FILTER_TAG_AND              0xA0
 #define FILTER_TAG_OR               0xA1
 #define FILTER_TAG_EQUALITY_MATCH   0xA3
+#define FILTER_TAG_PRESENT          0x87
 
 /* Handles an LDAP search request, and constructs a reply. */
 static int vlmapd_search(vas_ctx_t *vasctx, vas_id_t *vasid, 
@@ -485,7 +486,21 @@ static int vlmapd_search(vas_ctx_t *vasctx, vas_id_t *vasid,
         DEBUG(3, "search filter tag %02x\n", ft);
 
 	switch (ft) {
-	case FILTER_TAG_EQUALITY_MATCH:
+
+	case FILTER_TAG_PRESENT: /* 87 */
+		nl = sizeof name;
+		ret = ber_scanf(be, "s", name, &nl);
+		if (ret == -1) {
+                        warnx("malformed AttributeDescription");
+			return -1;
+		}
+                DEBUG(3, "(%.*s=*)\n", nl, name);
+		/* XXX if name=="objectclass" then we should dump all 
+		 * objects? */
+		ret = search_result_ok(msgid, reply);
+		break;
+	       
+	case FILTER_TAG_EQUALITY_MATCH: /* a3 */
 		/* equality check what is it about */
 		nl = sizeof name;
                 vl = sizeof val;
@@ -506,7 +521,7 @@ static int vlmapd_search(vas_ctx_t *vasctx, vas_id_t *vasid,
 		ret = search_result_ok(msgid, reply);
 		break;
 
-	case FILTER_TAG_AND:
+	case FILTER_TAG_AND: /* a0 */
                 berep = ber_alloc_t(BER_USE_DER);
                 if (berep == NULL) {
                         warnx("ber_alloc_t failed");
