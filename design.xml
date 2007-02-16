@@ -1,0 +1,549 @@
+<?xml version='1.0'?>
+<!DOCTYPE rfc SYSTEM 'rfcXXXX.dtd' [
+  <!ENTITY rfc2743 PUBLIC '' 'http://xml.resource.org/public/rfc/bibxml/reference.RFC.2743.xml'>
+  <!ENTITY rfc2744 PUBLIC '' 'http://xml.resource.org/public/rfc/bibxml/reference.RFC.2744.xml'>
+]>
+
+<!-- See http://xml.resource.org/ on how to print this document -->
+
+<?rfc compact='yes'?>
+<?rfc notedraftinprogress='yes'?>
+<?rfc private='Design of the pluggable GSSAPI library'?>
+<?rfc footer='(c) 2007 Quest Software, Inc. All rights reserved.'?>
+<?rfc toc='yes'?>
+<?rfc tocappendix='no'?>
+
+<rfc ipr="full3978" docname="draft-leonard-pgssapi-design-03">
+  <front>
+    <title abbrev="PGSSAPI library design">
+	Design of the pluggable GSSAPI (PGSSAPI) library
+    </title>
+
+    <author initials="D" surname="Leonard" fullname="David Leonard">
+	<organization>Quest Software, Inc.</organization>
+	<postal>
+	    <street>Level 2, 303 Adelaide Street</street>
+	    <city>Brisbane</city>
+	    <region>Queensland</region>
+	    <code>4000</code>
+	    <country>AU</country>
+	</postal>
+	<phone>+61 7 3023 5133</phone>
+	<email>David.Leonard@quest.com</email>
+	<uri>http://www.quest.com/</uri>
+    </author>
+
+    <date month="February" year="2007" />
+
+    <area>Applications</area>
+    <keyword>GSSAPI</keyword>
+    <keyword>pluggable</keyword>
+
+    <abstract>
+	<t>This memo presents the design of a pluggable GSSAPI library,
+	    which dispatches GSSAPI operations to mechanisms implemented
+	    in other libraries or files</t>
+    </abstract>
+
+    <note title='Quest Software internal'>
+	<t>This document is currently in Draft status. 
+	   Do not distribute outside of Quest Software.</t>
+    </note>
+  </front>
+
+  <middle>
+
+    <section title='Introduction'>
+        <t>
+	    This document is a design for a pluggable GSSAPI library.
+	    The PGSSAPI library is intended for application developers
+	    who wish to allow their application to make use of
+	    arbitrary GSSAPI implementations. Previously, this was
+	    not generally possible because the GSSAPI 
+	    <xref target='RFC2743' />,<xref target='RFC2744' />
+	    only specifies language interfaces, and not an application
+	    binary interface (ABI).
+        </t>
+        <t>
+	    The PGSSAPI language interface is a superset of the GSSAPI.
+	    The library is able to load other libraries conforming 
+	    to known GSSAPI-based ABIs and act as a configurable GSS 
+	    function dispatcher for the application.
+        </t>
+    </section>
+
+    <section title='Design overview'>
+	<t>
+	    Pluggable-GSS provides PAM-like configuration to applications 
+	    using the GSSAPI. 
+	    It allows for new GSSAPI mechanisms to be added to applications 
+	    without re-linking.
+	</t>
+
+	<t>
+	    The PGSSAPI library itself has two forms:
+	    <list style='numbers'>
+	      <t>a statically-linkable "application" library with
+	         configuration files indicated by application.</t>
+	      <t>a dynamically-linkable "system" library with a centralised
+	         location for configuration files. This is intended for
+		 inclusion by operating system vendors.</t>
+	    </list>
+	</t>
+
+	<t> 
+	    The following diagram indicates the relationship between various 
+	    executables, files and the dynamically-linkable plugabble GSSAPI 
+	    library "libpgss.so".
+	</t>
+
+	<figure><artwork><![CDATA[
+   +-------------+      +-------------+    
+   | application |      | application |
+   +------+------+      +-+--------+--+    
+          |               |        |
+          v               v        v
+         =======GSSAPI======  ==PGSSAPI==
+               |                   |
+        +------v-------------------v-+
+        |          libpgss.so        |<---- pgss config file 
+        +----+-----------------------+
+             |                      
+             v                      
+        =======GSSAPI=======
+           |            |
+ +---------v------+ +---v-----+
+ |libvas-gssapi.so| |libgss.so|<--- /etc/gss/mech.conf
+ +----------------+ +---------+
+                           |
+                           v
+                      ====mechglue====
+                       |     |     |
+                     +-v-+ +-v-+ +-v-+
+                     |...| |...| |...|
+                     +---+ +---+ +---+
+]]></artwork></figure>
+
+	<t>
+	    Unlike MIT mechglue, PGSS assumes no 'internal' mechanism 
+	    API/ABI. 
+	    Instead, the provider library is expected to expose an
+	    ABI corresponding to the GSSAPI v1 C interface. 
+	    Variations in the ABI are tolerated.
+	</t>
+
+	<t>
+	    In the system version of the PGSS library, default configuration
+	    information is supplied by the file /etc/pgss.d/default. 
+	    See below for details on how application-specific configuration
+	    files are located.
+	</t>
+    </section>
+
+    <section title='Application interface'>
+
+	<t>
+	    To the application, the PGSSAPI is a simple superset of the GSSAPI.
+	    PGSSAPI extends the GSSAPI with a control interface, 
+	    consisting of a single function:
+	</t>
+
+	<figure><artwork><![CDATA[
+  OM_uint32 pgss_ctl(OM_uint32 *minor_ret, const gss_OID mech,
+                OM_uint32 op, gss_buffer_t arg);
+
+  #define PGSS_CTL_GET_CONFIG_ERRORS      0x00000001
+  #define PGSS_CTL_SET_CONFIG_FILE        0x00000002
+  #define PGSS_CTL_SET_EXEC_NAME          0x00000003
+	]]></artwork></figure>
+
+	<t>
+	    The control function serves two purposes. First, to control the
+	    PGSS library itself, and secondly to allow control over
+	    mechanisms that understand the PGSS provider interface
+	    (See <xref target='provider' />).
+        </t>
+
+	<t>
+	    When called with a mechanism of GSS_C_NO_OID, the
+	    operation argument is interpreted in the following ways:
+	<list style='hanging'>
+	    <t hangText='PGSS_CTL_GET_CONFIG_ERRORS'>
+		A human-readable string is returned in the arg buffer
+		describing the last error encountered during the processing
+		of the configuration file. If no error was detected, the
+		buffer's length will be set to zero.
+		This operation always returns GSS_S_SUCCESS.
+		The caller must release the buffer with gss_release_buffer().
+	    </t>
+	    <t hangText='PGSS_CTL_SET_CONFIG_FILE'>
+		This operation sets the path to the configuration file 
+		from the string in the read-only buffer. 
+		See <xref target='configloc' /> for how the configuration file
+		path is normally discovered.
+		Returns GSS_S_SUCCESS on success, or GSS_S_FAILURE if
+		the configuration file has already been read.
+	    </t>
+	    <t hangText='PGSS_CTL_SET_EXEC_NAME'>
+	        Sets the name of the application for use by the 
+		configuration file discovery algorithm.
+		(See <xref target='configloc' />.)
+		Returns GSS_S_SUCCESS on success, or GSS_S_FAILURE if
+		the configuration file has already been read.
+	    </t>
+	</list>
+	</t>
+
+        <t>
+	    If a mechanism OID is provided, the control operation is 
+	    instead dispatched without change directly to a 
+	    provider-specific control function. The control 
+	    function will return GSS_S_UNAVAILABLE if the operation
+	    code is not understood, or if the provider itself does not 
+	    provide a _pgss_provider_ctl() control function.
+	    The function returns GSS_S_BAD_MECH if the mechanism is
+	    unknown or could not be loaded.
+	</t>
+    </section>
+
+    <section anchor='provider' title='Provider interface'>
+	<t> 
+	    Although PGSS does not expect anything more from a 
+	    loaded library than an ABI corresponding to the GSSAPI,
+	    libraries may expose a single control function to allow
+	    for mechanism configuration or extension development.
+        </t>
+
+	<figure><artwork><![CDATA[
+  OM_uint32 _pgss_provider_ctl(OM_uint32 *minor_ret,
+                const gss_OID mech, OM_uint32 op, gss_buffer_t arg);
+
+  #define PGSS_CTL_SET_PARAMETER          0x00000000
+	]]></artwork></figure>
+
+	<t>
+	    If PGSS discovers this function provided by the library, it
+	    will dispatch pgss_ctl() calls on mechanisms provided by that
+	    library.
+        </t>
+	<t>
+	    The provider control function can support
+	    the following optional operation:
+        <list style='hanging'>
+	    <t hangText='PGSS_CTL_SET_PARAMETER'>
+	        Called immediately after the library is loaded, before
+		any other use of the loaded library. 
+		The arg buffer will contain a string containing a single 
+		parameter setting of the form "param=value", or just 
+		"param". If the value needs to be stored by the loaded
+		library it must be copied, as the string storage
+		will be invalidated later.
+		This operation may be called zero or multiple times.
+		It corresponds to the parameter settings from the
+		configuration file. 
+		The function should return GSS_S_UNAVAILABLE if the
+		parameter name is not understood, GSS_S_COMPLETE if the
+		parameter is valid, or GSS_S_FAILURE if the parameter
+		is malformed in some way or causes an error. 
+		If GSS_S_FAILURE is returned, the arg buffer must be
+		replaced with either a releasable string describing what the
+		problem was, or a releasable empty string.
+	    </t>
+	</list>
+	</t>
+
+	<section title='New identifiers'>
+	   <t>
+	       It is intended that PGSSAPI can be used as a platform to
+	       extend the GSSAPI. This can be assisted by using the
+	       pgss_ctl() function to pass encapsulated function calls to 
+	       _pgss_provider_ctl() and using private operation identifiers.
+	   </t>
+	   <t>
+               For new operations, developers should use 32-bit
+               operation integers with the high 24 bits set to a
+               three-character representation of their organisation
+               name.
+	   </t>
+	</section>
+
+    </section>
+
+    <section title='Configuration files'>
+	<t> 
+	    When the PGSS_CTL_GET_CONFIG_ERRORS control operation, or any 
+	    wrapped GSSAPI operation is invoked (eg gss_inquire_mechs()), 
+	    PGSS will immediately read the configuration file and load
+	    required libraries.
+	</t>
+
+	<section title='Determining the configuration file location'
+		 anchor='configloc'>
+	    <t>
+		This section describes the logic in determining
+		which file the PGSS opens to read configuration
+		information.
+	    </t>
+	    <t> 
+		If the PGSS_CTL_SET_CONFIG_FILE operation has
+		set a configuration file path, then use that file,
+		or if the file does not exist, then use the equivalent of
+		an empty file.
+		No further discovery is performed.
+	    </t> 
+	    <t> 
+		Otherwise, a search path for configuration files
+		is determined as follows:
+		If the environment variable PGSS_CONFIG_DIR 
+		is defined and non-empty, then it is used as a search path. 
+		Otherwise, the fixed path /etc/pgss.d is used as the 
+		configuration directory (&lt;confdir&gt;).
+	    </t>
+	    <t> 
+		Next, the application name &lt;name&gt;
+		is determined (see <xref target='appname' />)
+		and an attempt to open the file
+		&lt;confdir&gt;/&lt;name&gt; is made.
+		If this fails, then &lt;confdir&gt;/default is tried.
+		And if this fails, then the equivalent of an empty file 
+		is used.
+	    </t>
+	    <t> 
+		Note:
+		Only one attempt at opening the configuration file may be
+		made. 
+		The configuration file is loaded in a 'lazy' fashion:
+		whenever a gss_* function is called, when the
+		PGSS_CTL_GET_CONFIG_ERRORS operation is invoked on
+		the pgss library, or when any control operation is
+		performed on any mechanism.
+	    </t>
+	</section>
+
+	<section title='Determining the application name'
+	         anchor='appname'>
+	    <t> 
+		The application name is determined in the following order:
+	    </t>
+	    <list style="numbers">
+		<t>if the environment variable PGSS_EXEC_NAME is 
+		    defined and non-empty, use that</t>
+		<t>otherwise, if PGSS_CTL_SET_EXEC_NAME has been called, 
+		    and the last call supplied a non-empty buffer, use that</t>
+		<t>otherwise, if a platform-specific technique to get 
+		    the current executable path is known, use that</t>
+		<t>otherwise, use the empty string</t>
+	    </list>
+	    <t> 
+		Regardless of how the application name is determined, 
+		it is stripped of any prefix up to and including the 
+		last slash ('/') character. 
+	    </t>
+	    <t>
+		If the resulting string is now empty, 
+		then it is replaced with the name 'default'. 
+		This becomes the stripped application name (&lt;name&gt;).
+	    </t>
+	</section>
+
+	<section title='Configuration file grammar'>
+	    <t>
+	       	The configuration file grammar is as follows:
+	    </t>
+	    <list style='hanging'>
+		<t hangText='config-file::'>
+		    ( WSP? config-line EOL )*
+		</t>
+		<t hangText='config-line::'>
+		    ( config-entry WSP? )? ( '#' any-char-except-EOL* )?
+		</t>
+		<t hangText='config-entry::'>
+		    mech-pattern WSP provider-name (WSP parameter)*
+		</t>
+		<t hangText='mech-pattern::'>
+		    mech-atom ( '|' mech-atom )*
+		</t>
+		<t hangText='mech-atom::'>
+		    oid | mech-abbrev | '*'
+		</t>
+		<t hangText='mech-abbrev::'>
+		    identifier | literal
+		</t>
+		<t hangText='provider-name::'>
+		    word | literal
+		</t>
+		<t hangText='parameter::'>
+		    identifier ( '=' ( word | literal )? )?
+		</t>
+		<t hangText='WSP::'>
+		    ( SP | TAB | '\' EOL )+ 
+		</t>
+		<t hangText='oid::'>
+		    ( digit+ '.' )* digit+
+		</t>
+		<t hangText='digit::'>
+		    '0' .. '9'
+		</t>
+		<t hangText='alpha::'>
+		    'A' .. 'Z' | 'a' .. 'z'
+		</t>
+		<t hangText='literal::'>
+		    '"' literal-dq-char* '"' | "'" literal-sq-char* "'"
+		</t>
+		<t hangText='literal-dq-char::'>
+		    '\' any-character | any-char-except-'"'
+		</t>
+		<t hangText='literal-sq-char::'>
+		    '\' any-character | any-char-except-"'"
+		</t>
+		<t hangText='identifier::'>
+		    alpha (alpha | digit | '_')*
+		</t>
+		<t hangText='word::'>
+		    any-printable-char-except-backslash ?
+		</t>
+	    </list>
+
+	    <t>
+		Errors in an individual configuration line, such as 
+		a non-existent library, or parameters with invalid values, 
+		will cause the matching mechanisms to be replaced with an
+		'unavailable' pseudo-mechanism. This pseudo mechanism
+		always returns unavailable errors (GSS_S_UNAVAILABLE).
+	    </t>
+
+	    <t> 
+		All words in the configuration file 
+		may be quoted using single or double quotes so as
+		to include whitespace.
+		Quoted literals may use a backslash character 
+		to quote the immediately following character.
+		A literal backslash may be enterred by entering two of them.
+		Newlines may be escaped anywhere except in comments.
+	    </t>
+	    <t>
+	      	Comments begin with a '#' character and must occur
+		either at the beginning or end of a line.
+	    </t>
+	</section>
+
+	<section title='Parameters'>
+	    <t> 
+		The param[=value] fields in the configuration file
+		are extensible. Unknown parameters are sent to 
+		the library's _pgss_provider_ctl() function if it
+		is available. However, some parameter names are reserved
+		for exclusive use by PGSS, as follows:
+	    </t>
+
+	    <list style='hanging'>
+		<t hangText='type=(lib|include|alias)'>
+		    Describes the type of the provider, defaulting to 'lib'.
+		    The types are:
+		    <list style='hanging'>
+			<t hangText='lib'>A dynamically loaded library</t>
+			<t hangText='include'>Included config file</t>
+			<t hangText='alias'>Re-match as the named OID</t>
+			<t hangText='unavailable'>Dispatch to the
+			     built-in 'unavailable' mechanism.</t>
+		    </list>
+		</t>
+		<t hangText='hide-symbols'>
+		    Configures the visibility of type=lib symbols.
+		    Valid values are 'yes' (default) and 'no'.
+		</t>
+		<t hangText='abi'>
+		    Confgures the ABI for type=lib providers.
+		    Defaults to 'auto', but includes 'gss1', 'gss2', 'gss2u1'.
+		</t>
+	    </list>
+
+	    <t>
+		If the provider supports the PGSSAPI provider API, then 
+		other parameters are passed to it.
+		Otherwise, unknown parameters are considered an error, 
+		and type=unavailable behaviour is forced
+		(i.e. most gss functions will return GSS_S_UNAVAILABLE).
+	    </t>
+	</section>
+
+
+	<figure>
+	    <preamble>An example configuration file:</preamble>
+	    <artwork><![CDATA[
+    # this is a simple config file
+    1.2.840.11354.1.2.2 /usr/lib/libgss.so abi=gssv1
+    1.2.3.4             -                  unavailable 
+    *                   default            type=include
+	    ]]></artwork>
+	</figure>
+
+	<t>
+	    If the configuration file contains a syntax error, then
+	    PGSS treats the config file as if it were empty.
+	</t>
+	<t>
+	    The behaviour of PGSS with an empty configuration file is 
+	    to load no mechanisms: Calling gss_indicate_mechs() will 
+	    return an empty OID set, and most GSS operations will
+	    fail, returning GSS_S_BAD_MECH. 
+	</t>
+
+	<t> 
+	    The PGSS_CTL_GET_CONFIG_ERRORS control can be used to test a 
+	    configuration for applications that cannot tolerate
+	    failures in configuration.
+	    It forces the configuration file to be read immediately.
+	</t>
+
+    </section>
+
+    <section title='Related work'>
+	<t> The GSSAPI C standard [<xref target='RFC2744' />] describes a compile-time 
+	    C interface, and not a binary interface. 
+	    Unix security libraries that implement the GSSAPI require the 
+	    client application to be compiled against the vendor's GSSAPI 
+	    headers for reliable behaviour. 
+	    Regardless, library implementations of GSSAPI are generally 
+	    ABI compatible.  
+	</t>
+	<t>
+	    The GSSAPI standard focuses on the application side of the 
+	    interface, and does not address questions of how mechanism 
+	    implementations may access the application, external
+	    configuration or each other.
+	</t>
+	<section title='MIT mechglue'>
+	<t> 
+	    MIT Kerberos contains an internal API, named mechglue, 
+	    which is suited for managing the several separate GSSAPI 
+	    mechanisms into their single GSSAPI library.
+	</t>
+	<t> Doug Engert has talked about porting GSI to mechglue on the 
+	    <eref target='http://www.stacken.kth.se/lists/heimdal-discuss/2001-11/msg00010.html'>heimdal-discuss</eref> list and on the
+	    <eref target='http://www-unix.globus.org/mail_archive/security/2001/Archive/msg00364.html'>security@globus</eref> list.
+	</t>
+
+	</section>
+	<section title='Solaris libgss'>
+	<t>
+	    Solaris's libgss uses the MIT mechglue interface with 
+	    a configuration file at /etc/gss/mech to select 
+	    dynamically loadable mechanism libraries.
+	    <eref target='http://src.opensolaris.org/source/xref/netvirt/usr/src/lib/libgss/README.spi' />
+	</t>
+	<t> 
+	    HP-UX have adopted sun's libgss (available in B.11.00).
+	</t>
+	</section>
+
+    </section>
+  </middle>
+
+  <back>
+      <references>
+	  &rfc2743;
+	  &rfc2744;
+      </references>
+  </back>
+</rfc>
