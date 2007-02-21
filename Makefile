@@ -15,6 +15,7 @@ OBJS=	pgss-config.o \
 	pgss-getprogname.o \
 	pgss-oidstr.o \
 	pgss-gss2.o \
+	pgss-dlprov.o \
 	test.o
 
 CPPFLAGS=	-I.

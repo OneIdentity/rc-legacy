@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <pgssapi.h>
+#include "pgss-common.h"
 #include "pgss-config.h"
 #include "pgss-dispatch.h"
 #include "pgss-gss2.h"
@@ -16,8 +17,6 @@ struct mechconf {
 };
 
 #define MAX_OIDS	64
-#define lengthof(a)	(sizeof (a)/sizeof (a)[0])
-#define new(T) 		((T *)malloc(sizeof (T)))
 #define iseol(ch)	((ch) == '\n' || (ch) == EOF || (ch) == '#')
 
 /*
@@ -490,4 +489,15 @@ _pgss_config_get_param(const struct config *cfg, const char *key)
 	    return value;
     }
     return NULL;
+}
+
+int
+_pgss_config_load(struct config *cfg)
+{
+    if (cfg->dispatch != NULL) {
+    	cfg->dispatch = _pgss_dl_provider(cfg);
+	if (cfg->dispatch == NULL)
+	    return -1;
+    }
+    return 0;
 }

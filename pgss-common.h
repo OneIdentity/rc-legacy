@@ -14,3 +14,6 @@ char *basename(const char *);
 const char *getprogname(void);
 #endif
 
+#define lengthof(a)     (sizeof (a)/sizeof (a)[0])
+#define new(T)          ((T *)malloc(sizeof (T)))
+

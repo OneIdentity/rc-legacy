@@ -309,7 +309,15 @@ typedef OM_uint32 (*gss_unseal_t)
 	       int *              /* qop_state */
 	      );
 
-struct pgss_diapatch {
+typedef OM_uint32 (*pgss_ctl_t)
+	      (OM_uint32 *,       /* minor_status */
+	       gss_OID,           /* mechanism */
+	       OM_uint32,         /* operation */
+	       gss_buffer_t       /* data_buffer */
+	      );
+
+
+struct pgss_dispatch {
     gss_acquire_cred_t           gss_acquire_cred;
     gss_release_cred_t           gss_release_cred;
     gss_init_sec_context_t       gss_init_sec_context;
@@ -348,4 +356,9 @@ struct pgss_diapatch {
     gss_verify_t                 gss_verify;
     gss_seal_t                   gss_seal;
     gss_unseal_t                 gss_unseal;
+    pgss_ctl_t			 pgss_ctl;
 };
+
+struct config;
+struct pgss_dispatch *_pgss_dl_provider(struct config *config);
+
