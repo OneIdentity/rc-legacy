@@ -36,4 +36,22 @@ getprogname() {
     return "unknown";
 # endif
 }
-#endif
+#endif /* !HAVE_GETPROGNAME */
+
+
+#if TEST
+#include <stdio.h>
+int
+main(int argc, char **argv)
+{
+    const char *name;
+
+    printf("argv[0] = '%s'\n", argv[0]);
+    name = getprogname();
+    if (name)
+	printf("getprogname = '%s'\n", name);
+    else
+	printf("getprogname = NULL\n");
+    return 0;
+}
+#endif /* TEST */

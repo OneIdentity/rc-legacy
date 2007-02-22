@@ -14,6 +14,9 @@ char *basename(const char *);
 const char *getprogname(void);
 #endif
 
+#if !HAVE_GETENV
+# define getenv(name)	((const char *)0)
+#endif
+
 #define lengthof(a)     (sizeof (a)/sizeof (a)[0])
 #define new(T)          ((T *)malloc(sizeof (T)))
-
