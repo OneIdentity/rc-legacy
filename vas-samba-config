@@ -335,17 +335,18 @@ CONFMOD=${VASCONF}.mod
 cp ${VASCONF} ${CONFMOD}
 NEWTEXT=/tmp/newtext$$.tmp
 
-if [ $VMINOR -eq 0 ]; then #VAS 3.0.x, make passowrd permanent
-
+case "$VERSION" in
+  3.0.*|3.1.1.39|3.1.1.4[0123456])
+    # VAS 3.0.x and 3.1.1.39 thru .46 need the make password permanent
     check_and_fix "password-change-interval" "0" "${CONFMOD}" ||
         echo " password-change-interval = 0" >> $NEWTEXT
-
-else # VAS 3.1 or greater, use password change script
-
+    ;;
+  *)
     check_and_fix "password-change-script" "${PWDCHGSCRIPT}" "${CONFMOD}" ||
         echo " password-change-script = ${PWDCHGSCRIPT}" >> $NEWTEXT
     check_and_fix "password-change-interval" "30" "${CONFMOD}"
-fi
+    ;;
+esac
 
 #-- insert the new text at the end of the [vasd] section
 if test -s $NEWTEXT; then
