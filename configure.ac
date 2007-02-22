@@ -4,14 +4,14 @@ AC_INIT([pgssapi],
 	[0.0.0.]esyscmd({ svnversion -n . /trunk || echo 0; }|tr -d '\012'),
 	[support@quest.com])
 AM_INIT_AUTOMAKE
-AC_CONFIG_SRCDIR([pgssapi.c])
+AC_CONFIG_SRCDIR([pgssapi.h])
 AC_CONFIG_FILES([Makefile])
 AC_CONFIG_HEADERS([config.h])
 
 AC_PREFIX_DEFAULT([/opt/quest])
 
 AC_PROG_CC
-AC_PROG_RANLIB
+AC_PROG_LIBTOOL
 dnl AC_C_CONST
 dnl AC_HEADER_STDC
 AC_CHECK_HEADERS([libgen.h])

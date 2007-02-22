@@ -33,12 +33,6 @@ static struct mechconf *config_hash_table[HASHLEN];
 static struct mechconf *mechconf_list;
 static char config_last_error[256];
 
-/* Return true if two OIDs are equal. Safe to use with NULL OIDs. */
-#define OID_EQUALS(o1, o2) \
-    ((o1) == (o2) || \
-     ((o1) && (o2) && (o1)->length == (o2)->length && \
-      memcmp((o1)->elements, (o2)->elements, (o1)->length)))
-
 /* A table of short OID aliases */
 static struct {
     const char *name;
@@ -229,7 +223,7 @@ read_word(struct filestate *state, int delim)
 {
     char *buf, *newbuf;
     int bufspc, len;
-    int quote = 0, quote_lineno;
+    int quote = 0, quote_lineno = -1;
     int empty = 1;
 
     if (state->nextch == EOF || isspace(state->nextch)) {
@@ -345,11 +339,9 @@ str2oid(const char *str) {
 int
 _pgss_load_config_file(const char *filename)
 {
-    int ch;
     int lineno, config_lineno;
-    FILE *file;
     struct config *config;
-    char *oidstr = NULL, *name, *param;
+    char *oidstr = NULL, *param;
     struct filestate state;
     gss_OID oid;
 

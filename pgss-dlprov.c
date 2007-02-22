@@ -1,4 +1,5 @@
 #include <dlfcn.h>
+#include <string.h>
 #include <gssapi.h>
 #include <pgssapi.h>
 #include "pgss-common.h"
@@ -63,4 +64,6 @@ _pgss_dl_provider(struct config *config)
     LOOKUP(gss_seal);
     LOOKUP(gss_unseal);
     LOOKUP(pgss_ctl);
+
+    return dispatch;
 }

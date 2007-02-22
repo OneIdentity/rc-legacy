@@ -1,3 +1,4 @@
+# (c) 2007, Quest Software, Inc. All rights reserved.
 
 AUTOMAKE_OPTIONS=	foreign
 
@@ -5,7 +6,7 @@ include_HEADERS=	gssapi.h \
 			pgssapi.h
 
 lib_LTLIBRARIES=	libpgss.la
-libpgssapi_la_SOURCES=	pgss-common.h \
+libpgss_la_SOURCES=	pgss-common.h \
 			pgss-config.c \
 			pgss-config.h \
 			pgss-dispatch.h \
@@ -14,9 +15,10 @@ libpgssapi_la_SOURCES=	pgss-common.h \
 			pgss-basename.c \
 			pgss-gss2.c \
 			pgss-gss2.h \
-			pgss-oidstr.c
+			pgss-oidstr.c \
+			pgss-unavail.c
 
-noinst_bin_PROGRAMS=	test
+noinst_PROGRAMS=	test
 test_SOURCES=		test.c
 test_LDADD=		libpgss.la
 test_DEPENDENCIES=	libpgss.la
