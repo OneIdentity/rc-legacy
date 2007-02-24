@@ -1,6 +1,6 @@
 # (c) 2007 Quest Software, Inc. All rights reserved
 AC_INIT(sys-auth, [1.0.0.]esyscmd(tr -d '\012' <build-number.txt))
-VERSION="1.0.`cat ./build-number.txt`"
+VERSION="1.0.0.`cat ./build-number.txt`"
 AC_CONFIG_HEADER(config.h)
 
 dnl Find and test the C compiler

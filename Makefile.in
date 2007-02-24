@@ -28,9 +28,9 @@ PROG32 = $(PROG)32
 PROG64 = $(PROG)64
 MAKE = @MAKE@
 
-@AIX_TRUE@all : $(PROG32).so.@VERSION@ $(PROG64).so.@VERSION@ lamAuth32 lamAuth64 pamAuth32 pamAuth64
-@AIX_FALSE@@B64_TRUE@all : $(PROG32).so.@VERSION@ $(PROG64).so.@VERSION@ pamAuth32 pamAuth64
-@AIX_FALSE@@B64_FALSE@all : $(PROG32).so.@VERSION@ pamAuth32
+@AIX_TRUE@all : $(PROG32).so.@VERSION@ $(PROG64).so.@VERSION@ lamAuth32 lamAuth64 pamAuth32 pamAuth64 db2dassecPam32 db2dassecPam64 db2dassecLam32 db2dassecLam64
+@AIX_FALSE@@B64_TRUE@all : $(PROG32).so.@VERSION@ $(PROG64).so.@VERSION@ pamAuth32 pamAuth64 db2dassecPam32 db2dassecPam64
+@AIX_FALSE@@B64_FALSE@all : $(PROG32).so.@VERSION@ pamAuth32 db2dassecPam32
 
 check: all test_all
 @LINUX_TRUE@@LINUX_S390X_TRUE@	sudo ./test_all "./sys-auth64.so.@VERSION@"
@@ -56,7 +56,7 @@ csuite.o: ctest.h ctest.c bool.h csuite.c csuite.h
 @LINUX_S390X_FALSE@	$(CC) -c csuite.c -o csuite.o -g
 
 clean:
-	rm -f *.o *.so.@VERSION@ pamAuth32 pamAuth64 lamAuth32 lamAuth64 test/*.o test_all
+	rm -f *.o *.so.@VERSION@ pamAuth32 pamAuth64 lamAuth32 lamAuth64 test/*.o test_all db2dassecPam32 db2dassecPam64 db2dassecLam32 db2dassecLam64
 
 distclean: clean
 	rm -rf config.h config.log config.status Makefile upgrade.sh install.sh install DB2* Troubleshooting autom4te.cache
@@ -96,6 +96,18 @@ lamAuth32.o: lamAuth.c
 
 lamAuth64.o: lamAuth.c
 	$(CC64) $(CFLAGS) $(INCLUDES) -c lamAuth.c -o lamAuth64.o
+
+db2dassecPam32: db2dassecPam32.o log32.o
+	$(CC) db2dassecPam32.o -o db2dassecPam32 -lpam
+
+db2dassecPam64: db2dassecPam64.o log64.o
+	$(CC64) db2dassecPam64.o -o db2dassecPam64 -lpam
+
+db2dassecPam32.o: db2dassecPam.c
+	$(CC) $(CFLAGS) $(INCLUDES)  -c db2dassecPam.c -o db2dassecPam32.o
+
+db2dassecPam64.o: db2dassecPam.c
+	$(CC64) $(CFLAGS) $(INCLUDES) -c db2dassecPam.c -o db2dassecPam64.o
 
 log32.o: log.c log.h vsyslog32.o
 	$(CC) $(CFLAGS) $(INCLUDES) -c log.c -o log32.o
