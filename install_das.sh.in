@@ -1,0 +1,83 @@
+#!/bin/sh
+# (c) 2007 Quest Software, Inc. All rights reserved.
+
+# Uncomment the following line for debug info.
+# set -x
+
+# Usage
+if [ -z "$1" ] || [ -n "$3" ] ; then
+	echo "Usage: $0 <DAS user, i.e. dasusr1> [LAM]"
+	exit 1
+fi
+
+# Check root
+if [ "`id | sed 's/uid=\([0-9]*\).*/\1/'`" -ne 0 ] ; then
+    echo "Must be root to run."
+    exit 1
+fi
+
+# Check the second argument.
+if [ "$2" != "LAM" ] && [ -n "$2" ] ; then
+	echo "Second argument can only be LAM."
+	exit 1
+fi
+
+# Figure out what program to use.
+if [ "$2" = "LAM" ] ; then 
+    if [ "`uname -s`" = "AIX" ] ; then
+        DASSECLOC=db2dassecLam
+    else
+        echo "Not AIX, LAM setting ignored."
+        DASSECLOC=db2dassecPam
+    fi
+else
+    DASSECLOC=db2dassecPam
+fi
+
+DASHOME="`eval echo ~${1}`"
+DASSEC="${DASHOME}/das/adm/db2dassec"
+
+# Check for the user, and that there is a das directory.
+if [ ! -f "${DASSEC}" ]
+then
+	echo "Unable to find file ${DASSEC}, is ${1} a DAS admin?"
+	exit 1
+fi
+
+# Find out the bit-ness of the DAS files.
+DASSECBITS=`file "$DASSEC" | sed 's/.*\([36][24]\)-bit.*/\1/'`
+DASSECLOC="${DASSECLOC}${DASSECBITS}"
+if [ ! -f "${DASSECLOC}" ] ; then
+    echo "Unable to find file ${DASSECLOC}, are you running from the same directory as this script is in?"
+    exit 1
+fi
+
+echo ""
+
+# If there is the backed-up file already, don't do it again.
+if [ ! -f "${DASSEC}.orig" ] ; then
+    echo "Saving off <${DASSEC}> to <${DASSEC}.orig>"
+    cp -p "${DASSEC}" "${DASSEC}.orig"
+    else
+    echo "<${DASSEC}.orig> already exists, not saving <${DASSEC}>"
+fi    
+
+echo "Copying <${DASSECLOC}> to <${DASSEC}>"
+cp "${DASSECLOC}" "${DASSEC}"
+
+echo "Setting ownership on <${DASSEC}> to <root>"
+chown root ${DASSEC}
+
+echo "Setting permissions on <${DASSEC}> to 4555"
+chmod 4555 ${DASSEC}
+
+echo ""
+echo "The DAS account <$1> is now set up to use system authentication"
+echo ""
+echo ""
+echo "To allow the instance to use it, restart the instance"
+echo ""
+echo "If on Linux or AIX 5.3, might need to make a specific sys-auth32/sys-auth64 PAM service entry in pam.conf or /etc/pam.d/"
+echo "For Linux: cp /etc/pam.d/sshd /etc/pam.d/sys-auth64 might do it."
+echo "If you need help with this step, or any part of the process, contact Quest Support"
+echo ""
