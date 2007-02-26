@@ -3,6 +3,9 @@
 #include <dlfcn.h>
 #include <assert.h>
 #include <pwd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include "db2secPlugin.h"
 #include "csuite.h"
 #include "log.h"
@@ -12,7 +15,11 @@ char test_conf[512] = "./test.conf";
 
 
 void *handle = NULL;
+#ifdef __64BIT__
+char filename[512] = "./sys-auth64.so."VERSION;
+#else
 char filename[512] = "./sys-auth32.so."VERSION;
+#endif
 char *funcNameClient = "db2secClientAuthPluginInit";
 char *funcNameServer = "db2secServerAuthPluginInit";
 char *funcNameGroup = "db2secGroupPluginInit";
@@ -52,8 +59,26 @@ struct group_functions_1 fnsG;
 
 void testOpen( Test *pTest )
 {
+    struct stat stb;
+    if( stat( filename, &stb ) != 0 )
+    {
+        fprintf( stderr, 
+                 "%s: unable to find file <%s>, exiting.\n", 
+                 __FUNCTION__, 
+                 filename ? filename : "<EMPTY>" );
+        exit( 1 );
+    }
+
     handle = dlopen( filename, RTLD_LAZY );
     ct_test( pTest, handle != NULL );
+    if( handle == NULL )
+    {
+        fprintf( stderr, 
+                 "%s: unable to open file <%s>, exiting.\n", 
+                 __FUNCTION__, 
+                 filename ? filename : "<EMPTY>" );
+        exit( 1 );
+    }
 }
 
 void testLoadC( Test *pTest )

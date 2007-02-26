@@ -7,123 +7,107 @@ dnl Find and test the C compiler
 AC_PROG_CC
 AC_LANG_C
 
-AIX_TRUE=#
-HPUX_TRUE=#
-LINUX_TRUE=#
-LINUX_S390X_TRUE=#
-LINUX_S390X_FALSE=''
-SOLARIS_TRUE=#
-AIX_FALSE=''
-HPUX_FALSE=''
-LINUX_FALSE=''
-SOLARIS_FALSE=''
-B64_TRUE=''
-B64_FALSE=#
-CC="gcc"
-
-case `uname -a | awk '{print $1}'` in
-    "Linux")
-        OS="LINUX"
-        LINUX_TRUE=''
-        LINUX_FALSE=#
-        CC=gcc
-        uname -m | grep x86_64 >/dev/null 2>&1
-        if test $? -eq 1 -a ! `uname -m` = "s390x" ; then
-            B64_TRUE=#
-            B64_FALSE=''
-            echo "Found 32-bit"
-        else
-            echo "Found a 64-bit machine"
-        fi
-        ;;
-    "SunOS")
-        OS="SOLARIS"
-        SOLARIS_TRUE=''
-        SOLARIS_FALSE=#
-        CC="gcc -m32"
-        CC64="gcc -m64 -D__64BIT__"
-        ;;
-    "HP-UX")
-        OS=HPUX
-        HPUX_TRUE=''
-        HPUX_FALSE=#
-        if test -f /usr/lib/hpux64/libpam.so ; then
-            CC64="gcc -mlp64 -D__64BIT__"
-        else
-            B64_TRUE=#
-            B64_FALSE=''
-        fi
-        ;;
-    "AIX")
-        OS=AIX
-        AIX_TRUE=''
-        AIX_FALSE=#
-        CC=gcc
-        CC64="gcc -maix64 -D__64BIT__"
-        ;;
-esac        
-
 AC_CHECK_FUNCS(vsyslog snprintf asprintf asnprintf vasprintf vasnprintf vsnprintf)
 
-CFLAGS="-D${OS} -fpic"
-case $OS in 
-    "LINUX")
-        CC="gcc -m32"
-        CC64="gcc -m64 -D__64BIT__"
-        if test `uname -m` = "x86_64" ; then
-            OS=LINUX_X86_64
-        else
-            OS=LINUX_X86
-        fi
-        if test `uname -m` = "s390x" ; then
-            OS=LINUX_S390X
-            CC="gcc -m31"
-            CC64="gcc -m64 -D__64BIT__"
-            LINUX_S390X_TRUE=''
-            LINUX_S390X_FALSE='#'
-        fi
-        ;;
-    "AIX")
-        if test "`uname -r`" -eq "3" ; then 
-            OS=AIX_53    
-        else
-            OS="AIX_51-52"
-        fi
-        ;;
-    "HPUX")
-        if test "`uname -m`" = "ia64" ; then
-            OS=HPUX_IA64
-            else
-            OS=HPUX_9000
-        fi    
-        ;;
-    "SOLARIS")
-        OS=SOLARIS_SPARC
-        ;;
-    *)
-        echo "Unknown OS <$OS>"
-        ;; 
-esac        
+DO32=''
+NO32=#
+DO64=''
+NO64=#
+DOLAM=#
+NOLAM=''
+DOSUDO=#
+NOSUDO=''
+CC="gcc"
+CC64="gcc -D__64BIT__"
+DLFLAG='-ldl'
 LDFLAGS='-static-libgcc -shared -Bsymbolic -lc'
+CHECKS='check32 check64'
+
+case `uname -a | awk '{print $1}'` in
+    Linux)
+        OS="LINUX"
+        CC="$CC -m32"
+        DOSUDO=''
+        NOSUDO=#
+        case `uname -m` in
+            x86_64)
+                PLATFORM="LINUX_X86_64"
+                CC64="$CC64 -m64"
+                CHECKS='check32sudo check64sudo'
+                ;;
+            i*86)
+                PLATFORM="LINUX_X86"
+                DO64=#
+                NO64=''
+                CHECKS='check32sudo'
+                ;;
+            s390x)
+                PLATFORM="LINUX_S390X"
+                DO32=#
+                NO32=''
+                CC="$CC -m31"
+                CC64="$CC64 -m64"
+                CHECKS='check64sudo'
+                ;;
+        esac
+        ;;
+    SunOS)
+        OS="SOLARIS"
+        PLATFORM="SOLARIS_SPARC"
+        CC="$CC -m32"
+        CC64="$CC64 -m64"
+        ;;
+    HP-UX)
+        OS=HPUX
+        DLFLAG='-ldld'
+        if test -f /usr/lib/hpux64/libpam.so ; then
+            CC64="$CC64 -mlp64"
+        else
+            DO64=#
+            NO64=''
+            CHECKS='check32'
+        fi
+        case `uname -m` in
+            ia64)
+                PLATFORM="HPUX_IA64"
+                ;;
+            *)
+                PLATFORM="HPUX_9000"
+                ;;
+        esac
+        ;;
+    AIX)
+        OS=AIX
+        CC64="$CC64 -maix64"
+        DOLAM=''
+        NOLAM=#
+        if test "`uname -r`" -eq "3" ; then
+            PLATFORM=AIX_53
+        else
+            PLATFORM="AIX_51-52"
+        fi
+        ;;
+esac        
+
+CFLAGS="-D${OS} -fpic"
 
 AC_SUBST(OS)
-AC_SUBST(AIX_TRUE)
-AC_SUBST(HPUX_TRUE)
-AC_SUBST(LINUX_TRUE)
-AC_SUBST(LINUX_S390X_TRUE)
-AC_SUBST(LINUX_S390X_FALSE)
-AC_SUBST(SOLARIS_TRUE)
-AC_SUBST(AIX_FALSE)
-AC_SUBST(HPUX_FALSE)
-AC_SUBST(LINUX_FALSE)
-AC_SUBST(SOLARIS_FALSE)
-AC_SUBST(B64_TRUE)
-AC_SUBST(B64_FALSE)
+AC_SUBST(PLATFORM)
+AC_SUBST(DO32)
+AC_SUBST(NO32)
+AC_SUBST(DO64)
+AC_SUBST(NO64)
+AC_SUBST(DOLAM)
+AC_SUBST(NOLAM)
+AC_SUBST(DOSUDO)
+AC_SUBST(NOSUDO)
 AC_SUBST(PACKAGE_NAME)
 AC_SUBST(CC)
 AC_SUBST(CC64)
+AC_SUBST(DLFLAG)
 AC_SUBST(CFLAGS)
 AC_SUBST(LDFLAGS)
+AC_SUBST(CHECKS)
 
 AC_PROG_MAKE_SET
 AC_SUBST(MAKE)
@@ -133,4 +117,8 @@ AC_HEADER_STDC
 AC_SUBST(VERSION)
 
 dnl read Makefile.in and write Makefile
-AC_OUTPUT(Makefile Troubleshooting install.sh upgrade.sh make_all.exp)
+AC_OUTPUT(Makefile Troubleshooting install.sh install_das.sh upgrade.sh make_all.exp)
+    chmod +x install.sh
+    chmod +x install_das.sh
+    chmod +x upgrade.sh
+    chmod +x make_all.exp

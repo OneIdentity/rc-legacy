@@ -18,6 +18,9 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
+#include <errno.h>
+#include <pwd.h>
+#include <usersec.h>
  
 /* Define process exit codes */
 #define PASSWORD_OK       0                    /* Password is valid          */
@@ -27,19 +30,41 @@
 
 #define MAXLINE 610
 
+int lam_auth_user( char *username, char *password ) 
+{
+    int reenter = 0;
+    int retval = 0;
+    char *authmsg = NULL;
 
+    do {
+        retval = authenticate( username, password, &reenter, &authmsg );
+    } while (reenter);
+
+    if( retval == 0 )
+        return 0;
+    else
+        return 1;
+}
 
 int main(int argc, char *argv[])
 {
     char userid[MAXLINE + 1] = {'\0'};
     char password[MAXLINE + 1]={'\0'};
     int rc = BAD_PASSWORD;
+    int rval = 1;
            
     /* Argv[1] is the file descriptor number for a pipe on which */
     /* the parent will write the userid and password.            */
            
     char cLine[MAXLINE + 1]={'\0'};
     char *pszPassword = NULL ;
+
+    /* Check usage */
+    if( argc != 2 )
+    {
+        fprintf( stderr, "Usage: %s <file descripter number to read from> (userid/password will be read from that descriptor).\n", argv[0]);
+        exit ( 1 );
+    }
                 
     int bytesRead = read(atol(argv[1]), cLine, MAXLINE); 
     if ( bytesRead != MAXLINE )
@@ -59,11 +84,12 @@ int main(int argc, char *argv[])
                                 
     /* TBD : Do your stuff - verify the password and userid using your */
     /*       own means.                                                */
-    if ( /* TBD password checks out OK */ )
+    rval = lam_auth_user( userid, password );
+    if ( rval == 0 )
     {
         rc = PASSWORD_OK;
     }
-    else if ( /* TBD bad password      */ )
+    else if ( rval == 1 )
     {
         rc = BAD_PASSWORD;
     }
@@ -71,9 +97,7 @@ int main(int argc, char *argv[])
     {
         rc = OTHER_ERROR;
     }
+
 exit:
     exit(rc);
-                                       
 }
-
-

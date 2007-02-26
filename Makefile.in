@@ -20,46 +20,72 @@ VERSION = @VERSION@
 CC = @CC@
 CC64 = @CC64@
 CFLAGS = @CFLAGS@ @DEFS@ -g -DVERSION=\"$(VERSION)\"
-DB2PATH = $(HOME)/sqllib
 INCLUDES = -I/opt/IBM/db2/V8.1/include -I.
 LDFLAGS = @LDFLAGS@
+DLFLAG = @DLFLAG@
 PROG = @PACKAGE_NAME@
 PROG32 = $(PROG)32
 PROG64 = $(PROG)64
 MAKE = @MAKE@
+LAM = lamAuth32 lamAuth64 db2dassecLam64 db2dassecLam32
+PAM32 = pamAuth32 db2dassecPam32
+PAM64 = pamAuth64 db2dassecPam64
+PAMALL = $(PAM32) $(PAM64)
+CHECKS = @CHECKS@    
+@DO32@@DO64@TESTS = test_all32 test_all64
+@NO32@@DO64@TESTS = test_all64
+@DO32@@NO64@TESTS = test_all32 
+TEST32 = ctest32.o csuite32.o test_all32.o log32.o vsyslog32.o
+TEST64 = ctest64.o csuite64.o test_all64.o log64.o vsyslog64.o
 
-@AIX_TRUE@all : $(PROG32).so.@VERSION@ $(PROG64).so.@VERSION@ lamAuth32 lamAuth64 pamAuth32 pamAuth64 db2dassecPam32 db2dassecPam64 db2dassecLam32 db2dassecLam64
-@AIX_FALSE@@B64_TRUE@all : $(PROG32).so.@VERSION@ $(PROG64).so.@VERSION@ pamAuth32 pamAuth64 db2dassecPam32 db2dassecPam64
-@AIX_FALSE@@B64_FALSE@all : $(PROG32).so.@VERSION@ pamAuth32 db2dassecPam32
+@DO32@@DO64@@DOLAM@all : $(PROG32).so.@VERSION@ $(PROG64).so.@VERSION@ $(PAMALL) $(LAM)
+@DO32@@DO64@@NOLAM@all : $(PROG32).so.@VERSION@ $(PROG64).so.@VERSION@ $(PAMALL)
+@DO32@@NO64@all: $(PROG32).so.@VERSION@ $(PAM32)
+@NO32@@DO64@all: $(PROG64).so.@VERSION@ $(PAM64)
 
-check: all test_all
-@LINUX_TRUE@@LINUX_S390X_TRUE@	sudo ./test_all "./sys-auth64.so.@VERSION@"
-@LINUX_TRUE@@LINUX_S390X_FALSE@	sudo ./test_all "./sys-auth32.so.@VERSION@"
-@LINUX_FALSE@	./test_all "./sys-auth32.so.@VERSION@"
+check: $(TESTS) $(CHECKS)
+
+check32sudo: test_all32
+	sudo ./test_all32 "./sys-auth32.so.@VERSION@"
+
+check64sudo: test_all64
+	sudo ./test_all64 "./sys-auth64.so.@VERSION@"
+
+check32: test_all32
+	./test_all32 "./sys-auth32.so.@VERSION@"
+
+check64: test_all64
+	./test_all64 "./sys-auth64.so.@VERSION@"
+
+test_all64: $(TEST64) $(PROG64).so.@VERSION@
+	$(CC64) -o test_all64 $(TEST64) $(DLFLAG)
+
+test_all64.o: test_all.c
+	$(CC64) $(CFLAGS) $(INCLUDES) -o test_all64.o -c test_all.c -g
     
-test_all: ctest.o csuite.o test_all.o all
-@HPUX_TRUE@	$(CC) -o test_all test_all.o ctest.o csuite.o log32.o vsyslog32.o -ldld
-@LINUX_S390X_TRUE@@HPUX_FALSE@	$(CC64) -o test_all test_all.o ctest.o csuite.o log64.o vsyslog64.o -ldl 
-@LINUX_S390X_FALSE@@HPUX_FALSE@	$(CC) -o test_all test_all.o ctest.o csuite.o log32.o vsyslog32.o -ldl 
+test_all32: $(TEST32) $(PROG32).so.@VERSION@
+	$(CC) -o test_all32 $(TEST32) $(DLFLAG)
 
-test_all.o: test_all.c
-@LINUX_S390X_TRUE@	$(CC64) $(CFLAGS) $(INCLUDES) -o test_all.o -c test_all.c -g
-@LINUX_S390X_FALSE@	$(CC) $(CFLAGS) $(INCLUDES) -o test_all.o -c test_all.c -g
-	
+test_all32.o: test_all.c
+	$(CC) $(CFLAGS) $(INCLUDES) -o test_all32.o -c test_all.c -g
     
-ctest.o: ctest.h ctest.c bool.h
-@LINUX_S390X_TRUE@	$(CC64) -c ctest.c -o ctest.o -g
-@LINUX_S390X_FALSE@	$(CC) -c ctest.c -o ctest.o -g
+ctest64.o: ctest.h ctest.c bool.h
+	$(CC64) $(CFLAGS) -c ctest.c -o ctest64.o -g
 
-csuite.o: ctest.h ctest.c bool.h csuite.c csuite.h
-@LINUX_S390X_TRUE@	$(CC64) -c csuite.c -o csuite.o -g
-@LINUX_S390X_FALSE@	$(CC) -c csuite.c -o csuite.o -g
+csuite64.o: ctest.h ctest.c bool.h csuite.c csuite.h
+	$(CC64) $(CFLAGS) -c csuite.c -o csuite64.o -g
+
+ctest32.o: ctest.h ctest.c bool.h
+	$(CC) $(CFLAGS) -c ctest.c -o ctest32.o -g
+
+csuite32.o: ctest.h ctest.c bool.h csuite.c csuite.h
+	$(CC) $(CFLAGS) -c csuite.c -o csuite32.o -g
 
 clean:
-	rm -f *.o *.so.@VERSION@ pamAuth32 pamAuth64 lamAuth32 lamAuth64 test/*.o test_all db2dassecPam32 db2dassecPam64 db2dassecLam32 db2dassecLam64
+	rm -f *.o *.so.@VERSION@ $(LAM) $(PAMALL) test/*.o $(TESTS)
 
 distclean: clean
-	rm -rf config.h config.log config.status Makefile upgrade.sh install.sh install DB2* Troubleshooting autom4te.cache
+	rm -rf config.h config.log config.status Makefile upgrade.sh install.sh install DB2* Troubleshooting autom4te.cache install_das.sh
 
 $(PROG32).so.@VERSION@: $(PROG32).o log32.o
 	$(CC) $(LDFLAGS) -o $(PROG32).so.@VERSION@ $(PROG32).o vsyslog32.o log32.o
@@ -97,10 +123,22 @@ lamAuth32.o: lamAuth.c
 lamAuth64.o: lamAuth.c
 	$(CC64) $(CFLAGS) $(INCLUDES) -c lamAuth.c -o lamAuth64.o
 
-db2dassecPam32: db2dassecPam32.o log32.o
+db2dassecLam32: db2dassecLam32.o
+	$(CC) db2dassecLam32.o -o db2dassecLam32
+
+db2dassecLam64: db2dassecLam64.o
+	$(CC64) $(LDFLAGS) db2dassecLam64.o -o db2dassecLam64
+
+db2dassecLam32.o: db2dassecLam.c
+	$(CC) $(CFLAGS) $(INCLUDES)  -c db2dassecLam.c -o db2dassecLam32.o
+
+db2dassecLam64.o: db2dassecLam.c
+	$(CC64) $(CFLAGS) $(INCLUDES) -c db2dassecLam.c -o db2dassecLam64.o
+
+db2dassecPam32: db2dassecPam32.o
 	$(CC) db2dassecPam32.o -o db2dassecPam32 -lpam
 
-db2dassecPam64: db2dassecPam64.o log64.o
+db2dassecPam64: db2dassecPam64.o
 	$(CC64) db2dassecPam64.o -o db2dassecPam64 -lpam
 
 db2dassecPam32.o: db2dassecPam.c
@@ -121,22 +159,23 @@ vsyslog32.o: vsyslog.c vsyslog.h
 vsyslog64.o: vsyslog.c vsyslog.h
 	$(CC64) $(CFLAGS) $(INCLUDES) -c vsyslog.c -o vsyslog64.o
 
-bin_dist: all test_all
+bin_dist: all $(TESTS)
 	@rm -rf DB2_sys-auth
 	@mkdir DB2_sys-auth
-	@chmod +x upgrade.sh install.sh
-@AIX_TRUE@	@cp sys-auth32.so.@VERSION@ sys-auth64.so.@VERSION@ upgrade.sh install.sh INSTALL README LICENSE pamAuth32 pamAuth64 lamAuth32 lamAuth64 NEWS AUTHORS TESTING ChangeLog pam.conf.aix test_all test.conf Troubleshooting DB2_sys-auth/ 
-@AIX_FALSE@@B64_TRUE@	@cp sys-auth32.so.@VERSION@ sys-auth64.so.@VERSION@ upgrade.sh install.sh INSTALL LICENSE README pamAuth32 pamAuth64 NEWS AUTHORS TESTING ChangeLog pam.conf.aix test_all test.conf Troubleshooting DB2_sys-auth/
-@AIX_FALSE@@B64_FALSE@	@cp sys-auth32.so.@VERSION@ upgrade.sh install.sh INSTALL README LICENSE pamAuth32 NEWS AUTHORS TESTING ChangeLog pam.conf.aix test_all test.conf Troubleshooting DB2_sys-auth/
-	@tar -cvf DB2_sys-auth_@OS@.tar DB2_sys-auth/*
+	@chmod +x upgrade.sh install.sh install_das.sh
+@DOLAM@	@cp sys-auth32.so.@VERSION@ sys-auth64.so.@VERSION@ upgrade.sh install.sh install_das.sh INSTALL README LICENSE $(PAMALL) $(LAM) NEWS AUTHORS TESTING ChangeLog pam.conf.aix $(TESTS) test.conf Troubleshooting DB2_sys-auth/ 
+@NOLAM@@DO32@@DO64@	@cp sys-auth32.so.@VERSION@ sys-auth64.so.@VERSION@ upgrade.sh install.sh install_das.sh INSTALL LICENSE README $(PAMALL) NEWS AUTHORS TESTING ChangeLog pam.conf.aix $(TESTS) test.conf Troubleshooting DB2_sys-auth/
+@NOLAM@@NO64@	@cp sys-auth32.so.@VERSION@ upgrade.sh install.sh install_das.sh INSTALL README LICENSE $(PAM32) NEWS AUTHORS TESTING ChangeLog pam.conf.aix $(TESTS) test.conf Troubleshooting DB2_sys-auth/
+@NOLAM@@NO32@	@cp sys-auth64.so.@VERSION@ upgrade.sh install.sh install_das.sh INSTALL README LICENSE $(PAM64) NEWS AUTHORS TESTING ChangeLog pam.conf.aix $(TESTS) test.conf Troubleshooting DB2_sys-auth/
+	@tar -cvf DB2_sys-auth_@PLATFORM@.tar DB2_sys-auth/*
 	@rm -rf DB2_sys-auth
-	@gzip DB2_sys-auth_@OS@.tar
+	@gzip DB2_sys-auth_@PLATFORM@.tar
 
 
 src_dist: all
 	@rm -rf DB2_sys-auth
 	@mkdir DB2_sys-auth
-	@cp configure config.h.in log.h log.c vsyslog.c vsyslog.h sys-auth.c upgrade.sh.in install.sh.in Makefile.in INSTALL README LICENSE pamAuth.c lamAuth.c NEWS AUTHORS TESTING ChangeLog pam.conf.aix ctest.c ctest.h csuite.c csuite.h test_all.c test.conf bool.h Troubleshooting DB2_sys-auth/ 
+	@cp configure config.h.in log.h log.c vsyslog.c vsyslog.h sys-auth.c upgrade.sh.in install.sh.in Makefile.in INSTALL README LICENSE pamAuth.c lamAuth.c NEWS AUTHORS TESTING ChangeLog pam.conf.aix ctest.c ctest.h csuite.c csuite.h test_all.c test.conf bool.h Troubleshooting db2dassecLam.c db2dassecPam.c DB2_sys-auth/ 
 	@tar -cvf DB2_sys-auth_src.tar DB2_sys-auth/*
 	@rm -rf DB2_sys-auth
 	@gzip DB2_sys-auth_src.tar
@@ -152,4 +191,4 @@ install: all
 	@echo 
 
 build: 
-	@./buildall.exp
+	@./make_all.exp
