@@ -117,7 +117,7 @@ Now changelog will work off the version.
 * Moved to sym links for the libraris. This makes telling what version is 
   installed much easier. 
 
-1.0.0.14 ( 2007_02_23 ):
+1.0.0.15 ( 2007_03_10 ):
 * Added support for DAS users. Thanks to help from IBM in figuring this out.
 * Made the versioning 4-digit.
   

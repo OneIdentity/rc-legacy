@@ -61,3 +61,12 @@ connect from public then grant it to specific groups.
 db2 connect to database
 db2 revoke connect on database from public
 db2 grant connect on database to group
+
+
+DAS commands:
+Restart DAS:
+db2admin stop
+db2admin start
+
+Print out setting:
+db2 get admin cfg

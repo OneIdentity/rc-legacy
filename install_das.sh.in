@@ -36,6 +36,7 @@ fi
 
 DASHOME="`eval echo ~${1}`"
 DASSEC="${DASHOME}/das/adm/db2dassec"
+DASSEC2="${DASHOME}/das/adm64/db2dassec"
 
 # Check for the user, and that there is a das directory.
 if [ ! -f "${DASSEC}" ]
@@ -44,32 +45,59 @@ then
 	exit 1
 fi
 
-# Find out the bit-ness of the DAS files.
-DASSECBITS=`file "$DASSEC" | sed 's/.*\([36][24]\)-bit.*/\1/'`
-DASSECLOC="${DASSECLOC}${DASSECBITS}"
-if [ ! -f "${DASSECLOC}" ] ; then
-    echo "Unable to find file ${DASSECLOC}, are you running from the same directory as this script is in?"
-    exit 1
+if [ -f $DASSEC2 ] ; then
+    DASSECBITS=32    
+else
+    # Find out the bit-ness of the DAS files.
+    DASSECBITS=`file "$DASSEC" | sed 's/.*\([36][24]\)-bit.*/\1/'`
 fi
 
+DASSECLOC2="${DASSECLOC}64"
+DASSECLOC="${DASSECLOC}${DASSECBITS}"
+
+if [ ! -f "${DASSECLOC}" ] ; then
+    echo "Unable to find file ${DASSECLOC}, are you running from the same directory as this script?"
+    exit 1
+fi
+echo ""
+
+if [ -f ${DASSEC2} -a ! -f "${DASSECLOC2}" ] ; then
+    echo "Unable to find file ${DASSECLOC2}, are you running from the same directory as this script?"
+    exit 1
+fi
 echo ""
 
 # If there is the backed-up file already, don't do it again.
 if [ ! -f "${DASSEC}.orig" ] ; then
     echo "Saving off <${DASSEC}> to <${DASSEC}.orig>"
     cp -p "${DASSEC}" "${DASSEC}.orig"
-    else
+else
     echo "<${DASSEC}.orig> already exists, not saving <${DASSEC}>"
 fi    
 
 echo "Copying <${DASSECLOC}> to <${DASSEC}>"
 cp "${DASSECLOC}" "${DASSEC}"
-
 echo "Setting ownership on <${DASSEC}> to <root>"
 chown root ${DASSEC}
-
 echo "Setting permissions on <${DASSEC}> to 4555"
 chmod 4555 ${DASSEC}
+
+if [ -f $DASSEC2 ] ; then
+    # If there is the backed-up file already, don't do it again.
+    if [ ! -f "${DASSEC2}.orig" ] ; then
+        echo "Saving off <${DASSEC2}> to <${DASSEC2}.orig>"
+        cp -p "${DASSEC2}" "${DASSEC2}.orig"
+    else
+        echo "<${DASSEC2}.orig> already exists, not saving <${DASSEC2}>"
+    fi    
+
+    echo "Copying <${DASSECLOC2}> to <${DASSEC2}>"
+    cp "${DASSECLOC2}" "${DASSEC2}"
+    echo "Setting ownership on <${DASSEC2}> to <root>"
+    chown root ${DASSEC2}
+    echo "Setting permissions on <${DASSEC2}> to 4555"
+    chmod 4555 ${DASSEC2}
+fi
 
 echo ""
 echo "The DAS account <$1> is now set up to use system authentication"
