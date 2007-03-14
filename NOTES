@@ -1,0 +1,24 @@
+
+Building
+========
+
+Build instructions
+  0. Ensure check out of VAS SDK from ISO or down-load. From this, you get the
+        headers vas.h, vas_gss.h and vas_ldap.h (from /opt/quest/include) and
+        their dependencies required to build the PHP sources.
+  1. ./bootstrap.sh
+  2. ./configure
+  3. make
+  4. make install (don't know if this works yet, so put the resulting shared
+  object in the usual place or places to test)
+
+
+Debugging
+=========
+
+* Seg faults usually caused by symbol collisions with other modules.
+
+* Add this line to the PHP script so that errors are logged:
+      error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
+
+

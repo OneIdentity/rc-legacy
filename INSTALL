@@ -1,0 +1,2 @@
+Download tarball and explode, unzip, invoke bootstrap.sh, configure, then make
+and make install.
