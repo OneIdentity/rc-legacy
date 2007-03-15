@@ -27,12 +27,12 @@ QUESTPHPINCLUDEDIR = $(DESTDIR)$(includedir)/php
 # we're consuming it as a shared library. Only libvas.so.M.m.r is needed.
 #------------------------------------------------------------------------------
 if AIX
-FILENAME       = $(PHP_BINDINGS).$(CSHAREDLIBSUFFIX).$(PHP_BINDINGS_VERSION)
-FILENAME64     = $(PHP_BINDINGS)64.$(CSHAREDLIBSUFFIX).$(PHP_BINDINGS_VERSION)
-MAJORSYMLINK   = $(PHP_BINDINGS).$(CSHAREDLIBSUFFIX).$(PHP_BIND_VERS_MAJOR)
-MAJORSYMLINK64 = $(PHP_BINDINGS)64.$(PHP_BIND_VERS_MAJOR).$(CSHAREDLIBSUFFIX)
-LIBSYMLINK     = $(PHP_BINDINGS).$(CSHAREDLIBSUFFIX)
-LIBSYMLINK64   = $(PHP_BINDINGS)64.$(CSHAREDLIBSUFFIX)
+FILENAME       = $(PHP_BINDINGS).$(PHP_SO_SUFFIX).$(PHP_BINDINGS_VERSION)
+FILENAME64     = $(PHP_BINDINGS)64.$(PHP_SO_SUFFIX).$(PHP_BINDINGS_VERSION)
+MAJORSYMLINK   = $(PHP_BINDINGS).$(PHP_SO_SUFFIX).$(PHP_BIND_VERS_MAJOR)
+MAJORSYMLINK64 = $(PHP_BINDINGS)64.$(PHP_BIND_VERS_MAJOR).$(PHP_SO_SUFFIX)
+LIBSYMLINK     = $(PHP_BINDINGS).$(PHP_SO_SUFFIX)
+LIBSYMLINK64   = $(PHP_BINDINGS)64.$(PHP_SO_SUFFIX)
 TMPLIBDIR      = .1				# (due to AIX command-line length limit)
 else
 
@@ -48,36 +48,45 @@ TMPLIBDIR      = .$(PHP_BINDINGS).libs
 
 else
 # Everything else has the version after the suffix...
-FILENAME       = $(PHP_BINDINGS).$(CSHAREDLIBSUFFIX).$(PHP_BINDINGS_VERSION)
+FILENAME       = $(PHP_BINDINGS).$(PHP_SO_SUFFIX).$(PHP_BINDINGS_VERSION)
 FILENAME64     = $(FILENAME)
-MAJORSYMLINK   = $(PHP_BINDINGS).$(CSHAREDLIBSUFFIX).$(PHP_BIND_VERS_MAJOR)
+MAJORSYMLINK   = $(PHP_BINDINGS).$(PHP_SO_SUFFIX).$(PHP_BIND_VERS_MAJOR)
 MAJORSYMLINK64 = $(MAJORSYMLINK)
-LIBSYMLINK     = $(PHP_BINDINGS).$(CSHAREDLIBSUFFIX)
+LIBSYMLINK     = $(PHP_BINDINGS).$(PHP_SO_SUFFIX)
 LIBSYMLINK64   = $(LIBSYMLINK)
 TMPLIBDIR      = .$(PHP_BINDINGS).libs
 endif
 endif
 
-VAS_LIBRARY_ADD   =-L$(VAS_LIBRARY_PATH) -l$(VAS_LIBRARY_NAME)
-VAS_LIBRARY_RPATH =-Wl,-rpath -Wl,$(VAS_LIBRARY_PATH)
+PHP_SO			= libphp_vas
+
+# We link with VAS' API library...
+VAS_SO_ADD		= -L$(VAS_LIBRARY_PATH) -l$(VAS_LIBRARY_NAME)
+VAS_SO_RPATH	= $(VAS_INSTALL_RPATH)
 
 # phony targets that don't have dependencies...
 .PHONY : build-$(PHP_BINDINGS) install-$(PHP_BINDINGS) clean-$(PHP_BINDINGS)
 
 $(FILENAME): $(PHP_BINDINGS).a
 	@echo
-	@echo Building $(FILENAME)...
+	@echo Delete the library-build directory...
 	rm -rf $(TMPLIBDIR)
 	mkdir $(TMPLIBDIR)
+	@echo
+	@echo Building $(FILENAME)...
 	cd $(TMPLIBDIR) && ar x ../$< && cd ..
-	cd $(TMPLIBDIR) && \
-	$(CLINK) $(CSHAREDLIBLINKFLAGS) $(CFLAGS) \
-		-o ../$(FILENAME) *.o $(patsubst -L../%,-L../../%,$(VAS_LIBRARY_ADD))
+	cd $(TMPLIBDIR) && $(CLINK) \
+		$(PHP_SO_LFLAGS) $(CFLAGS) \
+		-o ../$(FILENAME) *.o \
+		$(patsubst -L../%,-L../../%,$(VAS_SO_ADD)) \
+		$(VAS_SO_RPATH) ;
 	chmod +x $(FILENAME)
 	@echo
+	@echo Chain-link the PHP shared objects just as is done for libvas.so...
 	rm -rf $(LIBSYMLINK) $(MAJORSYMLINK) $(TMPLIBDIR)
 	ln -sf $(FILENAME) $(MAJORSYMLINK)
 	ln -sf $(MAJORSYMLINK) $(LIBSYMLINK)
+	ls -lgo $(PHP_SO).$(PHP_SO_SUFFIX)*
 
 build-$(PHP_BINDINGS): $(FILENAME)
 

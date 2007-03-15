@@ -26,6 +26,10 @@ PHP_BIND_VERS_MAJOR=`echo $library_info | awk '{ print $2; }'`
 PHP_BIND_VERS_MINOR=`echo $library_info | awk '{ print $3; }'`
 PHP_BIND_VERS_MICRO=`echo $library_info | awk '{ print $4; }'`
 
+libdir=$VAS_LIBRARY_PATH
+lib64dir=$VAS_LIBRARY_PATH
+supportlibdir=$VAS_LIBRARY_PATH
+
 PHP_BINDINGS=libphp_vas
 PHP_BINDINGS_VERSION=$PHP_BIND_VERS_MAJOR.$PHP_BIND_VERS_MINOR.$PHP_BIND_VERS_MICRO
 
@@ -114,104 +118,104 @@ case $host in
     echo "  Platform is identified as AIX * * * * * * * * * * * * *"
     ostype="AIX"
     AC_DEFINE(AIX,1)
-    CSHAREDLIBSUFFIX="so"
-    CSHAREDLIBLINKFLAGS="$CSHAREDLIBLINKFLAGS -shared -Wl,-G -static-libgcc -Wl,-brtl"
-    PHP_BIND_INST_RPATH='-Wl,-bnolibpath -Wl,-blibpath:$(libdir):/usr/lib:/lib'
-    PHP_BIND64_INST_RPATH='-Wl,-bnolibpath -Wl,-blibpath:$(lib64dir):/usr/lib:/lib'
-    PHP_BIND_SUPLIB_RPATH='-Wl,-bnolibpath -Wl,-blibpath:$(supportlibdir):$(libdir):/usr/lib:/lib'
+    PHP_SO_SUFFIX="so"
+    PHP_SO_LFLAGS="$PHP_SO_LFLAGS -shared -Wl,-G -static-libgcc -Wl,-brtl"
+    VAS_INSTALL_RPATH='-Wl,-bnolibpath -Wl,-blibpath:$(libdir):/usr/lib:/lib'
+    VAS64_INSTALL_RPATH='-Wl,-bnolibpath -Wl,-blibpath:$(lib64dir):/usr/lib:/lib'
+    VAS_SUPPLIB_RPATH='-Wl,-bnolibpath -Wl,-blibpath:$(supportlibdir):$(libdir):/usr/lib:/lib'
 
     ;;
   x86_64-*-linux*)
     echo "  Platform is identified as Linux x86 64 * * * * * * * * * * * * *"
     ostype="LINUX"
     AC_DEFINE(LINUX,1)
-    CSHAREDLIBSUFFIX="so"
-    CSHAREDLIBLINKFLAGS='-shared -fpic -Wl,-soname,$(PHP_BINDINGS).$(CSHAREDLIBSUFFIX).$(PHP_BIND_VERS_MAJOR) -static-libgcc'
-    PHP_BIND_INST_RPATH='-Wl,-rpath -Wl,$(libdir)'
-    PHP_BIND64_INST_RPATH='-Wl,-rpath -Wl,$(lib64dir)'
-    PHP_BIND_SUPLIB_RPATH='-Wl,-rpath -Wl,$(supportlibdir):$(libdir)'
+    PHP_SO_SUFFIX="so"
+    PHP_SO_LFLAGS='-shared -fpic -Wl,-soname,$(PHP_BINDINGS).$(PHP_SO_SUFFIX).$(PHP_BIND_VERS_MAJOR) -static-libgcc'
+    VAS_INSTALL_RPATH='-Wl,-rpath -Wl,$(libdir)'
+    VAS64_INSTALL_RPATH='-Wl,-rpath -Wl,$(lib64dir)'
+    VAS_SUPPLIB_RPATH='-Wl,-rpath -Wl,$(supportlibdir):$(libdir)'
     ;;
   s390x-*-linux*)
     echo "  Platform is identified as Linux S390x * * * * * * * * * * * * *"
     ostype="LINUX"
     AC_DEFINE(LINUX,1)
-    CSHAREDLIBSUFFIX="so"
-    CSHAREDLIBLINKFLAGS='-shared -fPIC -Wl,-soname,$(PHP_BINDINGS).$(CSHAREDLIBSUFFIX).$(PHP_BIND_VERS_MAJOR) -static-libgcc'
-    PHP_BIND_INST_RPATH='-Wl,-rpath -Wl,$(libdir)'
-    PHP_BIND64_INST_RPATH='-Wl,-rpath -Wl,$(lib64dir)'
-    PHP_BIND_SUPLIB_RPATH='-Wl,-rpath -Wl,$(supportlibdir):$(libdir)'
+    PHP_SO_SUFFIX="so"
+    PHP_SO_LFLAGS='-shared -fPIC -Wl,-soname,$(PHP_BINDINGS).$(PHP_SO_SUFFIX).$(PHP_BIND_VERS_MAJOR) -static-libgcc'
+    VAS_INSTALL_RPATH='-Wl,-rpath -Wl,$(libdir)'
+    VAS64_INSTALL_RPATH='-Wl,-rpath -Wl,$(lib64dir)'
+    VAS_SUPPLIB_RPATH='-Wl,-rpath -Wl,$(supportlibdir):$(libdir)'
     ;;
   s390-*-linux*)
     echo "  Platform is identified as Linux S390 * * * * * * * * * * * * *"
     ostype="LINUX"
     AC_DEFINE(LINUX,1)
-    CSHAREDLIBSUFFIX="so"
-    CSHAREDLIBLINKFLAGS='-shared -fPIC -Wl,-soname,$(PHP_BINDINGS).$(CSHAREDLIBSUFFIX).$(PHP_BIND_VERS_MAJOR) -static-libgcc'
-    PHP_BIND_INST_RPATH='-Wl,-rpath -Wl,$(libdir)'
+    PHP_SO_SUFFIX="so"
+    PHP_SO_LFLAGS='-shared -fPIC -Wl,-soname,$(PHP_BINDINGS).$(PHP_SO_SUFFIX).$(PHP_BIND_VERS_MAJOR) -static-libgcc'
+    VAS_INSTALL_RPATH='-Wl,-rpath -Wl,$(libdir)'
     LIBVAS_BUILD_RPATH='-Wl,-rpath -Wl,$(abs_top_builddir)/src/libs/vasapi'
-    PHP_BIND_SUPLIB_RPATH='-Wl,-rpath -Wl,$(supportlibdir):$(libdir)'
+    VAS_SUPPLIB_RPATH='-Wl,-rpath -Wl,$(supportlibdir):$(libdir)'
     ;;
   ia64-*-linux*)
     echo "  Platform is identified as Linux IA64 * * * * * * * * * * * * *"
     ostype="LINUX"
     AC_DEFINE(LINUX,1)
-    CSHAREDLIBSUFFIX="so"
-    CSHAREDLIBLINKFLAGS='-shared -fpic -Wl,-soname,$(PHP_BINDINGS).$(CSHAREDLIBSUFFIX).$(PHP_BIND_VERS_MAJOR) -static-libgcc'
-    PHP_BIND_INST_RPATH='-Wl,-rpath -Wl,$(libdir)'
-    PHP_BIND64_INST_RPATH='-Wl,-rpath -Wl,$(lib64dir)'
-    PHP_BIND_SUPLIB_RPATH='-Wl,-rpath -Wl,$(supportlibdir):$(libdir)'
+    PHP_SO_SUFFIX="so"
+    PHP_SO_LFLAGS='-shared -fpic -Wl,-soname,$(PHP_BINDINGS).$(PHP_SO_SUFFIX).$(PHP_BIND_VERS_MAJOR) -static-libgcc'
+    VAS_INSTALL_RPATH='-Wl,-rpath -Wl,$(libdir)'
+    VAS64_INSTALL_RPATH='-Wl,-rpath -Wl,$(lib64dir)'
+    VAS_SUPPLIB_RPATH='-Wl,-rpath -Wl,$(supportlibdir):$(libdir)'
     ;;
   powerpc64-*-linux*)
     echo "  Platform is identified as Linux PowerPC * * * * * * * * * * * * *"
     ostype="LINUX"
     AC_DEFINE(LINUX,1)
-    CSHAREDLIBSUFFIX="so"
-    CSHAREDLIBLINKFLAGS='-shared -fpic -Wl,-soname,$(PHP_BINDINGS).$(CSHAREDLIBSUFFIX).$(PHP_BIND_VERS_MAJOR) -static-libgcc'
-    PHP_BIND_INST_RPATH='-Wl,-rpath -Wl,$(libdir)'
-    PHP_BIND64_INST_RPATH='-Wl,-rpath -Wl,$(lib64dir)'
-    PHP_BIND_SUPLIB_RPATH='-Wl,-rpath -Wl,$(supportlibdir):$(libdir)'
+    PHP_SO_SUFFIX="so"
+    PHP_SO_LFLAGS='-shared -fpic -Wl,-soname,$(PHP_BINDINGS).$(PHP_SO_SUFFIX).$(PHP_BIND_VERS_MAJOR) -static-libgcc'
+    VAS_INSTALL_RPATH='-Wl,-rpath -Wl,$(libdir)'
+    VAS64_INSTALL_RPATH='-Wl,-rpath -Wl,$(lib64dir)'
+    VAS_SUPPLIB_RPATH='-Wl,-rpath -Wl,$(supportlibdir):$(libdir)'
     ;;
   *-*-linux*)
     echo "  Platform is identified as Linux x86 * * * * * * * * * * * * *"
     ostype="LINUX"
     AC_DEFINE(LINUX,1)
-    CSHAREDLIBSUFFIX="so"
-    CSHAREDLIBLINKFLAGS="-shared -fpic -Wl,-soname,$PHP_BINDINGS.$CSHAREDLIBSUFFIX.$PHP_BIND_VERS_MAJOR -static-libgcc"
-    PHP_BIND_INST_RPATH='-Wl,-rpath -Wl,$(libdir)'
-    PHP_BIND_SUPLIB_RPATH='-Wl,-rpath -Wl,$(supportlibdir):$(libdir)'
+    PHP_SO_SUFFIX="so"
+    PHP_SO_LFLAGS="-shared -fpic -Wl,-soname,$PHP_BINDINGS.$PHP_SO_SUFFIX.$PHP_BIND_VERS_MAJOR -static-libgcc"
+    VAS_INSTALL_RPATH='-Wl,-rpath -Wl,$(libdir)'
+    VAS_SUPPLIB_RPATH='-Wl,-rpath -Wl,$(supportlibdir):$(libdir)'
     ;;
   *-sgi-iri*)
     echo "  Platform is identified as Irix * * * * * * * * * * * * *"
     ostype="IRIX"
     AC_DEFINE(IRIX,1)
-    CSHAREDLIBSUFFIX="so"
-    CSHAREDLIBLINKFLAGS='-shared -fpic -Wl,-soname,$(PHP_BINDINGS).$(CSHAREDLIBSUFFIX).$(PHP_BIND_VERS_MAJOR) -static-libgcc'
-    PHP_BIND_INST_RPATH='-Wl,-rpath -Wl,$(libdir)'
-    PHP_BIND_SUPLIB_RPATH='-Wl,-rpath -Wl,$(supportlibdir):$(libdir)'
+    PHP_SO_SUFFIX="so"
+    PHP_SO_LFLAGS='-shared -fpic -Wl,-soname,$(PHP_BINDINGS).$(PHP_SO_SUFFIX).$(PHP_BIND_VERS_MAJOR) -static-libgcc'
+    VAS_INSTALL_RPATH='-Wl,-rpath -Wl,$(libdir)'
+    VAS_SUPPLIB_RPATH='-Wl,-rpath -Wl,$(supportlibdir):$(libdir)'
     ;;
   i386-*-solaris*)
     echo "  Platform is identified as Solaris i386 * * * * * * * * * * * * *"
     ostype="SOLARIS"
     AC_DEFINE(SOLARIS,1)
-    CSHAREDLIBSUFFIX="so"
+    PHP_SO_SUFFIX="so"
     if test -d /usr/lib/64; then
-      CSHAREDLIBLINKFLAGS='-specs=$(abs_top_builddir)/cf/gccspecs-sol10-rpath-fixes -shared -fPIC -static-libgcc -Wl,-h -Wl,$(PHP_BINDINGS).$(CSHAREDLIBSUFFIX).$(PHP_BIND_VERS_MAJOR)'
+      PHP_SO_LFLAGS='-specs=$(abs_top_builddir)/cf/gccspecs-sol10-rpath-fixes -shared -fPIC -static-libgcc -Wl,-h -Wl,$(PHP_BINDINGS).$(PHP_SO_SUFFIX).$(PHP_BIND_VERS_MAJOR)'
     else
-      CSHAREDLIBLINKFLAGS='-shared -fPIC -static-libgcc -Wl,-h -Wl,$(PHP_BINDINGS).$(CSHAREDLIBSUFFIX).$(PHP_BIND_VERS_MAJOR)'
+      PHP_SO_LFLAGS='-shared -fPIC -static-libgcc -Wl,-h -Wl,$(PHP_BINDINGS).$(PHP_SO_SUFFIX).$(PHP_BIND_VERS_MAJOR)'
     fi
-    PHP_BIND_INST_RPATH='-Wl,-R -Wl,$(libdir)'
-    PHP_BIND64_INST_RPATH='-Wl,-R -Wl,$(lib64dir)'
-    PHP_BIND_SUPLIB_RPATH='-Wl,-R -Wl,$(supportlibdir):$(libdir)'
+    VAS_INSTALL_RPATH='-Wl,-R -Wl,$(libdir)'
+    VAS64_INSTALL_RPATH='-Wl,-R -Wl,$(lib64dir)'
+    VAS_SUPPLIB_RPATH='-Wl,-R -Wl,$(supportlibdir):$(libdir)'
     ;;
   *-*-solaris*)
     echo "  Platform is identified as Solaris * * * * * * * * * * * * *"
     ostype="SOLARIS"
     AC_DEFINE(SOLARIS,1)
-    CSHAREDLIBSUFFIX="so"
-    CSHAREDLIBLINKFLAGS='-shared -fPIC -static-libgcc -Wl,-h -Wl,$(PHP_BINDINGS).$(CSHAREDLIBSUFFIX).$(PHP_BIND_VERS_MAJOR)'
-    PHP_BIND_INST_RPATH='-Wl,-R -Wl,$(libdir)'
-    PHP_BIND64_INST_RPATH='-Wl,-R -Wl,$(lib64dir)'
-    PHP_BIND_SUPLIB_RPATH='-Wl,-R -Wl,$(supportlibdir):$(libdir)'
+    PHP_SO_SUFFIX="so"
+    PHP_SO_LFLAGS='-shared -fPIC -static-libgcc -Wl,-h -Wl,$(PHP_BINDINGS).$(PHP_SO_SUFFIX).$(PHP_BIND_VERS_MAJOR)'
+    VAS_INSTALL_RPATH='-Wl,-R -Wl,$(libdir)'
+    VAS64_INSTALL_RPATH='-Wl,-R -Wl,$(lib64dir)'
+    VAS_SUPPLIB_RPATH='-Wl,-R -Wl,$(supportlibdir):$(libdir)'
     ;;
   *-*-hpux11*)
     echo "  Platform is identified as HP-UX * * * * * * * * * * * * *"
@@ -219,43 +223,43 @@ case $host in
     AC_DEFINE(HPUX,1)
     hparch=`uname -m`
     if test "x$hpuxarch" = "xia64"; then
-      CSHAREDLIBSUFFIX="so"
-      PHP_BIND_INST_RPATH='-Wl,+b -Wl,$(libdir)'
-      PHP_BIND64_INST_RPATH='-Wl,+b -Wl,$(lib64dir)'
-      PHP_BIND_SUPLIB_RPATH='-Wl,+b -Wl,$(supportlibdir):$(libdir)'
+      PHP_SO_SUFFIX="so"
+      VAS_INSTALL_RPATH='-Wl,+b -Wl,$(libdir)'
+      VAS64_INSTALL_RPATH='-Wl,+b -Wl,$(lib64dir)'
+      VAS_SUPPLIB_RPATH='-Wl,+b -Wl,$(supportlibdir):$(libdir)'
     else
-      CSHAREDLIBSUFFIX="sl"
-      PHP_BIND_INST_RPATH='-Wl,+b -Wl,$(libdir)'
-      PHP_BIND64_INST_RPATH='-Wl,+b -Wl,$(lib64dir)'
-      PHP_BIND_SUPLIB_RPATH='-Wl,+b -Wl,$(supportlibdir):$(libdir)'
+      PHP_SO_SUFFIX="sl"
+      VAS_INSTALL_RPATH='-Wl,+b -Wl,$(libdir)'
+      VAS64_INSTALL_RPATH='-Wl,+b -Wl,$(lib64dir)'
+      VAS_SUPPLIB_RPATH='-Wl,+b -Wl,$(supportlibdir):$(libdir)'
     fi
-    CSHAREDLIBLINKFLAGS='-shared -fPIC -static-libgcc -Wl,+h,$(PHP_BINDINGS).$(CSHAREDLIBSUFFIX).$(PHP_BIND_VERS_MAJOR)'
+    PHP_SO_LFLAGS='-shared -fPIC -static-libgcc -Wl,+h,$(PHP_BINDINGS).$(PHP_SO_SUFFIX).$(PHP_BIND_VERS_MAJOR)'
     ;;
   *-*-darwin*)
     echo "  Platform is identified as Macintosh OS X * * * * * * * * * * * * *"
     ostype="MACOSX"
     AC_DEFINE(MACOSX,1)
-    CSHAREDLIBSUFFIX="dylib"
-    CSHAREDLIBLINKFLAGS='-dynamiclib -dynamic -install_name ${libdir}/$(PHP_BINDINGS).$(PHP_BIND_VERS_MAJOR).$(CSHAREDLIBSUFFIX) -compatibility_version $(PHP_BIND_VERS_MAJOR) -current_version $(PHP_BINDINGS_VERSION)'" $UNIVERSAL_LINK_FLAGS"
-    PHP_BIND_INST_RPATH=''
+    PHP_SO_SUFFIX="dylib"
+    PHP_SO_LFLAGS='-dynamiclib -dynamic -install_name ${libdir}/$(PHP_BINDINGS).$(PHP_BIND_VERS_MAJOR).$(PHP_SO_SUFFIX) -compatibility_version $(PHP_BIND_VERS_MAJOR) -current_version $(PHP_BINDINGS_VERSION)'" $UNIVERSAL_LINK_FLAGS"
+    VAS_INSTALL_RPATH=''
     ;;
   *-*-freebsd*)
     echo "  Platform is identified as FreeBSD * * * * * * * * * * * * *"
     ostype="FREEBSD"
     AC_DEFINE(FREEBSD,1)
-    CSHAREDLIBSUFFIX="so"
-    CSHAREDLIBLINKFLAGS='-shared -fPIC -Wl,-soname -Wl,$(PHP_BINDINGS).$(CSHAREDLIBSUFFIX).$(PHP_BIND_VERS_MAJOR)'
-    PHP_BIND_INST_RPATH="-Wl,--rpath -Wl,$(libdir)"
-    PHP_BIND_SUPLIB_RPATH="-Wl,--rpath -Wl,$(supportlibdir):$(libdir)"
+    PHP_SO_SUFFIX="so"
+    PHP_SO_LFLAGS='-shared -fPIC -Wl,-soname -Wl,$(PHP_BINDINGS).$(PHP_SO_SUFFIX).$(PHP_BIND_VERS_MAJOR)'
+    VAS_INSTALL_RPATH="-Wl,--rpath -Wl,$(libdir)"
+    VAS_SUPPLIB_RPATH="-Wl,--rpath -Wl,$(supportlibdir):$(libdir)"
     ;;
   alphaev68-*-osf*)
     echo "  Platform is identified as Tru64 * * * * * * * * * * * * *"
     ostype="TRU64"
     AC_DEFINE(TRU64,1)
-    CSHAREDLIBSUFFIX="so"
-    CSHAREDLIBLINKFLAGS='-shared -fPIC -static-libgcc -Wl,-set_version -Wl,$(PHP_BINDINGS_VERSION):$(PHP_BIND_VERS_MAJOR):0 -Wl,-msym'
-    PHP_BIND_INST_RPATH='-Wl,-rpath -Wl,$(libdir)'
-    PHP_BIND_SUPLIB_RPATH='-Wl,-rpath -Wl,$(supportlibdir):$(libdir)'
+    PHP_SO_SUFFIX="so"
+    PHP_SO_LFLAGS='-shared -fPIC -static-libgcc -Wl,-set_version -Wl,$(PHP_BINDINGS_VERSION):$(PHP_BIND_VERS_MAJOR):0 -Wl,-msym'
+    VAS_INSTALL_RPATH='-Wl,-rpath -Wl,$(libdir)'
+    VAS_SUPPLIB_RPATH='-Wl,-rpath -Wl,$(supportlibdir):$(libdir)'
     ;;
   *)
     echo "Unknown CANONICAL_HOST $host"
@@ -277,6 +281,10 @@ AM_CONDITIONAL(TRU64,  test "x$ostype" = "xtru64")
 # values to get substituted here.
 #
 echo "  Using PHP headers from $PHP_HEADERS!"
+echo "  Configure variables:"
+echo "    libdir=$libdir"
+echo "    lib64dir=$lib64dir"
+echo "    supportlibdir=$supportlibdir"
 echo "  Variables exported to make:"
 
 AC_SUBST(PHP_BINDINGS)
@@ -304,16 +312,16 @@ echo "    PHP_HEADERS as $PHP_HEADERS"
 AC_SUBST(CANONICAL_HOST)
 echo "    CANONICAL_HOST as $CANONICAL_HOST"
 
-AC_SUBST(CSHAREDLIBSUFFIX)
-echo "    CSHAREDLIBSUFFIX as $CSHAREDLIBSUFFIX"
-AC_SUBST(CSHAREDLIBLINKFLAGS)
-echo "    CSHAREDLIBLINKFLAGS as $CSHAREDLIBLINKFLAGS"
-AC_SUBST(PHP_BIND_INST_RPATH)
-echo "    PHP_BIND_INST_RPATH as $PHP_BIND_INST_RPATH"
-AC_SUBST(PHP_BIND64_INST_RPATH)
-echo "    PHP_BIND64_INST_RPATH as $PHP_BIND64_INST_RPATH"
-AC_SUBST(PHP_BIND_SUPLIB_RPATH)
-echo "    PHP_BIND_SUPLIB_RPATH as $PHP_BIND_SUPLIB_RPATH"
+AC_SUBST(PHP_SO_SUFFIX)
+echo "    PHP_SO_SUFFIX as $PHP_SO_SUFFIX"
+AC_SUBST(PHP_SO_LFLAGS)
+echo "    PHP_SO_LFLAGS as $PHP_SO_LFLAGS"
+AC_SUBST(VAS_INSTALL_RPATH)
+echo "    VAS_INSTALL_RPATH as $VAS_INSTALL_RPATH"
+AC_SUBST(VAS64_INSTALL_RPATH)
+echo "    VAS64_INSTALL_RPATH as $VAS64_INSTALL_RPATH"
+AC_SUBST(VAS_SUPPLIB_RPATH)
+echo "    VAS_SUPPLIB_RPATH as $VAS_SUPPLIB_RPATH"
 
 AC_SUBST(ENABLE_DEBUG)
 echo "    ENABLE_DEBUG as $ENABLE_DEBUG"
