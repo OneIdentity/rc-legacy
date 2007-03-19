@@ -43,7 +43,7 @@ while ($_ = shift @ARGV) {
 	$name = $_;
 	$name =~ s|^\.||;	# Strip leading dot from path
 	print "$name:\n";
-	print "\tclass=apply,inventory,vas-apps\n";
+	print "\tclass=apply,inventory,krbd-apps\n";
 	print "\towner=root\n";
 	print "\tgroup=system\n";
 	printf "\tmode=%lo\n", $mod & 07777;	# Mask perm bits

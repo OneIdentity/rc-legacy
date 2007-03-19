@@ -2,7 +2,7 @@
 # otherwise HEAD will be built.
 BUILD_FROM=not srcdir
 
-NAME=vas_apps
+NAME=krbd_apps
 BASE_VERSION=0.7.2
 QUEST_VERSION=4
 VERSION=${BASE_VERSION}q${QUEST_VERSION}
@@ -10,7 +10,7 @@ SOURCE=${NAME}-${VERSION}.tar.gz
 PWD=$(shell pwd)
 TOPDIR=${PWD}/..
 SRCDIR=${TOPDIR}/heimdal
-BUILDDIR=/var/tmp/build-vas_apps
+BUILDDIR=/var/tmp/build-krbd_apps
 EXT_DIST_DIR=/data/rc/pub/ext/heimdal
 GPGV=gpg --verify
 

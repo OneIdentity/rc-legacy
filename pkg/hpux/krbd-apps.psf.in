@@ -7,7 +7,7 @@ end
 product
   tag @NAME@
   title "@LONG_NAME@"
-  description "Traditional Unix networking apps; http://rc.vintela.com/topics/vas-apps/"
+  description "Kerberos-enabled traditional Unix networking apps; http://rc.vintela.com/topics/vas-apps/"
   revision "@VERSION@"
   architecture S700/S800_HPUX_11
   os_name HP-UX

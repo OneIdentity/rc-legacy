@@ -1,34 +1,36 @@
-Name: vas-apps
+Name: krbd-apps
 Vendor: Quest Software, Inc.
 Version: @[VERSION]
 Release: @[BUILDNO]
 License: BSD
-Summary: VAS-enabled traditional Unix networking tools.
+Summary: Kerberos-enabled traditional Unix networking tools.
 URL: http://rc.vintela.com/topics/vas-apps/
 Group: Applications/Internet
 Packager: Ted Percival <ted.percival@quest.com>
 Prefix: /opt/quest
-Source: vas-apps-@[VERSION].tar.gz
+Source: krbd-apps-@[VERSION].tar.gz
 Requires: libvas.so.4
+Conflicts: vas-apps
+Obsoletes: vas-apps
 
 %description
-VAS-enabled traditional Unix networking tools, including
+Kerberos-enabled traditional Unix networking tools, including
 rsh, rcp, telnet, ftp, rshd, telnetd, and ftpd.
 
 %package clients
-Summary: VAS-enabled traditional Unix networking clients.
+Summary: Kerberos-enabled traditional Unix networking clients.
 Group: Applications/Internet
 
 %package servers
-Summary: VAS-enabled traditional Unix networking servers.
+Summary: Kerberos-enabled traditional Unix networking servers.
 Group: Applications/Internet
 
 %description clients
-VAS-enabled traditional Unix networking clients, including
+Kerberos-enabled traditional Unix networking clients, including
 rsh, rcp, telnet and ftp.
 
 %description servers
-VAS-enabled traditional Unix networking servers, including
+Kerberos-enabled traditional Unix networking servers, including
 rshd, telnetd and ftpd.
 
 # XXX This is a hack to ignore the unpackaged files that are installed
@@ -50,7 +52,7 @@ rshd, telnetd and ftpd.
 %define _infodir %{_prefix}/info
 
 %prep
-%setup -n vas-apps-@[VERSION]
+%setup -n krbd-apps-@[VERSION]
 
 %build
 rm -rf $RPM_BUILD_ROOT

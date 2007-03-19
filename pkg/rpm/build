@@ -29,7 +29,7 @@ fi
 cp ../$NAME-$VERSION.tar.gz $RPMDIR/SOURCES
 
 sed -e "s/@\[VERSION]/$VERSION/g" \
-    -e "s/@\[BUILDNO]/$BUILDNO/g" < vas-apps.spec.in > vas-apps.spec
+    -e "s/@\[BUILDNO]/$BUILDNO/g" < krbd-apps.spec.in > krbd-apps.spec
 
 # TODO: Include archive signing
-rpmbuild --timecheck 3600 --buildroot /var/tmp/build-vas_apps/buildroot -ba vas-apps.spec
+rpmbuild --timecheck 3600 --buildroot /var/tmp/build-krbd_apps/buildroot -ba krbd-apps.spec

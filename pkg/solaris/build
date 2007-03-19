@@ -10,11 +10,11 @@ fi
 PKGVERSION="${VERSION}-${BUILDNO}"
 SCRIPTDIR=`pwd`
 SCRIPTDIR=`dirname ${SCRIPTDIR}/$0`
-WORKDIR=/var/tmp/vas-apps
+WORKDIR=/var/tmp/krbd-apps
 BUILDDIR=$WORKDIR/build
 # OUTPUTDIR _must_ be the same as the real dir specified in the Prototype files
 OUTPUTDIR=$WORKDIR/output
-PACKAGES_DEST="/data/rc/builds/vas-apps/solaris.${ARCH}"
+PACKAGES_DEST="/data/rc/builds/krbd-apps/solaris.${ARCH}"
 CC=/usr/local/bin/gcc
 PATH=/usr/local/bin:$PATH
 export CC PATH
@@ -50,20 +50,22 @@ test -f pkginfo && rm pkginfo
 
 ## Servers
 pkginfo_create ${SCRIPTDIR}/pkginfo.servers.in pkginfo
+cp depend.servers "${OUTPUTDIR}/depend"
 
 pkgmk -o -r "${OUTPUTDIR}" -d /var/tmp -f "${SCRIPTDIR}/Prototype.servers"
 
 ## Clients
 pkginfo_create ${SCRIPTDIR}/pkginfo.clients.in pkginfo
+cp depend.clients "${OUTPUTDIR}/depend"
 
 pkgmk -o -r "${OUTPUTDIR}" -d /var/tmp -f "${SCRIPTDIR}/Prototype.clients"
 
 cd /var/tmp
-echo "QSFTvasapps-clients" | pkgtrans -os . ./QSFTvasapps-clients.$PKGVERSION.$ARCH.pkg
-echo "QSFTvasapps-servers" | pkgtrans -os . ./QSFTvasapps-servers.$PKGVERSION.$ARCH.pkg
+echo "QSFTkrbdapp-clients" | pkgtrans -os . ./QSFTkrbdapp-clients.$PKGVERSION.$ARCH.pkg
+echo "QSFTkrbdapp-servers" | pkgtrans -os . ./QSFTkrbdapp-servers.$PKGVERSION.$ARCH.pkg
 
 test -d "${PACKAGES_DEST}" || mkdir "${PACKAGES_DEST}"
-cp QSFTvasapps-*.${PKGVERSION}.${ARCH}.pkg ${PACKAGES_DEST}
+cp QSFTkrbdapp-*.${PKGVERSION}.${ARCH}.pkg ${PACKAGES_DEST}
 
 echo "Build complete, cleaning up..."
 cd "${SCRIPTDIR}"

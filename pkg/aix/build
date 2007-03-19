@@ -9,7 +9,7 @@ set -ex
 
 SCRIPTDIR=$(dirname $(pwd)/$0)
 
-WORKDIR=/var/tmp/vas-apps
+WORKDIR=/var/tmp/krbd-apps
 OUTPUTDIR=$WORKDIR/output
 BUILDDIR=$WORKDIR/build
 PKGDIR=$PKGDIR/aix
@@ -61,19 +61,19 @@ rm *.inventory lpp_name *.al || true
 rm -rf pkg || true
 mkdir pkg # all files in this dir will be packaged
 
-echo "./lpp_name" | tee vas-apps.clients.al > vas-apps.servers.al
+echo "./lpp_name" | tee krbd-apps.clients.al > krbd-apps.servers.al
 
 for inputfile in clients servers; do
     for i in `cat $SCRIPTDIR/$inputfile.files`; do
 	ii=$PREFIX/$i
-	$SCRIPTDIR/inventory.sh ".$ii" >> vas-apps.$inputfile.inventory
+	$SCRIPTDIR/inventory.sh ".$ii" >> krbd-apps.$inputfile.inventory
 	if [ -d ".$ii" ]; then
 	    mkdir -p pkg$ii
 	else
 	    ln ".$ii" pkg$ii
 	fi
 
-	echo ".$ii" >> vas-apps.$inputfile.al
+	echo ".$ii" >> krbd-apps.$inputfile.al
     done
 done
 
@@ -82,8 +82,8 @@ done
 # numbers in them, and installp doesn't recognise a dependency on
 # vasclnts | vasclnt as being satisfied
 cat <<EOF > lpp_name
-4 R I vas-apps {
-vas-apps.servers $BASE_VERSION.$RELEASE 1 N U en_AU VAS Apps servers - ftpd, rshd, telnetd
+4 R I krbd-apps {
+krbd-apps.servers $BASE_VERSION.$RELEASE 1 N U en_AU Kerberized Apps servers - ftpd, rshd, telnetd
 [
 %
 EOF
@@ -94,7 +94,7 @@ filesizes $SCRIPTDIR/servers.files >> lpp_name
 cat <<EOF >> lpp_name
 %
 ]
-vas-apps.clients $BASE_VERSION.$RELEASE 1 N U en_AU VAS Apps clients - ftp, rsh, rcp, telnet
+krbd-apps.clients $BASE_VERSION.$RELEASE 1 N U en_AU Kerberized Apps clients - ftp, rsh, rcp, telnet
 [
 %
 EOF
@@ -115,14 +115,14 @@ ar rc liblpp.a *.inventory *.al lpp.copyright
 
 # copy all the metainfo files to the pkg dir
 ln lpp_name pkg
-mkdir -p pkg/usr/lpp/vas-apps
-ln liblpp.a pkg/usr/lpp/vas-apps
+mkdir -p pkg/usr/lpp/krbd-apps
+ln liblpp.a pkg/usr/lpp/krbd-apps
 
 # create a master file list for the package
 rm -f filelist || true
 touch filelist
 echo ./lpp_name >> filelist
-echo ./usr/lpp/vas-apps/liblpp.a >> filelist
+echo ./usr/lpp/krbd-apps/liblpp.a >> filelist
 cat $SCRIPTDIR/clients.files >  filelist.real
 cat $SCRIPTDIR/servers.files >> filelist.real
 mv filelist.real filelist.real.sed_dash_i

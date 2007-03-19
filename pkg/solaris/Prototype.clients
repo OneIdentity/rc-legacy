@@ -1,4 +1,5 @@
 i pkginfo
+i depend
 d none /opt 0755 root bin
 d none /opt/quest 0755 root bin
 d none /opt/quest/man 0755 root bin
