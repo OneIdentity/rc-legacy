@@ -51,5 +51,6 @@ print_version(const char *progname)
 	package_list = "no version information";
     fprintf(stderr, "%s (%s)\n", progname, package_list);
     fprintf(stderr, "Copyright 1999-2005 Kungliga Tekniska Högskolan\n");
-    fprintf(stderr, "Send bug-reports to %s\n", PACKAGE_BUGREPORT);
+    fprintf(stderr, "Copyright 2006-2007 Quest Software, Inc.\n");
+    fprintf(stderr, "Send bug reports to %s\n", PACKAGE_BUGREPORT);
 }
