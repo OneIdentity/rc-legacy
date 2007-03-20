@@ -2,7 +2,7 @@ PHP_INC=$(PHP_HEADERS)
 VAS_INC=$(VAS_HEADERS)
 INCLUDES = -I$(PHP_INC) -I$(PHP_INC)/Zend -I$(PHP_INC)/TSRM -I$(PHP_INC)/main -I$(VAS_INC)
 
-EXTRA_DIST			= vasapi.php vas_gss.php vas_ldap.php doxvas
+EXTRA_DIST			= doxvas
 
 noinst_LIBRARIES	= libphp_vas.a
 
@@ -13,7 +13,7 @@ noinst_LIBRARIES	= libphp_vas.a
 libphp_vas_a_SOURCES= php_vas.h vasapi.c
 libphp_vas_a_CFLAGS	= -fno-strict-aliasing -Wall -Wno-missing-prototypes -Wno-unused -Werror
 
-QUESTPHPINCLUDEDIR = $(DESTDIR)$(includedir)/php
+phpincludedir = $(includedir)/php
 
 #------------------------------------------------------------------------------
 # Rules to build a shared library from libphp_vas.a, which is just a temporary
@@ -98,12 +98,7 @@ clean-$(PHP_BINDINGS):
 	rm -rf $(TMPLIBDIR)
 	rm -f $(FILENAME) $(MAJORSYMLINK) $(LIBSYMLINK)
 
-install-data-local:
-	$(mkinstalldirs) $(QUESTPHPINCLUDEDIR)
-	$(INSTALL_DATA)  $(QUESTPHPINCLUDEDIR)/
-	$(INSTALL_DATA)  vasapi.php $(QUESTPHPINCLUDEDIR)/
-	$(INSTALL_DATA)  vas_gss.php $(QUESTPHPINCLUDEDIR)/
-	$(INSTALL_DATA)  vas_ldap.php $(QUESTPHPINCLUDEDIR)/
+phpinclude_SCRIPTS=	vasapi.php vas_gss.php vas_ldap.php
 
 all-local :		build-$(PHP_BINDINGS)
 clean-local :	clean-$(PHP_BINDINGS)
