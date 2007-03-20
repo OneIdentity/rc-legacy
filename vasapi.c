@@ -912,19 +912,16 @@ zend_module_entry vas_module_entry =
  *                   doesn't appear in INTERNAL_FUNCTION_PARAMETERS (defined in
  *                   zend.h).
  */
-ZEND_VAS_ARG_INFO( vas_err_internal );
 ZEND_VAS_NAMED_FUNC( vas_err_internal )
 {
     RETURN_LONG( VAS_G( g_vas_err ) );
 }
 
-ZEND_VAS_ARG_INFO( vas_err_minor_internal );
 ZEND_VAS_NAMED_FUNC( vas_err_minor_internal )
 {
     RETURN_LONG( VAS_G( g_vas_err_minor ) );
 }
 
-ZEND_VAS_ARG_INFO( vas_ctx_alloc );
 ZEND_VAS_NAMED_FUNC( vas_ctx_alloc )
 {
     SPE_vas_ctx_t *newContext = NULL;
@@ -951,7 +948,6 @@ ZEND_VAS_NAMED_FUNC( vas_ctx_alloc )
 #define S3ARG zarg1 && zarg2 && zarg3 && !zarg4
 #define S4ARG zarg1 && zarg2 && zarg3 && zarg4 && !zarg5
 
-ZEND_VAS_ARG_INFO( vas_ctx_set_option );
 ZEND_VAS_NAMED_FUNC( vas_ctx_set_option )
 {
     zval *zctx;
@@ -1045,8 +1041,6 @@ ZEND_VAS_NAMED_FUNC( vas_ctx_set_option )
     RETURN_LONG( VAS_G( g_vas_err ) );
 }
 
-
-ZEND_VAS_ARG_INFO( vas_ctx_get_option );
 ZEND_VAS_NAMED_FUNC( vas_ctx_get_option )
 {
     zval* zctx;
@@ -1090,8 +1084,6 @@ ZEND_VAS_NAMED_FUNC( vas_ctx_get_option )
     }
 }
 
-
-ZEND_VAS_ARG_INFO( vas_id_alloc );
 ZEND_VAS_NAMED_FUNC( vas_id_alloc )
 {
     SPE_vas_ctx_t* ctx;
@@ -1126,8 +1118,6 @@ ZEND_VAS_NAMED_FUNC( vas_id_alloc )
     }
 }
 
-
-ZEND_VAS_ARG_INFO( vas_id_get_ccache_name );
 ZEND_VAS_NAMED_FUNC( vas_id_get_ccache_name )
 {
     zval* zctx;
@@ -1161,8 +1151,6 @@ ZEND_VAS_NAMED_FUNC( vas_id_get_ccache_name )
     }
 }
 
-
-ZEND_VAS_ARG_INFO( vas_id_get_keytab_name );
 ZEND_VAS_NAMED_FUNC( vas_id_get_keytab_name )
 {
     zval* zctx;
@@ -1196,8 +1184,6 @@ ZEND_VAS_NAMED_FUNC( vas_id_get_keytab_name )
     }
 }
 
-
-ZEND_VAS_ARG_INFO( vas_id_get_name );
 ZEND_VAS_NAMED_FUNC( vas_id_get_name )
 {
     zval* zctx;
@@ -1232,7 +1218,6 @@ ZEND_VAS_NAMED_FUNC( vas_id_get_name )
     RETURN_LONG( err );
 }
 
-ZEND_VAS_ARG_INFO( vas_id_get_user );
 ZEND_VAS_NAMED_FUNC( vas_id_get_user )
 {
     SPE_vas_ctx_t* ctx;
@@ -1265,8 +1250,6 @@ ZEND_VAS_NAMED_FUNC( vas_id_get_user )
     }
 }
 
-
-ZEND_VAS_ARG_INFO( vas_id_is_cred_established );
 ZEND_VAS_NAMED_FUNC( vas_id_is_cred_established )
 {
     SPE_vas_ctx_t* ctx;
@@ -1290,8 +1273,6 @@ ZEND_VAS_NAMED_FUNC( vas_id_is_cred_established )
     RETURN_LONG( err );
 }
 
-
-ZEND_VAS_ARG_INFO( vas_id_establish_cred_password );
 ZEND_VAS_NAMED_FUNC( vas_id_establish_cred_password )
 {
     zval* zctx;
@@ -1318,7 +1299,6 @@ ZEND_VAS_NAMED_FUNC( vas_id_establish_cred_password )
     RETURN_LONG( err );
 }
 
-ZEND_VAS_ARG_INFO( vas_id_establish_cred_keytab );
 ZEND_VAS_NAMED_FUNC( vas_id_establish_cred_keytab )
 {
     zval* zctx;
@@ -1349,8 +1329,6 @@ ZEND_VAS_NAMED_FUNC( vas_id_establish_cred_keytab )
     RETURN_LONG( err );
 }
 
-
-ZEND_VAS_ARG_INFO( vas_id_renew_cred );
 ZEND_VAS_NAMED_FUNC( vas_id_renew_cred )
 {
     SPE_vas_ctx_t* ctx;
@@ -1375,8 +1353,6 @@ ZEND_VAS_NAMED_FUNC( vas_id_renew_cred )
     RETURN_LONG( err );
 }
 
-
-ZEND_VAS_ARG_INFO( vas_auth );
 ZEND_VAS_NAMED_FUNC( vas_auth )
 {
     SPE_vas_ctx_t* ctx;
@@ -1412,8 +1388,6 @@ ZEND_VAS_NAMED_FUNC( vas_auth )
     }
 }
 
-
-ZEND_VAS_ARG_INFO( vas_auth_with_password );
 ZEND_VAS_NAMED_FUNC( vas_auth_with_password )
 {
     SPE_vas_ctx_t* ctx;
@@ -1449,8 +1423,6 @@ ZEND_VAS_NAMED_FUNC( vas_auth_with_password )
     }
 }
 
-
-ZEND_VAS_ARG_INFO( vas_auth_check_client_membership );
 ZEND_VAS_NAMED_FUNC( vas_auth_check_client_membership )
 {
     SPE_vas_ctx_t* ctx;
@@ -1483,8 +1455,6 @@ ZEND_VAS_NAMED_FUNC( vas_auth_check_client_membership )
     RETURN_LONG( err );
 }
 
-
-ZEND_VAS_ARG_INFO( vas_auth_get_client_groups );
 ZEND_VAS_NAMED_FUNC( vas_auth_get_client_groups )
 {
     zval* zctx;
@@ -1549,8 +1519,6 @@ ZEND_VAS_NAMED_FUNC( vas_auth_get_client_groups )
     }
 }
 
-
-ZEND_VAS_ARG_INFO( vas_attrs_alloc );
 ZEND_VAS_NAMED_FUNC( vas_attrs_alloc )
 {
     SPE_vas_ctx_t* ctx;
@@ -1586,7 +1554,6 @@ ZEND_VAS_NAMED_FUNC( vas_attrs_alloc )
     }
 }
 
-ZEND_VAS_ARG_INFO( vas_attrs_find );
 ZEND_VAS_NAMED_FUNC( vas_attrs_find )
 {
     zval* zctx;
@@ -1639,8 +1606,6 @@ ZEND_VAS_NAMED_FUNC( vas_attrs_find )
     RETURN_NULL();
 }
 
-
-ZEND_VAS_ARG_INFO( vas_attrs_find_continue );
 ZEND_VAS_NAMED_FUNC( vas_attrs_find_continue )
 {
     zval* zctx;
@@ -1664,8 +1629,6 @@ ZEND_VAS_NAMED_FUNC( vas_attrs_find_continue )
     RETURN_NULL();
 }
 
-
-ZEND_VAS_ARG_INFO( vas_attrs_set_option );
 ZEND_VAS_NAMED_FUNC( vas_attrs_set_option )
 {
     zval* zctx;
@@ -1727,7 +1690,6 @@ ZEND_VAS_NAMED_FUNC( vas_attrs_set_option )
     RETURN_NULL();
 }
 
-ZEND_VAS_ARG_INFO( vas_attrs_get_option );
 ZEND_VAS_NAMED_FUNC( vas_attrs_get_option )
 {
     zval* zctx;
@@ -1785,8 +1747,6 @@ ZEND_VAS_NAMED_FUNC( vas_attrs_get_option )
     }
 }
 
-
-ZEND_VAS_ARG_INFO( vas_vals_get_string );
 ZEND_VAS_NAMED_FUNC( vas_vals_get_string )
 {
     zval* zctx;
@@ -1829,7 +1789,6 @@ ZEND_VAS_NAMED_FUNC( vas_vals_get_string )
     }
 }
 
-ZEND_VAS_ARG_INFO( vas_vals_get_integer );
 ZEND_VAS_NAMED_FUNC( vas_vals_get_integer )
 {
     zval* zctx;
@@ -1873,8 +1832,6 @@ ZEND_VAS_NAMED_FUNC( vas_vals_get_integer )
     }
 }
 
-
-ZEND_VAS_ARG_INFO( vas_vals_get_binary );
 ZEND_VAS_NAMED_FUNC( vas_vals_get_binary )
 {
     zval* zctx;
@@ -1918,8 +1875,6 @@ ZEND_VAS_NAMED_FUNC( vas_vals_get_binary )
     }
 }
 
-
-ZEND_VAS_ARG_INFO( vas_vals_get_anames );
 ZEND_VAS_NAMED_FUNC( vas_vals_get_anames )
 {
     zval* zctx;
@@ -1960,8 +1915,6 @@ ZEND_VAS_NAMED_FUNC( vas_vals_get_anames )
     }
 }
 
-
-ZEND_VAS_ARG_INFO( vas_vals_get_dn );
 ZEND_VAS_NAMED_FUNC( vas_vals_get_dn )
 {
     zval* zctx;
@@ -1995,8 +1948,6 @@ ZEND_VAS_NAMED_FUNC( vas_vals_get_dn )
     }
 }
 
-
-ZEND_VAS_ARG_INFO( vas_name_to_principal );
 ZEND_VAS_NAMED_FUNC( vas_name_to_principal )
 {
     zval* zctx;
@@ -2031,8 +1982,6 @@ ZEND_VAS_NAMED_FUNC( vas_name_to_principal )
     }
 }
 
-
-ZEND_VAS_ARG_INFO( vas_name_to_dn );
 ZEND_VAS_NAMED_FUNC( vas_name_to_dn )
 {
     zval* zctx;
@@ -2074,8 +2023,6 @@ ZEND_VAS_NAMED_FUNC( vas_name_to_dn )
     RETURN_LONG( err );
 }
 
-
-ZEND_VAS_ARG_INFO( vas_info_forest_root );
 ZEND_VAS_NAMED_FUNC( vas_info_forest_root )
 {
     zval* zctx;
@@ -2107,8 +2054,6 @@ ZEND_VAS_NAMED_FUNC( vas_info_forest_root )
     RETURN_LONG( err );
 }
 
-
-ZEND_VAS_ARG_INFO( vas_info_joined_domain );
 ZEND_VAS_NAMED_FUNC( vas_info_joined_domain )
 {
     zval* zctx;
@@ -2140,8 +2085,6 @@ ZEND_VAS_NAMED_FUNC( vas_info_joined_domain )
     RETURN_LONG( err );
 }
 
-
-ZEND_VAS_ARG_INFO( vas_info_site );
 ZEND_VAS_NAMED_FUNC( vas_info_site )
 {
     zval* zctx;
@@ -2172,8 +2115,6 @@ ZEND_VAS_NAMED_FUNC( vas_info_site )
     }
 }
 
-
-ZEND_VAS_ARG_INFO( vas_info_domains );
 ZEND_VAS_NAMED_FUNC( vas_info_domains )
 {
     zval* zctx;
@@ -2223,7 +2164,6 @@ ZEND_VAS_NAMED_FUNC( vas_info_domains )
     RETURN_LONG( err );
 }
 
-ZEND_VAS_ARG_INFO( vas_info_servers );
 ZEND_VAS_NAMED_FUNC( vas_info_servers )
 {
     zval* zctx;
@@ -2268,8 +2208,6 @@ ZEND_VAS_NAMED_FUNC( vas_info_servers )
     }
 }
 
-
-ZEND_VAS_ARG_INFO( vas_prompt_for_cred_string );
 ZEND_VAS_NAMED_FUNC( vas_prompt_for_cred_string )
 {
     zval* zctx;
@@ -2303,8 +2241,6 @@ ZEND_VAS_NAMED_FUNC( vas_prompt_for_cred_string )
     }
 }
 
-
-ZEND_VAS_ARG_INFO( vas_err_get_code );
 ZEND_VAS_NAMED_FUNC( vas_err_get_code )
 {
     zval* zctx;
@@ -2323,8 +2259,6 @@ ZEND_VAS_NAMED_FUNC( vas_err_get_code )
     RETURN_LONG( code );
 }
 
-
-ZEND_VAS_ARG_INFO( vas_err_get_string );
 ZEND_VAS_NAMED_FUNC( vas_err_get_string )
 {
     zval* zctx;
@@ -2344,8 +2278,6 @@ ZEND_VAS_NAMED_FUNC( vas_err_get_string )
     RETURN_STRING( ( char* ) s, 1 );
 }
 
-
-ZEND_VAS_ARG_INFO( vas_err_clear );
 ZEND_VAS_NAMED_FUNC( vas_err_clear )
 {
     zval* zctx;
@@ -2364,7 +2296,6 @@ ZEND_VAS_NAMED_FUNC( vas_err_clear )
     SPE_SET_VAS_ERR( err );
     RETURN_NULL();
 }
-
 
 #if 0
 /** VAS error information type used to describe the details of an error
@@ -2408,7 +2339,6 @@ add_err_cause_to_zval( vas_err_info_t *err, zval *z TSRMLS_DC )
     add_property_string( z, "message", err->message, 1 );
 }
 
-ZEND_VAS_ARG_INFO( vas_err_get_info );
 ZEND_VAS_NAMED_FUNC( vas_err_get_info )
 {
     SPE_vas_ctx_t* ctx;
@@ -2436,7 +2366,6 @@ ZEND_VAS_NAMED_FUNC( vas_err_get_info )
     }
 }
 
-ZEND_VAS_ARG_INFO( vas_err_info_get_string );
 ZEND_VAS_NAMED_FUNC( vas_err_info_get_string )
 {
     SPE_vas_ctx_t* ctx;
@@ -2490,7 +2419,6 @@ ZEND_VAS_NAMED_FUNC( vas_err_info_get_string )
     }
 }
 
-ZEND_VAS_ARG_INFO( vas_err_get_cause_by_type );
 ZEND_VAS_NAMED_FUNC( vas_err_get_cause_by_type )
 {
     SPE_vas_ctx_t* ctx;
@@ -2519,8 +2447,6 @@ ZEND_VAS_NAMED_FUNC( vas_err_get_cause_by_type )
     }
 }
 
-
-ZEND_VAS_ARG_INFO( vas_user_init );
 ZEND_VAS_NAMED_FUNC( vas_user_init )
 {
     SPE_vas_ctx_t* ctx;
@@ -2559,8 +2485,6 @@ ZEND_VAS_NAMED_FUNC( vas_user_init )
     }
 }
 
-
-ZEND_VAS_ARG_INFO( vas_user_is_member );
 ZEND_VAS_NAMED_FUNC( vas_user_is_member )
 {
     SPE_vas_ctx_t* ctx;
@@ -2590,8 +2514,6 @@ ZEND_VAS_NAMED_FUNC( vas_user_is_member )
     RETURN_LONG( err );
 }
 
-
-ZEND_VAS_ARG_INFO( vas_user_get_groups );
 ZEND_VAS_NAMED_FUNC( vas_user_get_groups )
 {
     SPE_vas_ctx_t* ctx;
@@ -2651,8 +2573,6 @@ ZEND_VAS_NAMED_FUNC( vas_user_get_groups )
     }
 }
 
-
-ZEND_VAS_ARG_INFO( vas_user_get_attrs );
 ZEND_VAS_NAMED_FUNC( vas_user_get_attrs )
 {
     SPE_vas_ctx_t* ctx;
@@ -2719,8 +2639,6 @@ ZEND_VAS_NAMED_FUNC( vas_user_get_attrs )
     }
 }
 
-
-ZEND_VAS_ARG_INFO( vas_user_get_dn );
 ZEND_VAS_NAMED_FUNC( vas_user_get_dn )
 {
     SPE_vas_ctx_t* ctx;
@@ -2759,8 +2677,6 @@ ZEND_VAS_NAMED_FUNC( vas_user_get_dn )
     }
 }
 
-
-ZEND_VAS_ARG_INFO( vas_user_get_domain );
 ZEND_VAS_NAMED_FUNC( vas_user_get_domain )
 {
     SPE_vas_ctx_t* ctx;
@@ -2799,8 +2715,6 @@ ZEND_VAS_NAMED_FUNC( vas_user_get_domain )
     }
 }
 
-
-ZEND_VAS_ARG_INFO( vas_user_get_sam_account_name );
 ZEND_VAS_NAMED_FUNC( vas_user_get_sam_account_name )
 {
     SPE_vas_ctx_t* ctx;
@@ -2839,8 +2753,6 @@ ZEND_VAS_NAMED_FUNC( vas_user_get_sam_account_name )
     }
 }
 
-
-ZEND_VAS_ARG_INFO( vas_user_get_sid );
 ZEND_VAS_NAMED_FUNC( vas_user_get_sid )
 {
     SPE_vas_ctx_t* ctx;
@@ -2879,8 +2791,6 @@ ZEND_VAS_NAMED_FUNC( vas_user_get_sid )
     }
 }
 
-
-ZEND_VAS_ARG_INFO( vas_user_get_upn );
 ZEND_VAS_NAMED_FUNC( vas_user_get_upn )
 {
     SPE_vas_ctx_t* ctx;
@@ -2919,8 +2829,6 @@ ZEND_VAS_NAMED_FUNC( vas_user_get_upn )
     }
 }
 
-
-ZEND_VAS_ARG_INFO( vas_user_get_pwinfo );
 ZEND_VAS_NAMED_FUNC( vas_user_get_pwinfo )
 {
     SPE_vas_ctx_t* ctx;
@@ -2968,8 +2876,6 @@ ZEND_VAS_NAMED_FUNC( vas_user_get_pwinfo )
     }
 }
 
-
-ZEND_VAS_ARG_INFO( vas_user_get_krb5_client_name );
 ZEND_VAS_NAMED_FUNC( vas_user_get_krb5_client_name )
 {
     SPE_vas_ctx_t* ctx;
@@ -3008,8 +2914,6 @@ ZEND_VAS_NAMED_FUNC( vas_user_get_krb5_client_name )
     }
 }
 
-
-ZEND_VAS_ARG_INFO( vas_user_get_account_control );
 ZEND_VAS_NAMED_FUNC( vas_user_get_account_control )
 {
     SPE_vas_ctx_t* ctx;
@@ -3047,8 +2951,6 @@ ZEND_VAS_NAMED_FUNC( vas_user_get_account_control )
     }
 }
 
-
-ZEND_VAS_ARG_INFO( vas_user_check_access );
 ZEND_VAS_NAMED_FUNC( vas_user_check_access )
 {
     SPE_vas_ctx_t* ctx;
@@ -3076,8 +2978,6 @@ ZEND_VAS_NAMED_FUNC( vas_user_check_access )
     RETURN_LONG( err );
 }
 
-
-ZEND_VAS_ARG_INFO( vas_user_check_conflicts );
 ZEND_VAS_NAMED_FUNC( vas_user_check_conflicts )
 {
     SPE_vas_ctx_t* ctx;
@@ -3100,8 +3000,6 @@ ZEND_VAS_NAMED_FUNC( vas_user_check_conflicts )
     RETURN_LONG( err );
 }
 
-
-ZEND_VAS_ARG_INFO( vas_group_init );
 ZEND_VAS_NAMED_FUNC( vas_group_init )
 {
     SPE_vas_ctx_t* ctx;
@@ -3139,8 +3037,6 @@ ZEND_VAS_NAMED_FUNC( vas_group_init )
     }
 }
 
-
-ZEND_VAS_ARG_INFO( vas_group_has_member );
 ZEND_VAS_NAMED_FUNC( vas_group_has_member )
 {
     SPE_vas_ctx_t* ctx;
@@ -3170,8 +3066,6 @@ ZEND_VAS_NAMED_FUNC( vas_group_has_member )
     RETURN_LONG( err );
 }
 
-
-ZEND_VAS_ARG_INFO( vas_group_get_attrs );
 ZEND_VAS_NAMED_FUNC( vas_group_get_attrs )
 {
     SPE_vas_ctx_t* ctx;
@@ -3230,8 +3124,6 @@ ZEND_VAS_NAMED_FUNC( vas_group_get_attrs )
     }
 }
 
-
-ZEND_VAS_ARG_INFO( vas_group_get_dn );
 ZEND_VAS_NAMED_FUNC( vas_group_get_dn )
 {
     SPE_vas_ctx_t* ctx;
@@ -3270,8 +3162,6 @@ ZEND_VAS_NAMED_FUNC( vas_group_get_dn )
     }
 }
 
-
-ZEND_VAS_ARG_INFO( vas_group_get_domain );
 ZEND_VAS_NAMED_FUNC( vas_group_get_domain )
 {
     SPE_vas_ctx_t* ctx;
@@ -3310,8 +3200,6 @@ ZEND_VAS_NAMED_FUNC( vas_group_get_domain )
     }
 }
 
-
-ZEND_VAS_ARG_INFO( vas_group_get_sid );
 ZEND_VAS_NAMED_FUNC( vas_group_get_sid )
 {
     SPE_vas_ctx_t* ctx;
@@ -3350,8 +3238,6 @@ ZEND_VAS_NAMED_FUNC( vas_group_get_sid )
     }
 }
 
-
-ZEND_VAS_ARG_INFO( vas_service_init );
 ZEND_VAS_NAMED_FUNC( vas_service_init )
 {
     SPE_vas_ctx_t* ctx;
@@ -3390,8 +3276,6 @@ ZEND_VAS_NAMED_FUNC( vas_service_init )
     }
 }
 
-
-ZEND_VAS_ARG_INFO( vas_service_get_attrs );
 ZEND_VAS_NAMED_FUNC( vas_service_get_attrs )
 {
     SPE_vas_ctx_t* ctx;
@@ -3450,8 +3334,6 @@ ZEND_VAS_NAMED_FUNC( vas_service_get_attrs )
     }
 }
 
-
-ZEND_VAS_ARG_INFO( vas_service_get_dn );
 ZEND_VAS_NAMED_FUNC( vas_service_get_dn )
 {
     SPE_vas_ctx_t* ctx;
@@ -3490,8 +3372,6 @@ ZEND_VAS_NAMED_FUNC( vas_service_get_dn )
     }
 }
 
-
-ZEND_VAS_ARG_INFO( vas_service_get_domain );
 ZEND_VAS_NAMED_FUNC( vas_service_get_domain )
 {
     SPE_vas_ctx_t* ctx;
@@ -3530,8 +3410,6 @@ ZEND_VAS_NAMED_FUNC( vas_service_get_domain )
     }
 }
 
-
-ZEND_VAS_ARG_INFO( vas_service_get_krb5_client_name );
 ZEND_VAS_NAMED_FUNC( vas_service_get_krb5_client_name )
 {
     SPE_vas_ctx_t* ctx;
@@ -3570,8 +3448,6 @@ ZEND_VAS_NAMED_FUNC( vas_service_get_krb5_client_name )
     }
 }
 
-
-ZEND_VAS_ARG_INFO( vas_service_get_spns );
 ZEND_VAS_NAMED_FUNC( vas_service_get_spns )
 {
     SPE_vas_ctx_t* ctx;
@@ -3617,8 +3493,6 @@ ZEND_VAS_NAMED_FUNC( vas_service_get_spns )
     }
 }
 
-
-ZEND_VAS_ARG_INFO( vas_service_get_upn );
 ZEND_VAS_NAMED_FUNC( vas_service_get_upn )
 {
     SPE_vas_ctx_t* ctx;
@@ -3657,8 +3531,6 @@ ZEND_VAS_NAMED_FUNC( vas_service_get_upn )
     }
 }
 
-
-ZEND_VAS_ARG_INFO( vas_computer_init );
 ZEND_VAS_NAMED_FUNC( vas_computer_init )
 {
     SPE_vas_ctx_t* ctx;
@@ -3697,8 +3569,6 @@ ZEND_VAS_NAMED_FUNC( vas_computer_init )
     }
 }
 
-
-ZEND_VAS_ARG_INFO( vas_computer_is_member );
 ZEND_VAS_NAMED_FUNC( vas_computer_is_member )
 {
     SPE_vas_ctx_t* ctx;
@@ -3728,8 +3598,6 @@ ZEND_VAS_NAMED_FUNC( vas_computer_is_member )
     RETURN_LONG( err );
 }
 
-
-ZEND_VAS_ARG_INFO( vas_computer_get_attrs );
 ZEND_VAS_NAMED_FUNC( vas_computer_get_attrs )
 {
     SPE_vas_ctx_t* ctx;
@@ -3788,8 +3656,6 @@ ZEND_VAS_NAMED_FUNC( vas_computer_get_attrs )
     }
 }
 
-
-ZEND_VAS_ARG_INFO( vas_computer_get_dn );
 ZEND_VAS_NAMED_FUNC( vas_computer_get_dn )
 {
     SPE_vas_ctx_t* ctx;
@@ -3828,8 +3694,6 @@ ZEND_VAS_NAMED_FUNC( vas_computer_get_dn )
     }
 }
 
-
-ZEND_VAS_ARG_INFO( vas_computer_get_dns_hostname );
 ZEND_VAS_NAMED_FUNC( vas_computer_get_dns_hostname )
 {
     SPE_vas_ctx_t* ctx;
@@ -3868,8 +3732,6 @@ ZEND_VAS_NAMED_FUNC( vas_computer_get_dns_hostname )
     }
 }
 
-
-ZEND_VAS_ARG_INFO( vas_computer_get_domain );
 ZEND_VAS_NAMED_FUNC( vas_computer_get_domain )
 {
     SPE_vas_ctx_t* ctx;
@@ -3908,8 +3770,6 @@ ZEND_VAS_NAMED_FUNC( vas_computer_get_domain )
     }
 }
 
-
-ZEND_VAS_ARG_INFO( vas_computer_get_sid );
 ZEND_VAS_NAMED_FUNC( vas_computer_get_sid )
 {
     SPE_vas_ctx_t* ctx;
@@ -3950,8 +3810,6 @@ ZEND_VAS_NAMED_FUNC( vas_computer_get_sid )
     }
 }
 
-
-ZEND_VAS_ARG_INFO( vas_computer_get_spns );
 ZEND_VAS_NAMED_FUNC( vas_computer_get_spns )
 {
     SPE_vas_ctx_t* ctx;
@@ -3997,8 +3855,6 @@ ZEND_VAS_NAMED_FUNC( vas_computer_get_spns )
     }
 }
 
-
-ZEND_VAS_ARG_INFO( vas_computer_get_sam_account_name );
 ZEND_VAS_NAMED_FUNC( vas_computer_get_sam_account_name )
 {
     SPE_vas_ctx_t* ctx;
@@ -4037,8 +3893,6 @@ ZEND_VAS_NAMED_FUNC( vas_computer_get_sam_account_name )
     }
 }
 
-
-ZEND_VAS_ARG_INFO( vas_computer_get_upn );
 ZEND_VAS_NAMED_FUNC( vas_computer_get_upn )
 {
     SPE_vas_ctx_t* ctx;
@@ -4077,8 +3931,6 @@ ZEND_VAS_NAMED_FUNC( vas_computer_get_upn )
     }
 }
 
-
-ZEND_VAS_ARG_INFO( vas_computer_get_krb5_client_name );
 ZEND_VAS_NAMED_FUNC( vas_computer_get_krb5_client_name )
 {
     SPE_vas_ctx_t* ctx;
@@ -4117,8 +3969,6 @@ ZEND_VAS_NAMED_FUNC( vas_computer_get_krb5_client_name )
     }
 }
 
-
-ZEND_VAS_ARG_INFO( vas_computer_get_host_spn );
 ZEND_VAS_NAMED_FUNC( vas_computer_get_host_spn )
 {
     SPE_vas_ctx_t* ctx;
@@ -4157,8 +4007,6 @@ ZEND_VAS_NAMED_FUNC( vas_computer_get_host_spn )
     }
 }
 
-
-ZEND_VAS_ARG_INFO( vas_computer_get_account_control );
 ZEND_VAS_NAMED_FUNC( vas_computer_get_account_control )
 {
     SPE_vas_ctx_t* ctx;
@@ -4196,7 +4044,6 @@ ZEND_VAS_NAMED_FUNC( vas_computer_get_account_control )
     }
 }
 
-ZEND_VAS_ARG_INFO( vas_gss_initialize );
 ZEND_VAS_NAMED_FUNC( vas_gss_initialize )
 {
     SPE_vas_ctx_t* ctx;
@@ -4230,7 +4077,6 @@ ZEND_VAS_NAMED_FUNC( vas_gss_initialize )
 
 struct gss_cred_id_t_desc_struct;
 
-ZEND_VAS_ARG_INFO( vas_gss_acquire_cred );
 ZEND_VAS_NAMED_FUNC( vas_gss_acquire_cred )
 {
     SPE_vas_ctx_t* ctx;
@@ -4268,8 +4114,6 @@ ZEND_VAS_NAMED_FUNC( vas_gss_acquire_cred )
     }
 }
 
-
-ZEND_VAS_ARG_INFO( vas_gss_auth );
 ZEND_VAS_NAMED_FUNC( vas_gss_auth )
 {
     SPE_vas_ctx_t* ctx;
@@ -4303,8 +4147,6 @@ ZEND_VAS_NAMED_FUNC( vas_gss_auth )
     }
 }
 
-
-ZEND_VAS_ARG_INFO( vas_gss_spnego_initiate );
 ZEND_VAS_NAMED_FUNC( vas_gss_spnego_initiate )
 {
     SPE_vas_ctx_t* ctx;
@@ -4402,8 +4244,6 @@ ZEND_VAS_NAMED_FUNC( vas_gss_spnego_initiate )
     RETURN_LONG( err );
 }
 
-
-ZEND_VAS_ARG_INFO( vas_gss_spnego_accept );
 ZEND_VAS_NAMED_FUNC( vas_gss_spnego_accept )
 {
     SPE_vas_ctx_t* ctx;
@@ -4472,7 +4312,8 @@ ZEND_VAS_NAMED_FUNC( vas_gss_spnego_accept )
                                  encoding,
                                  real_intoken,
                                  &outtoken,
-                                 deleg_cred == GSS_C_NO_CREDENTIAL ? NULL : &deleg_cred );
+                                 (deleg_cred == GSS_C_NO_CREDENTIAL)
+                                    ? NULL : &deleg_cred );
     if( real_intoken )
     {
         efree( real_intoken );
@@ -4560,8 +4401,6 @@ done:
     RETURN_LONG( err );
 }
 
-
-ZEND_VAS_ARG_INFO( vas_gss_krb5_get_subkey );
 ZEND_VAS_NAMED_FUNC( vas_gss_krb5_get_subkey )
 {
     SPE_vas_ctx_t* ctx;
@@ -4588,429 +4427,308 @@ ZEND_VAS_NAMED_FUNC( vas_gss_krb5_get_subkey )
     RETURN_LONG( err );
 }
 
-
-ZEND_VAS_ARG_INFO( new_gss_buffer_desc );
 ZEND_VAS_NAMED_FUNC( new_gss_buffer_desc )
 {
     /*IMPLEMENT*/
 }
 
-
-ZEND_VAS_ARG_INFO( delete_gss_buffer_desc );
 ZEND_VAS_NAMED_FUNC( delete_gss_buffer_desc )
 {
     /*IMPLEMENT*/
 }
 
-
-ZEND_VAS_ARG_INFO( new_gss_OID_desc );
 ZEND_VAS_NAMED_FUNC( new_gss_OID_desc )
 {
     /*IMPLEMENT*/
 }
 
-
-ZEND_VAS_ARG_INFO( delete_gss_OID_desc );
 ZEND_VAS_NAMED_FUNC( delete_gss_OID_desc )
 {
     /*IMPLEMENT*/
 }
 
-
-ZEND_VAS_ARG_INFO( new_gss_OID_set_desc );
 ZEND_VAS_NAMED_FUNC( new_gss_OID_set_desc )
 {
     /*IMPLEMENT*/
 }
 
-
-ZEND_VAS_ARG_INFO( delete_gss_OID_set_desc );
 ZEND_VAS_NAMED_FUNC( delete_gss_OID_set_desc )
 {
     /*IMPLEMENT*/
 }
 
-
-ZEND_VAS_ARG_INFO( new_gss_channel_bindings_struct );
 ZEND_VAS_NAMED_FUNC( new_gss_channel_bindings_struct )
 {
     /*IMPLEMENT*/
 }
 
-
-ZEND_VAS_ARG_INFO( delete_gss_channel_bindings_struct );
 ZEND_VAS_NAMED_FUNC( delete_gss_channel_bindings_struct )
 {
     /*IMPLEMENT*/
 }
 
-
 #if 0
-ZEND_VAS_ARG_INFO( gss_c_nt_user_name_set );
 ZEND_VAS_NAMED_FUNC( gss_c_nt_user_name_set )
 {
     /*IMPLEMENT*/
 }
 
-
-ZEND_VAS_ARG_INFO( gss_c_nt_user_name_get );
 ZEND_VAS_NAMED_FUNC( gss_c_nt_user_name_get )
 {
     /*IMPLEMENT*/
 }
 
-
-ZEND_VAS_ARG_INFO( gss_c_nt_machine_uid_name_set );
 ZEND_VAS_NAMED_FUNC( gss_c_nt_machine_uid_name_set )
 {
     /*IMPLEMENT*/
 }
 
-
-ZEND_VAS_ARG_INFO( gss_c_nt_machine_uid_name_get );
 ZEND_VAS_NAMED_FUNC( gss_c_nt_machine_uid_name_get )
 {
     /*IMPLEMENT*/
 }
 
-
-ZEND_VAS_ARG_INFO( gss_c_nt_string_uid_name_set );
 ZEND_VAS_NAMED_FUNC( gss_c_nt_string_uid_name_set )
 {
     /*IMPLEMENT*/
 }
 
-
-ZEND_VAS_ARG_INFO( gss_c_nt_string_uid_name_get );
 ZEND_VAS_NAMED_FUNC( gss_c_nt_string_uid_name_get )
 {
     /*IMPLEMENT*/
 }
 
-
-ZEND_VAS_ARG_INFO( gss_c_nt_hostbased_service_x_set );
 ZEND_VAS_NAMED_FUNC( gss_c_nt_hostbased_service_x_set )
 {
     /*IMPLEMENT*/
 }
 
-
-ZEND_VAS_ARG_INFO( gss_c_nt_hostbased_service_x_get );
 ZEND_VAS_NAMED_FUNC( gss_c_nt_hostbased_service_x_get )
 {
     /*IMPLEMENT*/
 }
 
-
-ZEND_VAS_ARG_INFO( gss_c_nt_hostbased_service_set );
 ZEND_VAS_NAMED_FUNC( gss_c_nt_hostbased_service_set )
 {
     /*IMPLEMENT*/
 }
 
-
-ZEND_VAS_ARG_INFO( gss_c_nt_hostbased_service_get );
 ZEND_VAS_NAMED_FUNC( gss_c_nt_hostbased_service_get )
 {
     /*IMPLEMENT*/
 }
 
-
-ZEND_VAS_ARG_INFO( gss_c_nt_anonymous_set )
 ZEND_VAS_NAMED_FUNC( gss_c_nt_anonymous_set )
 {
     /*IMPLEMENT*/
 }
 
-
-ZEND_VAS_ARG_INFO( gss_c_nt_anonymous_get );
 ZEND_VAS_NAMED_FUNC( gss_c_nt_anonymous_get )
 {
     /*IMPLEMENT*/
 }
 
-
-ZEND_VAS_ARG_INFO( gss_c_nt_export_name_set );
 ZEND_VAS_NAMED_FUNC( gss_c_nt_export_name_set )
 {
     /*IMPLEMENT*/
 }
 
-
-ZEND_VAS_ARG_INFO( gss_c_nt_export_name_get );
 ZEND_VAS_NAMED_FUNC( gss_c_nt_export_name_get )
 {
     /*IMPLEMENT*/
 }
 
-
-ZEND_VAS_ARG_INFO( gss_spnego_mechanism_set );
 ZEND_VAS_NAMED_FUNC( gss_spnego_mechanism_set )
 {
     /*IMPLEMENT*/
 }
 
-
-ZEND_VAS_ARG_INFO( gss_spnego_mechanism_get );
 ZEND_VAS_NAMED_FUNC( gss_spnego_mechanism_get )
 {
     /*IMPLEMENT*/
 }
 #endif
 
-ZEND_VAS_ARG_INFO( gss_acquire_cred );
 ZEND_VAS_NAMED_FUNC( gss_acquire_cred )
 {
     /*IMPLEMENT*/
 }
 
-
-ZEND_VAS_ARG_INFO( gss_add_cred );
 ZEND_VAS_NAMED_FUNC( gss_add_cred )
 {
     /*IMPLEMENT*/
 }
 
-
-ZEND_VAS_ARG_INFO( gss_inquire_cred );
 ZEND_VAS_NAMED_FUNC( gss_inquire_cred )
 {
     /*IMPLEMENT*/
 }
 
-
-ZEND_VAS_ARG_INFO( gss_inquire_cred_by_mech );
 ZEND_VAS_NAMED_FUNC( gss_inquire_cred_by_mech )
 {
     /*IMPLEMENT*/
 }
 
-
-ZEND_VAS_ARG_INFO( gss_init_sec_context );
 ZEND_VAS_NAMED_FUNC( gss_init_sec_context )
 {
     /*IMPLEMENT*/
 }
 
-
-ZEND_VAS_ARG_INFO( gss_accept_sec_context );
 ZEND_VAS_NAMED_FUNC( gss_accept_sec_context )
 {
     /*IMPLEMENT*/
 }
 
-
-ZEND_VAS_ARG_INFO( gss_process_context_token );
 ZEND_VAS_NAMED_FUNC( gss_process_context_token )
 {
     /*IMPLEMENT*/
 }
 
-
-ZEND_VAS_ARG_INFO( gss_context_time );
 ZEND_VAS_NAMED_FUNC( gss_context_time )
 {
     /*IMPLEMENT*/
 }
 
-
-ZEND_VAS_ARG_INFO( gss_inquire_context );
 ZEND_VAS_NAMED_FUNC( gss_inquire_context )
 {
     /*IMPLEMENT*/
 }
 
-
-ZEND_VAS_ARG_INFO( gss_wrap_size_limit );
 ZEND_VAS_NAMED_FUNC( gss_wrap_size_limit )
 {
     /*IMPLEMENT*/
 }
 
-
-ZEND_VAS_ARG_INFO( gss_export_sec_context );
 ZEND_VAS_NAMED_FUNC( gss_export_sec_context )
 {
     /*IMPLEMENT*/
 }
 
-
-ZEND_VAS_ARG_INFO( gss_import_sec_context );
 ZEND_VAS_NAMED_FUNC( gss_import_sec_context )
 {
     /*IMPLEMENT*/
 }
 
-
-ZEND_VAS_ARG_INFO( gss_get_mic );
 ZEND_VAS_NAMED_FUNC( gss_get_mic )
 {
     /*IMPLEMENT*/
 }
 
-
-ZEND_VAS_ARG_INFO( gss_verify_mic );
 ZEND_VAS_NAMED_FUNC( gss_verify_mic )
 {
     /*IMPLEMENT*/
 }
 
-
-ZEND_VAS_ARG_INFO( gss_wrap );
 ZEND_VAS_NAMED_FUNC( gss_wrap )
 {
     /*IMPLEMENT*/
 }
 
-
-ZEND_VAS_ARG_INFO( gss_unwrap );
 ZEND_VAS_NAMED_FUNC( gss_unwrap )
 {
     /*IMPLEMENT*/
 }
 
-
-ZEND_VAS_ARG_INFO( gss_sign );
 ZEND_VAS_NAMED_FUNC( gss_sign )
 {
     /*IMPLEMENT*/
 }
 
-
-ZEND_VAS_ARG_INFO( gss_verify );
 ZEND_VAS_NAMED_FUNC( gss_verify )
 {
     /*IMPLEMENT*/
 }
 
-
-ZEND_VAS_ARG_INFO( gss_seal );
 ZEND_VAS_NAMED_FUNC( gss_seal )
 {
     /*IMPLEMENT*/
 }
 
-
-ZEND_VAS_ARG_INFO( gss_unseal );
 ZEND_VAS_NAMED_FUNC( gss_unseal )
 {
     /*IMPLEMENT*/
 }
 
-
-ZEND_VAS_ARG_INFO( gss_import_name );
 ZEND_VAS_NAMED_FUNC( gss_import_name )
 {
     /*IMPLEMENT*/
 }
 
-
-ZEND_VAS_ARG_INFO( gss_display_name );
 ZEND_VAS_NAMED_FUNC( gss_display_name )
 {
     /*IMPLEMENT*/
 }
 
-
-ZEND_VAS_ARG_INFO( gss_compare_name );
 ZEND_VAS_NAMED_FUNC( gss_compare_name )
 {
     /*IMPLEMENT*/
 }
 
-
-ZEND_VAS_ARG_INFO( gss_release_name );
 ZEND_VAS_NAMED_FUNC( gss_release_name )
 {
     /*IMPLEMENT*/
 }
 
-
-ZEND_VAS_ARG_INFO( gss_inquire_names_for_mech );
 ZEND_VAS_NAMED_FUNC( gss_inquire_names_for_mech )
 {
     /*IMPLEMENT*/
 }
 
-
-ZEND_VAS_ARG_INFO( gss_inquire_mechs_for_name );
 ZEND_VAS_NAMED_FUNC( gss_inquire_mechs_for_name )
 {
     /*IMPLEMENT*/
 }
 
-
-ZEND_VAS_ARG_INFO( gss_canonicalize_name );
 ZEND_VAS_NAMED_FUNC( gss_canonicalize_name )
 {
     /*IMPLEMENT*/
 }
 
-
-ZEND_VAS_ARG_INFO( gss_export_name );
 ZEND_VAS_NAMED_FUNC( gss_export_name )
 {
     /*IMPLEMENT*/
 }
 
-
-ZEND_VAS_ARG_INFO( gss_duplicate_name );
 ZEND_VAS_NAMED_FUNC( gss_duplicate_name )
 {
     /*IMPLEMENT*/
 }
 
-
-ZEND_VAS_ARG_INFO( gss_display_status );
 ZEND_VAS_NAMED_FUNC( gss_display_status )
 {
     /*IMPLEMENT*/
 }
 
-
-ZEND_VAS_ARG_INFO( gss_create_empty_oid_set );
 ZEND_VAS_NAMED_FUNC( gss_create_empty_oid_set )
 {
     /*IMPLEMENT*/
 }
 
-
-ZEND_VAS_ARG_INFO( gss_add_oid_set_member );
 ZEND_VAS_NAMED_FUNC( gss_add_oid_set_member )
 {
     /*IMPLEMENT*/
 }
 
-
-ZEND_VAS_ARG_INFO( gss_test_oid_set_member );
 ZEND_VAS_NAMED_FUNC( gss_test_oid_set_member )
 {
     /*IMPLEMENT*/
 }
 
-
-ZEND_VAS_ARG_INFO( gss_release_oid_set );
 ZEND_VAS_NAMED_FUNC( gss_release_oid_set )
 {
     /*IMPLEMENT*/
 }
 
-
-ZEND_VAS_ARG_INFO( gss_release_buffer );
 ZEND_VAS_NAMED_FUNC( gss_release_buffer )
 {
     /*IMPLEMENT*/
 }
 
-
-ZEND_VAS_ARG_INFO( gss_indicate_mechs );
 ZEND_VAS_NAMED_FUNC( gss_indicate_mechs )
 {
     /*IMPLEMENT*/
 }
 
-
-ZEND_VAS_ARG_INFO( vas_krb5_get_context );
 ZEND_VAS_NAMED_FUNC( vas_krb5_get_context )
 {
     zval *zctx;
@@ -5040,8 +4758,6 @@ ZEND_VAS_NAMED_FUNC( vas_krb5_get_context )
     }
 }
 
-
-ZEND_VAS_ARG_INFO( vas_krb5_get_principal );
 ZEND_VAS_NAMED_FUNC( vas_krb5_get_principal )
 {
     zval* zctx;
@@ -5074,8 +4790,6 @@ ZEND_VAS_NAMED_FUNC( vas_krb5_get_principal )
     }
 }
 
-
-ZEND_VAS_ARG_INFO( vas_krb5_get_ccache );
 ZEND_VAS_NAMED_FUNC( vas_krb5_get_ccache )
 {
     zval* zctx;
@@ -5108,8 +4822,6 @@ ZEND_VAS_NAMED_FUNC( vas_krb5_get_ccache )
     }
 }
 
-
-ZEND_VAS_ARG_INFO( vas_krb5_get_credentials );
 ZEND_VAS_NAMED_FUNC( vas_krb5_get_credentials )
 {
     zval* zctx;
@@ -5145,8 +4857,6 @@ ZEND_VAS_NAMED_FUNC( vas_krb5_get_credentials )
     }
 }
 
-
-ZEND_VAS_ARG_INFO( vas_krb5_validate_credentials );
 ZEND_VAS_NAMED_FUNC( vas_krb5_validate_credentials )
 {
     zval* zctx;
@@ -5181,7 +4891,6 @@ ZEND_VAS_NAMED_FUNC( vas_krb5_validate_credentials )
     }
 }
 
-ZEND_VAS_ARG_INFO( vas_ldap_init_and_bind );
 ZEND_VAS_NAMED_FUNC( vas_ldap_init_and_bind )
 {
     zval* zctx;
@@ -5218,7 +4927,6 @@ ZEND_VAS_NAMED_FUNC( vas_ldap_init_and_bind )
     }
 }
 
-ZEND_VAS_ARG_INFO( vas_ldap_set_attributes );
 ZEND_VAS_NAMED_FUNC( vas_ldap_set_attributes )
 {
     zval* zctx;
