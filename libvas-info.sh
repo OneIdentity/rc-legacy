@@ -86,4 +86,40 @@ echo "$PHP_BIND_VERS_MICRO"
 echo "$libvas_so_4_3_0"
 echo "$intermediate"
 echo "$version"
+
+exit 0
+# extra stuff here (this script...
+echo "Test obtaining library version with help from vas-config..."
+vasprefix=`/opt/quest/bin/vas-config --prefix`
+echo "vasprefix=$vasprefix"
+libdir="$vasprefix/lib"
+echo "libdir=$libdir"
+libs=`ls $libdir/libvas.so*`
+echo $libs
+liblist=`echo $libs | sed "s^$libdir/^^g"`
+echo "liblist=$liblist"
+# big assumption: there are 3 libraries here!
+actual=`echo $liblist | awk '{ print $3 }'`
+echo "(3) actual=$actual"
+if test -z "$actual" ; then
+  actual=`echo $liblist | awk '{ print $2 }'`
+  echo "(2) actual=$actual"
+  if test -z "$actual" ; then
+    actual=`echo $liblist | awk '{ print $1 }'`
+    echo "(1) actual=$actual"
+  fi
+fi
+# big assumption: there are 3 version digits!
+versions=`echo $actual | sed 's/[.]/ /g' | awk '{ print $3,$4,$5 }'`
+echo "versions=$versions"
+versions=`echo $actual | sed 's/\./ /g' | awk '{ print $3,$4,$5 }'`
+echo "dot-versions=$versions"
+
+echo ""
+echo "Now for php-config..."
+version=`/usr/local/bin/php-config --version`
+echo "version=$version"
+vers=`echo $version | sed 's/\./ /g' | awk '{ print $1 }'`
+echo "vers=$vers"
+
 # vim: set tabstop=2 shiftwidth=2 expandtab:
