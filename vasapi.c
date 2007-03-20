@@ -7,6 +7,10 @@
 
 /*#define SPE_DEBUG*/
 
+#ifndef __PHP_5__
+# define __PHP_4__
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -17,8 +21,12 @@ extern "C" {
 #include "ext/standard/info.h"
 #include "php_vas.h"
 
-/* These TSRMLS_ definitions should already be available now, but with older
- * PHP under redhat are not... */
+/*
+ * These TSRMLS_ definitions should already be available now, but with older
+ * PHP under Red Hat are not. This affects the last argument in the wrapped
+ * function argument list defined by INTERNAL_FUNCTION_PARAMETERS. These define
+ * out the executor_globals (search in this file on this term).
+ */
 #ifndef TSRMLS_D
 # define TSRMLS_D
 #endif
@@ -66,57 +74,48 @@ void SPEPRINTF( void *arg, ... )
     #define SPE_zend_error(a, b, c)
 #endif /* SPE_DEBUG */
 
-static void
-vas_attrs_t_free( vas_ctx_t *ctx, vas_attrs_t *object )
+static void vas_attrs_t_free( vas_ctx_t *ctx, vas_attrs_t *object )
 {
     vas_attrs_free( ctx, object );
 }
 
-static void
-vas_id_t_free( vas_ctx_t *ctx, vas_id_t *object )
+static void vas_id_t_free( vas_ctx_t *ctx, vas_id_t *object )
 {
     vas_id_free( ctx, object );
 }
 
-static void
-vas_auth_t_free( vas_ctx_t *ctx, vas_auth_t *object )
+static void vas_auth_t_free( vas_ctx_t *ctx, vas_auth_t *object )
 {
     vas_auth_free( ctx, object );
 }
 
-static void
-vas_user_t_free( vas_ctx_t *ctx, vas_user_t *object )
+static void vas_user_t_free( vas_ctx_t *ctx, vas_user_t *object )
 {
     vas_user_free( ctx, object );
 }
 
-static void
-vas_group_t_free( vas_ctx_t *ctx, vas_group_t *object )
+static void vas_group_t_free( vas_ctx_t *ctx, vas_group_t *object )
 {
     vas_group_free( ctx, object );
 }
 
-static void
-vas_service_t_free( vas_ctx_t *ctx, vas_service_t *object )
+static void vas_service_t_free( vas_ctx_t *ctx, vas_service_t *object )
 {
     vas_service_free( ctx, object );
 }
 
-static void
-vas_computer_t_free( vas_ctx_t *ctx, vas_computer_t *object )
+static void vas_computer_t_free( vas_ctx_t *ctx, vas_computer_t *object )
 {
     vas_computer_free( ctx, object );
 }
 
-static void
-gss_release_cred_internal( vas_ctx_t *ctx, gss_cred_id_t* cred_handle )
+static void gss_release_cred_internal( vas_ctx_t *ctx, gss_cred_id_t* cred_handle )
 {
     OM_uint32 minor_status;
     gss_release_cred( &minor_status, cred_handle );
 }
 
-static void
-gss_delete_sec_context_internal( vas_ctx_t *ctx, gss_ctx_id_t* cred_handle )
+static void gss_delete_sec_context_internal( vas_ctx_t *ctx, gss_ctx_id_t* cred_handle )
 {
     /* These are now deleted when the ctx is deleted and deinitialize is called
      * OM_uint32 minor_status;
@@ -124,16 +123,14 @@ gss_delete_sec_context_internal( vas_ctx_t *ctx, gss_ctx_id_t* cred_handle )
 }
 
 /*
-static void
-gss_release_buffer_internal( vas_ctx_t *ctx, gss_buffer_t buffer )
+static void gss_release_buffer_internal( vas_ctx_t *ctx, gss_buffer_t buffer )
 {
   * Note that the gss_release_buffer is actually done when this object is created.
   efree(buffer->value);
 }
 */
 
-static void
-krb5_free_keyblock_internal( vas_ctx_t *ctx, krb5_keyblock *key )
+static void krb5_free_keyblock_internal( vas_ctx_t *ctx, krb5_keyblock *key )
 {
     krb5_context kctx;
     vas_krb5_get_context( ctx, &kctx );
@@ -141,26 +138,22 @@ krb5_free_keyblock_internal( vas_ctx_t *ctx, krb5_keyblock *key )
     krb5_free_keyblock( kctx, key );
 }
 
-static void
-krb5_free_context_internal( vas_ctx_t *ctx, krb5_context *kctx )
+static void krb5_free_context_internal( vas_ctx_t *ctx, krb5_context *kctx )
 {
     /*EMPTY*/
 }
 
-static void
-krb5_free_principal_internal( vas_ctx_t *ctx, krb5_principal *princ )
+static void krb5_free_principal_internal( vas_ctx_t *ctx, krb5_principal *princ )
 {
     /*EMPTY*/
 }
 
-static void
-krb5_free_ccache_internal( vas_ctx_t *ctx, krb5_ccache *cc )
+static void krb5_free_ccache_internal( vas_ctx_t *ctx, krb5_ccache *cc )
 {
     /*EMPTY*/
 }
 
-static void
-krb5_free_creds_internal( vas_ctx_t *ctx, krb5_creds *creds )
+static void krb5_free_creds_internal( vas_ctx_t *ctx, krb5_creds *creds )
 {
     krb5_context kctx;
     vas_krb5_get_context( ctx, &kctx );
@@ -168,8 +161,7 @@ krb5_free_creds_internal( vas_ctx_t *ctx, krb5_creds *creds )
     krb5_free_creds( kctx, creds );
 }
 
-static void
-free_ldap_internal( vas_ctx_t *ctx, LDAP *ld )
+static void free_ldap_internal( vas_ctx_t *ctx, LDAP *ld )
 {
     ldap_unbind( ld );
 }
@@ -184,7 +176,7 @@ free_ldap_internal( vas_ctx_t *ctx, LDAP *ld )
 
 typedef struct SPE_vas_groups_list_t
 {
-    vas_group_t **groups;
+    vas_group_t                  **groups;
     struct SPE_vas_groups_list_t *next;
 } SPE_vas_groups_list_t;
 
@@ -194,21 +186,20 @@ typedef struct SPE_vas_groups_list_t
  * would fault.  This defers the releasing of the gss_ctx_id_t's.*/
 typedef struct SPE_vas_gss_ctx_list_t
 {
-    gss_ctx_id_t gssctx;
+    gss_ctx_id_t                  gssctx;
     struct SPE_vas_gss_ctx_list_t *next;
 } SPE_vas_gss_ctx_list_t;
 
 typedef struct
 {
-    vas_ctx_t *ctx;
-    unsigned int referenceCount;
-    SPE_vas_groups_list_t *groups_list;
-    unsigned char freeGSS;  /* Set to true if we have to call vas_gss_deinitialize.*/
+    vas_ctx_t              *ctx;
+    unsigned int           referenceCount;
+    SPE_vas_groups_list_t  *groups_list;
+    unsigned char          freeGSS;  /* Set to true if we have to call vas_gss_deinitialize.*/
     SPE_vas_gss_ctx_list_t *gssctx_list;
 } SPE_vas_ctx_t;
 
-static void
-SPE_add_groups( SPE_vas_ctx_t *ctx, vas_group_t **groups )
+static void SPE_add_groups( SPE_vas_ctx_t *ctx, vas_group_t **groups )
 {
   SPE_vas_groups_list_t *g = ( SPE_vas_groups_list_t * )emalloc( sizeof( SPE_vas_groups_list_t ) );
 
@@ -217,12 +208,11 @@ SPE_add_groups( SPE_vas_ctx_t *ctx, vas_group_t **groups )
   ctx->groups_list = g;
 }
 
-static void
-SPE_free_groups( SPE_vas_ctx_t *ctx )
+static void SPE_free_groups( SPE_vas_ctx_t *ctx )
 {
     SPE_vas_groups_list_t *p = ctx->groups_list;
 
-    while ( p )
+    while( p )
     {
         SPE_vas_groups_list_t *n = p->next;
         SPEPRINTF( "%p: Freeing groups at %p\n", p, p->groups );
@@ -232,20 +222,17 @@ SPE_free_groups( SPE_vas_ctx_t *ctx )
     }
 }
 
-static void
-SPE_add_gss_ctx( SPE_vas_ctx_t *ctx, gss_ctx_id_t gssctx )
+static void SPE_add_gss_ctx( SPE_vas_ctx_t *ctx, gss_ctx_id_t gssctx )
 {
     SPE_vas_gss_ctx_list_t *g = ( SPE_vas_gss_ctx_list_t * )emalloc( sizeof( SPE_vas_gss_ctx_list_t ) );
 
     /* printf( "Adding gssctx %p to list\n", gssctx ); */
-
     g->next = ctx->gssctx_list;
     g->gssctx = gssctx;
     ctx->gssctx_list = g;
 }
 
-static void
-SPE_remove_gss_ctx( SPE_vas_ctx_t *ctx, gss_ctx_id_t gssctx )
+static void SPE_remove_gss_ctx( SPE_vas_ctx_t *ctx, gss_ctx_id_t gssctx )
 {
     SPE_vas_gss_ctx_list_t *prev = NULL;
     SPE_vas_gss_ctx_list_t *next = ctx->gssctx_list;
@@ -253,11 +240,11 @@ SPE_remove_gss_ctx( SPE_vas_ctx_t *ctx, gss_ctx_id_t gssctx )
     /* printf("Removing gssctx %p from list\n", gssctx); */
 
 startover:
-    for ( next = ctx->gssctx_list; next; prev = next, next = next->next )
+    for( next = ctx->gssctx_list; next; prev = next, next = next->next )
     {
-        if ( next->gssctx == gssctx )
+        if( next->gssctx == gssctx )
         {
-            if ( prev )
+            if( prev )
             {  /* Delete item in middle. */
                 prev->next = next->next;
                 efree( next );
@@ -273,12 +260,11 @@ startover:
     }
 }
 
-static void
-SPE_free_gss_ctx( SPE_vas_ctx_t *ctx )
+static void SPE_free_gss_ctx( SPE_vas_ctx_t *ctx )
 {
     SPE_vas_gss_ctx_list_t *p = ctx->gssctx_list;
 
-    while ( p )
+    while( p )
     {
         OM_uint32 minor_status;
         SPE_vas_gss_ctx_list_t *n = p->next;
@@ -290,13 +276,12 @@ SPE_free_gss_ctx( SPE_vas_ctx_t *ctx )
     }
 }
 
-static vas_err_t
-SPE_vas_ctx_alloc( SPE_vas_ctx_t **vc )
+static vas_err_t SPE_vas_ctx_alloc( SPE_vas_ctx_t **vc )
 {
     vas_ctx_t *ctx = NULL;
     vas_err_t err = vas_ctx_alloc( &ctx );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         *vc = ( SPE_vas_ctx_t* )emalloc( sizeof( SPE_vas_ctx_t ) );
 
@@ -310,21 +295,20 @@ SPE_vas_ctx_alloc( SPE_vas_ctx_t **vc )
     return err;
 }
 
-static void
-SPE_vas_ctx_free( SPE_vas_ctx_t *vas_ctx )
+static void SPE_vas_ctx_free( SPE_vas_ctx_t *vas_ctx )
 {
     SPEPRINTF( "%p: Calling SPE_vas_ctx_free -- ref count %d\n", vas_ctx, vas_ctx->referenceCount );
 
-    if ( vas_ctx && vas_ctx->referenceCount > 0 )
+    if( vas_ctx && vas_ctx->referenceCount > 0 )
     {
-        if ( --vas_ctx->referenceCount == 0 )
+        if( --vas_ctx->referenceCount == 0 )
         {
             SPEPRINTF( "%p: Calling vas_ctx_free on %p\n", vas_ctx, vas_ctx->ctx );
 
             SPE_free_groups( vas_ctx );
             SPE_free_gss_ctx( vas_ctx );
 
-            if ( vas_ctx->freeGSS )
+            if( vas_ctx->freeGSS )
             {
                 vas_gss_deinitialize( vas_ctx->ctx );
             }
@@ -335,8 +319,7 @@ SPE_vas_ctx_free( SPE_vas_ctx_t *vas_ctx )
     /* SPEPRINTF( "%p: Free done\n", vas_ctx ); */
 }
 
-static void
-php_vas_ctx_t_dtor( zend_rsrc_list_entry *rsrc TSRMLS_DC )
+static void php_vas_ctx_t_dtor( zend_rsrc_list_entry *rsrc TSRMLS_DC )
 {
     SPE_vas_ctx_t *vas_ctx = ( SPE_vas_ctx_t* ) rsrc->ptr;
 
@@ -346,7 +329,7 @@ php_vas_ctx_t_dtor( zend_rsrc_list_entry *rsrc TSRMLS_DC )
 }
 
 #define SPE_DECLARE_DTOR_USING_CTX2_NO_POINTER( TYPE, FREE ) \
-static char* PHP_##TYPE##_RES_NAME = #TYPE;	\
+static char* PHP_##TYPE##_RES_NAME = #TYPE; \
 static int le_##TYPE; \
 typedef struct \
 { \
@@ -358,9 +341,9 @@ static void php_##TYPE##_dtor( zend_rsrc_list_entry *rsrc TSRMLS_DC ) \
 { \
     SPE_##TYPE* thing = ( SPE_##TYPE* ) rsrc->ptr; \
     SPEPRINTF( "%p: Calling " #TYPE "_dtor. noFree=%d\n", thing, thing->noFree ); \
-    if ( thing && thing->raw ) \
+    if( thing && thing->raw ) \
     { \
-        if ( thing->noFree == 0 ) \
+        if( thing->noFree == 0 ) \
         { \
             FREE( thing->ctx->ctx, &( thing->raw ) ); \
         } \
@@ -370,7 +353,7 @@ static void php_##TYPE##_dtor( zend_rsrc_list_entry *rsrc TSRMLS_DC ) \
 }
 
 #define SPE_DECLARE_DTOR_USING_CTX2_NO_POINTER_BY_VALUE( TYPE, FREE ) \
-static char* PHP_##TYPE##_RES_NAME = #TYPE;	\
+static char* PHP_##TYPE##_RES_NAME = #TYPE; \
 static int le_##TYPE; \
 typedef struct \
 { \
@@ -382,9 +365,9 @@ static void php_##TYPE##_dtor( zend_rsrc_list_entry *rsrc TSRMLS_DC ) \
 { \
     SPE_##TYPE *thing = ( SPE_##TYPE* ) rsrc->ptr; \
     SPEPRINTF( "%p: Calling " #TYPE "_dtor. noFree=%d\n", thing, thing->noFree ); \
-    if ( thing && thing->raw ) \
+    if( thing && thing->raw ) \
     { \
-        if ( thing->noFree == 0 ) \
+        if( thing->noFree == 0 ) \
         { \
             FREE( thing->ctx->ctx, thing->raw ); \
         } \
@@ -394,7 +377,7 @@ static void php_##TYPE##_dtor( zend_rsrc_list_entry *rsrc TSRMLS_DC ) \
 }
 
 #define SPE_DECLARE_DTOR_USING_CTX2( TYPE, FREE ) \
-static char* PHP_##TYPE##_RES_NAME = #TYPE;	\
+static char* PHP_##TYPE##_RES_NAME = #TYPE; \
 static int le_##TYPE; \
 typedef struct \
 { \
@@ -406,9 +389,9 @@ static void php_##TYPE##_dtor( zend_rsrc_list_entry *rsrc TSRMLS_DC ) \
 { \
     SPE_##TYPE* thing = ( SPE_##TYPE* ) rsrc->ptr; \
     SPEPRINTF( "%p: Calling " #TYPE "_dtor. noFree=%d\n", thing, thing->noFree ); \
-    if ( thing && thing->raw ) \
+    if( thing && thing->raw ) \
     { \
-        if ( thing->noFree == 0 ) \
+        if( thing->noFree == 0 ) \
         { \
             FREE( thing->ctx->ctx, thing->raw ); \
         } \
@@ -442,8 +425,8 @@ static void php_##TYPE##_dtor( zend_rsrc_list_entry *rsrc TSRMLS_DC ) \
 #define SPE_CHECK_ARGS( n ) \
 { \
     int argbase = 0; \
-    if ( this_ptr && this_ptr->type==IS_OBJECT ) { argbase++; } \
-    if ( ZEND_NUM_ARGS() + argbase != ( n ) ) { WRONG_PARAM_COUNT; } \
+    if( this_ptr && this_ptr->type==IS_OBJECT ) { argbase++; } \
+    if( ZEND_NUM_ARGS() + argbase != ( n ) ) { WRONG_PARAM_COUNT; } \
   }
 
 /*  || ( zend_get_parameters_array_ex( 1 - argbase, args ) != SUCCESS ) */
@@ -497,6 +480,17 @@ extern gss_OID GSS_C_NT_EXPORT_NAME;
 extern gss_OID GSS_SPNEGO_MECHANISM;
 */
 
+#ifdef __PHP_5__
+/* TODO: PHP-5 doesn't have these definitions, but perhaps this is done
+ * differently there? See definition of macro ZEND_VAS2() for PHP-5.
+ */
+#define BYREF_NONE          0
+#define BYREF_FORCE         1
+#define BYREF_ALLOW         2
+#define BYREF_FORCE_REST    3
+
+#endif
+
 static unsigned char vas_id_get_name_arginfo[] =
     { 4, BYREF_ALLOW, BYREF_ALLOW, BYREF_FORCE, BYREF_FORCE };
 
@@ -524,160 +518,350 @@ static unsigned char vas_gss_spnego_accept_arginfo[] =
 static unsigned char vas_gss_krb5_get_subkey_arginfo[] =
     { 3, BYREF_ALLOW, BYREF_ALLOW, BYREF_FORCE };
 
-/* entry subsection */
-/* Every non-class user visible function must have an entry here */
-function_entry vas_functions[] = {
-    ZEND_NAMED_FE( vas_err_internal,                  _wrap_vas_err_internal,                  NULL )
-    ZEND_NAMED_FE( vas_err_minor_internal,            _wrap_vas_err_minor_internal,            NULL )
-	ZEND_NAMED_FE( vas_ctx_alloc,                     _wrap_vas_ctx_alloc,                     NULL )
-	ZEND_NAMED_FE( vas_ctx_set_option,                _wrap_vas_ctx_set_option,                NULL )
-	ZEND_NAMED_FE( vas_ctx_get_option,                _wrap_vas_ctx_get_option,                NULL )
-	ZEND_NAMED_FE( vas_id_alloc,                      _wrap_vas_id_alloc,                      NULL )
-	ZEND_NAMED_FE( vas_id_get_ccache_name,            _wrap_vas_id_get_ccache_name,            NULL )
-	ZEND_NAMED_FE( vas_id_get_keytab_name,            _wrap_vas_id_get_keytab_name,            NULL )
-	ZEND_NAMED_FE( vas_id_get_name,                   _wrap_vas_id_get_name,                   vas_id_get_name_arginfo )
-	ZEND_NAMED_FE( vas_id_get_user,                   _wrap_vas_id_get_user,                   NULL )
-	ZEND_NAMED_FE( vas_id_is_cred_established,        _wrap_vas_id_is_cred_established,        NULL )
-	ZEND_NAMED_FE( vas_id_establish_cred_password,    _wrap_vas_id_establish_cred_password,    NULL )
-	ZEND_NAMED_FE( vas_id_establish_cred_keytab,      _wrap_vas_id_establish_cred_keytab,      NULL )
-	ZEND_NAMED_FE( vas_id_renew_cred,                 _wrap_vas_id_renew_cred,                 NULL )
-	ZEND_NAMED_FE( vas_auth,                          _wrap_vas_auth,                          NULL )
-	ZEND_NAMED_FE( vas_auth_with_password,            _wrap_vas_auth_with_password,            NULL )
-	ZEND_NAMED_FE( vas_auth_check_client_membership,  _wrap_vas_auth_check_client_membership,  NULL )
-	ZEND_NAMED_FE( vas_auth_get_client_groups,        _wrap_vas_auth_get_client_groups,        NULL )
-	ZEND_NAMED_FE( vas_attrs_alloc,                   _wrap_vas_attrs_alloc,                   NULL )
-	ZEND_NAMED_FE( vas_attrs_find,                    _wrap_vas_attrs_find,                    NULL )
-	ZEND_NAMED_FE( vas_attrs_find_continue,           _wrap_vas_attrs_find_continue,           NULL )
-	ZEND_NAMED_FE( vas_attrs_set_option,              _wrap_vas_attrs_set_option,              NULL )
-	ZEND_NAMED_FE( vas_attrs_get_option,              _wrap_vas_attrs_get_option,              NULL )
-	ZEND_NAMED_FE( vas_vals_get_string,               _wrap_vas_vals_get_string,               NULL )
-	ZEND_NAMED_FE( vas_vals_get_integer,              _wrap_vas_vals_get_integer,              NULL )
-	ZEND_NAMED_FE( vas_vals_get_binary,               _wrap_vas_vals_get_binary,               NULL )
-	ZEND_NAMED_FE( vas_vals_get_anames,               _wrap_vas_vals_get_anames,               NULL )
-	ZEND_NAMED_FE( vas_vals_get_dn,                   _wrap_vas_vals_get_dn,                   NULL )
-	ZEND_NAMED_FE( vas_name_to_principal,             _wrap_vas_name_to_principal,             NULL )
-	ZEND_NAMED_FE( vas_name_to_dn,                    _wrap_vas_name_to_dn,                    vas_name_to_dn_arginfo )
-	ZEND_NAMED_FE( vas_info_forest_root,              _wrap_vas_info_forest_root,              vas_info_forest_root_arginfo )
-	ZEND_NAMED_FE( vas_info_joined_domain,            _wrap_vas_info_joined_domain,            vas_info_joined_domain_arginfo )
-	ZEND_NAMED_FE( vas_info_site,                     _wrap_vas_info_site,                     NULL )
-	ZEND_NAMED_FE( vas_info_domains,                  _wrap_vas_info_domains,                  vas_info_domains_arginfo )
-	ZEND_NAMED_FE( vas_info_servers,                  _wrap_vas_info_servers,                  NULL )
-	ZEND_NAMED_FE( vas_prompt_for_cred_string,        _wrap_vas_prompt_for_cred_string,        NULL )
-	ZEND_NAMED_FE( vas_err_get_code,                  _wrap_vas_err_get_code,                  NULL )
-	ZEND_NAMED_FE( vas_err_get_string,                _wrap_vas_err_get_string,                NULL )
-	ZEND_NAMED_FE( vas_err_clear,                     _wrap_vas_err_clear,                     NULL )
-	ZEND_NAMED_FE( vas_err_get_info,                  _wrap_vas_err_get_info,                  NULL )
-	ZEND_NAMED_FE( vas_err_info_get_string,           _wrap_vas_err_info_get_string,           NULL )
-	ZEND_NAMED_FE( vas_err_get_cause_by_type,         _wrap_vas_err_get_cause_by_type,         NULL )
-	ZEND_NAMED_FE( vas_user_init,                     _wrap_vas_user_init,                     NULL )
-	ZEND_NAMED_FE( vas_user_is_member,                _wrap_vas_user_is_member,                NULL )
-	ZEND_NAMED_FE( vas_user_get_groups,               _wrap_vas_user_get_groups,               NULL )
-	ZEND_NAMED_FE( vas_user_get_attrs,                _wrap_vas_user_get_attrs,                NULL )
-	ZEND_NAMED_FE( vas_user_get_dn,                   _wrap_vas_user_get_dn,                   NULL )
-	ZEND_NAMED_FE( vas_user_get_domain,               _wrap_vas_user_get_domain,               NULL )
-	ZEND_NAMED_FE( vas_user_get_sam_account_name,     _wrap_vas_user_get_sam_account_name,     NULL )
-	ZEND_NAMED_FE( vas_user_get_sid,                  _wrap_vas_user_get_sid,                  NULL )
-	ZEND_NAMED_FE( vas_user_get_upn,                  _wrap_vas_user_get_upn,                  NULL )
-	ZEND_NAMED_FE( vas_user_get_pwinfo,               _wrap_vas_user_get_pwinfo,               NULL )
-	ZEND_NAMED_FE( vas_user_get_krb5_client_name,     _wrap_vas_user_get_krb5_client_name,     NULL )
-	ZEND_NAMED_FE( vas_user_get_account_control,      _wrap_vas_user_get_account_control,      NULL )
-	ZEND_NAMED_FE( vas_user_check_access,             _wrap_vas_user_check_access,             NULL )
-	ZEND_NAMED_FE( vas_user_check_conflicts,          _wrap_vas_user_check_conflicts,          NULL )
-	ZEND_NAMED_FE( vas_group_init,                    _wrap_vas_group_init,                    NULL )
-	ZEND_NAMED_FE( vas_group_has_member,              _wrap_vas_group_has_member,              NULL )
-	ZEND_NAMED_FE( vas_group_get_attrs,               _wrap_vas_group_get_attrs,               NULL )
-	ZEND_NAMED_FE( vas_group_get_dn,                  _wrap_vas_group_get_dn,                  NULL )
-	ZEND_NAMED_FE( vas_group_get_domain,              _wrap_vas_group_get_domain,              NULL )
-	ZEND_NAMED_FE( vas_group_get_sid,                 _wrap_vas_group_get_sid,                 NULL )
-	ZEND_NAMED_FE( vas_service_init,                  _wrap_vas_service_init,                  NULL )
-	ZEND_NAMED_FE( vas_service_get_attrs,             _wrap_vas_service_get_attrs,             NULL )
-	ZEND_NAMED_FE( vas_service_get_dn,                _wrap_vas_service_get_dn,                NULL )
-	ZEND_NAMED_FE( vas_service_get_domain,            _wrap_vas_service_get_domain,            NULL )
-	ZEND_NAMED_FE( vas_service_get_krb5_client_name,  _wrap_vas_service_get_krb5_client_name,  NULL )
-	ZEND_NAMED_FE( vas_service_get_spns,              _wrap_vas_service_get_spns,              NULL )
-	ZEND_NAMED_FE( vas_service_get_upn,               _wrap_vas_service_get_upn,               NULL )
-	ZEND_NAMED_FE( vas_computer_init,                 _wrap_vas_computer_init,                 NULL )
-	ZEND_NAMED_FE( vas_computer_is_member,            _wrap_vas_computer_is_member,            NULL )
-	ZEND_NAMED_FE( vas_computer_get_attrs,            _wrap_vas_computer_get_attrs,            NULL )
-	ZEND_NAMED_FE( vas_computer_get_dn,               _wrap_vas_computer_get_dn,               NULL )
-	ZEND_NAMED_FE( vas_computer_get_dns_hostname,     _wrap_vas_computer_get_dns_hostname,     NULL )
-	ZEND_NAMED_FE( vas_computer_get_domain,           _wrap_vas_computer_get_domain,           NULL )
-	ZEND_NAMED_FE( vas_computer_get_sid,              _wrap_vas_computer_get_sid,              NULL )
-	ZEND_NAMED_FE( vas_computer_get_spns,             _wrap_vas_computer_get_spns,             NULL )
-	ZEND_NAMED_FE( vas_computer_get_sam_account_name, _wrap_vas_computer_get_sam_account_name, NULL )
-	ZEND_NAMED_FE( vas_computer_get_upn,              _wrap_vas_computer_get_upn,              NULL )
-	ZEND_NAMED_FE( vas_computer_get_krb5_client_name, _wrap_vas_computer_get_krb5_client_name, NULL )
-	ZEND_NAMED_FE( vas_computer_get_host_spn,         _wrap_vas_computer_get_host_spn,         NULL )
-	ZEND_NAMED_FE( vas_computer_get_account_control,  _wrap_vas_computer_get_account_control,  NULL )
-	ZEND_NAMED_FE( vas_gss_initialize,                _wrap_vas_gss_initialize,                NULL )
-	ZEND_NAMED_FE( vas_gss_acquire_cred,              _wrap_vas_gss_acquire_cred,              NULL )
-	ZEND_NAMED_FE( vas_gss_auth,                      _wrap_vas_gss_auth,                      NULL )
-	ZEND_NAMED_FE( vas_gss_spnego_initiate,           _wrap_vas_gss_spnego_initiate,           vas_gss_spnego_initiate_arginfo )
-	ZEND_NAMED_FE( vas_gss_spnego_accept,             _wrap_vas_gss_spnego_accept,             vas_gss_spnego_accept_arginfo )
-	ZEND_NAMED_FE( vas_gss_krb5_get_subkey,           _wrap_vas_gss_krb5_get_subkey,           vas_gss_krb5_get_subkey_arginfo )
-	ZEND_NAMED_FE( gss_c_nt_user_name_set,            _wrap_GSS_C_NT_USER_NAME_set,            NULL )
-	ZEND_NAMED_FE( gss_c_nt_user_name_get,            _wrap_GSS_C_NT_USER_NAME_get,            NULL )
-	ZEND_NAMED_FE( gss_c_nt_machine_uid_name_set,     _wrap_GSS_C_NT_MACHINE_UID_NAME_set,     NULL )
-	ZEND_NAMED_FE( gss_c_nt_machine_uid_name_get,     _wrap_GSS_C_NT_MACHINE_UID_NAME_get,     NULL )
-	ZEND_NAMED_FE( gss_c_nt_string_uid_name_set,      _wrap_GSS_C_NT_STRING_UID_NAME_set,      NULL )
-	ZEND_NAMED_FE( gss_c_nt_string_uid_name_get,      _wrap_GSS_C_NT_STRING_UID_NAME_get,      NULL )
-	ZEND_NAMED_FE( gss_c_nt_hostbased_service_x_set,  _wrap_GSS_C_NT_HOSTBASED_SERVICE_X_set,  NULL )
-	ZEND_NAMED_FE( gss_c_nt_hostbased_service_x_get,  _wrap_GSS_C_NT_HOSTBASED_SERVICE_X_get,  NULL )
-	ZEND_NAMED_FE( gss_c_nt_hostbased_service_set,    _wrap_GSS_C_NT_HOSTBASED_SERVICE_set,    NULL )
-	ZEND_NAMED_FE( gss_c_nt_hostbased_service_get,    _wrap_GSS_C_NT_HOSTBASED_SERVICE_get,    NULL )
-	ZEND_NAMED_FE( gss_c_nt_anonymous_set,            _wrap_GSS_C_NT_ANONYMOUS_set,            NULL )
-	ZEND_NAMED_FE( gss_c_nt_anonymous_get,            _wrap_GSS_C_NT_ANONYMOUS_get,            NULL )
-	ZEND_NAMED_FE( gss_c_nt_export_name_set,          _wrap_GSS_C_NT_EXPORT_NAME_set,          NULL )
-	ZEND_NAMED_FE( gss_c_nt_export_name_get,          _wrap_GSS_C_NT_EXPORT_NAME_get,          NULL )
-	ZEND_NAMED_FE( gss_spnego_mechanism_set,          _wrap_GSS_SPNEGO_MECHANISM_set,          NULL )
-	ZEND_NAMED_FE( gss_spnego_mechanism_get,          _wrap_GSS_SPNEGO_MECHANISM_get,          NULL )
-	ZEND_NAMED_FE( gss_acquire_cred,                  _wrap_gss_acquire_cred,                  NULL )
-	ZEND_NAMED_FE( gss_add_cred,                      _wrap_gss_add_cred,                      NULL )
-	ZEND_NAMED_FE( gss_inquire_cred,                  _wrap_gss_inquire_cred,                  NULL )
-	ZEND_NAMED_FE( gss_inquire_cred_by_mech,          _wrap_gss_inquire_cred_by_mech,          NULL )
-	ZEND_NAMED_FE( gss_init_sec_context,              _wrap_gss_init_sec_context,              NULL )
-	ZEND_NAMED_FE( gss_accept_sec_context,            _wrap_gss_accept_sec_context,            NULL )
-	ZEND_NAMED_FE( gss_process_context_token,         _wrap_gss_process_context_token,         NULL )
-	ZEND_NAMED_FE( gss_context_time,                  _wrap_gss_context_time,                  NULL )
-	ZEND_NAMED_FE( gss_inquire_context,               _wrap_gss_inquire_context,               NULL )
-	ZEND_NAMED_FE( gss_wrap_size_limit,               _wrap_gss_wrap_size_limit,               NULL )
-	ZEND_NAMED_FE( gss_export_sec_context,            _wrap_gss_export_sec_context,            NULL )
-	ZEND_NAMED_FE( gss_import_sec_context,            _wrap_gss_import_sec_context,            NULL )
-	ZEND_NAMED_FE( gss_get_mic,                       _wrap_gss_get_mic,                       NULL )
-	ZEND_NAMED_FE( gss_verify_mic,                    _wrap_gss_verify_mic,                    NULL )
-	ZEND_NAMED_FE( gss_wrap,                          _wrap_gss_wrap,                          NULL )
-	ZEND_NAMED_FE( gss_unwrap,                        _wrap_gss_unwrap,                        NULL )
-	ZEND_NAMED_FE( gss_sign,                          _wrap_gss_sign,                          NULL )
-	ZEND_NAMED_FE( gss_verify,                        _wrap_gss_verify,                        NULL )
-	ZEND_NAMED_FE( gss_seal,                          _wrap_gss_seal,                          NULL )
-	ZEND_NAMED_FE( gss_unseal,                        _wrap_gss_unseal,                        NULL )
-	ZEND_NAMED_FE( gss_import_name,                   _wrap_gss_import_name,                   NULL )
-	ZEND_NAMED_FE( gss_display_name,                  _wrap_gss_display_name,                  NULL )
-	ZEND_NAMED_FE( gss_compare_name,                  _wrap_gss_compare_name,                  NULL )
-	ZEND_NAMED_FE( gss_release_name,                  _wrap_gss_release_name,                  NULL )
-	ZEND_NAMED_FE( gss_inquire_names_for_mech,        _wrap_gss_inquire_names_for_mech,        NULL )
-	ZEND_NAMED_FE( gss_inquire_mechs_for_name,        _wrap_gss_inquire_mechs_for_name,        NULL )
-	ZEND_NAMED_FE( gss_canonicalize_name,             _wrap_gss_canonicalize_name,             NULL )
-	ZEND_NAMED_FE( gss_export_name,                   _wrap_gss_export_name,                   NULL )
-	ZEND_NAMED_FE( gss_duplicate_name,                _wrap_gss_duplicate_name,                NULL )
-	ZEND_NAMED_FE( gss_display_status,                _wrap_gss_display_status,                NULL )
-	ZEND_NAMED_FE( gss_create_empty_oid_set,          _wrap_gss_create_empty_oid_set,          NULL )
-	ZEND_NAMED_FE( gss_add_oid_set_member,            _wrap_gss_add_oid_set_member,            NULL )
-	ZEND_NAMED_FE( gss_test_oid_set_member,           _wrap_gss_test_oid_set_member,           NULL )
-	ZEND_NAMED_FE( gss_release_oid_set,               _wrap_gss_release_oid_set,               NULL )
-	ZEND_NAMED_FE( gss_release_buffer,                _wrap_gss_release_buffer,                NULL )
-	ZEND_NAMED_FE( gss_indicate_mechs,                _wrap_gss_indicate_mechs,                NULL )
-	ZEND_NAMED_FE( vas_krb5_get_context,              _wrap_vas_krb5_get_context,              NULL )
-	ZEND_NAMED_FE( vas_krb5_get_principal,            _wrap_vas_krb5_get_principal,            NULL )
-	ZEND_NAMED_FE( vas_krb5_get_ccache,               _wrap_vas_krb5_get_ccache,               NULL )
-	ZEND_NAMED_FE( vas_krb5_get_credentials,          _wrap_vas_krb5_get_credentials,          NULL )
-	ZEND_NAMED_FE( vas_krb5_validate_credentials,     _wrap_vas_krb5_validate_credentials,     NULL )
-	ZEND_NAMED_FE( vas_ldap_init_and_bind,            _wrap_vas_ldap_init_and_bind,            NULL )
-	ZEND_NAMED_FE( vas_ldap_set_attributes,           _wrap_vas_ldap_set_attributes,           NULL )
-	{ NULL, NULL, NULL }
+ZEND_VAS_ARG_INFO( vas_err_internal );
+ZEND_VAS_ARG_INFO( vas_err_minor_internal );
+ZEND_VAS_ARG_INFO( vas_ctx_alloc );
+ZEND_VAS_ARG_INFO( vas_ctx_set_option );
+ZEND_VAS_ARG_INFO( vas_ctx_get_option );
+ZEND_VAS_ARG_INFO( vas_id_alloc );
+ZEND_VAS_ARG_INFO( vas_id_get_ccache_name );
+ZEND_VAS_ARG_INFO( vas_id_get_keytab_name );
+ZEND_VAS_ARG_INFO( vas_id_get_name );
+ZEND_VAS_ARG_INFO( vas_id_get_user );
+ZEND_VAS_ARG_INFO( vas_id_is_cred_established );
+ZEND_VAS_ARG_INFO( vas_id_establish_cred_password );
+ZEND_VAS_ARG_INFO( vas_id_establish_cred_keytab );
+ZEND_VAS_ARG_INFO( vas_id_renew_cred );
+ZEND_VAS_ARG_INFO( vas_auth );
+ZEND_VAS_ARG_INFO( vas_auth_with_password );
+ZEND_VAS_ARG_INFO( vas_auth_check_client_membership );
+ZEND_VAS_ARG_INFO( vas_auth_get_client_groups );
+ZEND_VAS_ARG_INFO( vas_attrs_alloc );
+ZEND_VAS_ARG_INFO( vas_attrs_find );
+ZEND_VAS_ARG_INFO( vas_attrs_find_continue );
+ZEND_VAS_ARG_INFO( vas_attrs_set_option );
+ZEND_VAS_ARG_INFO( vas_attrs_get_option );
+ZEND_VAS_ARG_INFO( vas_vals_get_string );
+ZEND_VAS_ARG_INFO( vas_vals_get_integer );
+ZEND_VAS_ARG_INFO( vas_vals_get_binary );
+ZEND_VAS_ARG_INFO( vas_vals_get_anames );
+ZEND_VAS_ARG_INFO( vas_vals_get_dn );
+ZEND_VAS_ARG_INFO( vas_name_to_principal );
+ZEND_VAS_ARG_INFO( vas_name_to_dn );
+ZEND_VAS_ARG_INFO( vas_info_forest_root );
+ZEND_VAS_ARG_INFO( vas_info_joined_domain );
+ZEND_VAS_ARG_INFO( vas_info_site );
+ZEND_VAS_ARG_INFO( vas_info_domains );
+ZEND_VAS_ARG_INFO( vas_info_servers );
+ZEND_VAS_ARG_INFO( vas_prompt_for_cred_string );
+ZEND_VAS_ARG_INFO( vas_err_get_code );
+ZEND_VAS_ARG_INFO( vas_err_get_string );
+ZEND_VAS_ARG_INFO( vas_err_clear );
+ZEND_VAS_ARG_INFO( vas_err_get_info );
+ZEND_VAS_ARG_INFO( vas_err_info_get_string );
+ZEND_VAS_ARG_INFO( vas_err_get_cause_by_type );
+ZEND_VAS_ARG_INFO( vas_user_init );
+ZEND_VAS_ARG_INFO( vas_user_is_member );
+ZEND_VAS_ARG_INFO( vas_user_get_groups );
+ZEND_VAS_ARG_INFO( vas_user_get_attrs );
+ZEND_VAS_ARG_INFO( vas_user_get_dn );
+ZEND_VAS_ARG_INFO( vas_user_get_domain );
+ZEND_VAS_ARG_INFO( vas_user_get_sam_account_name );
+ZEND_VAS_ARG_INFO( vas_user_get_sid );
+ZEND_VAS_ARG_INFO( vas_user_get_upn );
+ZEND_VAS_ARG_INFO( vas_user_get_pwinfo );
+ZEND_VAS_ARG_INFO( vas_user_get_krb5_client_name );
+ZEND_VAS_ARG_INFO( vas_user_get_account_control );
+ZEND_VAS_ARG_INFO( vas_user_check_access );
+ZEND_VAS_ARG_INFO( vas_user_check_conflicts );
+ZEND_VAS_ARG_INFO( vas_group_init );
+ZEND_VAS_ARG_INFO( vas_group_has_member );
+ZEND_VAS_ARG_INFO( vas_group_get_attrs );
+ZEND_VAS_ARG_INFO( vas_group_get_dn );
+ZEND_VAS_ARG_INFO( vas_group_get_domain );
+ZEND_VAS_ARG_INFO( vas_group_get_sid );
+ZEND_VAS_ARG_INFO( vas_service_init );
+ZEND_VAS_ARG_INFO( vas_service_get_attrs );
+ZEND_VAS_ARG_INFO( vas_service_get_dn );
+ZEND_VAS_ARG_INFO( vas_service_get_domain );
+ZEND_VAS_ARG_INFO( vas_service_get_krb5_client_name );
+ZEND_VAS_ARG_INFO( vas_service_get_spns );
+ZEND_VAS_ARG_INFO( vas_service_get_upn );
+ZEND_VAS_ARG_INFO( vas_computer_init );
+ZEND_VAS_ARG_INFO( vas_computer_is_member );
+ZEND_VAS_ARG_INFO( vas_computer_get_attrs );
+ZEND_VAS_ARG_INFO( vas_computer_get_dn );
+ZEND_VAS_ARG_INFO( vas_computer_get_dns_hostname );
+ZEND_VAS_ARG_INFO( vas_computer_get_domain );
+ZEND_VAS_ARG_INFO( vas_computer_get_sid );
+ZEND_VAS_ARG_INFO( vas_computer_get_spns );
+ZEND_VAS_ARG_INFO( vas_computer_get_sam_account_name );
+ZEND_VAS_ARG_INFO( vas_computer_get_upn );
+ZEND_VAS_ARG_INFO( vas_computer_get_krb5_client_name );
+ZEND_VAS_ARG_INFO( vas_computer_get_host_spn );
+ZEND_VAS_ARG_INFO( vas_computer_get_account_control );
+ZEND_VAS_ARG_INFO( vas_gss_initialize );
+ZEND_VAS_ARG_INFO( vas_gss_acquire_cred );
+ZEND_VAS_ARG_INFO( vas_gss_auth );
+ZEND_VAS_ARG_INFO( vas_gss_spnego_initiate );
+ZEND_VAS_ARG_INFO( vas_gss_spnego_accept );
+ZEND_VAS_ARG_INFO( vas_gss_krb5_get_subkey );
+ZEND_VAS_ARG_INFO( new_gss_buffer_desc );
+ZEND_VAS_ARG_INFO( delete_gss_buffer_desc );
+ZEND_VAS_ARG_INFO( new_gss_OID_desc );
+ZEND_VAS_ARG_INFO( delete_gss_OID_desc );
+ZEND_VAS_ARG_INFO( new_gss_OID_set_desc );
+ZEND_VAS_ARG_INFO( delete_gss_OID_set_desc );
+ZEND_VAS_ARG_INFO( new_gss_channel_bindings_struct );
+ZEND_VAS_ARG_INFO( delete_gss_channel_bindings_struct );
+#if 0
+ZEND_VAS_ARG_INFO( gss_c_nt_user_name_set );
+ZEND_VAS_ARG_INFO( gss_c_nt_user_name_get );
+ZEND_VAS_ARG_INFO( gss_c_nt_machine_uid_name_set );
+ZEND_VAS_ARG_INFO( gss_c_nt_machine_uid_name_get );
+ZEND_VAS_ARG_INFO( gss_c_nt_string_uid_name_set );
+ZEND_VAS_ARG_INFO( gss_c_nt_string_uid_name_get );
+ZEND_VAS_ARG_INFO( gss_c_nt_hostbased_service_x_set );
+ZEND_VAS_ARG_INFO( gss_c_nt_hostbased_service_x_get );
+ZEND_VAS_ARG_INFO( gss_c_nt_hostbased_service_set );
+ZEND_VAS_ARG_INFO( gss_c_nt_hostbased_service_get );
+ZEND_VAS_ARG_INFO( gss_c_nt_anonymous_set )
+ZEND_VAS_ARG_INFO( gss_c_nt_anonymous_get );
+ZEND_VAS_ARG_INFO( gss_c_nt_export_name_set );
+ZEND_VAS_ARG_INFO( gss_c_nt_export_name_get );
+ZEND_VAS_ARG_INFO( gss_spnego_mechanism_set );
+ZEND_VAS_ARG_INFO( gss_spnego_mechanism_get );
+#endif
+ZEND_VAS_ARG_INFO( gss_acquire_cred );
+ZEND_VAS_ARG_INFO( gss_add_cred );
+ZEND_VAS_ARG_INFO( gss_inquire_cred );
+ZEND_VAS_ARG_INFO( gss_inquire_cred_by_mech );
+ZEND_VAS_ARG_INFO( gss_init_sec_context );
+ZEND_VAS_ARG_INFO( gss_accept_sec_context );
+ZEND_VAS_ARG_INFO( gss_process_context_token );
+ZEND_VAS_ARG_INFO( gss_context_time );
+ZEND_VAS_ARG_INFO( gss_inquire_context );
+ZEND_VAS_ARG_INFO( gss_wrap_size_limit );
+ZEND_VAS_ARG_INFO( gss_export_sec_context );
+ZEND_VAS_ARG_INFO( gss_import_sec_context );
+ZEND_VAS_ARG_INFO( gss_get_mic );
+ZEND_VAS_ARG_INFO( gss_verify_mic );
+ZEND_VAS_ARG_INFO( gss_wrap );
+ZEND_VAS_ARG_INFO( gss_unwrap );
+ZEND_VAS_ARG_INFO( gss_sign );
+ZEND_VAS_ARG_INFO( gss_verify );
+ZEND_VAS_ARG_INFO( gss_seal );
+ZEND_VAS_ARG_INFO( gss_unseal );
+ZEND_VAS_ARG_INFO( gss_import_name );
+ZEND_VAS_ARG_INFO( gss_display_name );
+ZEND_VAS_ARG_INFO( gss_compare_name );
+ZEND_VAS_ARG_INFO( gss_release_name );
+ZEND_VAS_ARG_INFO( gss_inquire_names_for_mech );
+ZEND_VAS_ARG_INFO( gss_inquire_mechs_for_name );
+ZEND_VAS_ARG_INFO( gss_canonicalize_name );
+ZEND_VAS_ARG_INFO( gss_export_name );
+ZEND_VAS_ARG_INFO( gss_duplicate_name );
+ZEND_VAS_ARG_INFO( gss_display_status );
+ZEND_VAS_ARG_INFO( gss_create_empty_oid_set );
+ZEND_VAS_ARG_INFO( gss_add_oid_set_member );
+ZEND_VAS_ARG_INFO( gss_test_oid_set_member );
+ZEND_VAS_ARG_INFO( gss_release_oid_set );
+ZEND_VAS_ARG_INFO( gss_release_buffer );
+ZEND_VAS_ARG_INFO( gss_indicate_mechs );
+ZEND_VAS_ARG_INFO( vas_krb5_get_context );
+ZEND_VAS_ARG_INFO( vas_krb5_get_principal );
+ZEND_VAS_ARG_INFO( vas_krb5_get_ccache );
+ZEND_VAS_ARG_INFO( vas_krb5_get_credentials );
+ZEND_VAS_ARG_INFO( vas_krb5_validate_credentials );
+ZEND_VAS_ARG_INFO( vas_ldap_init_and_bind );
+ZEND_VAS_ARG_INFO( vas_ldap_set_attributes );
+
+/*
+ * Entry subsection
+ *
+ * Every user-visible function must have an entry here. This introduces them to
+ * Zend by name as it should appear in PHP (the expected, VAS API name) and the
+ * underlying, implementation name (which, for now, is the same but prefixed by
+ * _wrap_--PHP really wants this to be prefixed with zif_ and we should change
+ * this later).
+ *
+ * This information comes from
+ * http://devzone.zend.com/manual/view/page/zend.structure.html. This document
+ * covers only PHP-4 and there are differences introduced in PHP-5.
+ */
+function_entry vas_functions[] =
+{
+    /* these pass in an array to give information... */
+    ZEND_VAS2( vas_id_get_name,         vas_id_get_name_arginfo )
+    ZEND_VAS2( vas_name_to_dn,          vas_name_to_dn_arginfo )
+    ZEND_VAS2( vas_info_forest_root,    vas_info_forest_root_arginfo )
+    ZEND_VAS2( vas_info_joined_domain,  vas_info_joined_domain_arginfo )
+    ZEND_VAS2( vas_info_domains,        vas_info_domains_arginfo )
+    ZEND_VAS2( vas_gss_spnego_initiate, vas_gss_spnego_initiate_arginfo )
+    ZEND_VAS2( vas_gss_spnego_accept,   vas_gss_spnego_accept_arginfo )
+    ZEND_VAS2( vas_gss_krb5_get_subkey, vas_gss_krb5_get_subkey_arginfo )
+
+    ZEND_VAS( vas_err_internal )
+    ZEND_VAS( vas_err_minor_internal )
+    ZEND_VAS( vas_ctx_alloc )
+    ZEND_VAS( vas_ctx_set_option )
+    ZEND_VAS( vas_ctx_get_option )
+    ZEND_VAS( vas_id_alloc )
+    ZEND_VAS( vas_id_get_ccache_name )
+    ZEND_VAS( vas_id_get_keytab_name )
+    ZEND_VAS( vas_id_get_user )
+    ZEND_VAS( vas_id_is_cred_established )
+    ZEND_VAS( vas_id_establish_cred_password )
+    ZEND_VAS( vas_id_establish_cred_keytab )
+    ZEND_VAS( vas_id_renew_cred )
+    ZEND_VAS( vas_auth )
+    ZEND_VAS( vas_auth_with_password )
+    ZEND_VAS( vas_auth_check_client_membership )
+    ZEND_VAS( vas_auth_get_client_groups )
+    ZEND_VAS( vas_attrs_alloc )
+    ZEND_VAS( vas_attrs_find )
+    ZEND_VAS( vas_attrs_find_continue )
+    ZEND_VAS( vas_attrs_set_option )
+    ZEND_VAS( vas_attrs_get_option )
+    ZEND_VAS( vas_vals_get_string )
+    ZEND_VAS( vas_vals_get_integer )
+    ZEND_VAS( vas_vals_get_binary )
+    ZEND_VAS( vas_vals_get_anames )
+    ZEND_VAS( vas_vals_get_dn )
+    ZEND_VAS( vas_name_to_principal )
+    ZEND_VAS( vas_info_site )
+    ZEND_VAS( vas_info_servers )
+    ZEND_VAS( vas_prompt_for_cred_string )
+    ZEND_VAS( vas_err_get_code )
+    ZEND_VAS( vas_err_get_string )
+    ZEND_VAS( vas_err_clear )
+    ZEND_VAS( vas_err_get_info )
+    ZEND_VAS( vas_err_info_get_string )
+    ZEND_VAS( vas_err_get_cause_by_type )
+    ZEND_VAS( vas_user_init )
+    ZEND_VAS( vas_user_is_member )
+    ZEND_VAS( vas_user_get_groups )
+    ZEND_VAS( vas_user_get_attrs )
+    ZEND_VAS( vas_user_get_dn )
+    ZEND_VAS( vas_user_get_domain )
+    ZEND_VAS( vas_user_get_sam_account_name )
+    ZEND_VAS( vas_user_get_sid )
+    ZEND_VAS( vas_user_get_upn )
+    ZEND_VAS( vas_user_get_pwinfo )
+    ZEND_VAS( vas_user_get_krb5_client_name )
+    ZEND_VAS( vas_user_get_account_control )
+    ZEND_VAS( vas_user_check_access )
+    ZEND_VAS( vas_user_check_conflicts )
+    ZEND_VAS( vas_group_init )
+    ZEND_VAS( vas_group_has_member )
+    ZEND_VAS( vas_group_get_attrs )
+    ZEND_VAS( vas_group_get_dn )
+    ZEND_VAS( vas_group_get_domain )
+    ZEND_VAS( vas_group_get_sid )
+    ZEND_VAS( vas_service_init )
+    ZEND_VAS( vas_service_get_attrs )
+    ZEND_VAS( vas_service_get_dn )
+    ZEND_VAS( vas_service_get_domain )
+    ZEND_VAS( vas_service_get_krb5_client_name )
+    ZEND_VAS( vas_service_get_spns )
+    ZEND_VAS( vas_service_get_upn )
+    ZEND_VAS( vas_computer_init )
+    ZEND_VAS( vas_computer_is_member )
+    ZEND_VAS( vas_computer_get_attrs )
+    ZEND_VAS( vas_computer_get_dn )
+    ZEND_VAS( vas_computer_get_dns_hostname )
+    ZEND_VAS( vas_computer_get_domain )
+    ZEND_VAS( vas_computer_get_sid )
+    ZEND_VAS( vas_computer_get_spns )
+    ZEND_VAS( vas_computer_get_sam_account_name )
+    ZEND_VAS( vas_computer_get_upn )
+    ZEND_VAS( vas_computer_get_krb5_client_name )
+    ZEND_VAS( vas_computer_get_host_spn )
+    ZEND_VAS( vas_computer_get_account_control )
+    ZEND_VAS( vas_gss_initialize )
+    ZEND_VAS( vas_gss_acquire_cred )
+    ZEND_VAS( vas_gss_auth )
+    ZEND_VAS( vas_krb5_get_context )
+    ZEND_VAS( vas_krb5_get_principal )
+    ZEND_VAS( vas_krb5_get_ccache )
+    ZEND_VAS( vas_krb5_get_credentials )
+    ZEND_VAS( vas_krb5_validate_credentials )
+    ZEND_VAS( vas_ldap_init_and_bind )
+    ZEND_VAS( vas_ldap_set_attributes )
+
+#if 0
+    /* these are as yet unimplemented... */
+    ZEND_VAS( gss_c_nt_user_name_set )
+    ZEND_VAS( gss_c_nt_user_name_get )
+    ZEND_VAS( gss_c_nt_machine_uid_name_set )
+    ZEND_VAS( gss_c_nt_machine_uid_name_get )
+    ZEND_VAS( gss_c_nt_string_uid_name_set )
+    ZEND_VAS( gss_c_nt_string_uid_name_get )
+    ZEND_VAS( gss_c_nt_hostbased_service_x_set )
+    ZEND_VAS( gss_c_nt_hostbased_service_x_get )
+    ZEND_VAS( gss_c_nt_hostbased_service_set )
+    ZEND_VAS( gss_c_nt_hostbased_service_get )
+    ZEND_VAS( gss_c_nt_anonymous_set )
+    ZEND_VAS( gss_c_nt_anonymous_get )
+    ZEND_VAS( gss_c_nt_export_name_set )
+    ZEND_VAS( gss_c_nt_export_name_get )
+    ZEND_VAS( gss_spnego_mechanism_set )
+    ZEND_VAS( gss_spnego_mechanism_get )
+#endif
+
+    ZEND_VAS( gss_acquire_cred )
+    ZEND_VAS( gss_add_cred )
+    ZEND_VAS( gss_inquire_cred )
+    ZEND_VAS( gss_inquire_cred_by_mech )
+    ZEND_VAS( gss_init_sec_context )
+    ZEND_VAS( gss_accept_sec_context )
+    ZEND_VAS( gss_process_context_token )
+    ZEND_VAS( gss_context_time )
+    ZEND_VAS( gss_inquire_context )
+    ZEND_VAS( gss_wrap_size_limit )
+    ZEND_VAS( gss_export_sec_context )
+    ZEND_VAS( gss_import_sec_context )
+    ZEND_VAS( gss_get_mic )
+    ZEND_VAS( gss_verify_mic )
+    ZEND_VAS( gss_wrap )
+    ZEND_VAS( gss_unwrap )
+    ZEND_VAS( gss_sign )
+    ZEND_VAS( gss_verify )
+    ZEND_VAS( gss_seal )
+    ZEND_VAS( gss_unseal )
+    ZEND_VAS( gss_import_name )
+    ZEND_VAS( gss_display_name )
+    ZEND_VAS( gss_compare_name )
+    ZEND_VAS( gss_release_name )
+    ZEND_VAS( gss_inquire_names_for_mech )
+    ZEND_VAS( gss_inquire_mechs_for_name )
+    ZEND_VAS( gss_canonicalize_name )
+    ZEND_VAS( gss_export_name )
+    ZEND_VAS( gss_duplicate_name )
+    ZEND_VAS( gss_display_status )
+    ZEND_VAS( gss_create_empty_oid_set )
+    ZEND_VAS( gss_add_oid_set_member )
+    ZEND_VAS( gss_test_oid_set_member )
+    ZEND_VAS( gss_release_oid_set )
+    ZEND_VAS( gss_release_buffer )
+    ZEND_VAS( gss_indicate_mechs )
+#if defined( __PHP_4__ )
+    { /* fname */          NULL,
+      /* handler */        NULL,
+      /* func_arg_types */ NULL }
+#elif defined( __PHP_5__ )
+    { /* fname */          NULL,
+      /* handler */        NULL,
+      /* arg_info */       NULL,
+      /* num_args */       0,
+      /* flags */          0 }
+#else
+# error You must define __PHP_4__ or __PHP_5__
+#endif
 };
 
-zend_module_entry vas_module_entry = {
+zend_module_entry vas_module_entry =
+{
 #if ZEND_MODULE_API_NO > 20010900
     STANDARD_MODULE_HEADER,
 #endif
@@ -695,20 +879,53 @@ zend_module_entry vas_module_entry = {
 };
 
 
-/* wrapper section */
-
-
-ZEND_NAMED_FUNCTION( _wrap_vas_err_internal )
+/*
+ * Wrapped-implementation section
+ *
+ * Each function needs a definition and, for PHP-5, a filled-in arg_info
+ * structure. In each of these functions, there are 5 or 6 arguments (depending
+ * on whether this is built for PHP-4 or PHP-5). Most are accessed only through
+ * special macros and some are only seen in this code after preprocessing the
+ * macros out. Except as marked, each of these is in both PHP-4 and PHP-5. They
+ * are:
+ *
+ * ht                Number of arguments passed to Zend, obtained only using
+ *                   ZEND_NUM_ARGS().
+ * return_value      Used to pass return values from this function back to PHP
+ *                   using predefined macros.
+ * return_value_ptr  (PHP-5) Don't know what this does. It is this argument
+ *                   smack in the middle of the list that caused these bindings
+ *                   not to compile for PHP-5.
+ * (Returning values is discussed in:
+ * http://devzone.zend.com/manual/view/page/zend.returning.html.)
+ * this_ptr          Gains access to the object in which function is contained,
+ *                   if used within an object. The VAS APIs aren't
+ *                   object-oriented, so this isn't specially used, but some
+ *                   macros in use actually touch it.
+ * return_value_used Flag indicating whether the return value of the guts of
+ *                   this function will be consumed by the PHP calling code, 0
+ *                   for won't be used, 1 indicates that it will be expected.
+ * executor_globals  Points to global settings of the Zend engine used only if
+ *                   creating new variables (which VAS doesn't do). Because at
+ *                   the time of the original implementation, Red Hat platform
+ *                   implementations of PHP didn't support this argument, it
+ *                   doesn't appear in INTERNAL_FUNCTION_PARAMETERS (defined in
+ *                   zend.h).
+ */
+ZEND_VAS_ARG_INFO( vas_err_internal );
+ZEND_VAS_NAMED_FUNC( vas_err_internal )
 {
     RETURN_LONG( VAS_G( g_vas_err ) );
 }
 
-ZEND_NAMED_FUNCTION( _wrap_vas_err_minor_internal )
+ZEND_VAS_ARG_INFO( vas_err_minor_internal );
+ZEND_VAS_NAMED_FUNC( vas_err_minor_internal )
 {
     RETURN_LONG( VAS_G( g_vas_err_minor ) );
 }
 
-ZEND_NAMED_FUNCTION( _wrap_vas_ctx_alloc )
+ZEND_VAS_ARG_INFO( vas_ctx_alloc );
+ZEND_VAS_NAMED_FUNC( vas_ctx_alloc )
 {
     SPE_vas_ctx_t *newContext = NULL;
     vas_err_t err;
@@ -719,7 +936,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_ctx_alloc )
 
     SPE_SET_VAS_ERR( err );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         ZEND_REGISTER_RESOURCE( return_value, newContext, le_vas_ctx_t );
     }
@@ -734,7 +951,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_ctx_alloc )
 #define S3ARG zarg1 && zarg2 && zarg3 && !zarg4
 #define S4ARG zarg1 && zarg2 && zarg3 && zarg4 && !zarg5
 
-ZEND_NAMED_FUNCTION( _wrap_vas_ctx_set_option )
+ZEND_VAS_ARG_INFO( vas_ctx_set_option );
+ZEND_VAS_NAMED_FUNC( vas_ctx_set_option )
 {
     zval *zctx;
     zval *zarg1 = NULL, *zarg2 = NULL, *zarg3 = NULL, *zarg4 = NULL, *zarg5 = NULL;
@@ -744,19 +962,19 @@ ZEND_NAMED_FUNCTION( _wrap_vas_ctx_set_option )
     /* Make sure there are at least three arguments. */
     {
         int argbase=0;
-        if ( this_ptr && this_ptr->type == IS_OBJECT ) { argbase++; }
-        if ( ZEND_NUM_ARGS() + argbase < 3 ) { WRONG_PARAM_COUNT; }
+        if( this_ptr && this_ptr->type == IS_OBJECT ) { argbase++; }
+        if( ZEND_NUM_ARGS() + argbase < 3 ) { WRONG_PARAM_COUNT; }
     }
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rl|zzzzz", &zctx, &option, &zarg1, &zarg2, &zarg3, &zarg4, &zarg5 ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rl|zzzzz", &zctx, &option, &zarg1, &zarg2, &zarg3, &zarg4, &zarg5 ) == FAILURE )
     {
         RETURN_NULL();
     }
     ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
-    switch ( option )
+    switch( option )
     {
     case VAS_CTX_OPTION_DEFAULT_REALM:
-        if ( S1ARG && Z_TYPE_P( zarg1 ) == IS_STRING )
+        if( S1ARG && Z_TYPE_P( zarg1 ) == IS_STRING )
         {
             char *str1 = Z_STRVAL_P( zarg1 );
             err = vas_ctx_set_option( ctx->ctx, option, str1 );
@@ -768,7 +986,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_ctx_set_option )
         }
         break;
     case VAS_CTX_OPTION_SITE_AND_FOREST_ROOT:
-        if ( S2ARG &&
+        if( S2ARG &&
              ( Z_TYPE_P(zarg1) == IS_STRING || Z_TYPE_P( zarg1 ) == IS_NULL ) &&
              ( Z_TYPE_P(zarg2) == IS_STRING || Z_TYPE_P( zarg2 ) == IS_NULL ) )
         {
@@ -783,7 +1001,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_ctx_set_option )
         }
         break;
     case VAS_CTX_OPTION_ADD_SERVER:
-        if ( S4ARG &&
+        if( S4ARG &&
              ( Z_TYPE_P( zarg1 ) == IS_STRING ) &&
              ( Z_TYPE_P( zarg2 ) == IS_STRING || Z_TYPE_P( zarg2 ) == IS_NULL ) &&
              ( Z_TYPE_P( zarg3 ) == IS_STRING || Z_TYPE_P( zarg3 ) == IS_NULL ) &&
@@ -808,7 +1026,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_ctx_set_option )
     case VAS_CTX_OPTION_USE_SERVER_REFERRALS:
     case VAS_CTX_OPTION_USE_VASCACHE:
     case VAS_CTX_OPTION_USE_VASCACHE_IPC:
-        if ( S1ARG && Z_TYPE_P( zarg1 ) == IS_LONG )
+        if( S1ARG && Z_TYPE_P( zarg1 ) == IS_LONG )
         {
             long int1 = Z_LVAL_P( zarg1 );
             err = vas_ctx_set_option( ctx->ctx, option, int1 );
@@ -828,7 +1046,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_ctx_set_option )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_ctx_get_option )
+ZEND_VAS_ARG_INFO( vas_ctx_get_option );
+ZEND_VAS_NAMED_FUNC( vas_ctx_get_option )
 {
     zval* zctx;
     SPE_vas_ctx_t* ctx;
@@ -838,13 +1057,13 @@ ZEND_NAMED_FUNCTION( _wrap_vas_ctx_get_option )
 
     SPE_CHECK_ARGS( 2 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rl", &zctx, &option ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rl", &zctx, &option ) == FAILURE )
     {
         RETURN_NULL();
     }
     ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
-    switch ( option )
+    switch( option )
     {
     case VAS_CTX_OPTION_DEFAULT_REALM:
     case VAS_CTX_OPTION_SITE_AND_FOREST_ROOT:
@@ -858,7 +1077,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_ctx_get_option )
     case VAS_CTX_OPTION_USE_SERVER_REFERRALS:
         err = vas_ctx_get_option( ctx->ctx, option, &intvalue );
         SPE_SET_VAS_ERR( err );
-        if ( err == VAS_ERR_SUCCESS )
+        if( err == VAS_ERR_SUCCESS )
         {
             RETURN_LONG( intvalue );
         }
@@ -872,7 +1091,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_ctx_get_option )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_id_alloc )
+ZEND_VAS_ARG_INFO( vas_id_alloc );
+ZEND_VAS_NAMED_FUNC( vas_id_alloc )
 {
     SPE_vas_ctx_t* ctx;
     vas_id_t* id = NULL;
@@ -883,7 +1103,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_id_alloc )
 
     SPE_CHECK_ARGS( 2 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rs", &zctx, &name, &name_len ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rs", &zctx, &name, &name_len ) == FAILURE )
     {
         RETURN_NULL();
     }
@@ -896,7 +1116,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_id_alloc )
 
     SPE_SET_VAS_ERR( err );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         SPE_CONS_RETURN_VALUE( vas_id_t, id );
     }
@@ -907,7 +1127,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_id_alloc )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_id_get_ccache_name )
+ZEND_VAS_ARG_INFO( vas_id_get_ccache_name );
+ZEND_VAS_NAMED_FUNC( vas_id_get_ccache_name )
 {
     zval* zctx;
     zval* zid;
@@ -918,7 +1139,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_id_get_ccache_name )
 
     SPE_CHECK_ARGS( 2 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rr", &zctx, &zid ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rr", &zctx, &zid ) == FAILURE )
     {
         RETURN_NULL();
     }
@@ -929,7 +1150,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_id_get_ccache_name )
 
     SPE_SET_VAS_ERR( err );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         RETVAL_STRING(name, 1);
         free(name);
@@ -941,7 +1162,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_id_get_ccache_name )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_id_get_keytab_name )
+ZEND_VAS_ARG_INFO( vas_id_get_keytab_name );
+ZEND_VAS_NAMED_FUNC( vas_id_get_keytab_name )
 {
     zval* zctx;
     zval* zid;
@@ -952,7 +1174,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_id_get_keytab_name )
 
     SPE_CHECK_ARGS( 2 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rr", &zctx, &zid ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rr", &zctx, &zid ) == FAILURE )
     {
         RETURN_NULL();
     }
@@ -963,7 +1185,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_id_get_keytab_name )
 
     SPE_SET_VAS_ERR( err );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         RETVAL_STRING( name, 1 );
         free( name );
@@ -975,7 +1197,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_id_get_keytab_name )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_id_get_name )
+ZEND_VAS_ARG_INFO( vas_id_get_name );
+ZEND_VAS_NAMED_FUNC( vas_id_get_name )
 {
     zval* zctx;
     zval* zId;
@@ -988,7 +1211,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_id_get_name )
 
     SPE_CHECK_ARGS( 4 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrzz", &zctx, &zId, &zprinc, &zdn ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrzz", &zctx, &zId, &zprinc, &zdn ) == FAILURE )
     {
         RETURN_NULL();
     }
@@ -999,7 +1222,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_id_get_name )
 
     SPE_SET_VAS_ERR( err );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         ZVAL_STRING( zprinc, princ, 1 );
         ZVAL_STRING( zdn, dn, 1 );
@@ -1009,7 +1232,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_id_get_name )
     RETURN_LONG( err );
 }
 
-ZEND_NAMED_FUNCTION( _wrap_vas_id_get_user )
+ZEND_VAS_ARG_INFO( vas_id_get_user );
+ZEND_VAS_NAMED_FUNC( vas_id_get_user )
 {
     SPE_vas_ctx_t* ctx;
     SPE_vas_id_t* id;
@@ -1020,7 +1244,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_id_get_user )
 
     SPE_CHECK_ARGS( 2 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rr", &zctx, &zId ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rr", &zctx, &zId ) == FAILURE )
     {
         RETURN_NULL();
     }
@@ -1031,7 +1255,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_id_get_user )
 
     SPE_SET_VAS_ERR( err );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         SPE_CONS_RETURN_VALUE( vas_user_t, user );
     }
@@ -1042,7 +1266,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_id_get_user )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_id_is_cred_established )
+ZEND_VAS_ARG_INFO( vas_id_is_cred_established );
+ZEND_VAS_NAMED_FUNC( vas_id_is_cred_established )
 {
     SPE_vas_ctx_t* ctx;
     SPE_vas_id_t* id;
@@ -1052,7 +1277,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_id_is_cred_established )
 
     SPE_CHECK_ARGS( 2 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rr", &zctx, &zId ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rr", &zctx, &zId ) == FAILURE )
     {
         RETURN_NULL();
     }
@@ -1066,7 +1291,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_id_is_cred_established )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_id_establish_cred_password )
+ZEND_VAS_ARG_INFO( vas_id_establish_cred_password );
+ZEND_VAS_NAMED_FUNC( vas_id_establish_cred_password )
 {
     zval* zctx;
     zval* zid;
@@ -1079,7 +1305,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_id_establish_cred_password )
 
     SPE_CHECK_ARGS( 4 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrls", &zctx, &zid, &credFlags, &pw, &pw_len ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrls", &zctx, &zid, &credFlags, &pw, &pw_len ) == FAILURE )
     {
         RETURN_NULL();
     }
@@ -1092,7 +1318,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_id_establish_cred_password )
     RETURN_LONG( err );
 }
 
-ZEND_NAMED_FUNCTION( _wrap_vas_id_establish_cred_keytab )
+ZEND_VAS_ARG_INFO( vas_id_establish_cred_keytab );
+ZEND_VAS_NAMED_FUNC( vas_id_establish_cred_keytab )
 {
     zval* zctx;
     zval* zid;
@@ -1105,14 +1332,14 @@ ZEND_NAMED_FUNCTION( _wrap_vas_id_establish_cred_keytab )
 
     SPE_CHECK_ARGS( 4 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrls", &zctx, &zid, &credFlags, &keytab, &szkeytab ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrls", &zctx, &zid, &credFlags, &keytab, &szkeytab ) == FAILURE )
     {
         RETURN_NULL();
     }
     ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t *, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
     ZEND_FETCH_RESOURCE( id, SPE_vas_id_t *, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
 
-    if ( *keytab == '\0' )
+    if( *keytab == '\0' )
     {
         keytab = NULL;
     }
@@ -1123,7 +1350,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_id_establish_cred_keytab )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_id_renew_cred )
+ZEND_VAS_ARG_INFO( vas_id_renew_cred );
+ZEND_VAS_NAMED_FUNC( vas_id_renew_cred )
 {
     SPE_vas_ctx_t* ctx;
     SPE_vas_id_t* id;
@@ -1134,7 +1362,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_id_renew_cred )
 
     SPE_CHECK_ARGS( 3 );
 
-    if ( zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rrl", &zctx, &zId, &credFlags ) == FAILURE )
+    if( zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rrl", &zctx, &zId, &credFlags ) == FAILURE )
     {
         RETURN_NULL();
     }
@@ -1148,7 +1376,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_id_renew_cred )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_auth )
+ZEND_VAS_ARG_INFO( vas_auth );
+ZEND_VAS_NAMED_FUNC( vas_auth )
 {
     SPE_vas_ctx_t* ctx;
     SPE_vas_id_t* idClient;
@@ -1161,7 +1390,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_auth )
 
     SPE_CHECK_ARGS( 3 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrr", &zctx, &zClient, &zServer ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrr", &zctx, &zClient, &zServer ) == FAILURE )
     {
         RETURN_NULL();
     }
@@ -1173,7 +1402,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_auth )
 
     SPE_SET_VAS_ERR( err );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         SPE_CONS_RETURN_VALUE( vas_auth_t, auth );
     }
@@ -1184,7 +1413,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_auth )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_auth_with_password )
+ZEND_VAS_ARG_INFO( vas_auth_with_password );
+ZEND_VAS_NAMED_FUNC( vas_auth_with_password )
 {
     SPE_vas_ctx_t* ctx;
     SPE_vas_id_t* idServer;
@@ -1198,7 +1428,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_auth_with_password )
 
     SPE_CHECK_ARGS( 4 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rssr", &zctx, &szClientName, &lClientName, &szClientPass, &lClientPass, &zServer ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rssr", &zctx, &szClientName, &lClientName, &szClientPass, &lClientPass, &zServer ) == FAILURE )
     {
         RETURN_NULL();
     }
@@ -1209,7 +1439,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_auth_with_password )
 
     SPE_SET_VAS_ERR( err );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         SPE_CONS_RETURN_VALUE( vas_auth_t, auth );
     }
@@ -1220,7 +1450,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_auth_with_password )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_auth_check_client_membership )
+ZEND_VAS_ARG_INFO( vas_auth_check_client_membership );
+ZEND_VAS_NAMED_FUNC( vas_auth_check_client_membership )
 {
     SPE_vas_ctx_t* ctx;
     SPE_vas_id_t* id = NULL;
@@ -1234,13 +1465,13 @@ ZEND_NAMED_FUNCTION( _wrap_vas_auth_check_client_membership )
 
     SPE_CHECK_ARGS( 4 );
 
-    if ( zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rzrs", &zctx, &zid, &zauth, &szGroup, &lGroup ) == FAILURE )
+    if( zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rzrs", &zctx, &zid, &zauth, &szGroup, &lGroup ) == FAILURE )
     {
         RETURN_NULL();
     }
     ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
-    if ( ! ZVAL_IS_NULL( zid ) )
+    if( ! ZVAL_IS_NULL( zid ) )
     {
         ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
@@ -1253,7 +1484,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_auth_check_client_membership )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_auth_get_client_groups )
+ZEND_VAS_ARG_INFO( vas_auth_get_client_groups );
+ZEND_VAS_NAMED_FUNC( vas_auth_get_client_groups )
 {
     zval* zctx;
     zval* zid;
@@ -1266,13 +1498,13 @@ ZEND_NAMED_FUNCTION( _wrap_vas_auth_get_client_groups )
 
     SPE_CHECK_ARGS( 3 );
 
-    if ( zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zauth) == FAILURE )
+    if( zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zauth) == FAILURE )
     {
         RETURN_NULL();
     }
     ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
-    if ( ! ZVAL_IS_NULL( zid ) )
+    if( ! ZVAL_IS_NULL( zid ) )
     {
         ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
@@ -1282,13 +1514,13 @@ ZEND_NAMED_FUNCTION( _wrap_vas_auth_get_client_groups )
 
     SPE_SET_VAS_ERR( err );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         int i;
         /* convert strvals into a PHP vector thing, then free it. */
         array_init( return_value );
 
-        for ( i = 0; groups[i]; i++ )
+        for( i = 0; groups[i]; i++ )
         {
             zval* g;
             SPE_vas_group_t* thing;
@@ -1318,7 +1550,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_auth_get_client_groups )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_attrs_alloc )
+ZEND_VAS_ARG_INFO( vas_attrs_alloc );
+ZEND_VAS_NAMED_FUNC( vas_attrs_alloc )
 {
     SPE_vas_ctx_t* ctx;
     SPE_vas_id_t* id = NULL;
@@ -1329,13 +1562,13 @@ ZEND_NAMED_FUNCTION( _wrap_vas_attrs_alloc )
 
     SPE_CHECK_ARGS( 2 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rz", &zctx, &zid ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rz", &zctx, &zid ) == FAILURE )
     {
         RETURN_NULL();
     }
     ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
-    if ( ! ZVAL_IS_NULL( zid ) )
+    if( ! ZVAL_IS_NULL( zid ) )
     {
         ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
@@ -1343,7 +1576,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_attrs_alloc )
 
     SPE_SET_VAS_ERR( err );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         SPE_CONS_RETURN_VALUE( vas_attrs_t, attrs );
     }
@@ -1353,7 +1586,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_attrs_alloc )
     }
 }
 
-ZEND_NAMED_FUNCTION( _wrap_vas_attrs_find )
+ZEND_VAS_ARG_INFO( vas_attrs_find );
+ZEND_VAS_NAMED_FUNC( vas_attrs_find )
 {
     zval* zctx;
     zval* zattrs;
@@ -1372,7 +1606,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_attrs_find )
 
     SPE_CHECK_ARGS( 7 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrssssa", &zctx, &zattrs, &uri, &l, &scope, &l, &base, &l, &filter, &l, &zanames ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrssssa", &zctx, &zattrs, &uri, &l, &scope, &l, &base, &l, &filter, &l, &zanames ) == FAILURE )
     {
         RETURN_NULL();
     }
@@ -1386,11 +1620,11 @@ ZEND_NAMED_FUNCTION( _wrap_vas_attrs_find )
     anames_count = zend_hash_num_elements( htanames );
     anames = emalloc( ( anames_count + 1 ) * sizeof( const char* ) );
 
-    for ( zend_hash_internal_pointer_reset_ex( htanames, &panames );
+    for( zend_hash_internal_pointer_reset_ex( htanames, &panames );
           zend_hash_get_current_data_ex( htanames, ( void** )&data, &panames ) == SUCCESS;
           zend_hash_move_forward_ex( htanames, &panames ) )
     {
-        if ( Z_TYPE_PP( data ) == IS_STRING )
+        if( Z_TYPE_PP( data ) == IS_STRING )
         {
             anames[anames_index++] = Z_STRVAL_PP( data );
         }
@@ -1406,7 +1640,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_attrs_find )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_attrs_find_continue )
+ZEND_VAS_ARG_INFO( vas_attrs_find_continue );
+ZEND_VAS_NAMED_FUNC( vas_attrs_find_continue )
 {
     zval* zctx;
     zval* zattrs;
@@ -1416,7 +1651,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_attrs_find_continue )
 
     SPE_CHECK_ARGS( 2 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rr", &zctx, &zattrs ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rr", &zctx, &zattrs ) == FAILURE )
     {
         RETURN_NULL();
     }
@@ -1430,7 +1665,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_attrs_find_continue )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_attrs_set_option )
+ZEND_VAS_ARG_INFO( vas_attrs_set_option );
+ZEND_VAS_NAMED_FUNC( vas_attrs_set_option )
 {
     zval* zctx;
     zval* zattrs;
@@ -1443,19 +1679,19 @@ ZEND_NAMED_FUNCTION( _wrap_vas_attrs_set_option )
 
     SPE_CHECK_ARGS( 4 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrlz", &zctx, &zattrs, &option, &zvalue ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrlz", &zctx, &zattrs, &option, &zvalue ) == FAILURE )
     {
         RETURN_NULL();
     }
     ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
     ZEND_FETCH_RESOURCE( attrs, SPE_vas_attrs_t*, &zattrs, -1, PHP_vas_attrs_t_RES_NAME, le_vas_attrs_t );
 
-    switch ( option )
+    switch( option )
     {
     case VAS_ATTRS_B64_ENCODE_ATTRS:
-        if ( Z_TYPE_P( zvalue ) == IS_STRING || Z_TYPE_P( zvalue ) == IS_NULL )
+        if( Z_TYPE_P( zvalue ) == IS_STRING || Z_TYPE_P( zvalue ) == IS_NULL )
         {
-            if ( Z_TYPE_P( zvalue ) == IS_STRING )
+            if( Z_TYPE_P( zvalue ) == IS_STRING )
             {
                 strvalue = Z_STRVAL_P( zvalue );
             }
@@ -1473,7 +1709,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_attrs_set_option )
         break;
     case VAS_ATTRS_OPTION_SEARCH_TIMEOUT:
     case VAS_ATTRS_OPTION_LDAP_PAGESIZE:
-        if ( Z_TYPE_P( zvalue ) == IS_LONG )
+        if( Z_TYPE_P( zvalue ) == IS_LONG )
         {
             err = vas_attrs_set_option( ctx->ctx, attrs->raw, option, Z_LVAL_P( zvalue ) );
             SPE_SET_VAS_ERR( err );
@@ -1491,7 +1727,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_attrs_set_option )
     RETURN_NULL();
 }
 
-ZEND_NAMED_FUNCTION( _wrap_vas_attrs_get_option )
+ZEND_VAS_ARG_INFO( vas_attrs_get_option );
+ZEND_VAS_NAMED_FUNC( vas_attrs_get_option )
 {
     zval* zctx;
     zval* zattrs;
@@ -1504,21 +1741,21 @@ ZEND_NAMED_FUNCTION( _wrap_vas_attrs_get_option )
 
     SPE_CHECK_ARGS( 3 );
 
-    if ( zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rrl", &zctx, &zattrs, &option ) == FAILURE )
+    if( zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rrl", &zctx, &zattrs, &option ) == FAILURE )
     {
         RETURN_NULL();
     }
     ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
     ZEND_FETCH_RESOURCE( attrs, SPE_vas_attrs_t*, &zattrs, -1, PHP_vas_attrs_t_RES_NAME, le_vas_attrs_t );
 
-    switch ( option )
+    switch( option )
     {
     case VAS_ATTRS_B64_ENCODE_ATTRS:
         err = vas_attrs_get_option( ctx->ctx, attrs->raw, option, &strvalue );
         SPE_SET_VAS_ERR( err );
-        if ( err == VAS_ERR_SUCCESS )
+        if( err == VAS_ERR_SUCCESS )
         {
-            if ( strvalue == NULL )
+            if( strvalue == NULL )
             {
                 RETVAL_NULL();
             }
@@ -1535,7 +1772,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_attrs_get_option )
     case VAS_ATTRS_OPTION_LDAP_PAGESIZE:
         err = vas_attrs_get_option( ctx->ctx, attrs->raw, option, &intvalue );
         SPE_SET_VAS_ERR( err );
-        if ( err == VAS_ERR_SUCCESS )
+        if( err == VAS_ERR_SUCCESS )
         {
             RETVAL_LONG( intvalue );
         }
@@ -1549,7 +1786,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_attrs_get_option )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_vals_get_string )
+ZEND_VAS_ARG_INFO( vas_vals_get_string );
+ZEND_VAS_NAMED_FUNC( vas_vals_get_string )
 {
     zval* zctx;
     zval* zattrs;
@@ -1563,7 +1801,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_vals_get_string )
 
     SPE_CHECK_ARGS( 3 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrs", &zctx, &zattrs, &aname, &aname_len ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrs", &zctx, &zattrs, &aname, &aname_len ) == FAILURE )
     {
         RETURN_NULL();
     }
@@ -1573,12 +1811,12 @@ ZEND_NAMED_FUNCTION( _wrap_vas_vals_get_string )
     err = vas_vals_get_string( ctx->ctx, attrs->raw, aname, &strvals, &count );
     SPE_SET_VAS_ERR( err );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         int i;
         /* convert strvals into a PHP vector thing, then free it. */
         array_init(return_value);
-        for ( i = 0; i < count; i++ )
+        for( i = 0; i < count; i++ )
         {
             add_next_index_string( return_value, strvals[i], 1 );
         }
@@ -1591,7 +1829,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_vals_get_string )
     }
 }
 
-ZEND_NAMED_FUNCTION( _wrap_vas_vals_get_integer )
+ZEND_VAS_ARG_INFO( vas_vals_get_integer );
+ZEND_VAS_NAMED_FUNC( vas_vals_get_integer )
 {
     zval* zctx;
     zval* zattrs;
@@ -1605,7 +1844,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_vals_get_integer )
 
     SPE_CHECK_ARGS( 3 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrs", &zctx, &zattrs, &aname, &aname_len ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrs", &zctx, &zattrs, &aname, &aname_len ) == FAILURE )
     {
         RETURN_NULL();
     }
@@ -1616,12 +1855,12 @@ ZEND_NAMED_FUNCTION( _wrap_vas_vals_get_integer )
 
     SPE_SET_VAS_ERR( err );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         int i;
         /* convert intvals into a PHP vector thing, then free it. */
         array_init(return_value);
-        for ( i = 0; i < count; i++ )
+        for( i = 0; i < count; i++ )
         {
             add_next_index_long( return_value, intvals[i] );
         }
@@ -1635,7 +1874,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_vals_get_integer )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_vals_get_binary )
+ZEND_VAS_ARG_INFO( vas_vals_get_binary );
+ZEND_VAS_NAMED_FUNC( vas_vals_get_binary )
 {
     zval* zctx;
     zval* zattrs;
@@ -1649,7 +1889,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_vals_get_binary )
 
     SPE_CHECK_ARGS( 3 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrs", &zctx, &zattrs, &aname, &aname_len ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrs", &zctx, &zattrs, &aname, &aname_len ) == FAILURE )
     {
         RETURN_NULL();
     }
@@ -1659,13 +1899,13 @@ ZEND_NAMED_FUNCTION( _wrap_vas_vals_get_binary )
     err = vas_vals_get_binary( ctx->ctx, attrs->raw, aname, &binvals, &count );
     SPE_SET_VAS_ERR( err );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         int i;
         /* convert intvals into a PHP vector thing, then free it.*/
         array_init( return_value );
 
-        for ( i = 0; i < count; i++ )
+        for( i = 0; i < count; i++ )
         {
             add_next_index_stringl( return_value, binvals[i].data, binvals[i].size, 1 );
         }
@@ -1679,7 +1919,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_vals_get_binary )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_vals_get_anames )
+ZEND_VAS_ARG_INFO( vas_vals_get_anames );
+ZEND_VAS_NAMED_FUNC( vas_vals_get_anames )
 {
     zval* zctx;
     zval* zattrs;
@@ -1691,7 +1932,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_vals_get_anames )
 
     SPE_CHECK_ARGS( 2 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rr", &zctx, &zattrs ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rr", &zctx, &zattrs ) == FAILURE )
     {
         RETURN_NULL();
     }
@@ -1701,12 +1942,12 @@ ZEND_NAMED_FUNCTION( _wrap_vas_vals_get_anames )
     err = vas_vals_get_anames( ctx->ctx, attrs->raw, &anames, &count );
     SPE_SET_VAS_ERR(err);
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         int i;
         /* convert strvals into a PHP vector thing, then free it.*/
         array_init(return_value);
-        for ( i = 0; i < count; i++ )
+        for( i = 0; i < count; i++ )
         {
             add_next_index_string( return_value, anames[i], 1 );
         }
@@ -1720,7 +1961,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_vals_get_anames )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_vals_get_dn )
+ZEND_VAS_ARG_INFO( vas_vals_get_dn );
+ZEND_VAS_NAMED_FUNC( vas_vals_get_dn )
 {
     zval* zctx;
     zval* zattrs;
@@ -1731,7 +1973,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_vals_get_dn )
 
     SPE_CHECK_ARGS( 2 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rr", &zctx, &zattrs ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rr", &zctx, &zattrs ) == FAILURE )
     {
         RETURN_NULL();
     }
@@ -1741,7 +1983,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_vals_get_dn )
     err = vas_vals_get_dn( ctx->ctx, attrs->raw, &dn );
     SPE_SET_VAS_ERR( err );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         RETVAL_STRING( dn, 1 );
         vas_vals_free_dn( ctx->ctx, dn );
@@ -1754,7 +1996,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_vals_get_dn )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_name_to_principal )
+ZEND_VAS_ARG_INFO( vas_name_to_principal );
+ZEND_VAS_NAMED_FUNC( vas_name_to_principal )
 {
     zval* zctx;
     const char* szName;
@@ -1766,7 +2009,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_name_to_principal )
 
     SPE_CHECK_ARGS( 4 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rsll", &zctx, &szName, &lName, &hint, &flags ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rsll", &zctx, &szName, &lName, &hint, &flags ) == FAILURE )
     {
         RETURN_NULL();
     }
@@ -1776,7 +2019,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_name_to_principal )
 
     SPE_SET_VAS_ERR( err );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         RETVAL_STRING( nameout, 1 );
         free(nameout);
@@ -1789,7 +2032,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_name_to_principal )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_name_to_dn )
+ZEND_VAS_ARG_INFO( vas_name_to_dn );
+ZEND_VAS_NAMED_FUNC( vas_name_to_dn )
 {
     zval* zctx;
     zval* zid;
@@ -1806,13 +2050,13 @@ ZEND_NAMED_FUNCTION( _wrap_vas_name_to_dn )
 
     SPE_CHECK_ARGS( 7 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzsllzz", &zctx, &zid, &szName, &lName, &hint, &flags, &znameout, &zdomainout ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzsllzz", &zctx, &zid, &szName, &lName, &hint, &flags, &znameout, &zdomainout ) == FAILURE )
     {
         RETURN_NULL();
     }
     ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
-    if ( ! ZVAL_IS_NULL( zid ) )
+    if( ! ZVAL_IS_NULL( zid ) )
     {
         ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
@@ -1820,7 +2064,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_name_to_dn )
 
     SPE_SET_VAS_ERR( err );
 
-    if (err == VAS_ERR_SUCCESS)
+    if(err == VAS_ERR_SUCCESS)
     {
         ZVAL_STRING( znameout, nameout, 1 );
         ZVAL_STRING( zdomainout, domainout, 1 );
@@ -1831,7 +2075,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_name_to_dn )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_info_forest_root )
+ZEND_VAS_ARG_INFO( vas_info_forest_root );
+ZEND_VAS_NAMED_FUNC( vas_info_forest_root )
 {
     zval* zctx;
     zval* zroot;
@@ -1843,7 +2088,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_info_forest_root )
 
     SPE_CHECK_ARGS( 3 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzz", &zctx, &zroot, &zrootdn ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzz", &zctx, &zroot, &zrootdn ) == FAILURE )
     {
         RETURN_NULL();
     }
@@ -1852,7 +2097,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_info_forest_root )
     err = vas_info_forest_root( ctx->ctx, &root, &rootdn );
     SPE_SET_VAS_ERR( err );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         ZVAL_STRING( zroot, root, 1 );
         ZVAL_STRING( zrootdn, rootdn, 1 );
@@ -1863,7 +2108,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_info_forest_root )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_info_joined_domain )
+ZEND_VAS_ARG_INFO( vas_info_joined_domain );
+ZEND_VAS_NAMED_FUNC( vas_info_joined_domain )
 {
     zval* zctx;
     zval* zdomain;
@@ -1875,7 +2121,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_info_joined_domain )
 
     SPE_CHECK_ARGS( 3 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzz", &zctx, &zdomain, &zdomaindn ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzz", &zctx, &zdomain, &zdomaindn ) == FAILURE )
     {
         RETURN_NULL();
     }
@@ -1884,7 +2130,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_info_joined_domain )
     err = vas_info_joined_domain( ctx->ctx, &domain, &domaindn );
     SPE_SET_VAS_ERR( err );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         ZVAL_STRING( zdomain, domain, 1 );
         ZVAL_STRING( zdomaindn, domaindn, 1 );
@@ -1895,7 +2141,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_info_joined_domain )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_info_site )
+ZEND_VAS_ARG_INFO( vas_info_site );
+ZEND_VAS_NAMED_FUNC( vas_info_site )
 {
     zval* zctx;
     SPE_vas_ctx_t* ctx;
@@ -1904,7 +2151,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_info_site )
 
     SPE_CHECK_ARGS( 1 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "r", &zctx) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "r", &zctx) == FAILURE )
     {
         RETURN_NULL();
     }
@@ -1913,7 +2160,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_info_site )
     err = vas_info_site( ctx->ctx, &site );
     SPE_SET_VAS_ERR( err );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         RETVAL_STRING( site, 1 );
         free( site );
@@ -1926,7 +2173,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_info_site )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_info_domains )
+ZEND_VAS_ARG_INFO( vas_info_domains );
+ZEND_VAS_NAMED_FUNC( vas_info_domains )
 {
     zval* zctx;
     zval* zId;
@@ -1940,13 +2188,13 @@ ZEND_NAMED_FUNCTION( _wrap_vas_info_domains )
 
     SPE_CHECK_ARGS( 4 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzzz", &zctx, &zId, &zdomains, &zdomains_dn ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzzz", &zctx, &zId, &zdomains, &zdomains_dn ) == FAILURE )
     {
         RETURN_NULL();
     }
     ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
-    if ( ! ZVAL_IS_NULL( zId ) )
+    if( ! ZVAL_IS_NULL( zId ) )
     {
         ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zId, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
@@ -1954,19 +2202,19 @@ ZEND_NAMED_FUNCTION( _wrap_vas_info_domains )
     err = vas_info_domains( ctx->ctx, RAW( id ), &domains, &domains_dn );
     SPE_SET_VAS_ERR( err );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         int i;
         convert_to_array( zdomains );
         zend_hash_clean( Z_ARRVAL_P( zdomains ) );
-        for ( i = 0; domains[i] != NULL; i++ )
+        for( i = 0; domains[i] != NULL; i++ )
         {
             add_next_index_string( zdomains, domains[i], 1 );
         }
         vas_info_domains_free( ctx->ctx, domains );
         convert_to_array( zdomains_dn );
         zend_hash_clean( Z_ARRVAL_P( zdomains_dn ) );
-        for ( i = 0; domains_dn[i] != NULL; i++ )
+        for( i = 0; domains_dn[i] != NULL; i++ )
         {
             add_next_index_string( zdomains_dn, domains_dn[i], 1 );
         }
@@ -1975,7 +2223,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_info_domains )
     RETURN_LONG( err );
 }
 
-ZEND_NAMED_FUNCTION( _wrap_vas_info_servers )
+ZEND_VAS_ARG_INFO( vas_info_servers );
+ZEND_VAS_NAMED_FUNC( vas_info_servers )
 {
     zval* zctx;
     SPE_vas_ctx_t* ctx;
@@ -1988,7 +2237,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_info_servers )
 
     SPE_CHECK_ARGS( 4 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rssl", &zctx, &szDomain, &lDomain, &szSite, &lSite, &srvinfo ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rssl", &zctx, &szDomain, &lDomain, &szSite, &lSite, &srvinfo ) == FAILURE )
     {
         RETURN_NULL();
     }
@@ -2001,12 +2250,12 @@ ZEND_NAMED_FUNCTION( _wrap_vas_info_servers )
                             &servers );
     SPE_SET_VAS_ERR(err);
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         int i;
         /* convert strvals into a PHP vector thing, then free it. */
         array_init(return_value);
-        for ( i = 0; servers[i] != NULL; i++ )
+        for( i = 0; servers[i] != NULL; i++ )
         {
             add_next_index_string( return_value, servers[i], 1 );
         }
@@ -2020,7 +2269,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_info_servers )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_prompt_for_cred_string )
+ZEND_VAS_ARG_INFO( vas_prompt_for_cred_string );
+ZEND_VAS_NAMED_FUNC( vas_prompt_for_cred_string )
 {
     zval* zctx;
     SPE_vas_ctx_t* ctx;
@@ -2032,7 +2282,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_prompt_for_cred_string )
 
     SPE_CHECK_ARGS( 3 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rss", &zctx, &szprompt, &lprompt, &szverify, &lverify ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rss", &zctx, &szprompt, &lprompt, &szverify, &lverify ) == FAILURE )
     {
         RETURN_NULL();
     }
@@ -2041,7 +2291,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_prompt_for_cred_string )
     err = vas_prompt_for_cred_string( ctx->ctx, szprompt, szverify, &credstr );
     SPE_SET_VAS_ERR( err );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         RETVAL_STRING( credstr, 1 );
         free( credstr );
@@ -2054,7 +2304,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_prompt_for_cred_string )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_err_get_code )
+ZEND_VAS_ARG_INFO( vas_err_get_code );
+ZEND_VAS_NAMED_FUNC( vas_err_get_code )
 {
     zval* zctx;
     SPE_vas_ctx_t* ctx;
@@ -2062,7 +2313,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_err_get_code )
 
     SPE_CHECK_ARGS( 1 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "r", &zctx ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "r", &zctx ) == FAILURE )
     {
         RETURN_NULL();
     }
@@ -2073,7 +2324,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_err_get_code )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_err_get_string )
+ZEND_VAS_ARG_INFO( vas_err_get_string );
+ZEND_VAS_NAMED_FUNC( vas_err_get_string )
 {
     zval* zctx;
     SPE_vas_ctx_t* ctx;
@@ -2082,7 +2334,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_err_get_string )
 
     SPE_CHECK_ARGS( 2 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rl", &zctx, &with_cause ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rl", &zctx, &with_cause ) == FAILURE )
     {
         RETURN_NULL();
     }
@@ -2093,7 +2345,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_err_get_string )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_err_clear )
+ZEND_VAS_ARG_INFO( vas_err_clear );
+ZEND_VAS_NAMED_FUNC( vas_err_clear )
 {
     zval* zctx;
     SPE_vas_ctx_t* ctx;
@@ -2101,7 +2354,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_err_clear )
 
     SPE_CHECK_ARGS( 1 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "r", &zctx) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "r", &zctx) == FAILURE )
     {
         RETURN_NULL();
     }
@@ -2138,7 +2391,7 @@ add_err_cause_to_zval( vas_err_info_t *err, zval *z TSRMLS_DC )
     MAKE_STD_ZVAL( cause );
     array_init( cause );
 
-    for ( c = err->cause; c; c = c->cause )
+    for( c = err->cause; c; c = c->cause )
     {
         zval* zcause;
         MAKE_STD_ZVAL( zcause );
@@ -2155,7 +2408,8 @@ add_err_cause_to_zval( vas_err_info_t *err, zval *z TSRMLS_DC )
     add_property_string( z, "message", err->message, 1 );
 }
 
-ZEND_NAMED_FUNCTION( _wrap_vas_err_get_info )
+ZEND_VAS_ARG_INFO( vas_err_get_info );
+ZEND_VAS_NAMED_FUNC( vas_err_get_info )
 {
     SPE_vas_ctx_t* ctx;
     zval* zctx;
@@ -2163,7 +2417,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_err_get_info )
 
     SPE_CHECK_ARGS( 1 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "r", &zctx ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "r", &zctx ) == FAILURE )
     {
         RETURN_NULL();
     }
@@ -2171,7 +2425,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_err_get_info )
 
     err = vas_err_get_info( ctx->ctx );
 
-    if ( err )
+    if( err )
     {
         add_err_cause_to_zval( err, return_value TSRMLS_CC );
         vas_err_info_free( err );
@@ -2182,7 +2436,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_err_get_info )
     }
 }
 
-ZEND_NAMED_FUNCTION( _wrap_vas_err_info_get_string )
+ZEND_VAS_ARG_INFO( vas_err_info_get_string );
+ZEND_VAS_NAMED_FUNC( vas_err_info_get_string )
 {
     SPE_vas_ctx_t* ctx;
     zval* zctx;
@@ -2194,7 +2449,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_err_info_get_string )
 
     SPE_CHECK_ARGS( 3 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rOl", &zctx, &zerr, vas_CVAS_err_info_entry, &with_cause ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rOl", &zctx, &zerr, vas_CVAS_err_info_entry, &with_cause ) == FAILURE )
     {
         RETURN_NULL();
     }
@@ -2204,11 +2459,11 @@ ZEND_NAMED_FUNCTION( _wrap_vas_err_info_get_string )
 
     memset( err, sizeof( *err ), 0 );
 
-    if ( zend_hash_find( Z_OBJPROP_P( zerr ), "code", sizeof( "code" ), ( void** )&z ) != FAILURE )
+    if( zend_hash_find( Z_OBJPROP_P( zerr ), "code", sizeof( "code" ), ( void** )&z ) != FAILURE )
     {
         err->code = Z_LVAL_PP( z );
     }
-    if ( zend_hash_find( Z_OBJPROP_P( zerr ), "type", sizeof( "type" ), ( void** )&z ) != FAILURE )
+    if( zend_hash_find( Z_OBJPROP_P( zerr ), "type", sizeof( "type" ), ( void** )&z ) != FAILURE )
     {
         err->type = Z_LVAL_PP( z );
     }
@@ -2216,7 +2471,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_err_info_get_string )
      * Hopefully that is OK.*/
     err->cause = NULL;
 
-    if ( zend_hash_find( Z_OBJPROP_P( zerr ), "message", sizeof( "message" ), ( void** )&z ) != FAILURE )
+    if( zend_hash_find( Z_OBJPROP_P( zerr ), "message", sizeof( "message" ), ( void** )&z ) != FAILURE )
     {
         err->message = Z_STRVAL_PP( z );
     }
@@ -2224,7 +2479,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_err_info_get_string )
 
     efree( err );
 
-    if ( s != NULL )
+    if( s != NULL )
     {
         RETVAL_STRING( s, 1 );
         free( s );
@@ -2235,7 +2490,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_err_info_get_string )
     }
 }
 
-ZEND_NAMED_FUNCTION( _wrap_vas_err_get_cause_by_type )
+ZEND_VAS_ARG_INFO( vas_err_get_cause_by_type );
+ZEND_VAS_NAMED_FUNC( vas_err_get_cause_by_type )
 {
     SPE_vas_ctx_t* ctx;
     zval* zctx;
@@ -2244,7 +2500,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_err_get_cause_by_type )
 
     SPE_CHECK_ARGS( 2 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rl", &zctx, &type ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rl", &zctx, &type ) == FAILURE )
     {
         RETURN_NULL();
     }
@@ -2252,7 +2508,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_err_get_cause_by_type )
 
     err = vas_err_get_cause_by_type( ctx->ctx, type );
 
-    if ( err )
+    if( err )
     {
         add_err_cause_to_zval( err, return_value TSRMLS_CC );
         vas_err_info_free( err );
@@ -2264,7 +2520,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_err_get_cause_by_type )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_user_init )
+ZEND_VAS_ARG_INFO( vas_user_init );
+ZEND_VAS_NAMED_FUNC( vas_user_init )
 {
     SPE_vas_ctx_t* ctx;
     SPE_vas_id_t* id = NULL;
@@ -2278,13 +2535,13 @@ ZEND_NAMED_FUNCTION( _wrap_vas_user_init )
 
     SPE_CHECK_ARGS( 4 );
 
-    if ( zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rzsl", &zctx, &zId, &szName, &lName, &flags ) == FAILURE )
+    if( zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rzsl", &zctx, &zId, &szName, &lName, &flags ) == FAILURE )
     {
         RETURN_NULL();
     }
     ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
-    if ( ! ZVAL_IS_NULL( zId ) )
+    if( ! ZVAL_IS_NULL( zId ) )
     {
         ZEND_FETCH_RESOURCE( id, SPE_vas_id_t *, &zId, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
@@ -2292,7 +2549,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_user_init )
     err = vas_user_init( ctx->ctx, RAW( id ), szName, flags, &user );
     SPE_SET_VAS_ERR( err );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         SPE_CONS_RETURN_VALUE( vas_user_t, user );
     }
@@ -2303,7 +2560,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_user_init )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_user_is_member )
+ZEND_VAS_ARG_INFO( vas_user_is_member );
+ZEND_VAS_NAMED_FUNC( vas_user_is_member )
 {
     SPE_vas_ctx_t* ctx;
     SPE_vas_id_t* id = NULL;
@@ -2314,13 +2572,13 @@ ZEND_NAMED_FUNCTION( _wrap_vas_user_is_member )
 
     SPE_CHECK_ARGS( 4 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzrr", &zctx, &zid, &zuser, &zgroup ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzrr", &zctx, &zid, &zuser, &zgroup ) == FAILURE )
     {
         RETURN_NULL();
     }
     ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
-    if ( ! ZVAL_IS_NULL( zid ) )
+    if( ! ZVAL_IS_NULL( zid ) )
     {
         ZEND_FETCH_RESOURCE( id, SPE_vas_id_t *, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
@@ -2333,7 +2591,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_user_is_member )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_user_get_groups )
+ZEND_VAS_ARG_INFO( vas_user_get_groups );
+ZEND_VAS_NAMED_FUNC( vas_user_get_groups )
 {
     SPE_vas_ctx_t* ctx;
     SPE_vas_id_t* id = NULL;
@@ -2344,13 +2603,13 @@ ZEND_NAMED_FUNCTION( _wrap_vas_user_get_groups )
 
     SPE_CHECK_ARGS( 3 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zuser ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zuser ) == FAILURE )
     {
         RETURN_NULL();
     }
     ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
-    if ( ! ZVAL_IS_NULL( zid ) )
+    if( ! ZVAL_IS_NULL( zid ) )
     {
         ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
@@ -2359,12 +2618,12 @@ ZEND_NAMED_FUNCTION( _wrap_vas_user_get_groups )
     err = vas_user_get_groups( ctx->ctx, RAW( id ), user->raw, &groups );
     SPE_SET_VAS_ERR( err );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         int i;
         /* convert strvals into a PHP vector thing, then free it.*/
         array_init( return_value );
-        for ( i = 0; groups[i]; i++ )
+        for( i = 0; groups[i]; i++ )
         {
             zval* g;
             SPE_vas_group_t* thing;
@@ -2393,7 +2652,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_user_get_groups )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_user_get_attrs )
+ZEND_VAS_ARG_INFO( vas_user_get_attrs );
+ZEND_VAS_NAMED_FUNC( vas_user_get_attrs )
 {
     SPE_vas_ctx_t* ctx;
     SPE_vas_id_t* id = NULL;
@@ -2410,31 +2670,31 @@ ZEND_NAMED_FUNCTION( _wrap_vas_user_get_attrs )
 
     SPE_CHECK_ARGS( 4 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzra", &zctx, &zid, &zuser, &zanames ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzra", &zctx, &zid, &zuser, &zanames ) == FAILURE )
     {
         RETURN_NULL();
     }
     ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t *, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
-    if ( ! ZVAL_IS_NULL( zid ) )
+    if( ! ZVAL_IS_NULL( zid ) )
     {
         ZEND_FETCH_RESOURCE( id, SPE_vas_id_t *, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
     ZEND_FETCH_RESOURCE( user, SPE_vas_user_t *, &zuser, -1, PHP_vas_user_t_RES_NAME, le_vas_user_t );
 
     /*DRK test to make sure this works when null!!*/
-    if ( ! ZVAL_IS_NULL( zanames ) )
+    if( ! ZVAL_IS_NULL( zanames ) )
     {
         /* Create the anames array. */
         htanames = Z_ARRVAL_P( zanames );
         anames_count = zend_hash_num_elements( htanames );
         anames = emalloc( ( anames_count + 1 ) * sizeof( const char* ) );
 
-        for ( zend_hash_internal_pointer_reset_ex( htanames, &panames );
+        for( zend_hash_internal_pointer_reset_ex( htanames, &panames );
               zend_hash_get_current_data_ex( htanames, ( void** )&data, &panames ) == SUCCESS;
               zend_hash_move_forward_ex( htanames, &panames ) )
         {
-            if ( Z_TYPE_PP( data ) == IS_STRING )
+            if( Z_TYPE_PP( data ) == IS_STRING )
             {
                 anames[anames_index++] = Z_STRVAL_PP( data );
             }
@@ -2445,11 +2705,11 @@ ZEND_NAMED_FUNCTION( _wrap_vas_user_get_attrs )
     err = vas_user_get_attrs( ctx->ctx, RAW( id ), user->raw, anames, &attrs );
     SPE_SET_VAS_ERR( err );
 
-    if ( anames )
+    if( anames )
     {
         efree( anames );
     }
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         SPE_CONS_RETURN_VALUE( vas_attrs_t, attrs );
     }
@@ -2460,7 +2720,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_user_get_attrs )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_user_get_dn )
+ZEND_VAS_ARG_INFO( vas_user_get_dn );
+ZEND_VAS_NAMED_FUNC( vas_user_get_dn )
 {
     SPE_vas_ctx_t* ctx;
     SPE_vas_id_t* id = NULL;
@@ -2471,13 +2732,13 @@ ZEND_NAMED_FUNCTION( _wrap_vas_user_get_dn )
 
     SPE_CHECK_ARGS( 3 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zuser ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zuser ) == FAILURE )
     {
         RETURN_NULL();
     }
     ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
-    if ( ! ZVAL_IS_NULL( zid ) )
+    if( ! ZVAL_IS_NULL( zid ) )
     {
         ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
@@ -2486,7 +2747,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_user_get_dn )
     err = vas_user_get_dn( ctx->ctx, RAW( id ), user->raw, &dn );
     SPE_SET_VAS_ERR( err );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         RETVAL_STRING( dn, 1 );
         free( dn );
@@ -2499,7 +2760,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_user_get_dn )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_user_get_domain )
+ZEND_VAS_ARG_INFO( vas_user_get_domain );
+ZEND_VAS_NAMED_FUNC( vas_user_get_domain )
 {
     SPE_vas_ctx_t* ctx;
     SPE_vas_id_t* id = NULL;
@@ -2510,13 +2772,13 @@ ZEND_NAMED_FUNCTION( _wrap_vas_user_get_domain )
 
     SPE_CHECK_ARGS( 3 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zuser ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zuser ) == FAILURE )
     {
         RETURN_NULL();
     }
     ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t *, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
-    if ( ! ZVAL_IS_NULL( zid ) )
+    if( ! ZVAL_IS_NULL( zid ) )
     {
         ZEND_FETCH_RESOURCE( id, SPE_vas_id_t *, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
@@ -2525,7 +2787,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_user_get_domain )
     err = vas_user_get_domain( ctx->ctx, RAW( id ), user->raw, &domain );
     SPE_SET_VAS_ERR( err );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         RETVAL_STRING( domain, 1 );
         free( domain );
@@ -2538,7 +2800,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_user_get_domain )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_user_get_sam_account_name )
+ZEND_VAS_ARG_INFO( vas_user_get_sam_account_name );
+ZEND_VAS_NAMED_FUNC( vas_user_get_sam_account_name )
 {
     SPE_vas_ctx_t* ctx;
     SPE_vas_id_t* id = NULL;
@@ -2549,13 +2812,13 @@ ZEND_NAMED_FUNCTION( _wrap_vas_user_get_sam_account_name )
 
     SPE_CHECK_ARGS( 3 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zuser ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zuser ) == FAILURE )
     {
         RETURN_NULL();
     }
     ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
-    if ( ! ZVAL_IS_NULL( zid ) )
+    if( ! ZVAL_IS_NULL( zid ) )
     {
         ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
@@ -2564,7 +2827,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_user_get_sam_account_name )
     err = vas_user_get_sam_account_name( ctx->ctx, RAW( id ), user->raw, &sam );
     SPE_SET_VAS_ERR( err );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         RETVAL_STRING( sam, 1 );
         free( sam );
@@ -2577,7 +2840,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_user_get_sam_account_name )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_user_get_sid )
+ZEND_VAS_ARG_INFO( vas_user_get_sid );
+ZEND_VAS_NAMED_FUNC( vas_user_get_sid )
 {
     SPE_vas_ctx_t* ctx;
     SPE_vas_id_t* id = NULL;
@@ -2588,13 +2852,13 @@ ZEND_NAMED_FUNCTION( _wrap_vas_user_get_sid )
 
     SPE_CHECK_ARGS( 3 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zuser ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zuser ) == FAILURE )
     {
         RETURN_NULL();
     }
     ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
-    if ( ! ZVAL_IS_NULL( zid ) )
+    if( ! ZVAL_IS_NULL( zid ) )
     {
         ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
@@ -2603,7 +2867,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_user_get_sid )
     err = vas_user_get_sid( ctx->ctx, RAW( id ), user->raw, &sid );
     SPE_SET_VAS_ERR( err );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         RETVAL_STRING( sid, 1 );
         free( sid );
@@ -2616,7 +2880,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_user_get_sid )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_user_get_upn )
+ZEND_VAS_ARG_INFO( vas_user_get_upn );
+ZEND_VAS_NAMED_FUNC( vas_user_get_upn )
 {
     SPE_vas_ctx_t* ctx;
     SPE_vas_id_t* id = NULL;
@@ -2627,13 +2892,13 @@ ZEND_NAMED_FUNCTION( _wrap_vas_user_get_upn )
 
     SPE_CHECK_ARGS( 3 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zuser ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zuser ) == FAILURE )
     {
         RETURN_NULL();
     }
     ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
-    if ( ! ZVAL_IS_NULL( zid ) )
+    if( ! ZVAL_IS_NULL( zid ) )
     {
         ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
@@ -2642,7 +2907,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_user_get_upn )
     err = vas_user_get_upn( ctx->ctx, RAW( id ), user->raw, &upn );
     SPE_SET_VAS_ERR( err );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         RETVAL_STRING( upn, 1 );
         free( upn );
@@ -2655,7 +2920,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_user_get_upn )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_user_get_pwinfo )
+ZEND_VAS_ARG_INFO( vas_user_get_pwinfo );
+ZEND_VAS_NAMED_FUNC( vas_user_get_pwinfo )
 {
     SPE_vas_ctx_t* ctx;
     SPE_vas_id_t* id = NULL;
@@ -2666,13 +2932,13 @@ ZEND_NAMED_FUNCTION( _wrap_vas_user_get_pwinfo )
 
     SPE_CHECK_ARGS( 3 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zuser ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zuser ) == FAILURE )
     {
         RETURN_NULL();
     }
     ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
-    if ( ! ZVAL_IS_NULL( zid ) )
+    if( ! ZVAL_IS_NULL( zid ) )
     {
         ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
@@ -2681,7 +2947,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_user_get_pwinfo )
     err = vas_user_get_pwinfo( ctx->ctx, RAW( id ), user->raw, &pwd );
     SPE_SET_VAS_ERR( err );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         object_init_ex( return_value, vas_CVAS_passwd_entry );
 
@@ -2703,7 +2969,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_user_get_pwinfo )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_user_get_krb5_client_name )
+ZEND_VAS_ARG_INFO( vas_user_get_krb5_client_name );
+ZEND_VAS_NAMED_FUNC( vas_user_get_krb5_client_name )
 {
     SPE_vas_ctx_t* ctx;
     SPE_vas_id_t* id = NULL;
@@ -2714,13 +2981,13 @@ ZEND_NAMED_FUNCTION( _wrap_vas_user_get_krb5_client_name )
 
     SPE_CHECK_ARGS( 3 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zuser ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zuser ) == FAILURE )
     {
         RETURN_NULL();
     }
     ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
-    if ( ! ZVAL_IS_NULL( zid ) )
+    if( ! ZVAL_IS_NULL( zid ) )
     {
         ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
@@ -2729,7 +2996,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_user_get_krb5_client_name )
     err = vas_user_get_krb5_client_name( ctx->ctx, RAW( id ), user->raw, &client_name );
     SPE_SET_VAS_ERR( err );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         RETVAL_STRING( client_name, 1 );
         free( client_name );
@@ -2742,7 +3009,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_user_get_krb5_client_name )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_user_get_account_control )
+ZEND_VAS_ARG_INFO( vas_user_get_account_control );
+ZEND_VAS_NAMED_FUNC( vas_user_get_account_control )
 {
     SPE_vas_ctx_t* ctx;
     SPE_vas_id_t* id = NULL;
@@ -2753,13 +3021,13 @@ ZEND_NAMED_FUNCTION( _wrap_vas_user_get_account_control )
 
     SPE_CHECK_ARGS( 3 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zuser ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zuser ) == FAILURE )
     {
         RETURN_NULL();
     }
     ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
-    if ( ! ZVAL_IS_NULL( zid ) )
+    if( ! ZVAL_IS_NULL( zid ) )
     {
         ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
@@ -2768,7 +3036,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_user_get_account_control )
     err = vas_user_get_account_control( ctx->ctx, RAW( id ), user->raw, &account_control );
     SPE_SET_VAS_ERR( err );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         RETVAL_LONG( account_control );
         return;
@@ -2780,7 +3048,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_user_get_account_control )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_user_check_access )
+ZEND_VAS_ARG_INFO( vas_user_check_access );
+ZEND_VAS_NAMED_FUNC( vas_user_check_access )
 {
     SPE_vas_ctx_t* ctx;
     SPE_vas_user_t* user;
@@ -2790,14 +3059,14 @@ ZEND_NAMED_FUNCTION( _wrap_vas_user_check_access )
 
     SPE_CHECK_ARGS( 3 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrz", &zctx, &zuser, &zsrv ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrz", &zctx, &zuser, &zsrv ) == FAILURE )
     {
         RETURN_NULL();
     }
     ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
     ZEND_FETCH_RESOURCE( user, SPE_vas_user_t*, &zuser, -1, PHP_vas_user_t_RES_NAME, le_vas_user_t );
 
-    if ( Z_TYPE_P( zsrv ) == IS_STRING )
+    if( Z_TYPE_P( zsrv ) == IS_STRING )
     {
         szService = Z_STRVAL_P( zsrv );
     }
@@ -2808,7 +3077,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_user_check_access )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_user_check_conflicts )
+ZEND_VAS_ARG_INFO( vas_user_check_conflicts );
+ZEND_VAS_NAMED_FUNC( vas_user_check_conflicts )
 {
     SPE_vas_ctx_t* ctx;
     SPE_vas_user_t* user;
@@ -2818,7 +3088,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_user_check_conflicts )
 
     SPE_CHECK_ARGS( 2 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rr", &zctx, &zuser ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rr", &zctx, &zuser ) == FAILURE )
     {
         RETURN_NULL();
     }
@@ -2831,7 +3101,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_user_check_conflicts )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_group_init )
+ZEND_VAS_ARG_INFO( vas_group_init );
+ZEND_VAS_NAMED_FUNC( vas_group_init )
 {
     SPE_vas_ctx_t* ctx;
     SPE_vas_id_t* id = NULL;
@@ -2845,20 +3116,20 @@ ZEND_NAMED_FUNCTION( _wrap_vas_group_init )
 
     SPE_CHECK_ARGS( 4 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzsl", &zctx, &zId, &szName, &lName, &flags ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzsl", &zctx, &zId, &szName, &lName, &flags ) == FAILURE )
     {
         RETURN_NULL();
     }
     ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
-    if ( ! ZVAL_IS_NULL( zId ) )
+    if( ! ZVAL_IS_NULL( zId ) )
     {
         ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zId, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
     err = vas_group_init( ctx->ctx, RAW( id ), szName, flags, &group );
     SPE_SET_VAS_ERR( err );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         SPE_CONS_RETURN_VALUE( vas_group_t, group );
     }
@@ -2869,7 +3140,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_group_init )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_group_has_member )
+ZEND_VAS_ARG_INFO( vas_group_has_member );
+ZEND_VAS_NAMED_FUNC( vas_group_has_member )
 {
     SPE_vas_ctx_t* ctx;
     SPE_vas_id_t* id = NULL;
@@ -2880,13 +3152,13 @@ ZEND_NAMED_FUNCTION( _wrap_vas_group_has_member )
 
     SPE_CHECK_ARGS( 4 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzrr", &zctx, &zid, &zgroup, &zuser ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzrr", &zctx, &zid, &zgroup, &zuser ) == FAILURE )
     {
         RETURN_NULL();
     }
     ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
-    if ( ! ZVAL_IS_NULL( zid ) )
+    if( ! ZVAL_IS_NULL( zid ) )
     {
         ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
@@ -2899,7 +3171,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_group_has_member )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_group_get_attrs )
+ZEND_VAS_ARG_INFO( vas_group_get_attrs );
+ZEND_VAS_NAMED_FUNC( vas_group_get_attrs )
 {
     SPE_vas_ctx_t* ctx;
     SPE_vas_id_t* id = NULL;
@@ -2916,13 +3189,13 @@ ZEND_NAMED_FUNCTION( _wrap_vas_group_get_attrs )
 
     SPE_CHECK_ARGS( 4 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzra", &zctx, &zid, &zgroup, &zanames ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzra", &zctx, &zid, &zgroup, &zanames ) == FAILURE )
     {
         RETURN_NULL();
     }
     ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
-    if ( ! ZVAL_IS_NULL( zid ) )
+    if( ! ZVAL_IS_NULL( zid ) )
     {
         ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
@@ -2932,11 +3205,11 @@ ZEND_NAMED_FUNCTION( _wrap_vas_group_get_attrs )
     anames_count = zend_hash_num_elements( htanames );
     anames = emalloc( ( anames_count + 1 ) * sizeof( const char* ) );
 
-    for ( zend_hash_internal_pointer_reset_ex( htanames, &panames );
+    for( zend_hash_internal_pointer_reset_ex( htanames, &panames );
           zend_hash_get_current_data_ex( htanames, ( void** ) &data, &panames ) == SUCCESS;
           zend_hash_move_forward_ex( htanames, &panames ) )
     {
-        if ( Z_TYPE_PP( data ) == IS_STRING )
+        if( Z_TYPE_PP( data ) == IS_STRING )
         {
             anames[anames_index++] = Z_STRVAL_PP( data );
         }
@@ -2947,7 +3220,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_group_get_attrs )
     SPE_SET_VAS_ERR( err );
     efree( anames );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         SPE_CONS_RETURN_VALUE( vas_attrs_t, attrs );
     }
@@ -2958,7 +3231,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_group_get_attrs )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_group_get_dn )
+ZEND_VAS_ARG_INFO( vas_group_get_dn );
+ZEND_VAS_NAMED_FUNC( vas_group_get_dn )
 {
     SPE_vas_ctx_t* ctx;
     SPE_vas_id_t* id = NULL;
@@ -2969,13 +3243,13 @@ ZEND_NAMED_FUNCTION( _wrap_vas_group_get_dn )
 
     SPE_CHECK_ARGS( 3 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zgroup ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zgroup ) == FAILURE )
     {
         RETURN_NULL();
     }
     ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
-    if ( ! ZVAL_IS_NULL( zid ) )
+    if( ! ZVAL_IS_NULL( zid ) )
     {
         ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
@@ -2984,7 +3258,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_group_get_dn )
     err = vas_group_get_dn( ctx->ctx, RAW( id ), group->raw, &dn );
     SPE_SET_VAS_ERR( err );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         RETVAL_STRING( dn, 1 );
         free( dn );
@@ -2997,7 +3271,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_group_get_dn )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_group_get_domain )
+ZEND_VAS_ARG_INFO( vas_group_get_domain );
+ZEND_VAS_NAMED_FUNC( vas_group_get_domain )
 {
     SPE_vas_ctx_t* ctx;
     SPE_vas_id_t* id = NULL;
@@ -3008,13 +3283,13 @@ ZEND_NAMED_FUNCTION( _wrap_vas_group_get_domain )
 
     SPE_CHECK_ARGS( 3 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zgroup ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zgroup ) == FAILURE )
     {
         RETURN_NULL();
     }
     ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
-    if ( ! ZVAL_IS_NULL( zid ) )
+    if( ! ZVAL_IS_NULL( zid ) )
     {
         ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
@@ -3023,7 +3298,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_group_get_domain )
     err = vas_group_get_domain( ctx->ctx, RAW( id ), group->raw, &domain );
     SPE_SET_VAS_ERR( err );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         RETVAL_STRING( domain, 1 );
         free( domain );
@@ -3036,7 +3311,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_group_get_domain )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_group_get_sid )
+ZEND_VAS_ARG_INFO( vas_group_get_sid );
+ZEND_VAS_NAMED_FUNC( vas_group_get_sid )
 {
     SPE_vas_ctx_t* ctx;
     SPE_vas_id_t* id = NULL;
@@ -3047,13 +3323,13 @@ ZEND_NAMED_FUNCTION( _wrap_vas_group_get_sid )
 
     SPE_CHECK_ARGS( 3 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zgroup) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zgroup) == FAILURE )
     {
         RETURN_NULL();
     }
     ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
-    if ( ! ZVAL_IS_NULL( zid ) )
+    if( ! ZVAL_IS_NULL( zid ) )
     {
         ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
@@ -3062,7 +3338,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_group_get_sid )
     err = vas_group_get_sid( ctx->ctx, RAW( id ), group->raw, &sid );
     SPE_SET_VAS_ERR( err );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         RETVAL_STRING( sid, 1 );
         free( sid );
@@ -3075,7 +3351,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_group_get_sid )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_service_init )
+ZEND_VAS_ARG_INFO( vas_service_init );
+ZEND_VAS_NAMED_FUNC( vas_service_init )
 {
     SPE_vas_ctx_t* ctx;
     SPE_vas_id_t* id = NULL;
@@ -3089,13 +3366,13 @@ ZEND_NAMED_FUNCTION( _wrap_vas_service_init )
 
     SPE_CHECK_ARGS( 4 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzsl", &zctx, &zId, &szName, &lName, &flags ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzsl", &zctx, &zId, &szName, &lName, &flags ) == FAILURE )
     {
         RETURN_NULL();
     }
     ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
-    if ( ! ZVAL_IS_NULL( zId ) )
+    if( ! ZVAL_IS_NULL( zId ) )
     {
         ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zId, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
@@ -3103,7 +3380,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_service_init )
     err = vas_service_init( ctx->ctx, RAW( id ), szName, flags, &service );
     SPE_SET_VAS_ERR( err );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         SPE_CONS_RETURN_VALUE( vas_service_t, service );
     }
@@ -3114,7 +3391,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_service_init )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_service_get_attrs )
+ZEND_VAS_ARG_INFO( vas_service_get_attrs );
+ZEND_VAS_NAMED_FUNC( vas_service_get_attrs )
 {
     SPE_vas_ctx_t* ctx;
     SPE_vas_id_t* id = NULL;
@@ -3131,13 +3409,13 @@ ZEND_NAMED_FUNCTION( _wrap_vas_service_get_attrs )
 
     SPE_CHECK_ARGS( 4 );
 
-    if ( zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rzra", &zctx, &zid, &zservice, &zanames ) == FAILURE )
+    if( zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rzra", &zctx, &zid, &zservice, &zanames ) == FAILURE )
     {
         RETURN_NULL();
     }
     ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
-    if ( ! ZVAL_IS_NULL( zid ) )
+    if( ! ZVAL_IS_NULL( zid ) )
     {
         ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
@@ -3147,11 +3425,11 @@ ZEND_NAMED_FUNCTION( _wrap_vas_service_get_attrs )
     anames_count = zend_hash_num_elements( htanames );
     anames = emalloc( ( anames_count + 1 ) * sizeof( const char* ) );
 
-    for ( zend_hash_internal_pointer_reset_ex( htanames, &panames );
+    for( zend_hash_internal_pointer_reset_ex( htanames, &panames );
           zend_hash_get_current_data_ex( htanames, ( void** ) &data, &panames ) == SUCCESS;
           zend_hash_move_forward_ex( htanames, &panames ) )
     {
-        if ( Z_TYPE_PP( data ) == IS_STRING )
+        if( Z_TYPE_PP( data ) == IS_STRING )
         {
             anames[anames_index++] = Z_STRVAL_PP( data );
         }
@@ -3162,7 +3440,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_service_get_attrs )
     SPE_SET_VAS_ERR( err );
     efree( anames );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         SPE_CONS_RETURN_VALUE( vas_attrs_t, attrs );
     }
@@ -3173,7 +3451,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_service_get_attrs )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_service_get_dn )
+ZEND_VAS_ARG_INFO( vas_service_get_dn );
+ZEND_VAS_NAMED_FUNC( vas_service_get_dn )
 {
     SPE_vas_ctx_t* ctx;
     SPE_vas_id_t* id = NULL;
@@ -3184,13 +3463,13 @@ ZEND_NAMED_FUNCTION( _wrap_vas_service_get_dn )
 
     SPE_CHECK_ARGS( 3 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zservice ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zservice ) == FAILURE )
     {
         RETURN_NULL();
     }
     ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
-    if ( ! ZVAL_IS_NULL( zid ) )
+    if( ! ZVAL_IS_NULL( zid ) )
     {
         ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
@@ -3199,7 +3478,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_service_get_dn )
     err = vas_service_get_dn( ctx->ctx, RAW( id ), service->raw, &dn );
     SPE_SET_VAS_ERR( err );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         RETVAL_STRING( dn, 1 );
         free( dn );
@@ -3212,7 +3491,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_service_get_dn )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_service_get_domain )
+ZEND_VAS_ARG_INFO( vas_service_get_domain );
+ZEND_VAS_NAMED_FUNC( vas_service_get_domain )
 {
     SPE_vas_ctx_t* ctx;
     SPE_vas_id_t* id = NULL;
@@ -3223,13 +3503,13 @@ ZEND_NAMED_FUNCTION( _wrap_vas_service_get_domain )
 
     SPE_CHECK_ARGS( 3 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zservice ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zservice ) == FAILURE )
     {
         RETURN_NULL();
     }
     ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
-    if ( ! ZVAL_IS_NULL( zid ) )
+    if( ! ZVAL_IS_NULL( zid ) )
     {
         ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
@@ -3238,7 +3518,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_service_get_domain )
     err = vas_service_get_domain( ctx->ctx, RAW( id ), service->raw, &domain );
     SPE_SET_VAS_ERR( err );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         RETVAL_STRING( domain, 1 );
         free( domain );
@@ -3251,7 +3531,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_service_get_domain )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_service_get_krb5_client_name )
+ZEND_VAS_ARG_INFO( vas_service_get_krb5_client_name );
+ZEND_VAS_NAMED_FUNC( vas_service_get_krb5_client_name )
 {
     SPE_vas_ctx_t* ctx;
     SPE_vas_id_t* id = NULL;
@@ -3262,13 +3543,13 @@ ZEND_NAMED_FUNCTION( _wrap_vas_service_get_krb5_client_name )
 
     SPE_CHECK_ARGS( 3 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zservice ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zservice ) == FAILURE )
     {
         RETURN_NULL();
     }
     ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
-    if ( ! ZVAL_IS_NULL( zid ) )
+    if( ! ZVAL_IS_NULL( zid ) )
     {
         ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
@@ -3277,7 +3558,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_service_get_krb5_client_name )
     err = vas_service_get_krb5_client_name( ctx->ctx, RAW( id ), service->raw, &client_name );
     SPE_SET_VAS_ERR( err );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         RETVAL_STRING( client_name, 1 );
         free( client_name );
@@ -3290,7 +3571,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_service_get_krb5_client_name )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_service_get_spns )
+ZEND_VAS_ARG_INFO( vas_service_get_spns );
+ZEND_VAS_NAMED_FUNC( vas_service_get_spns )
 {
     SPE_vas_ctx_t* ctx;
     SPE_vas_id_t* id = NULL;
@@ -3301,13 +3583,13 @@ ZEND_NAMED_FUNCTION( _wrap_vas_service_get_spns )
 
     SPE_CHECK_ARGS( 3 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zservice ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zservice ) == FAILURE )
     {
         RETURN_NULL();
     }
     ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
-    if ( ! ZVAL_IS_NULL( zid ) )
+    if( ! ZVAL_IS_NULL( zid ) )
     {
         ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
@@ -3316,12 +3598,12 @@ ZEND_NAMED_FUNCTION( _wrap_vas_service_get_spns )
     err = vas_service_get_spns( ctx->ctx, RAW( id ), service->raw, &spns );
     SPE_SET_VAS_ERR( err );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         int i;
         /* convert strvals into a PHP vector thing, then free it.*/
         array_init(return_value);
-        for ( i = 0; spns[i]; i++ )
+        for( i = 0; spns[i]; i++ )
         {
             add_next_index_string( return_value, spns[i], 1 );
             free( spns[i] );
@@ -3336,7 +3618,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_service_get_spns )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_service_get_upn )
+ZEND_VAS_ARG_INFO( vas_service_get_upn );
+ZEND_VAS_NAMED_FUNC( vas_service_get_upn )
 {
     SPE_vas_ctx_t* ctx;
     SPE_vas_id_t* id = NULL;
@@ -3347,13 +3630,13 @@ ZEND_NAMED_FUNCTION( _wrap_vas_service_get_upn )
 
     SPE_CHECK_ARGS( 3 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zservice ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zservice ) == FAILURE )
     {
         RETURN_NULL();
     }
     ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
-    if ( ! ZVAL_IS_NULL( zid ) )
+    if( ! ZVAL_IS_NULL( zid ) )
     {
         ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
@@ -3362,7 +3645,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_service_get_upn )
     err = vas_service_get_upn( ctx->ctx, RAW( id ), service->raw, &upn );
     SPE_SET_VAS_ERR( err );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         RETVAL_STRING( upn, 1 );
         free( upn );
@@ -3375,7 +3658,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_service_get_upn )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_computer_init )
+ZEND_VAS_ARG_INFO( vas_computer_init );
+ZEND_VAS_NAMED_FUNC( vas_computer_init )
 {
     SPE_vas_ctx_t* ctx;
     SPE_vas_id_t* id = NULL;
@@ -3389,13 +3673,13 @@ ZEND_NAMED_FUNCTION( _wrap_vas_computer_init )
 
     SPE_CHECK_ARGS( 4 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzsl", &zctx, &zId, &szName, &lName, &flags ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzsl", &zctx, &zId, &szName, &lName, &flags ) == FAILURE )
     {
         RETURN_NULL();
     }
     ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
-    if ( ! ZVAL_IS_NULL( zId ) )
+    if( ! ZVAL_IS_NULL( zId ) )
     {
         ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zId, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
@@ -3403,7 +3687,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_computer_init )
     err = vas_computer_init( ctx->ctx, RAW( id ), szName, flags, &computer );
     SPE_SET_VAS_ERR( err );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         SPE_CONS_RETURN_VALUE( vas_computer_t, computer );
     }
@@ -3414,7 +3698,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_computer_init )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_computer_is_member )
+ZEND_VAS_ARG_INFO( vas_computer_is_member );
+ZEND_VAS_NAMED_FUNC( vas_computer_is_member )
 {
     SPE_vas_ctx_t* ctx;
     SPE_vas_id_t* id = NULL;
@@ -3425,13 +3710,13 @@ ZEND_NAMED_FUNCTION( _wrap_vas_computer_is_member )
 
     SPE_CHECK_ARGS( 4 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzrr", &zctx, &zid, &zcomputer, &zgroup ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzrr", &zctx, &zid, &zcomputer, &zgroup ) == FAILURE )
     {
         RETURN_NULL();
     }
     ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
-    if ( ! ZVAL_IS_NULL( zid ) )
+    if( ! ZVAL_IS_NULL( zid ) )
     {
         ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
@@ -3444,7 +3729,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_computer_is_member )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_computer_get_attrs )
+ZEND_VAS_ARG_INFO( vas_computer_get_attrs );
+ZEND_VAS_NAMED_FUNC( vas_computer_get_attrs )
 {
     SPE_vas_ctx_t* ctx;
     SPE_vas_id_t* id = NULL;
@@ -3461,13 +3747,13 @@ ZEND_NAMED_FUNCTION( _wrap_vas_computer_get_attrs )
 
     SPE_CHECK_ARGS( 4 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzra", &zctx, &zid, &zcomputer, &zanames ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzra", &zctx, &zid, &zcomputer, &zanames ) == FAILURE )
     {
         RETURN_NULL();
     }
     ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
-    if ( ! ZVAL_IS_NULL( zid ) )
+    if( ! ZVAL_IS_NULL( zid ) )
     {
         ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
@@ -3477,11 +3763,11 @@ ZEND_NAMED_FUNCTION( _wrap_vas_computer_get_attrs )
     anames_count = zend_hash_num_elements( htanames );
     anames = emalloc( ( anames_count + 1 ) * sizeof( const char* ) );
 
-    for ( zend_hash_internal_pointer_reset_ex( htanames, &panames );
+    for( zend_hash_internal_pointer_reset_ex( htanames, &panames );
           zend_hash_get_current_data_ex( htanames, ( void** ) &data, &panames ) == SUCCESS;
           zend_hash_move_forward_ex( htanames, &panames ) )
     {
-        if ( Z_TYPE_PP( data ) == IS_STRING )
+        if( Z_TYPE_PP( data ) == IS_STRING )
         {
             anames[anames_index++] = Z_STRVAL_PP( data );
         }
@@ -3492,7 +3778,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_computer_get_attrs )
     SPE_SET_VAS_ERR( err );
     efree( anames );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         SPE_CONS_RETURN_VALUE( vas_attrs_t, attrs );
     }
@@ -3503,7 +3789,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_computer_get_attrs )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_computer_get_dn )
+ZEND_VAS_ARG_INFO( vas_computer_get_dn );
+ZEND_VAS_NAMED_FUNC( vas_computer_get_dn )
 {
     SPE_vas_ctx_t* ctx;
     SPE_vas_id_t* id = NULL;
@@ -3514,13 +3801,13 @@ ZEND_NAMED_FUNCTION( _wrap_vas_computer_get_dn )
 
     SPE_CHECK_ARGS( 3 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zcomputer ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zcomputer ) == FAILURE )
     {
         RETURN_NULL();
     }
     ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
-    if ( ! ZVAL_IS_NULL( zid ) )
+    if( ! ZVAL_IS_NULL( zid ) )
     {
         ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
@@ -3529,7 +3816,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_computer_get_dn )
     err = vas_computer_get_dn( ctx->ctx, RAW( id ), computer->raw, &dn );
     SPE_SET_VAS_ERR( err );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         RETVAL_STRING( dn, 1 );
         free(dn);
@@ -3542,7 +3829,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_computer_get_dn )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_computer_get_dns_hostname )
+ZEND_VAS_ARG_INFO( vas_computer_get_dns_hostname );
+ZEND_VAS_NAMED_FUNC( vas_computer_get_dns_hostname )
 {
     SPE_vas_ctx_t* ctx;
     SPE_vas_id_t* id = NULL;
@@ -3553,13 +3841,13 @@ ZEND_NAMED_FUNCTION( _wrap_vas_computer_get_dns_hostname )
 
     SPE_CHECK_ARGS( 3 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zcomputer ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zcomputer ) == FAILURE )
     {
         RETURN_NULL();
     }
     ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
-    if ( ! ZVAL_IS_NULL( zid ) )
+    if( ! ZVAL_IS_NULL( zid ) )
     {
         ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
@@ -3568,7 +3856,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_computer_get_dns_hostname )
     err = vas_computer_get_dns_hostname( ctx->ctx, RAW( id ), computer->raw, &dns_hostname );
     SPE_SET_VAS_ERR( err );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         RETVAL_STRING( dns_hostname, 1 );
         free( dns_hostname );
@@ -3581,7 +3869,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_computer_get_dns_hostname )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_computer_get_domain )
+ZEND_VAS_ARG_INFO( vas_computer_get_domain );
+ZEND_VAS_NAMED_FUNC( vas_computer_get_domain )
 {
     SPE_vas_ctx_t* ctx;
     SPE_vas_id_t* id = NULL;
@@ -3592,13 +3881,13 @@ ZEND_NAMED_FUNCTION( _wrap_vas_computer_get_domain )
 
     SPE_CHECK_ARGS( 3 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zcomputer ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zcomputer ) == FAILURE )
     {
         RETURN_NULL();
     }
     ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
-    if ( ! ZVAL_IS_NULL( zid ) )
+    if( ! ZVAL_IS_NULL( zid ) )
     {
         ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
@@ -3607,7 +3896,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_computer_get_domain )
     err = vas_computer_get_domain( ctx->ctx, RAW( id ), computer->raw, &domain );
     SPE_SET_VAS_ERR( err );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         RETVAL_STRING( domain, 1 );
         free( domain );
@@ -3620,7 +3909,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_computer_get_domain )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_computer_get_sid )
+ZEND_VAS_ARG_INFO( vas_computer_get_sid );
+ZEND_VAS_NAMED_FUNC( vas_computer_get_sid )
 {
     SPE_vas_ctx_t* ctx;
     SPE_vas_id_t* id = NULL;
@@ -3631,13 +3921,13 @@ ZEND_NAMED_FUNCTION( _wrap_vas_computer_get_sid )
 
     SPE_CHECK_ARGS( 3 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zcomputer ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zcomputer ) == FAILURE )
     {
         RETURN_NULL();
     }
     ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
-    if ( ! ZVAL_IS_NULL( zid ) )
+    if( ! ZVAL_IS_NULL( zid ) )
     {
         ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
@@ -3646,7 +3936,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_computer_get_sid )
     err = vas_computer_get_sid( ctx->ctx, RAW( id ), computer->raw, &sid );
     SPE_SET_VAS_ERR( err );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         RETVAL_STRING( sid, 1 );
 
@@ -3661,7 +3951,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_computer_get_sid )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_computer_get_spns )
+ZEND_VAS_ARG_INFO( vas_computer_get_spns );
+ZEND_VAS_NAMED_FUNC( vas_computer_get_spns )
 {
     SPE_vas_ctx_t* ctx;
     SPE_vas_id_t* id = NULL;
@@ -3672,13 +3963,13 @@ ZEND_NAMED_FUNCTION( _wrap_vas_computer_get_spns )
 
     SPE_CHECK_ARGS( 3 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zcomputer ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zcomputer ) == FAILURE )
     {
         RETURN_NULL();
     }
     ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
-    if ( ! ZVAL_IS_NULL( zid ) )
+    if( ! ZVAL_IS_NULL( zid ) )
     {
         ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
@@ -3687,12 +3978,12 @@ ZEND_NAMED_FUNCTION( _wrap_vas_computer_get_spns )
     err = vas_computer_get_spns( ctx->ctx, RAW( id ), computer->raw, &spns );
     SPE_SET_VAS_ERR( err );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         int i;
         /* convert strvals into a PHP vector thing, then free it.*/
         array_init( return_value );
-        for ( i = 0; spns[i]; i++ )
+        for( i = 0; spns[i]; i++ )
         {
             add_next_index_string( return_value, spns[i], 1 );
             free( spns[i] );
@@ -3707,7 +3998,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_computer_get_spns )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_computer_get_sam_account_name )
+ZEND_VAS_ARG_INFO( vas_computer_get_sam_account_name );
+ZEND_VAS_NAMED_FUNC( vas_computer_get_sam_account_name )
 {
     SPE_vas_ctx_t* ctx;
     SPE_vas_id_t* id = NULL;
@@ -3718,13 +4010,13 @@ ZEND_NAMED_FUNCTION( _wrap_vas_computer_get_sam_account_name )
 
     SPE_CHECK_ARGS( 3 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zcomputer ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zcomputer ) == FAILURE )
     {
         RETURN_NULL();
     }
     ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
-    if ( ! ZVAL_IS_NULL( zid ) )
+    if( ! ZVAL_IS_NULL( zid ) )
     {
         ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
@@ -3733,7 +4025,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_computer_get_sam_account_name )
     err = vas_computer_get_sam_account_name( ctx->ctx, RAW( id ), computer->raw, &sam );
     SPE_SET_VAS_ERR( err );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         RETVAL_STRING( sam, 1 );
         free( sam );
@@ -3746,7 +4038,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_computer_get_sam_account_name )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_computer_get_upn )
+ZEND_VAS_ARG_INFO( vas_computer_get_upn );
+ZEND_VAS_NAMED_FUNC( vas_computer_get_upn )
 {
     SPE_vas_ctx_t* ctx;
     SPE_vas_id_t* id = NULL;
@@ -3757,13 +4050,13 @@ ZEND_NAMED_FUNCTION( _wrap_vas_computer_get_upn )
 
     SPE_CHECK_ARGS( 3 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zcomputer ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zcomputer ) == FAILURE )
     {
         RETURN_NULL();
     }
     ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
-    if ( ! ZVAL_IS_NULL( zid ) )
+    if( ! ZVAL_IS_NULL( zid ) )
     {
         ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
@@ -3772,7 +4065,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_computer_get_upn )
     err = vas_computer_get_upn( ctx->ctx, RAW( id ), computer->raw, &upn );
     SPE_SET_VAS_ERR( err );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         RETVAL_STRING( upn, 1 );
         free( upn );
@@ -3785,7 +4078,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_computer_get_upn )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_computer_get_krb5_client_name )
+ZEND_VAS_ARG_INFO( vas_computer_get_krb5_client_name );
+ZEND_VAS_NAMED_FUNC( vas_computer_get_krb5_client_name )
 {
     SPE_vas_ctx_t* ctx;
     SPE_vas_id_t* id = NULL;
@@ -3796,13 +4090,13 @@ ZEND_NAMED_FUNCTION( _wrap_vas_computer_get_krb5_client_name )
 
     SPE_CHECK_ARGS( 3 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zcomputer ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zcomputer ) == FAILURE )
     {
         RETURN_NULL();
     }
     ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
-    if ( ! ZVAL_IS_NULL( zid ) )
+    if( ! ZVAL_IS_NULL( zid ) )
     {
         ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
@@ -3811,7 +4105,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_computer_get_krb5_client_name )
     err = vas_computer_get_krb5_client_name( ctx->ctx, RAW( id ), computer->raw, &client_name );
     SPE_SET_VAS_ERR( err );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         RETVAL_STRING( client_name, 1 );
         free( client_name );
@@ -3824,7 +4118,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_computer_get_krb5_client_name )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_computer_get_host_spn )
+ZEND_VAS_ARG_INFO( vas_computer_get_host_spn );
+ZEND_VAS_NAMED_FUNC( vas_computer_get_host_spn )
 {
     SPE_vas_ctx_t* ctx;
     SPE_vas_id_t* id = NULL;
@@ -3835,13 +4130,13 @@ ZEND_NAMED_FUNCTION( _wrap_vas_computer_get_host_spn )
 
     SPE_CHECK_ARGS( 3 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zcomputer ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zcomputer ) == FAILURE )
     {
         RETURN_NULL();
     }
     ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
-    if ( ! ZVAL_IS_NULL( zid ) )
+    if( ! ZVAL_IS_NULL( zid ) )
     {
         ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
@@ -3850,7 +4145,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_computer_get_host_spn )
     err = vas_computer_get_host_spn( ctx->ctx, RAW( id ), computer->raw, &host_spn );
     SPE_SET_VAS_ERR( err );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         RETVAL_STRING( host_spn, 1 );
         free( host_spn );
@@ -3863,7 +4158,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_computer_get_host_spn )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_computer_get_account_control )
+ZEND_VAS_ARG_INFO( vas_computer_get_account_control );
+ZEND_VAS_NAMED_FUNC( vas_computer_get_account_control )
 {
     SPE_vas_ctx_t* ctx;
     SPE_vas_id_t* id = NULL;
@@ -3874,13 +4170,13 @@ ZEND_NAMED_FUNCTION( _wrap_vas_computer_get_account_control )
 
     SPE_CHECK_ARGS( 3 );
 
-    if ( zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zcomputer ) == FAILURE )
+    if( zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zcomputer ) == FAILURE )
     {
         RETURN_NULL();
     }
     ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
-    if ( ! ZVAL_IS_NULL( zid ) )
+    if( ! ZVAL_IS_NULL( zid ) )
     {
         ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
@@ -3889,7 +4185,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_computer_get_account_control )
     err = vas_computer_get_account_control( ctx->ctx, RAW( id ), computer->raw, &account_control );
     SPE_SET_VAS_ERR( err );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         RETVAL_LONG( account_control );
         return;
@@ -3900,7 +4196,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_computer_get_account_control )
     }
 }
 
-ZEND_NAMED_FUNCTION( _wrap_vas_gss_initialize )
+ZEND_VAS_ARG_INFO( vas_gss_initialize );
+ZEND_VAS_NAMED_FUNC( vas_gss_initialize )
 {
     SPE_vas_ctx_t* ctx;
     SPE_vas_id_t* id = NULL;
@@ -3910,13 +4207,13 @@ ZEND_NAMED_FUNCTION( _wrap_vas_gss_initialize )
 
     SPE_CHECK_ARGS( 2 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rz", &zctx, &zid ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rz", &zctx, &zid ) == FAILURE )
     {
         RETURN_NULL();
     }
     ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
-    if ( ! ZVAL_IS_NULL( zid ) )
+    if( ! ZVAL_IS_NULL( zid ) )
     {
         ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
@@ -3924,7 +4221,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_gss_initialize )
 
     SPE_SET_VAS_ERR( err );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         ctx->freeGSS = 1;
     }
@@ -3933,7 +4230,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_gss_initialize )
 
 struct gss_cred_id_t_desc_struct;
 
-ZEND_NAMED_FUNCTION( _wrap_vas_gss_acquire_cred )
+ZEND_VAS_ARG_INFO( vas_gss_acquire_cred );
+ZEND_VAS_NAMED_FUNC( vas_gss_acquire_cred )
 {
     SPE_vas_ctx_t* ctx;
     SPE_vas_id_t* id = NULL;
@@ -3946,13 +4244,13 @@ ZEND_NAMED_FUNCTION( _wrap_vas_gss_acquire_cred )
 
     SPE_CHECK_ARGS( 3 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzl", &zctx, &zid, &usage ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzl", &zctx, &zid, &usage ) == FAILURE )
     {
         RETURN_NULL();
     }
     ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
-    if ( ! ZVAL_IS_NULL( zid ) )
+    if( ! ZVAL_IS_NULL( zid ) )
     {
         ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
@@ -3960,7 +4258,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_gss_acquire_cred )
 
     SPE_SET_VAS_ERR2( err, minor_status );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         SPE_CONS_RETURN_VALUE( gss_cred_id_t, cred );
     }
@@ -3971,7 +4269,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_gss_acquire_cred )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_gss_auth )
+ZEND_VAS_ARG_INFO( vas_gss_auth );
+ZEND_VAS_NAMED_FUNC( vas_gss_auth )
 {
     SPE_vas_ctx_t* ctx;
     SPE_gss_cred_id_t* cred;
@@ -3983,7 +4282,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_gss_auth )
 
     SPE_CHECK_ARGS( 3 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrr", &zctx, &zcred, &zcontext ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrr", &zctx, &zcred, &zcontext ) == FAILURE )
     {
         RETURN_NULL();
     }
@@ -3994,7 +4293,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_gss_auth )
     err = vas_gss_auth( ctx->ctx, cred->raw, context->raw, &auth );
     SPE_SET_VAS_ERR2( err, minor_status );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         SPE_CONS_RETURN_VALUE( vas_auth_t, auth );
     }
@@ -4005,7 +4304,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_gss_auth )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_gss_spnego_initiate )
+ZEND_VAS_ARG_INFO( vas_gss_spnego_initiate );
+ZEND_VAS_NAMED_FUNC( vas_gss_spnego_initiate )
 {
     SPE_vas_ctx_t* ctx;
     SPE_vas_id_t* id;
@@ -4025,7 +4325,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_gss_spnego_initiate )
 
     SPE_CHECK_ARGS( 9 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC,
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC,
                                 "rrzzsllsz",
                                 &zctx,
                                 &zid,
@@ -4044,15 +4344,15 @@ ZEND_NAMED_FUNCTION( _wrap_vas_gss_spnego_initiate )
     ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
     ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
     /*Ignore Reserved*/
-    if ( ! ZVAL_IS_NULL( zgssctx ) )
+    if( ! ZVAL_IS_NULL( zgssctx ) )
     {
-        if ( Z_TYPE_P( zgssctx ) != IS_LONG || Z_LVAL_P( zgssctx ) != 0 )
+        if( Z_TYPE_P( zgssctx ) != IS_LONG || Z_LVAL_P( zgssctx ) != 0 )
         {
             ZEND_FETCH_RESOURCE( gssctx, SPE_gss_ctx_id_t*, &zgssctx, -1, PHP_gss_ctx_id_t_RES_NAME, le_gss_ctx_id_t );
             mygssctx = gssctx->raw;
         }
     }
-    if ( lIntoken != 0 )
+    if( lIntoken != 0 )
     {
         real_intoken = emalloc( sizeof( *real_intoken ) );
         real_intoken->length = lIntoken;
@@ -4069,24 +4369,24 @@ ZEND_NAMED_FUNCTION( _wrap_vas_gss_spnego_initiate )
                                    encoding,
                                    real_intoken,
                                    &outtoken );
-    if ( real_intoken )
+    if( real_intoken )
     {
         efree( real_intoken );
     }
     /* If accept eats out gssctx, don't double free.*/
-    if ( mygssctx != mygssctx_in )
+    if( mygssctx != mygssctx_in )
     {
-        if ( mygssctx_in )
+        if( mygssctx_in )
         {
             SPE_remove_gss_ctx( ctx, mygssctx_in );
         }
-        if ( mygssctx )
+        if( mygssctx )
         {
             SPE_add_gss_ctx( ctx, mygssctx );
             SPE_CONS_VALUE( zgssctx, gss_ctx_id_t, mygssctx );
         }
     }
-    if ( ! GSS_ERROR( err ) )
+    if( ! GSS_ERROR( err ) )
     {
         /* Success, so deal with the outtoken.
          *
@@ -4103,7 +4403,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_gss_spnego_initiate )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_gss_spnego_accept )
+ZEND_VAS_ARG_INFO( vas_gss_spnego_accept );
+ZEND_VAS_NAMED_FUNC( vas_gss_spnego_accept )
 {
     SPE_vas_ctx_t* ctx;
     SPE_vas_id_t* id;
@@ -4124,7 +4425,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_gss_spnego_accept )
 
     SPE_CHECK_ARGS( 9 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrzzzlszz",
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrzzzlszz",
                                 &zctx,
                                 &zid,
                                 &zauth,
@@ -4140,22 +4441,22 @@ ZEND_NAMED_FUNCTION( _wrap_vas_gss_spnego_accept )
     }
     ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
     ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
-    if ( ! ZVAL_IS_NULL( zgssctx ) )
+    if( ! ZVAL_IS_NULL( zgssctx ) )
     {
-        if ( Z_TYPE_P( zgssctx ) != IS_LONG || Z_LVAL_P( zgssctx ) != 0 )
+        if( Z_TYPE_P( zgssctx ) != IS_LONG || Z_LVAL_P( zgssctx ) != 0 )
         {
             ZEND_FETCH_RESOURCE( gssctx, SPE_gss_ctx_id_t*, &zgssctx, -1, PHP_gss_ctx_id_t_RES_NAME, le_gss_ctx_id_t );
             mygssctx = gssctx->raw;
         }
     }
-    if ( ! ZVAL_IS_NULL( zdeleg_cred ) )
+    if( ! ZVAL_IS_NULL( zdeleg_cred ) )
     {
-        if ( Z_TYPE_P( zdeleg_cred ) != IS_LONG || Z_LVAL_P( zdeleg_cred ) != 0 )
+        if( Z_TYPE_P( zdeleg_cred ) != IS_LONG || Z_LVAL_P( zdeleg_cred ) != 0 )
         {
             deleg_cred = ( gss_cred_id_t )1;
         }
     }
-    if ( lIntoken != 0 )
+    if( lIntoken != 0 )
     {
         real_intoken = emalloc( sizeof( *real_intoken ) );
         real_intoken->length = lIntoken;
@@ -4172,24 +4473,24 @@ ZEND_NAMED_FUNCTION( _wrap_vas_gss_spnego_accept )
                                  real_intoken,
                                  &outtoken,
                                  deleg_cred == GSS_C_NO_CREDENTIAL ? NULL : &deleg_cred );
-    if ( real_intoken )
+    if( real_intoken )
     {
         efree( real_intoken );
     }
     /* If accept eats out gssctx, don't double free. */
-    if ( mygssctx != mygssctx_in )
+    if( mygssctx != mygssctx_in )
     {
-        if ( mygssctx_in )
+        if( mygssctx_in )
         {
             SPE_remove_gss_ctx( ctx, mygssctx_in );
         }
-        if ( mygssctx )
+        if( mygssctx )
         {
             SPE_add_gss_ctx( ctx, mygssctx );
             SPE_CONS_VALUE( zgssctx, gss_ctx_id_t, mygssctx );
         }
     }
-    if ( ! GSS_ERROR( err ) )
+    if( ! GSS_ERROR( err ) )
     {
         /* Success, so deal with the outtoken.
          *
@@ -4203,7 +4504,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_gss_spnego_accept )
 
         gss_release_buffer( &minor_status, &outtoken );
         /* The rest of the out parameters: auth, gssctx, flags, deleg_cred.*/
-        if ( ! ZVAL_IS_NULL( zauth ) )
+        if( ! ZVAL_IS_NULL( zauth ) )
         {
             SPE_CONS_VALUE( zauth, vas_auth_t, myauth );
         }
@@ -4213,7 +4514,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_gss_spnego_accept )
         }
         ZVAL_LONG( zflags, flags );
 
-        if ( deleg_cred != GSS_C_NO_CREDENTIAL )
+        if( deleg_cred != GSS_C_NO_CREDENTIAL )
         {
             SPE_CONS_VALUE( zdeleg_cred, gss_cred_id_t, deleg_cred );
         }
@@ -4232,14 +4533,14 @@ ZEND_NAMED_FUNCTION( _wrap_vas_gss_spnego_accept )
                                        NULL,
                                        NULL,
                                        NULL );
-            if ( err != GSS_S_COMPLETE )
+            if( err != GSS_S_COMPLETE )
             {
                 goto done;
             }
 
             /* Convert the client's name into a visible string */
             err = gss_display_name( &minor_status, client_name, &buf, NULL );
-            if ( err != GSS_S_COMPLETE )
+            if( err != GSS_S_COMPLETE )
             {
                 goto done;
             }
@@ -4249,7 +4550,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_gss_spnego_accept )
             gss_release_buffer( &minor_status, &buf );
 done:
 
-	        if ( client_name != NULL )
+            if( client_name != NULL )
             {
                 gss_release_name( &minor_status, &client_name );
             }
@@ -4260,7 +4561,8 @@ done:
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_gss_krb5_get_subkey )
+ZEND_VAS_ARG_INFO( vas_gss_krb5_get_subkey );
+ZEND_VAS_NAMED_FUNC( vas_gss_krb5_get_subkey )
 {
     SPE_vas_ctx_t* ctx;
     SPE_gss_ctx_id_t* gssctx;
@@ -4270,7 +4572,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_gss_krb5_get_subkey )
 
     SPE_CHECK_ARGS( 3 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrz", &zctx, &zgssctx, &zkey ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrz", &zctx, &zgssctx, &zkey ) == FAILURE )
     {
         RETURN_NULL();
     }
@@ -4279,7 +4581,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_gss_krb5_get_subkey )
 
     err = vas_gss_krb5_get_subkey( ctx->ctx, gssctx->raw, &key );
 
-    if ( err == GSS_S_COMPLETE )
+    if( err == GSS_S_COMPLETE )
     {
         SPE_CONS_VALUE( zkey, krb5_keyblock, key );
     }
@@ -4287,367 +4589,429 @@ ZEND_NAMED_FUNCTION( _wrap_vas_gss_krb5_get_subkey )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_new_gss_buffer_desc )
+ZEND_VAS_ARG_INFO( new_gss_buffer_desc );
+ZEND_VAS_NAMED_FUNC( new_gss_buffer_desc )
 {
     /*IMPLEMENT*/
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_delete_gss_buffer_desc )
+ZEND_VAS_ARG_INFO( delete_gss_buffer_desc );
+ZEND_VAS_NAMED_FUNC( delete_gss_buffer_desc )
 {
     /*IMPLEMENT*/
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_new_gss_OID_desc )
+ZEND_VAS_ARG_INFO( new_gss_OID_desc );
+ZEND_VAS_NAMED_FUNC( new_gss_OID_desc )
 {
     /*IMPLEMENT*/
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_delete_gss_OID_desc )
+ZEND_VAS_ARG_INFO( delete_gss_OID_desc );
+ZEND_VAS_NAMED_FUNC( delete_gss_OID_desc )
 {
     /*IMPLEMENT*/
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_new_gss_OID_set_desc )
+ZEND_VAS_ARG_INFO( new_gss_OID_set_desc );
+ZEND_VAS_NAMED_FUNC( new_gss_OID_set_desc )
 {
     /*IMPLEMENT*/
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_delete_gss_OID_set_desc )
+ZEND_VAS_ARG_INFO( delete_gss_OID_set_desc );
+ZEND_VAS_NAMED_FUNC( delete_gss_OID_set_desc )
 {
     /*IMPLEMENT*/
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_new_gss_channel_bindings_struct )
+ZEND_VAS_ARG_INFO( new_gss_channel_bindings_struct );
+ZEND_VAS_NAMED_FUNC( new_gss_channel_bindings_struct )
 {
     /*IMPLEMENT*/
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_delete_gss_channel_bindings_struct )
+ZEND_VAS_ARG_INFO( delete_gss_channel_bindings_struct );
+ZEND_VAS_NAMED_FUNC( delete_gss_channel_bindings_struct )
 {
     /*IMPLEMENT*/
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_GSS_C_NT_USER_NAME_set )
+#if 0
+ZEND_VAS_ARG_INFO( gss_c_nt_user_name_set );
+ZEND_VAS_NAMED_FUNC( gss_c_nt_user_name_set )
 {
     /*IMPLEMENT*/
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_GSS_C_NT_USER_NAME_get )
+ZEND_VAS_ARG_INFO( gss_c_nt_user_name_get );
+ZEND_VAS_NAMED_FUNC( gss_c_nt_user_name_get )
 {
     /*IMPLEMENT*/
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_GSS_C_NT_MACHINE_UID_NAME_set )
+ZEND_VAS_ARG_INFO( gss_c_nt_machine_uid_name_set );
+ZEND_VAS_NAMED_FUNC( gss_c_nt_machine_uid_name_set )
 {
     /*IMPLEMENT*/
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_GSS_C_NT_MACHINE_UID_NAME_get )
+ZEND_VAS_ARG_INFO( gss_c_nt_machine_uid_name_get );
+ZEND_VAS_NAMED_FUNC( gss_c_nt_machine_uid_name_get )
 {
     /*IMPLEMENT*/
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_GSS_C_NT_STRING_UID_NAME_set )
+ZEND_VAS_ARG_INFO( gss_c_nt_string_uid_name_set );
+ZEND_VAS_NAMED_FUNC( gss_c_nt_string_uid_name_set )
 {
     /*IMPLEMENT*/
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_GSS_C_NT_STRING_UID_NAME_get )
+ZEND_VAS_ARG_INFO( gss_c_nt_string_uid_name_get );
+ZEND_VAS_NAMED_FUNC( gss_c_nt_string_uid_name_get )
 {
     /*IMPLEMENT*/
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_GSS_C_NT_HOSTBASED_SERVICE_X_set )
+ZEND_VAS_ARG_INFO( gss_c_nt_hostbased_service_x_set );
+ZEND_VAS_NAMED_FUNC( gss_c_nt_hostbased_service_x_set )
 {
     /*IMPLEMENT*/
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_GSS_C_NT_HOSTBASED_SERVICE_X_get )
+ZEND_VAS_ARG_INFO( gss_c_nt_hostbased_service_x_get );
+ZEND_VAS_NAMED_FUNC( gss_c_nt_hostbased_service_x_get )
 {
     /*IMPLEMENT*/
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_GSS_C_NT_HOSTBASED_SERVICE_set )
+ZEND_VAS_ARG_INFO( gss_c_nt_hostbased_service_set );
+ZEND_VAS_NAMED_FUNC( gss_c_nt_hostbased_service_set )
 {
     /*IMPLEMENT*/
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_GSS_C_NT_HOSTBASED_SERVICE_get )
+ZEND_VAS_ARG_INFO( gss_c_nt_hostbased_service_get );
+ZEND_VAS_NAMED_FUNC( gss_c_nt_hostbased_service_get )
 {
     /*IMPLEMENT*/
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_GSS_C_NT_ANONYMOUS_set )
+ZEND_VAS_ARG_INFO( gss_c_nt_anonymous_set )
+ZEND_VAS_NAMED_FUNC( gss_c_nt_anonymous_set )
 {
     /*IMPLEMENT*/
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_GSS_C_NT_ANONYMOUS_get )
+ZEND_VAS_ARG_INFO( gss_c_nt_anonymous_get );
+ZEND_VAS_NAMED_FUNC( gss_c_nt_anonymous_get )
 {
     /*IMPLEMENT*/
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_GSS_C_NT_EXPORT_NAME_set )
+ZEND_VAS_ARG_INFO( gss_c_nt_export_name_set );
+ZEND_VAS_NAMED_FUNC( gss_c_nt_export_name_set )
 {
     /*IMPLEMENT*/
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_GSS_C_NT_EXPORT_NAME_get )
+ZEND_VAS_ARG_INFO( gss_c_nt_export_name_get );
+ZEND_VAS_NAMED_FUNC( gss_c_nt_export_name_get )
 {
     /*IMPLEMENT*/
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_GSS_SPNEGO_MECHANISM_set )
+ZEND_VAS_ARG_INFO( gss_spnego_mechanism_set );
+ZEND_VAS_NAMED_FUNC( gss_spnego_mechanism_set )
 {
     /*IMPLEMENT*/
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_GSS_SPNEGO_MECHANISM_get )
+ZEND_VAS_ARG_INFO( gss_spnego_mechanism_get );
+ZEND_VAS_NAMED_FUNC( gss_spnego_mechanism_get )
+{
+    /*IMPLEMENT*/
+}
+#endif
+
+ZEND_VAS_ARG_INFO( gss_acquire_cred );
+ZEND_VAS_NAMED_FUNC( gss_acquire_cred )
 {
     /*IMPLEMENT*/
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_gss_acquire_cred )
+ZEND_VAS_ARG_INFO( gss_add_cred );
+ZEND_VAS_NAMED_FUNC( gss_add_cred )
 {
     /*IMPLEMENT*/
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_gss_add_cred )
+ZEND_VAS_ARG_INFO( gss_inquire_cred );
+ZEND_VAS_NAMED_FUNC( gss_inquire_cred )
 {
     /*IMPLEMENT*/
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_gss_inquire_cred )
+ZEND_VAS_ARG_INFO( gss_inquire_cred_by_mech );
+ZEND_VAS_NAMED_FUNC( gss_inquire_cred_by_mech )
 {
     /*IMPLEMENT*/
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_gss_inquire_cred_by_mech )
+ZEND_VAS_ARG_INFO( gss_init_sec_context );
+ZEND_VAS_NAMED_FUNC( gss_init_sec_context )
 {
     /*IMPLEMENT*/
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_gss_init_sec_context )
+ZEND_VAS_ARG_INFO( gss_accept_sec_context );
+ZEND_VAS_NAMED_FUNC( gss_accept_sec_context )
 {
     /*IMPLEMENT*/
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_gss_accept_sec_context )
+ZEND_VAS_ARG_INFO( gss_process_context_token );
+ZEND_VAS_NAMED_FUNC( gss_process_context_token )
 {
     /*IMPLEMENT*/
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_gss_process_context_token )
+ZEND_VAS_ARG_INFO( gss_context_time );
+ZEND_VAS_NAMED_FUNC( gss_context_time )
 {
     /*IMPLEMENT*/
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_gss_context_time )
+ZEND_VAS_ARG_INFO( gss_inquire_context );
+ZEND_VAS_NAMED_FUNC( gss_inquire_context )
 {
     /*IMPLEMENT*/
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_gss_inquire_context )
+ZEND_VAS_ARG_INFO( gss_wrap_size_limit );
+ZEND_VAS_NAMED_FUNC( gss_wrap_size_limit )
 {
     /*IMPLEMENT*/
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_gss_wrap_size_limit )
+ZEND_VAS_ARG_INFO( gss_export_sec_context );
+ZEND_VAS_NAMED_FUNC( gss_export_sec_context )
 {
     /*IMPLEMENT*/
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_gss_export_sec_context )
+ZEND_VAS_ARG_INFO( gss_import_sec_context );
+ZEND_VAS_NAMED_FUNC( gss_import_sec_context )
 {
     /*IMPLEMENT*/
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_gss_import_sec_context )
+ZEND_VAS_ARG_INFO( gss_get_mic );
+ZEND_VAS_NAMED_FUNC( gss_get_mic )
 {
     /*IMPLEMENT*/
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_gss_get_mic )
+ZEND_VAS_ARG_INFO( gss_verify_mic );
+ZEND_VAS_NAMED_FUNC( gss_verify_mic )
 {
     /*IMPLEMENT*/
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_gss_verify_mic )
+ZEND_VAS_ARG_INFO( gss_wrap );
+ZEND_VAS_NAMED_FUNC( gss_wrap )
 {
     /*IMPLEMENT*/
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_gss_wrap )
+ZEND_VAS_ARG_INFO( gss_unwrap );
+ZEND_VAS_NAMED_FUNC( gss_unwrap )
 {
     /*IMPLEMENT*/
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_gss_unwrap )
+ZEND_VAS_ARG_INFO( gss_sign );
+ZEND_VAS_NAMED_FUNC( gss_sign )
 {
     /*IMPLEMENT*/
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_gss_sign )
+ZEND_VAS_ARG_INFO( gss_verify );
+ZEND_VAS_NAMED_FUNC( gss_verify )
 {
     /*IMPLEMENT*/
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_gss_verify )
+ZEND_VAS_ARG_INFO( gss_seal );
+ZEND_VAS_NAMED_FUNC( gss_seal )
 {
     /*IMPLEMENT*/
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_gss_seal )
+ZEND_VAS_ARG_INFO( gss_unseal );
+ZEND_VAS_NAMED_FUNC( gss_unseal )
 {
     /*IMPLEMENT*/
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_gss_unseal )
+ZEND_VAS_ARG_INFO( gss_import_name );
+ZEND_VAS_NAMED_FUNC( gss_import_name )
 {
     /*IMPLEMENT*/
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_gss_import_name )
+ZEND_VAS_ARG_INFO( gss_display_name );
+ZEND_VAS_NAMED_FUNC( gss_display_name )
 {
     /*IMPLEMENT*/
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_gss_display_name )
+ZEND_VAS_ARG_INFO( gss_compare_name );
+ZEND_VAS_NAMED_FUNC( gss_compare_name )
 {
     /*IMPLEMENT*/
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_gss_compare_name )
+ZEND_VAS_ARG_INFO( gss_release_name );
+ZEND_VAS_NAMED_FUNC( gss_release_name )
 {
     /*IMPLEMENT*/
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_gss_release_name )
+ZEND_VAS_ARG_INFO( gss_inquire_names_for_mech );
+ZEND_VAS_NAMED_FUNC( gss_inquire_names_for_mech )
 {
     /*IMPLEMENT*/
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_gss_inquire_names_for_mech )
+ZEND_VAS_ARG_INFO( gss_inquire_mechs_for_name );
+ZEND_VAS_NAMED_FUNC( gss_inquire_mechs_for_name )
 {
     /*IMPLEMENT*/
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_gss_inquire_mechs_for_name )
+ZEND_VAS_ARG_INFO( gss_canonicalize_name );
+ZEND_VAS_NAMED_FUNC( gss_canonicalize_name )
 {
     /*IMPLEMENT*/
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_gss_canonicalize_name )
+ZEND_VAS_ARG_INFO( gss_export_name );
+ZEND_VAS_NAMED_FUNC( gss_export_name )
 {
     /*IMPLEMENT*/
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_gss_export_name )
+ZEND_VAS_ARG_INFO( gss_duplicate_name );
+ZEND_VAS_NAMED_FUNC( gss_duplicate_name )
 {
     /*IMPLEMENT*/
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_gss_duplicate_name )
+ZEND_VAS_ARG_INFO( gss_display_status );
+ZEND_VAS_NAMED_FUNC( gss_display_status )
 {
     /*IMPLEMENT*/
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_gss_display_status )
+ZEND_VAS_ARG_INFO( gss_create_empty_oid_set );
+ZEND_VAS_NAMED_FUNC( gss_create_empty_oid_set )
 {
     /*IMPLEMENT*/
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_gss_create_empty_oid_set )
+ZEND_VAS_ARG_INFO( gss_add_oid_set_member );
+ZEND_VAS_NAMED_FUNC( gss_add_oid_set_member )
 {
     /*IMPLEMENT*/
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_gss_add_oid_set_member )
+ZEND_VAS_ARG_INFO( gss_test_oid_set_member );
+ZEND_VAS_NAMED_FUNC( gss_test_oid_set_member )
 {
     /*IMPLEMENT*/
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_gss_test_oid_set_member )
+ZEND_VAS_ARG_INFO( gss_release_oid_set );
+ZEND_VAS_NAMED_FUNC( gss_release_oid_set )
 {
     /*IMPLEMENT*/
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_gss_release_oid_set )
+ZEND_VAS_ARG_INFO( gss_release_buffer );
+ZEND_VAS_NAMED_FUNC( gss_release_buffer )
 {
     /*IMPLEMENT*/
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_gss_release_buffer )
+ZEND_VAS_ARG_INFO( gss_indicate_mechs );
+ZEND_VAS_NAMED_FUNC( gss_indicate_mechs )
 {
     /*IMPLEMENT*/
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_gss_indicate_mechs )
-{
-    /*IMPLEMENT*/
-}
-
-
-ZEND_NAMED_FUNCTION( _wrap_vas_krb5_get_context )
+ZEND_VAS_ARG_INFO( vas_krb5_get_context );
+ZEND_VAS_NAMED_FUNC( vas_krb5_get_context )
 {
     zval *zctx;
     SPE_vas_ctx_t *ctx;
@@ -4656,7 +5020,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_krb5_get_context )
 
     SPE_CHECK_ARGS( 1 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "r", &zctx ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "r", &zctx ) == FAILURE )
     {
         RETURN_NULL();
     }
@@ -4666,7 +5030,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_krb5_get_context )
 
     SPE_SET_VAS_ERR( err );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         SPE_CONS_RETURN_VALUE( krb5_context, krb5ctx );
     }
@@ -4677,7 +5041,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_krb5_get_context )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_krb5_get_principal )
+ZEND_VAS_ARG_INFO( vas_krb5_get_principal );
+ZEND_VAS_NAMED_FUNC( vas_krb5_get_principal )
 {
     zval* zctx;
     zval* zid;
@@ -4688,7 +5053,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_krb5_get_principal )
 
     SPE_CHECK_ARGS( 2 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rr", &zctx, &zid ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rr", &zctx, &zid ) == FAILURE )
     {
         RETURN_NULL();
     }
@@ -4699,7 +5064,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_krb5_get_principal )
 
     SPE_SET_VAS_ERR( err );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         SPE_CONS_RETURN_VALUE( krb5_principal, krb5princ );
     }
@@ -4710,7 +5075,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_krb5_get_principal )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_krb5_get_ccache )
+ZEND_VAS_ARG_INFO( vas_krb5_get_ccache );
+ZEND_VAS_NAMED_FUNC( vas_krb5_get_ccache )
 {
     zval* zctx;
     zval* zid;
@@ -4721,7 +5087,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_krb5_get_ccache )
 
     SPE_CHECK_ARGS( 2 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rr", &zctx, &zid ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rr", &zctx, &zid ) == FAILURE )
     {
         RETURN_NULL();
     }
@@ -4732,7 +5098,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_krb5_get_ccache )
 
     SPE_SET_VAS_ERR( err );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         SPE_CONS_RETURN_VALUE( krb5_ccache, krb5cc );
     }
@@ -4743,7 +5109,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_krb5_get_ccache )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_krb5_get_credentials )
+ZEND_VAS_ARG_INFO( vas_krb5_get_credentials );
+ZEND_VAS_NAMED_FUNC( vas_krb5_get_credentials )
 {
     zval* zctx;
     zval* zid;
@@ -4757,7 +5124,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_krb5_get_credentials )
 
     SPE_CHECK_ARGS( 4 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrsl", &zctx, &zid, &szTarget, &lTarget, &addtocache ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrsl", &zctx, &zid, &szTarget, &lTarget, &addtocache ) == FAILURE )
     {
         RETURN_NULL();
     }
@@ -4768,7 +5135,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_krb5_get_credentials )
 
     SPE_SET_VAS_ERR( err );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         SPE_CONS_RETURN_VALUE( krb5_creds, creds );
     }
@@ -4779,7 +5146,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_krb5_get_credentials )
 }
 
 
-ZEND_NAMED_FUNCTION( _wrap_vas_krb5_validate_credentials )
+ZEND_VAS_ARG_INFO( vas_krb5_validate_credentials );
+ZEND_VAS_NAMED_FUNC( vas_krb5_validate_credentials )
 {
     zval* zctx;
     zval* zcreds;
@@ -4792,7 +5160,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_krb5_validate_credentials )
 
     SPE_CHECK_ARGS( 3 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrs", &zctx, &zcreds, &szKeytab, &lKeytab ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrs", &zctx, &zcreds, &szKeytab, &lKeytab ) == FAILURE )
     {
         RETURN_NULL();
     }
@@ -4803,7 +5171,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_krb5_validate_credentials )
 
     SPE_SET_VAS_ERR( err );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         SPE_CONS_RETURN_VALUE( vas_auth_t, auth );
     }
@@ -4813,7 +5181,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_krb5_validate_credentials )
     }
 }
 
-ZEND_NAMED_FUNCTION( _wrap_vas_ldap_init_and_bind )
+ZEND_VAS_ARG_INFO( vas_ldap_init_and_bind );
+ZEND_VAS_NAMED_FUNC( vas_ldap_init_and_bind )
 {
     zval* zctx;
     zval* zid;
@@ -4826,12 +5195,12 @@ ZEND_NAMED_FUNCTION( _wrap_vas_ldap_init_and_bind )
 
     SPE_CHECK_ARGS( 3 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrs", &zctx, &zid, &szUri, &lUri ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrs", &zctx, &zid, &szUri, &lUri ) == FAILURE )
     {
         RETURN_NULL();
     }
     ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
-    if ( ! ZVAL_IS_NULL( zid ) )
+    if( ! ZVAL_IS_NULL( zid ) )
     {
         ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
@@ -4839,7 +5208,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_ldap_init_and_bind )
 
     SPE_SET_VAS_ERR( err );
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         SPE_CONS_RETURN_VALUE( LDAP, ld );
     }
@@ -4849,7 +5218,8 @@ ZEND_NAMED_FUNCTION( _wrap_vas_ldap_init_and_bind )
     }
 }
 
-ZEND_NAMED_FUNCTION( _wrap_vas_ldap_set_attributes )
+ZEND_VAS_ARG_INFO( vas_ldap_set_attributes );
+ZEND_VAS_NAMED_FUNC( vas_ldap_set_attributes )
 {
     zval* zctx;
     zval* zid;
@@ -4871,18 +5241,18 @@ ZEND_NAMED_FUNCTION( _wrap_vas_ldap_set_attributes )
 
     SPE_CHECK_ARGS( 5 );
 
-    if ( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrssz", &zctx, &zid, &szUri, &lUri, &szDn, &lDn, &zmods ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrssz", &zctx, &zid, &szUri, &lUri, &szDn, &lDn, &zmods ) == FAILURE )
     {
         RETURN_NULL();
     }
     ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
-    if ( ! ZVAL_IS_NULL( zid ) )
+    if( ! ZVAL_IS_NULL( zid ) )
     {
         ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
     /* Create the mods array.
      * DRK: Test with null mod_values -- should be OK -- pass null mod_values.*/
-    if ( Z_TYPE_P( zmods ) != IS_ARRAY )
+    if( Z_TYPE_P( zmods ) != IS_ARRAY )
     {
         err = VAS_ERR_INVALID_PARAM;
     }
@@ -4892,16 +5262,16 @@ ZEND_NAMED_FUNCTION( _wrap_vas_ldap_set_attributes )
         mods_count = zend_hash_num_elements( htmods );
         mods = emalloc( ( mods_count + 1 ) * sizeof( LDAPMod* ) );
 
-        for ( zend_hash_internal_pointer_reset_ex( htmods, &pmods );
+        for( zend_hash_internal_pointer_reset_ex( htmods, &pmods );
               zend_hash_get_current_data_ex( htmods, ( void** )&dataArray, &pmods ) == SUCCESS;
               zend_hash_move_forward_ex( htmods, &pmods ) )
         {
-            if ( Z_TYPE_PP( dataArray ) == IS_OBJECT )
+            if( Z_TYPE_PP( dataArray ) == IS_OBJECT )
             {
                 zend_class_entry* o = Z_OBJCE_P( *dataArray );
 
                 /* See if it's the right type.*/
-                if ( strcmp( o->name, "cvas_ldapmod" ) != 0 )
+                if( strcmp( o->name, "cvas_ldapmod" ) != 0 )
                 {
                     err = VAS_ERR_INVALID_PARAM;
                     continue;
@@ -4913,12 +5283,12 @@ ZEND_NAMED_FUNCTION( _wrap_vas_ldap_set_attributes )
                 memset( m, 0, sizeof( *m ) );
 
                 /* get mod_op*/
-                if ( zend_hash_find( Z_OBJPROP_PP( dataArray ), "mod_op", sizeof( "mod_op" ), ( void** )&dataObject ) == FAILURE )
+                if( zend_hash_find( Z_OBJPROP_PP( dataArray ), "mod_op", sizeof( "mod_op" ), ( void** )&dataObject ) == FAILURE )
                 {
                     err = VAS_ERR_INVALID_PARAM;
                     continue;
                 }
-                if ( Z_TYPE_PP( dataObject ) != IS_LONG )
+                if( Z_TYPE_PP( dataObject ) != IS_LONG )
                 {
                     err = VAS_ERR_INVALID_PARAM;
                     continue;
@@ -4926,12 +5296,12 @@ ZEND_NAMED_FUNCTION( _wrap_vas_ldap_set_attributes )
                 m->mod_op = Z_LVAL_PP( dataObject );
 
                 /* get mod_type*/
-                if ( zend_hash_find( Z_OBJPROP_PP( dataArray ), "mod_type", sizeof( "mod_type" ), ( void** )&dataObject ) == FAILURE )
+                if( zend_hash_find( Z_OBJPROP_PP( dataArray ), "mod_type", sizeof( "mod_type" ), ( void** )&dataObject ) == FAILURE )
                 {
                     err = VAS_ERR_INVALID_PARAM;
                     continue;
                 }
-                if ( Z_TYPE_PP( dataObject ) != IS_STRING )
+                if( Z_TYPE_PP( dataObject ) != IS_STRING )
                 {
                     err = VAS_ERR_INVALID_PARAM;
                     continue;
@@ -4940,17 +5310,17 @@ ZEND_NAMED_FUNCTION( _wrap_vas_ldap_set_attributes )
                 /*printf( "m->mod_type: %s\n", m->mod_type );*/
 
                 /* get mod_values -- array of strings.*/
-                if ( zend_hash_find( Z_OBJPROP_PP( dataArray ), "mod_values", sizeof( "mod_values" ), ( void** )&dataObject ) == FAILURE )
+                if( zend_hash_find( Z_OBJPROP_PP( dataArray ), "mod_values", sizeof( "mod_values" ), ( void** )&dataObject ) == FAILURE )
                 {
                     err = VAS_ERR_INVALID_PARAM;
                     continue;
                 }
-                if ( Z_TYPE_PP( dataObject ) == IS_NULL )
+                if( Z_TYPE_PP( dataObject ) == IS_NULL )
                 {
                     m->mod_values = NULL;
                     /*printf( "m->mod_values: NULL\n" );*/
                 }
-                else if ( Z_TYPE_PP( dataObject ) != IS_ARRAY )
+                else if( Z_TYPE_PP( dataObject ) != IS_ARRAY )
                 {
                     err = VAS_ERR_INVALID_PARAM;
                     continue;
@@ -4965,7 +5335,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_ldap_set_attributes )
 
                     m->mod_values = emalloc( ( values_count + 1 ) * sizeof( const char * ) );
 
-                    for ( zend_hash_internal_pointer_reset_ex( htvalues, &pvalues );
+                    for( zend_hash_internal_pointer_reset_ex( htvalues, &pvalues );
                           zend_hash_get_current_data_ex( htvalues, ( void** ) &value, &pvalues ) == SUCCESS;
                           zend_hash_move_forward_ex( htvalues, &pvalues ) )
                     {
@@ -4979,7 +5349,7 @@ ZEND_NAMED_FUNCTION( _wrap_vas_ldap_set_attributes )
         mods[mods_index++] = NULL;  /* Make sure null terminated.*/
     }
 
-    if ( err == VAS_ERR_SUCCESS )
+    if( err == VAS_ERR_SUCCESS )
     {
         err = vas_ldap_set_attributes( ctx->ctx,
                                        ( id ) ? id->raw : NULL,
@@ -4993,15 +5363,15 @@ ZEND_NAMED_FUNCTION( _wrap_vas_ldap_set_attributes )
      *
      * Note that all the strings are pointers into the PHP data structures
      * so we don't free those.*/
-    if ( mods )
+    if( mods )
     {
         LDAPMod** m;
 
-        for ( m = mods; *m != NULL; m++ )
+        for( m = mods; *m != NULL; m++ )
         {
             LDAPMod* mod = *m;
 
-            if ( mod->mod_values )
+            if( mod->mod_values )
             {
                 efree( mod->mod_values );
             }
