@@ -20,7 +20,7 @@ main(int argc, char **argv)
     }
 
     context = NULL;
-    while ((cfg = _pgss_config_iterate(&context, &oid)) != NULL) {
+    while ((cfg = _pgss_config_next(&context, &oid)) != NULL) {
     	gss_buffer_desc buf;
 	OM_uint32 major, minor;
 	int i;

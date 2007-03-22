@@ -449,7 +449,7 @@ gss_indicate_mechs(minor_status, mech_set)
     /* Iterate over the mechanism OIDs, adding them to the result set */
     /* (could be optimized) */
     iter = 0;
-    while ((config = _pgss_config_iterate(&iter, &mech))) {
+    while ((config = _pgss_config_next(&iter, &mech))) {
 	major = gss_add_oid_set_member(minor_status, mech, &result);
 	if (major) {
 	    (void)gss_release_oid_set(NULL, &result);

@@ -20,7 +20,7 @@ struct config {
 };
 
 /* Iterates through config structure. State should start at NULL. */
-struct config *_pgss_config_iterate(void **state, gss_OID *mech_return);
+struct config *_pgss_config_next(void **state, gss_OID *mech_return);
 
 /* Returns the config associated with an OID, or NULL if not found */
 struct config *_pgss_config_find(gss_OID mech);

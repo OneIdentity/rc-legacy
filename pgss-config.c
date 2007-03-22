@@ -48,12 +48,12 @@ _pgss_config_last_error()
 }
 
 /*
- * Iterate over the mech oid -> config mapping.
+ * Iterates over the mech oid -> config mapping.
  * |state| should initially point to a NULL value.
  * Returns NULL when the mapping is exhausted.
  */
 struct config *
-_pgss_config_iterate(void **state, gss_OID *mech_return)
+_pgss_config_next(void **state, gss_OID *mech_return)
 {
     struct mechconf **next = (struct mechconf **)state;
 
