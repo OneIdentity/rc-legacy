@@ -1,4 +1,4 @@
-The following caveats apply to the current release of vas-apps.
+The following caveats apply to the current release of Quest Kerberized apps.
 
 RSH
    Users should be aware that an encrypted rsh connection does _not_ encrypt
@@ -13,7 +13,7 @@ TELNET
    arcfour kerberos tickets (see `vastool klist -v`). As of 2006-05,
    discussions are underway to have this corrected. The symptom of this is
    garbled output. Encrypted telnet works properly when both the client and
-   server are from this VAS Apps release.
+   server are from this Kerberized Apps release.
 
 
 Project home page: http://rc.vintela.com/topics/vas-apps/
