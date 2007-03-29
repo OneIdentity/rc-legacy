@@ -43,5 +43,6 @@ fi
 
 AC_CHECK_FUNCS([basename])
 AC_CHECK_FUNCS([getenv])
+AC_SEARCH_LIBS([dlopen], [dl])
 
 AC_OUTPUT

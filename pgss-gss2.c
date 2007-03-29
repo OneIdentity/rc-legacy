@@ -2,14 +2,70 @@
  * (c) 2007, Quest Software, Inc. All rights reserved. 
  */
 
+/*
+ * Provides an interface for GSSAPI v2, mapping calls onto providers
+ */
+
 #include <errno.h>
+#include <assert.h>
 #include <gssapi.h>
 #include <pgssapi.h>
 #include <string.h>
 #include "pgss-common.h"
-#include "pgss-gss2.h"
 #include "pgss-dispatch.h"
+#include "pgss-gss2.h"
 #include "pgss-config.h"
+
+#if NDEBUG
+# define dprintf(args)	/* nothing */
+#else
+# define dprintf(args) do {	    \
+	printf("debug: ");	    \
+	printf args;		    \
+	printf("\n");		    \
+   } while(0)
+#endif /* NDEBUG */
+
+struct error_tab {
+    OM_uint32   code;
+    const char *text;
+};
+
+/* Prototypes */
+static OM_uint32 complete(OM_uint32 *minor_status);
+static OM_uint32 error(OM_uint32 *minor_status, OM_uint32 major, int minor);
+static OM_uint32 failure(OM_uint32 *minor_status, OM_uint32 minor);
+static OM_uint32 failure_from_errno(OM_uint32 *minor_status);
+static OM_uint32 mech_error(OM_uint32 major, OM_uint32 *minor_status, 
+		    struct pgss_dispatch *dispatch);
+
+static OM_uint32 init(OM_uint32 *minor_status);
+static OM_uint32 find_dispatch(OM_uint32 *minor_status, gss_OID mech,
+		    struct pgss_dispatch **dispatch_return);
+static OM_uint32 strdup_buffer(OM_uint32 *minor_status, const char *str,
+		    gss_buffer_t buffer);
+static OM_uint32 copyout_buffer(OM_uint32 *minor_status, 
+		    struct pgss_dispatch *dispatch, gss_buffer_t buffer);
+static OM_uint32 copyout_oid_set(OM_uint32 *minor_status, 
+		    struct pgss_dispatch *dispatch, gss_OID_set *oid_set);
+static OM_uint32 copyout_name(OM_uint32 *minor_status, 
+		    struct pgss_dispatch *dispatch, gss_name_t *name);
+static OM_uint32 alloc_cred_id(OM_uint32 *minor_status, 
+		    struct pgss_cred_id **cred_return, OM_uint32 size);
+static void      free_cred_id(struct pgss_cred_id **cred_return);
+static OM_uint32 append_cred_id(OM_uint32 *minor_status, 
+		    struct pgss_cred_id **cred_return, gss_OID mech, 
+		    void *cred);
+
+static OM_uint32 dup_oid(OM_uint32 *minor_status, const gss_OID oid, 
+		    gss_OID oid_copy);
+static void      free_oid(gss_OID oid);
+
+static const char *error_tab_search(const struct error_tab *tab,OM_uint32 code);
+static const char *major_display_status_opt(OM_uint32 code, OM_uint32 context);
+static OM_uint32 major_display_status(OM_uint32 *minor_status, 
+			OM_uint32 status_value, OM_uint32 *message_context, 
+			gss_buffer_t status_string);
 
 gss_OID_desc
     _pgss_NT_USER_NAME =           /* 1.2.840.113554.1.2.1.1 */
@@ -42,8 +98,13 @@ gss_OID
     GSS_KRB5_MECHANISM =           &_pgss_KRB5_MECHANISM,
     GSS_KRB5_NT_PRINCIPAL_NAME =   &_pgss_KRB5_NT_PRINCIPAL_NAME;
 
+/*------------------------------------------------------------
+ * Convenience major/minor error return functions
+ */
+
 /*
- * Sets minor_status to 0 and returns GSS_S_COMPLETE
+ * Sets minor_status to 0 and returns GSS_S_COMPLETE.
+ * Convenience function.
  */
 static OM_uint32
 complete(minor_status)
@@ -55,15 +116,30 @@ complete(minor_status)
 }
 
 /*
+ * Sets minor_status to 0 and returns the GSS_S_ major status.
+ * Convenience function.
+ */
+static OM_uint32
+error(minor_status, major, minor)
+    OM_uint32 *minor_status;
+    OM_uint32 major;
+{
+    if (minor_status)
+	*minor_status = minor;
+    return major;
+}
+
+/*
  * Sets minor_status to an error code and returns GSS_S_FAILURE.
  * Convenience function.
  */
 static OM_uint32
-failure(minor_status, code)
+failure(minor_status, minor)
     OM_uint32 *minor_status;
+    OM_uint32 minor;
 {
     if (minor_status)
-	*minor_status = code;
+	*minor_status = minor;
     return GSS_S_FAILURE;
 }
 
@@ -75,11 +151,12 @@ static OM_uint32
 failure_from_errno(minor_status)
     OM_uint32 *minor_status;
 {
-    return failure(errno);
+    return failure(minor_status, (OM_uint32)errno);
 }
 
 /*
  * Returns a mechanism error converted into a generic error.
+ * Convenience function.
  */
 static OM_uint32
 mech_error(major, minor_status, dispatch)
@@ -87,9 +164,13 @@ mech_error(major, minor_status, dispatch)
     OM_uint32 *minor_status;
     struct pgss_dispatch *dispatch;
 {
-    /* TBD */
+    /* For now, no change. TBD? */
     return major;
 }
+
+/*------------------------------------------------------------
+ * Internal dispatch functions
+ */
 
 /*
  * Ensure the pgssapi has been initialised.
@@ -128,11 +209,40 @@ find_dispatch(minor_status, mech, dispatch_return)
     return GSS_S_COMPLETE;
 }
 
+/*------------------------------------------------------------
+ * Internal memory management functions
+ */
+
+/* Copies a C string into a buffer */
+static OM_uint32
+strdup_buffer(minor_status, str, buffer)
+    OM_uint32 *minor_status;
+    const char *str;
+    gss_buffer_t buffer;
+{
+    char *cp;
+
+    if (str == NULL) {
+	/*
+	 * Special case for NULL strings: no change
+	 */
+	buffer->length = 0;
+	buffer->value = NULL;
+    } else {
+	if (!(cp = strdup((char *)str)))
+	    return failure(minor_status, ENOMEM);
+	buffer->length = strlen(str);
+	buffer->value = cp;
+    }
+    return complete(minor_status);
+}
+
 /*
- * Copies out a buffer so that we don't have to worry about
+ * Re-copies a buffer so that we don't have to worry about
  * translating gss_release_buffer() calls later.
- * Modifies the buffer content to point to stoareg owned by PGSS.
- * On success and error, the buffer will always be released.
+ * Modifies the buffer pointers to point to new storage owned by PGSS,
+ * and releases the old storage before returning.
+ * On error, the original buffer will have been released.
  */
 static OM_uint32
 copyout_buffer(minor_status, dispatch, buffer)
@@ -146,37 +256,47 @@ copyout_buffer(minor_status, dispatch, buffer)
     if (buffer == GSS_C_NO_BUFFER)
 	return complete(minor_status);
 
+    /*
+     * TODO: maybe allow provider configs to flag that their buffers are
+     * releasable with generic free(). This could improve performance.
+     */
+
     /* Copy the old buffer content */
     length = buffer->length;
     if (length) {
+	assert(buffer->value != NULL);
+
 	new_data = new_array(char, length);
 	if (!new_data) {
 	    (void)(*dispatch->gss_release_buffer)(&ignore, buffer);
+	    buffer->length = 0;
+	    buffer->value = NULL;
 	    return failure(minor_status, ENOMEM);
 	}
-	memcpy(new_data, buffer->value, length);
-    } else
-	new_data = NULL;
 
-    /* Release the old buffer */
-    major = (*dispatch->gss_release_buffer)(&ignore, buffer);
-    if (major) {
-	if (new_data)
-	    free(new_data);
-	return major;
+	memcpy(new_data, buffer->value, length);
+
+	/* Release the old buffer */
+	if ((major = (*dispatch->gss_release_buffer)(minor_status, buffer))) {
+	    if (new_data)
+		free(new_data);
+	    buffer->length = 0;
+	    buffer->value = NULL;
+	    return major;
+	}
+
+	/* Update the passed-in buffer to point to the new data location. */
+	buffer->value = new_data;
     }
 
-    /* Replace with the new content */
-    buffer->length = length;
-    buffer->value = new_data;
     return complete(minor_status);
 }
 
 /*
  * Copies out an oid-set so that we don't have to worry about
  * translating gss_release_oid_set() calls later.
- * Modifies the oid_set pointer to point to stoareg owned by PGSS.
- * On success and error, the oid_set will always be released.
+ * Modifies the oid_set pointer to point to storage owned by PGSS.
+ * On success and error, the original oid_set will always be released.
  */
 static OM_uint32
 copyout_oid_set(minor_status, dispatch, oid_set)
@@ -192,6 +312,11 @@ copyout_oid_set(minor_status, dispatch, oid_set)
 
     if (*oid_set == GSS_C_NO_OID_SET)
 	return complete(minor_status);
+
+    /*
+     * TODO: allow provider configs to flag that their buffers are
+     * releasable with generic free(). This would improve performance.
+     */
 
     /* Duplicate the oid set */
     new_oid_set = new(gss_OID_set_desc);
@@ -218,7 +343,7 @@ copyout_oid_set(minor_status, dispatch, oid_set)
 
     /* Release the mechanism's oid set */
     major = (*dispatch->gss_release_oid_set)(minor_status, oid_set);
-    if (major == GSS_S_COMPLETE)
+    if (GSS_ERROR(major) == GSS_S_COMPLETE)
 	*oid_set = new_oid_set;
     else {
 	(void)gss_release_oid_set(NULL, &new_oid_set);
@@ -240,10 +365,8 @@ nomem:
     return failure(minor_status, ENOMEM);
 }
 
-
 /*
- * Replaces a name returned from a provider with a pgss_name wrapper.
- * Modifies the name pointer. 
+ * Wraps a name returned from a provider, modifying the name pointer. 
  * On error, the underlying name will be released.
  */
 static OM_uint32
@@ -269,10 +392,135 @@ copyout_name(minor_status, dispatch, name)
 nomem:
     if (new_name)
 	free(new_name);
-    (void)(*dispatch->gss_release_name)(&ignore, name);
+    if (dispatch->gss_release_name)
+	(void)(*dispatch->gss_release_name)(&ignore, (D_gss_name_t *)name);
     return failure(minor_status, ENOMEM);
 }
 
+/*
+ * Allocates a cred structure with room for size cred pointers.
+ * The caller is able to increment the length field up to the size
+ * they requested.
+ */
+static OM_uint32
+alloc_cred_id(minor_status, cred_return, size)
+    OM_uint32 *minor_status;
+    struct pgss_cred_id **cred_return;
+    OM_uint32 size;
+{
+    struct pgss_cred_id *cred_id;
+
+    cred_id = malloc(sizeof *cred_id + (size - 1) * sizeof *cred_id->element);
+    if (!cred_id)
+	return failure(minor_status, ENOMEM);
+    cred_id->length = 0;
+    return complete(minor_status);
+}
+
+/*
+ * Releases storage for a cred_id structure.
+ * DOES NOT RELEASE THE MECHANISM CREDS.
+ */
+static void
+free_cred_id(cred_return)
+    struct pgss_cred_id **cred_return;
+{
+    OM_uint32 i;
+
+    for (i = 0; i < (*cred_return)->length; i++)
+	free_oid(&(*cred_return)->element[i].mech);
+    free(*cred_return);
+    *cred_return = NULL;
+}
+
+/*
+ * Resizes a pgss_cred_id structure to fit another credential.
+ * On failure, makes no changes to the original credentials.
+ * On success, replaces the cred_return pointer with the new pointer.
+ */
+static OM_uint32
+append_cred_id(minor_status, cred_return, mech, cred)
+    OM_uint32 *minor_status;
+    struct pgss_cred_id **cred_return;
+    gss_OID mech;
+    void *cred;
+{
+    OM_uint32 major;
+    struct pgss_cred_id *new_cred_id;
+
+    /* Allocate slightly larger storgae */
+    new_cred_id = malloc(sizeof *new_cred_id + 
+	    ((*cred_return)->length - 1 + 1) * sizeof *new_cred_id->element);
+    if (!new_cred_id)
+	return failure(minor_status, ENOMEM);
+
+    /* Copy in the old elements */
+    new_cred_id->length = (*cred_return)->length + 1;
+    memcpy(new_cred_id->element, 
+	    (*cred_return)->element,
+	    (*cred_return)->length * sizeof *new_cred_id->element);
+
+    /* Copy the mech OID of the newly appended element */
+    if ((major = dup_oid(minor_status, mech, 
+	&new_cred_id->element[new_cred_id->length - 1].mech)))
+    {
+	free(new_cred_id);
+	return major;
+    }
+
+    /* Copying the cred doesn't require anything special */
+    new_cred_id->element[new_cred_id->length - 1].cred = cred;
+
+    /* Release the smaller structure */
+    free(*cred_return);
+    *cred_return = new_cred_id;
+
+    return complete(minor_status);
+}
+
+/*
+ * Deep-copy an OID.
+ * The fields of the output gss_OID_desc are set to point
+ * to newly-allocated storage.
+ */
+static OM_uint32
+dup_oid(minor_status, oid, oid_copy)
+    OM_uint32 *minor_status;
+    const gss_OID oid;
+    gss_OID oid_copy;
+{
+    void *elements_copy;
+
+    if (oid->length) {
+	elements_copy = (void *)malloc(oid->length);
+	if (!elements_copy)
+	    return failure(minor_status, ENOMEM);
+	memcpy(elements_copy, oid->elements, oid->length);
+    } else
+	elements_copy = NULL;
+
+    oid_copy->length = oid->length;
+    oid_copy->elements = elements_copy;
+
+    return complete(minor_status);
+}
+
+/* Releases an OID allocated with dup_oid */
+static void
+free_oid(oid)
+    gss_OID oid;
+{
+    if (oid) {
+	if (oid->elements)
+	    free(oid->elements);
+	oid->length = 0;
+	oid->elements = NULL;
+    }
+}
+
+/*------------------------------------------------------------
+ * GSSAPI v2u1 multi-mech dispatch wrapper
+ */
 
 OM_uint32
 gss_acquire_cred(minor_status, desired_name, time_req, 
@@ -287,7 +535,108 @@ gss_acquire_cred(minor_status, desired_name, time_req,
    gss_OID_set *actual_mechs;
    OM_uint32 *time_rec;
 {
-    /* TBD */
+    OM_uint32 major;
+    struct pgss_dispatch *dispatch;
+    gss_OID mech;
+    int i, j;
+    OM_uint32 trec, mintrec = GSS_C_INDEFINITE;
+    OM_uint32 ignore;
+    gss_OID_set acquired_mechs = GSS_C_NO_OID_SET;
+    gss_OID_set all_mechs = GSS_C_NO_OID_SET;
+    gss_OID_set actual_ret = GSS_C_NO_OID_SET;
+    gss_OID_set desired;
+    struct pgss_cred_id *creds = NULL;
+
+    if ((major = init(minor_status)))
+	return major;
+
+    if (actual_mechs) {
+	if ((major = gss_create_empty_oid_set(minor_status, &acquired_mechs)))
+	    return major;
+    }
+
+    /* If a subset was not provided, then we acquire from all mechs */
+    if (!desired_mechs) {
+	if ((major = gss_indicate_mechs(minor_status, &all_mechs)))
+	    goto failed;
+	desired = all_mechs;
+    } 
+	desired = desired_mechs;
+
+    if ((major = alloc_cred_id(minor_status, &creds, desired->count)))
+	goto failed;
+
+    /* Acquire creds for each of the listed mechs */
+    for (i = 0; i < desired->count; i++) {
+	gss_cred_id_t cred;
+	gss_OID_set_desc dmech;
+
+	mech = desired->elements + i;
+	if ((major = find_dispatch(minor_status, mech, &dispatch)))
+	    goto failed;
+
+	if (!dispatch->gss_acquire_cred || !dispatch->gss_release_cred)
+	{
+	    major = error(minor_status, GSS_S_BAD_MECH, 0);
+	    goto failed;
+	}
+
+	dmech.count = 1;
+	dmech.elements = mech;
+	if ((major = (*dispatch->gss_acquire_cred)(minor_status, 
+		desired_name, time_req, &dmech, cred_usage,
+	       	&creds->element[creds->length].cred,
+		&actual_ret, time_rec ? &trec : NULL)))
+	    goto failed;
+
+	if ((major = dup_oid(minor_status, mech, 
+			&creds->element[creds->length].mech)))
+	{
+	    if (dispatch->gss_release_oid_set)
+		(void)(*dispatch->gss_release_oid_set)(&ignore, &actual_ret);
+	    if (dispatch->gss_release_cred)
+		(void)(*dispatch->gss_release_cred)(&ignore,
+		    &creds->element[creds->length].cred);
+	    goto failed;
+	}
+	creds->length++;
+
+	/* Accumulate the actual mechanisms acquired */
+	if (acquired_mechs)
+	    for (j = 0; j < actual_ret->count; j++) {
+		major = gss_add_oid_set_member(minor_status, 
+		    actual_ret->elements + j, acquired_mechs);
+		if (major)
+		    break;
+	    }
+	if (dispatch->gss_release_oid_set)
+	    (*dispatch->gss_release_oid_set)(&ignore, &actual_ret);
+	if (major)
+	    goto failed;
+
+	/* Calculate minimum time the credentials remain valid */
+	if (time_rec && (mintrec == GSS_C_INDEFINITE || mintrec > trec))
+	    mintrec = trec;
+    }
+
+    *output_cred_handle = creds;
+    creds = NULL;
+
+    if (actual_mechs) {
+	*actual_mechs = acquired_mechs;
+	acquired_mechs = GSS_C_NO_OID_SET;
+    }
+
+    if (time_rec)
+	*time_rec = mintrec;
+
+    major = complete(minor_status);
+
+failed:
+    (void)gss_release_cred(NULL, &creds);
+    (void)gss_release_oid_set(NULL, &all_mechs);
+    (void)gss_release_oid_set(NULL, &acquired_mechs);
+    return major;
 }
 
 OM_uint32
@@ -295,7 +644,29 @@ gss_release_cred(minor_status, cred_handle)
    OM_uint32 *minor_status;
    gss_cred_id_t *cred_handle;
 {
-    /* TBD */
+    OM_uint32 major;
+    struct pgss_dispatch *dispatch;
+    int i;
+    OM_uint32 ignore;
+    struct pgss_cred_id *creds;
+
+    if ((major = init(minor_status)))
+	return major;
+
+    if (*cred_handle == GSS_C_NO_CREDENTIAL)
+	return complete(minor_status);
+
+    creds = *cred_handle;
+    for (i = creds->length - 1; i >= 0; i--)
+	if (find_dispatch(NULL, &creds->element[i].mech, &dispatch)) {
+	    (void)(*dispatch->gss_release_cred)(&ignore, 
+		&creds->element[i].cred);
+	    free_oid(&creds->element[i].mech);
+	}
+    free(creds);
+
+    *cred_handle = GSS_C_NO_CREDENTIAL;
+    return complete(minor_status);
 }
 
 OM_uint32
@@ -416,6 +787,142 @@ gss_unwrap(minor_status, context_handle, input_message_buffer,
     /* TBD */
 }
 
+static const struct error_tab calling_errors[] = {
+    { GSS_S_CALL_INACCESSIBLE_READ,  "A required input parameter could "
+					"not be read" },
+    { GSS_S_CALL_INACCESSIBLE_WRITE, "A required input parameter could "
+					"not be written" },
+    { GSS_S_CALL_BAD_STRUCTURE,      "A parameter was malformed" },
+    { 0, 0 }
+}, routine_errors[] = {
+    { 0,                         "Successful completion" },
+    { GSS_S_BAD_MECH,            "An unsupported mechanism was requested" },
+    { GSS_S_BAD_NAME,            "An invalid name was supplied" },
+    { GSS_S_BAD_NAMETYPE,        "A supplied name was of an unsupported type" },
+    { GSS_S_BAD_BINDINGS,        "Incorrect channel bindings were supplied" },
+    { GSS_S_BAD_STATUS,          "An invalid input status code was supplied" },
+    { GSS_S_BAD_MIC,             "A token had an invalid MIC" },
+    { GSS_S_NO_CRED,             "No credentials were supplied, or the "
+				     "credentials were unavailable or "
+				     "inaccessible" },
+    { GSS_S_NO_CONTEXT,          "No context has been established" },
+    { GSS_S_DEFECTIVE_TOKEN,     "A token was invalid" },
+    { GSS_S_DEFECTIVE_CREDENTIAL,"A credential was invalid" },
+    { GSS_S_CREDENTIALS_EXPIRED, "The referenced credentials have expired" },
+    { GSS_S_CONTEXT_EXPIRED,     "The context has expired" },
+    { GSS_S_FAILURE,             "Miscellaneous failure (see text)" },
+    { GSS_S_BAD_QOP,             "The quality-of-protection requested could "
+				     "not be provided" },
+    { GSS_S_UNAUTHORIZED,        "The operation is forbidden "
+				    "by local security policy" },
+    { GSS_S_UNAVAILABLE,         "The operation or option is unavailable" },
+    { GSS_S_DUPLICATE_ELEMENT,   "The requested credential element "
+				    "already exists" },
+    { GSS_S_NAME_NOT_MN,         "The provided name was not a mechanism name" },
+    { 0, 0 }
+}, supplementary_info[] = {
+    { GSS_S_CONTINUE_NEEDED, "Continue needed" },
+    { GSS_S_DUPLICATE_TOKEN, "The token was a duplicate of an earlier token" },
+    { GSS_S_OLD_TOKEN,	     "The token's validity period has expired" },
+    { GSS_S_UNSEQ_TOKEN,     "A later token has already been processed" },
+    { GSS_S_GAP_TOKEN,	     "An expected per-message token was not received" },
+    { 0, 0 }
+};
+
+static const char *
+error_tab_search(tab, code)
+    const struct error_tab *tab;
+    OM_uint32 code;
+{
+    int i;
+
+    for (i = 0; tab[i].text; i++)
+	if (tab[i].code == code)
+	    return tab[i].text;
+    return NULL;
+}
+
+/* Maximum value of the major status display context */
+#define MAX_CONTEXT \
+	(sizeof supplementary_info / sizeof supplementary_info[0] - 1 + 2)
+
+/*
+ * Return a status message for a given context integer, or NULL
+ * For different values of context:
+ *   0: the routine name, or "Unknown routine"
+ *   1: the calling error, or NULL
+ *   2..(MAX_CONTEXT-1): supplementary text or NULL
+ */
+static const char *
+major_display_status_opt(OM_uint32 code, OM_uint32 context)
+{
+    const char *text;
+    const struct error_tab *tab;
+
+    assert(context < MAX_CONTEXT);
+
+    switch (context) {
+    case 0:
+	text = error_tab_search(routine_errors, GSS_ROUTINE_ERROR(code));
+	if (!text)
+	    text = "Unknown routine";
+	return text;
+    case 1:
+	return error_tab_search(calling_errors, GSS_CALLING_ERROR(code));
+    default:
+	tab = &supplementary_info[context - 2];
+	if (GSS_SUPPLEMENTARY_INFO(code) & tab->code)
+	    return tab->text;
+	else
+	    return NULL;
+    }
+}
+
+/*
+ * Returns the next status text for the given message_context.
+ * Increments message_context, or sets it to zero if the returned
+ * text is the last message.
+ */
+static OM_uint32
+major_display_status(minor_status, status_value, message_context, status_string)
+    OM_uint32 *minor_status;
+    OM_uint32 status_value;
+    OM_uint32 *message_context;
+    gss_buffer_t status_string;
+{
+    OM_uint32 context = *message_context, next_context = 0;
+    const char *text, *next_text;
+
+    context = *message_context;
+
+    /* 
+     * First, get the next status message. Intermediate messages
+     * may be NULL, in which case they are skipped.
+     */
+    while (context < MAX_CONTEXT) {
+	text = major_display_status_opt(status_value, context);
+	context++;
+	if (text)
+	    break;
+    }
+
+    /*
+     * Look ahead to see if there will be a non-NULL future status message.
+     * If not, then the next context integer will be zero to indicate
+     * end of messages.
+     */
+    next_context = context;
+    while (next_context < MAX_CONTEXT) {
+	next_text = major_display_status_opt(status_value, next_context);
+	next_context++;
+	if (next_text)
+	    break;
+    }
+    *message_context = next_context < MAX_CONTEXT ? context : 0;
+
+    return strdup_buffer(minor_status, text, status_string);
+}
+
 OM_uint32
 gss_display_status(minor_status, status_value, status_type, mech_type,
         message_context, status_string)
@@ -426,8 +933,54 @@ gss_display_status(minor_status, status_value, status_type, mech_type,
    OM_uint32 *message_context;
    gss_buffer_t status_string;
 {
-    /* TBD */
+    OM_uint32 major;
+    struct pgss_dispatch *dispatch;
+    int i;
+    OM_uint32 minor;
+    struct pgss_cred_id *creds;
+    gss_OID effective_mech_type;
+
+    if (status_type == GSS_C_GSS_CODE)
+	return major_display_status(minor_status, status_value,
+	       	message_context, status_string);
+    
+    else if (status_type == GSS_C_MECH_CODE) {
+	if ((major = init(minor_status)))
+	    return major;
+
+	/* If no mech is supplied, use the default mechanism */
+	if (mech_type)
+	    effective_mech_type = mech_type;
+	else
+	    effective_mech_type = _pgss_get_default_mech();
+
+	/* If there is no default mechanism, then uh, I don't know. */
+	if (!effective_mech_type)
+	    return strdup_buffer(minor_status, "Unknown mechanism error", 
+		    status_string);
+
+	if ((major = find_dispatch(NULL, effective_mech_type, &dispatch)))
+	    return major;
+
+	/* Dispatch the minor error code display to the named mechanism */
+	status_string->value = NULL;
+	status_string->length = 0;
+	if ((major = (*dispatch->gss_display_status)(&minor, status_value,
+		GSS_C_MECH_CODE, effective_mech_type, message_context, 
+		status_string)))
+	{
+	    if (minor_status)
+		*minor_status = minor;
+	    return major;
+	}
+
+	return copyout_buffer(minor_status, dispatch, status_string);
+    } 
+
+    else
+       	return GSS_S_BAD_STATUS;
 }
+
 
 OM_uint32
 gss_indicate_mechs(minor_status, mech_set)
@@ -446,8 +999,10 @@ gss_indicate_mechs(minor_status, mech_set)
     if ((major = gss_create_empty_oid_set(minor_status, &result)))
 	return major;
 
-    /* Iterate over the mechanism OIDs, adding them to the result set */
-    /* (could be optimized) */
+    /* 
+     * Iterate over the configuration instructions, adding their mechanism 
+     * OIDs, to the result set.
+     */
     iter = 0;
     while ((config = _pgss_config_next(&iter, &mech))) {
 	major = gss_add_oid_set_member(minor_status, mech, &result);
@@ -733,7 +1288,7 @@ gss_test_oid_set_member(minor_status, member, set, present)
 	    *present = 1;
 	    break;
 	}
-    return success(minor_status);
+    return complete(minor_status);
 }
 
 OM_uint32

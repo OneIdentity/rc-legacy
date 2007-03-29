@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <errno.h>
 #include <pgssapi.h>
 #include "pgss-common.h"
 #include "pgss-config.h"
@@ -346,8 +347,11 @@ _pgss_load_config_file(const char *filename)
     gss_OID oid;
 
     state.file = fopen(filename, "r");
-    if (!state.file)
+    if (!state.file) {
+	snprintf(config_last_error, sizeof config_last_error, "%s: %s",
+		filename ? filename : "(null)", strerror(errno));
 	return -1;
+    }
 
     state.filename = filename;
     state.lineno = 1;
@@ -493,3 +497,29 @@ _pgss_config_load(struct config *cfg)
     }
     return 0;
 }
+
+gss_OID
+_pgss_get_default_mech()
+{
+    /* If there is only one mechanism, then it is the default */
+    void *state;
+    struct config *config;
+    gss_OID oid, oid2;
+
+    state = NULL;
+    config = _pgss_config_next(&state, &oid);
+    if (!config)
+	return GSS_C_NO_OID;		/* No mechanisms */
+    config = _pgss_config_next(&state, &oid2);
+    if (!config)
+	return oid;			/* Only one mechanism */
+
+    /* Search for the first config with a param 'default' */
+    state = NULL;
+    while ((config = _pgss_config_next(&state, &oid)) != NULL)
+	if (_pgss_config_get_param(config, "default"))
+	    return oid;
+
+    return GSS_C_NO_OID;		/* No mech marked as 'default' */
+}
+

@@ -33,3 +33,6 @@ int _pgss_load_config_file(const char *filename);
 
 /* Returns the key associated with a config entry, or NULL if not defined */
 const char *_pgss_config_get_param(const struct config *cfg, const char *key);
+
+/* Returns the 'default' mechanism. If only one mech is defined, that's it. */
+gss_OID _pgss_get_default_mech(void);

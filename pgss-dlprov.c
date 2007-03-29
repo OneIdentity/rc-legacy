@@ -8,7 +8,9 @@
 
 /*
  * A dynamically loaded library provider.
- * Handles are never closed.
+ * This provider uses dlopen to open a shared library that exposes
+ * a GSS ABI. It provides a dispatch table populated with pointers directly
+ * into the shared library, or with NULL if the function doesn't exist.
  */
 
 struct pgss_dispatch *
