@@ -29,3 +29,7 @@ const char *getprogname(void);
 	      ((o1) && (o2) && (o1)->length == (o2)->length && \
 	             memcmp((o1)->elements, (o2)->elements, (o1)->length)))
 
+extern int _pgss_debug;
+#define dprintf(fmt, arg...) do {  \
+    if (_pgss_debug) fprintf(stderr, fmt , ## arg); \
+ } while (0)

@@ -10,6 +10,8 @@
 #include "pgss-dispatch.h"
 #include "pgss-gss2.h"
 
+int _pgss_debug = 1;
+
 /* An element in the mech->config mapping */
 struct mechconf {
     struct mechconf *next;       /* list chain for get_configs() */

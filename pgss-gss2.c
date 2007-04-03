@@ -1072,6 +1072,9 @@ gss_init_sec_context(minor_status, initiator_cred_handle, context_handle,
     D_gss_name_t target;
     D_gss_cred_id_t init_cred;
 
+    if ((major = init(minor_status)))
+	return major;
+
     /* Find the right provider, or use the default */
     if (mech_type)
 	mech = mech_type;
@@ -1151,6 +1154,12 @@ gss_accept_sec_context(minor_status, context_handle, acceptor_cred_handle,
     OM_uint32 *time_rec;
     gss_cred_id_t *delegated_cred_handle;
 {
+    OM_uint32 major;
+
+    if ((major = init(minor_status)))
+	return major;
+
+    return error(minor_status, GSS_S_UNAVAILABLE, 0);
     /* TBD */
 }
 
@@ -1171,6 +1180,9 @@ gss_delete_sec_context(minor_status, context_handle, output_token)
     gss_buffer_t output_token;
 {
     OM_uint32 major, minor;
+
+    if ((major = init(minor_status)))
+	return major;
 
     if (!*context_handle)
 	return error(minor_status, GSS_S_NO_CONTEXT, 0);
@@ -1208,6 +1220,9 @@ gss_get_mic(minor_status, context_handle, qop_req, message_buffer,
 {
     OM_uint32 major, minor;
 
+    if ((major = init(minor_status)))
+	return major;
+
     if (!context_handle)
 	return error(minor_status, GSS_S_NO_CONTEXT, 0);
 
@@ -1238,6 +1253,9 @@ gss_verify_mic(minor_status, context_handle, message_buffer,
 {
     OM_uint32 major, minor;
 
+    if ((major = init(minor_status)))
+	return major;
+
     if (!context_handle)
 	return error(minor_status, GSS_S_NO_CONTEXT, 0);
 
@@ -1265,6 +1283,9 @@ gss_wrap(minor_status, context_handle, conf_req_flag, qop_req,
     gss_buffer_t output_message_buffer;
 {
     OM_uint32 major, minor;
+
+    if ((major = init(minor_status)))
+	return major;
 
     if (!context_handle)
 	return error(minor_status, GSS_S_NO_CONTEXT, 0);
@@ -1301,6 +1322,9 @@ gss_unwrap(minor_status, context_handle, input_message_buffer,
 {
     OM_uint32 major, minor;
     int qop_int;
+
+    if ((major = init(minor_status)))
+	return major;
 
     if (!context_handle)
 	return error(minor_status, GSS_S_NO_CONTEXT, 0);
@@ -1488,6 +1512,9 @@ gss_display_status(minor_status, status_value, status_type, mech_type,
     struct pgss_cred_id *creds;
     gss_OID effective_mech_type;
 
+    if ((major = init(minor_status)))
+	return major;
+
     if (status_type == GSS_C_GSS_CODE)
 	return major_display_status(minor_status, status_value,
 	       	message_context, status_string);
@@ -1574,6 +1601,9 @@ gss_compare_name(minor_status, name1, name2, name_equal)
 {
     OM_uint32 major, minor, ignore, i, j;
 
+    if ((major = init(minor_status)))
+	return major;
+
     if (!name1 || !name2)
 	return error(minor_status, 
 		GSS_S_BAD_NAME | GSS_S_CALL_INACCESSIBLE_READ, 0);
@@ -1615,6 +1645,9 @@ gss_display_name(minor_status, input_name, output_name_buffer, output_name_type)
     gss_OID mech;
     struct pgss_dispatch *dispatch;
     gss_OID type;
+
+    if ((major = init(minor_status)))
+	return major;
 
     if (input_name)
 	return error(minor_status, 
@@ -1660,6 +1693,11 @@ gss_import_name(minor_status, input_name_buffer, input_name_type, output_name)
     const gss_OID input_name_type;
     gss_name_t *output_name;
 {
+    OM_uint32 major;
+
+    if ((major = init(minor_status)))
+	return major;
+
     return alloc_name(minor_status, input_name_buffer, input_name_type,
 	    output_name);
 }
@@ -1679,6 +1717,11 @@ gss_release_name(minor_status, input_name)
     OM_uint32 *minor_status;
     gss_name_t *input_name;
 {
+    OM_uint32 major;
+
+    if ((major = init(minor_status)))
+	return major;
+
     free_name(input_name);
     return complete(minor_status);
 }
@@ -1688,6 +1731,10 @@ gss_release_buffer(minor_status, buffer)
     OM_uint32 *minor_status;
     gss_buffer_t buffer;
 {
+    OM_uint32 major;
+
+    if ((major = init(minor_status)))
+	return major;
 
     if (buffer && buffer->value)
 	free(buffer->value);
