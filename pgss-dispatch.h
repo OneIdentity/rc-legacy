@@ -299,7 +299,7 @@ typedef OM_uint32 (*gss_seal_t)
                int,               /* conf_req_flag */
                int,               /* qop_req */
                gss_buffer_t,      /* input_message_buffer */
-               int,               /* conf_state */
+               int *,             /* conf_state */
                gss_buffer_t       /* output_message_buffer */
               );
 
@@ -309,7 +309,7 @@ typedef OM_uint32 (*gss_unseal_t)
                D_gss_ctx_id_t,    /* context_handle */
                gss_buffer_t,      /* input_message_buffer */
                gss_buffer_t,      /* output_message_buffer */
-               int,               /* conf_state */
+               int *,             /* conf_state */
                int *              /* qop_state */
               );
 

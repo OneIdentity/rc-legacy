@@ -212,25 +212,23 @@ gss_oid_to_str(minor_status, oid, oid_str)
     gss_buffer_t oid_str;
 {
     char *out = NULL;
-    int state, outlen;
-    const char *base = (const char *)oid->elements;
-    const int inmax = oid->length;
+    int state, outlen = 0;
 
-    oid_str->value = NULL;
-    oid_str->length = 0;
+    if (minor_status)
+	*minor_status = 0;
 
     /*
      * This is a two-pass conversion. The first pass calculates
      * the length of the generated string, and the second
      * fills in the buffer
      */
+    if (oid)
     for (state = 0; state < 2; state++) {
-	int inpos, outpos, first;
+	int inpos = 0, outpos = 0, first = 1;
 	unsigned long n;
+	const char *base = (const char *)oid->elements;
+	const int inmax = oid->length;
 
-	inpos = 0;
-	outpos = 0;
-	first = 1;
 	while (inpos < inmax) {
 	    inpos = parse_der_int(base, inpos, inmax, &n);
 	    if (inpos < 0) {

@@ -25,7 +25,7 @@ struct config *_pgss_config_next(void **state, gss_OID *mech_return);
 /* Returns the config associated with an OID, or NULL if not found */
 struct config *_pgss_config_find(gss_OID mech);
 
-/* Returns a description of the last error */
+/* Returns a description of the last error or NULL. Caller must not free. */
 const char *_pgss_config_last_error(void);
 
 /* Loads configuration information from the file. (Do not call twice) */
@@ -34,5 +34,12 @@ int _pgss_load_config_file(const char *filename);
 /* Returns the key associated with a config entry, or NULL if not defined */
 const char *_pgss_config_get_param(const struct config *cfg, const char *key);
 
-/* Returns the 'default' mechanism. If only one mech is defined, that's it. */
+/* Returns the 'default' mechanism, or GSS_C_NO_OID. */
 gss_OID _pgss_get_default_mech(void);
+
+/* Returns the dispatcher for a given config entry */
+struct pgss_dispatch *_pgss_config_get_dispatch(struct config *cfg);
+
+/* Checks config tables and returns -1 on error */
+int _pgss_init(void);
+

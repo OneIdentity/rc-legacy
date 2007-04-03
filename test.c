@@ -15,7 +15,7 @@ gsserr(const char *msg, OM_uint32 major, OM_uint32 minor, gss_OID mech)
     gss_buffer_desc buf;
 
     printf("GSS error: %s\n", msg);
-    printf(" Major 0x%x:\n");
+    printf(" Major 0x%x:\n", major);
     context = 0;
     do {
 	maj = gss_display_status(&min, major, GSS_C_GSS_CODE, GSS_C_NO_OID,
@@ -32,9 +32,9 @@ gsserr(const char *msg, OM_uint32 major, OM_uint32 minor, gss_OID mech)
 		    maj, min);
     } while (context != 0);
 
-    printf(" Minor 0x%x:\n");
+    printf(" Minor 0x%x:\n", minor);
     do {
-	maj = gss_display_status(&min, major, GSS_C_MECH_CODE, mech,
+	maj = gss_display_status(&min, minor, GSS_C_MECH_CODE, mech,
 		&context, &buf);
 	if (GSS_ERROR(maj)) {
 	    printf("[error while displaying: major=0x%x minor=0x%x]\n",
