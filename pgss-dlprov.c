@@ -19,7 +19,7 @@ _pgss_dl_provider(struct config *config)
     struct pgss_dispatch *dispatch;
     void *handle;
 
-    handle = dlopen(config->name, RTLD_NOW);
+    handle = dlopen(config->name, RTLD_LAZY | RTLD_LOCAL);
     if (!handle)
     	return NULL;
     

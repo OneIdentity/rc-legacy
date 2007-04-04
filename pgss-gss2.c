@@ -16,16 +16,6 @@
 #include "pgss-gss2.h"
 #include "pgss-config.h"
 
-#if NDEBUG
-# define dprintf(args)	/* nothing */
-#else
-# define dprintf(args) do {	    \
-	printf("debug: ");	    \
-	printf args;		    \
-	printf("\n");		    \
-   } while(0)
-#endif /* NDEBUG */
-
 struct error_tab {
     OM_uint32   code;
     const char *text;
@@ -291,7 +281,7 @@ copyout_buffer(minor_status, dispatch, buffer)
     gss_buffer_t buffer;
 {
     void *new_data;
-    OM_uint32 major, ignore, length;
+    OM_uint32 major, minor, length;
 
     if (!buffer)
 	return complete(minor_status);
@@ -308,7 +298,7 @@ copyout_buffer(minor_status, dispatch, buffer)
 
 	new_data = new_array(char, length);
 	if (!new_data) {
-	    (void)(*dispatch->gss_release_buffer)(&ignore, buffer);
+	    (void)(*dispatch->gss_release_buffer)(&minor, buffer);
 	    zero_buffer(buffer);
 	    return failure(minor_status, ENOMEM);
 	}
@@ -316,15 +306,16 @@ copyout_buffer(minor_status, dispatch, buffer)
 	memcpy(new_data, buffer->value, length);
 
 	/* Release the old buffer */
-	if ((major = (*dispatch->gss_release_buffer)(minor_status, buffer))) {
+	if ((major = (*dispatch->gss_release_buffer)(&minor, buffer))) {
 	    if (new_data)
 		free(new_data);
 	    zero_buffer(buffer);
-	    return major;
+	    return error(minor_status, major, minor);
 	}
 
-	/* Update the passed-in buffer to point to the new data location. */
+	/* Update buffer to point to the new data location. */
 	buffer->value = new_data;
+	buffer->length = length;
     }
 
     return complete(minor_status);
@@ -1114,9 +1105,12 @@ gss_init_sec_context(minor_status, initiator_cred_handle, context_handle,
      */
     zero_buffer(output_token);
 
+    minor = 0;
     major = (*dispatch->gss_init_sec_context)(&minor, init_cred, mech_ctx, 
 	    target, mech, req_flags, time_req, input_chan_bindings, 
 	    input_token, actual_mech_type, output_token, ret_flags, time_rec);
+    if (GSS_ERROR(major))
+	return error(minor_status, major, minor);
 
     /* Wrap new contexts. (Be careful to preserve value of 'major') */
     if (!*context_handle)
@@ -1512,14 +1506,14 @@ gss_display_status(minor_status, status_value, status_type, mech_type,
     struct pgss_cred_id *creds;
     gss_OID effective_mech_type;
 
-    if ((major = init(minor_status)))
-	return major;
-
+#if 0
     if (status_type == GSS_C_GSS_CODE)
 	return major_display_status(minor_status, status_value,
 	       	message_context, status_string);
     
     else if (status_type == GSS_C_MECH_CODE) {
+#endif
+
 	if ((major = init(minor_status)))
 	    return major;
 
@@ -1540,19 +1534,17 @@ gss_display_status(minor_status, status_value, status_type, mech_type,
 	/* Dispatch the minor error code display to the named mechanism */
 	zero_buffer(status_string);
 	if ((major = (*dispatch->gss_display_status)(&minor, status_value,
-		GSS_C_MECH_CODE, effective_mech_type, message_context, 
+		status_type, mech_type, message_context, 
 		status_string)))
-	{
-	    if (minor_status)
-		*minor_status = minor;
-	    return major;
-	}
+	    return error(minor_status, major, minor);
 
 	return copyout_buffer(minor_status, dispatch, status_string);
+#if 0
     } 
 
     else
-       	return GSS_S_BAD_STATUS;
+       	return error(minor_status, GSS_S_BAD_STATUS, 0);
+#endif
 }
 
 /*

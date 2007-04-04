@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #include "gssapi.h"
@@ -40,7 +41,7 @@ gsserr(const char *msg, OM_uint32 major, OM_uint32 minor, gss_OID mech)
 	    printf("[error while releasing buffer: 0x%x/0x%x]\n", maj, min);
     } while (context != 0);
 
-    if (mech) {
+    if (1) {
 #if ERROR_DEBUG
 	printf(" Minor 0x%x:\n", minor);
 #endif
@@ -73,43 +74,47 @@ gsserr(const char *msg, OM_uint32 major, OM_uint32 minor, gss_OID mech)
 static void
 load_conf(const char *conffile)
 {
-    struct config *cfg;
-    void *context;
-    gss_OID oid;
-
     printf("Loading config file %s...\n", conffile);
 
     if (_pgss_load_config_file(conffile)) {
 	fprintf(stderr, "error: %s\n", _pgss_config_last_error());
 	exit(1);
     }
+}
+
+/* Dumps the internal PGSS config tables */
+static void
+dump_conf()
+{
+    struct config *cfg;
+    void *context;
+    gss_OID oid;
+    gss_buffer_desc buf;
+    OM_uint32 major, minor;
+    int i;
 
     context = NULL;
     while ((cfg = _pgss_config_next(&context, &oid)) != NULL) {
-    	gss_buffer_desc buf;
-	OM_uint32 major, minor;
-	int i;
-
 	if (oid == GSS_C_NO_OID)
-	    printf("*\n");
+	    printf("    mech: *\n");
 	else {
 	    major = gss_oid_to_str(&minor, oid, &buf);
 	    if (GSS_ERROR(major))
 		gsserr("gss_oid_to_str", major, minor, GSS_C_NO_OID);
-	    printf("%.*s\n", buf.length, buf.value);
+	    printf("    mech: %.*s\n", buf.length, buf.value);
+	    major = gss_release_buffer(&minor, &buf);
+	    if (GSS_ERROR(major))
+		gsserr("gss_release_buffer", major, minor, GSS_C_NO_OID);
 	}
 
 	printf("    name: '%s'\n", cfg->name);
 	for (i = 0; i < cfg->nparams; i++)
 	    printf("        %s\n", cfg->params[i]);
 	printf("\n");
-
-	major = gss_release_buffer(&minor, &buf);
-	if (GSS_ERROR(major))
-	    gsserr("gss_release_buffer", major, minor, GSS_C_NO_OID);
     }
 }
 
+/* Calls gss_indicate_mechs() and prints the results */
 static void
 enum_mechs()
 {
@@ -117,20 +122,24 @@ enum_mechs()
     OM_uint32 major, minor, i;
     gss_buffer_desc buf;
 
-    printf("Enumerating available mechanisms...\n");
+    printf("(config before enumerating:)\n");
+    dump_conf();
+    printf("\n");
 
+    printf("Enumerating available mechanisms...\n");
     major = gss_indicate_mechs(&minor, &set);
     if (GSS_ERROR(major))
 	gsserr("gss_indicate_mechs", major, minor, GSS_C_NO_OID);
+    printf("\n");
 
-    printf("found %u mechanism%s\n", set->count, set->count == 1 ? "" : "s");
 
+    printf("found %u mechanism%s:\n", set->count, set->count == 1 ? "" : "s");
     for (i = 0; i < set->count; i++) {
 	major = gss_oid_to_str(&minor, set->elements + i, &buf);
 	if (GSS_ERROR(major))
 	    gsserr("gss_oid_to_str", major, minor, GSS_C_NO_OID);
 
-	printf("  <%.*s>\n", buf.length, buf.value);
+	printf(" %3d. %.*s\n", i, buf.length, buf.value);
 
 	major = gss_release_buffer(&minor, &buf);
 	if (GSS_ERROR(major))
@@ -140,8 +149,15 @@ enum_mechs()
     major = gss_release_oid_set(&minor, &set);
     if (GSS_ERROR(major))
 	gsserr("gss_release_oid_set", major, minor, GSS_C_NO_OID);
+    printf("\n");
+
+
+    printf("(config after enumerating:)\n");
+    dump_conf();
+    printf("\n");
 }
 
+/* Prints a binary token in quotes */
 static void
 print_binary(gss_buffer_t buf)
 {
@@ -170,15 +186,17 @@ print_binary(gss_buffer_t buf)
     printf("\"\n");
 }
 
+/* Scans two hex digits and stores the resulting char. Returns -1 on error */
 static int
-scan_hex(char *s, unsigned char *v)
+scan_hex(const char *s, unsigned char *v)
 {
     int i;
     unsigned char result = 0;
     char c;
 
     for (i = 0; i < 2; i++) {
-	c = s[i];
+	while (*s == '\n') s++;
+	c = *s;
 	result <<= 4;
 	if (c >= '0' && c <= '9')
 	    result = result | (c - '0');
@@ -194,7 +212,8 @@ scan_hex(char *s, unsigned char *v)
 }
 
 
-/* Reduces in-place a string to its binary form, and sets buffer to span it */
+/* Reduces a quoted string to its binary form in situ, and then
+ * sets buffer to span it. Newlines are ignored. Returns -1 on error */
 static int
 scan_binary(char *s, gss_buffer_t buf)
 {
@@ -208,11 +227,16 @@ scan_binary(char *s, gss_buffer_t buf)
     start = s;
     t = start;
     while (*s && *s != '"') {
+	if (*s == '\n') {	/* skip newlines */
+	    s++;
+	    continue;
+	}
 	if (*s != '\\') {
 	    *t++ = *s++;
 	    continue;
 	}
 	s++;
+	while (*s == '\n') s++;
 	switch (*s) {
 	case 'x':
 	    if (scan_hex(s + 1, (unsigned char *)t) == -1)
@@ -225,18 +249,44 @@ scan_binary(char *s, gss_buffer_t buf)
 	}
 	t++; s++;
     }
+    if (*s != '"')
+	return -1;
     buf->value = start;
     buf->length = t - start;
+    return 0;
 }
 
-/* Imports a string of the form [:nametype_oid:]name into a GSS name */
+static int
+bufeq(gss_buffer_t buf, const char *str)
+{
+    return buf->length == strlen(str) &&
+	   memcmp(buf->value, str, buf->length) == 0;
+}
+
+static struct {
+    const char *abbr;
+    gss_OID *oidp;
+} oidabbr[] = {
+    { "user", &GSS_C_NT_USER_NAME },
+    { "uid", &GSS_C_NT_STRING_UID_NAME },
+    { "hostbased", &GSS_C_NT_HOSTBASED_SERVICE },
+    { "anon", &GSS_C_NT_ANONYMOUS },
+    { "export", &GSS_C_NT_EXPORT_NAME },
+    { "krb5", &GSS_KRB5_NT_PRINCIPAL_NAME },
+    { 0, 0 }
+};
+
+/* Imports a string of the form [:nametype_oid:]name into a GSS name.
+ * If no :oid: prefix is present, then uses GSS_C_NO_OID in the call
+ * to gss_import_name(). On error, calls gsserr().
+ */
 static void
 import_name(char *arg, gss_name_t *name)
 {
     gss_OID oid = GSS_C_NO_OID;
     char *n;
     gss_buffer_desc buf;
-    OM_uint32 major, minor;
+    OM_uint32 major, minor, i;
 
     if (!arg) {
 	*name = GSS_C_NO_NAME;
@@ -246,21 +296,31 @@ import_name(char *arg, gss_name_t *name)
     if (*arg == ':') {
 	n = strchr(arg + 1, ':');
 	if (n) {
-	    arg = n + 1;
 	    buf.value = arg + 1;
 	    buf.length = n - arg - 1;
-	    major = gss_str_to_oid(&minor, &buf, &oid);
-	    if (GSS_ERROR(major))
-		gsserr("gss_str_to_oid", major, minor, GSS_C_NO_OID);
+	    n++;
+	    printf("importing using nametype '%.*s'\n", buf.length, buf.value);
+
+	    for (i = 0; oidabbr[i].abbr; i++)
+		if (bufeq(&buf, oidabbr[i].abbr)) {
+		    oid = *oidabbr[i].oidp;
+		    break;
+		}
+	    if (!oid) {
+		major = gss_str_to_oid(&minor, &buf, &oid);
+		if (GSS_ERROR(major))
+		    gsserr("gss_str_to_oid", major, minor, GSS_C_NO_OID);
+	    }
 	} else
 	    n = arg;
     } else
 	n = arg;
 
-    printf("importing name '%s'...\n", n);
 
     buf.value = n;
     buf.length = strlen(n);
+
+    printf("importing name '%.*s'...\n", buf.length, buf.value);
 
     major = gss_import_name(&minor, &buf, oid, name);
     if (GSS_ERROR(major))
@@ -298,6 +358,8 @@ test_init(char *target, char *client)
 
     printf("first token: ");
     print_binary(&out);
+
+    (void)gss_release_buffer(&minor, &out);
 }
 
 static void
