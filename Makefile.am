@@ -2,6 +2,12 @@
 
 AUTOMAKE_OPTIONS=	foreign
 
+SUBST=			sed -e 's,[@]prefix[@],$(prefix),g' \
+			    -e 's,[@]bindir[@],$(bindir),g' \
+			    -e 's,[@]libdir[@],$(libdir),g' \
+			    -e 's,[@]includedir[@],$(includedir),g' \
+			    -e 's,[@]VERSION[@],$(VERSION),g'
+
 include_HEADERS=	gssapi.h \
 			pgssapi.h
 
@@ -17,6 +23,11 @@ libpgss_la_SOURCES=	pgss-common.h \
 			pgss-gss2.h \
 			pgss-oidstr.c \
 			pgss-unavail.c
+
+pkgconfigdir=		$(libdir)/pkgconfig
+pkgconfig_DATA=		libpgss.pc
+libpgss.pc: libpgss.pc.in
+	$(SUBST) < $^ > $@
 
 noinst_PROGRAMS=	test
 test_SOURCES=		test.c
