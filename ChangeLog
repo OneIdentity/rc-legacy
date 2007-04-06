@@ -120,4 +120,4 @@ Now changelog will work off the version.
 1.0.0.15 ( 2007_03_10 ):
 * Added support for DAS users. Thanks to help from IBM in figuring this out.
 * Made the versioning 4-digit.
-  
+* Fixed a non-portable usage of grep in the install script.  

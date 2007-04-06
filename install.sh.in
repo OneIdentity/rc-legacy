@@ -10,7 +10,7 @@ then
 	exit 1
 fi
 
-whoami | grep -q root
+whoami | grep root >/dev/null
 if [ $? -ne 0 ]
 then
 	echo "Must be root to run this!"
@@ -47,7 +47,7 @@ then
 	exit 1
 fi
 
-uname -a | awk '{print $1}' | grep -q AIX
+uname -a | awk '{print $1}' | grep AIX >/dev/null
 if [ "$2" = "LAM" -a $? -eq 0  ]; then 
         AUTH32=lamAuth32
         AUTH64=lamAuth64
