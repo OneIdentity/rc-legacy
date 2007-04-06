@@ -5,8 +5,10 @@
  * 	gss_str_to_oid()
  */
 
+#include <assert.h>
 #include <stdlib.h>
 #include "gssapi.h"
+#include "pgss-oidstr.h"
 
 #define ISNUM(c) ((c) >= '0' && (c) <= '9')
 
@@ -24,13 +26,18 @@ parse_der_int(base, pos, maxpos, result)
 {
     unsigned long n;
     unsigned char b;
+    int nlen;
 
     if (pos >= maxpos)
 	return -1;
     n = 0;
+    nlen = 0;
     do {
 	b = base[pos++];
-	/* XXX: check for overflow in n */
+	/* Check that we don't exceed the length of our machine int */
+	nlen += 7; 
+	if (nlen > 8 * sizeof n)
+	    return -1;
 	n = (n << 7) | (b & 0x7f);
     } while (pos < maxpos && (b & 0x80) != 0);
     *result = n;
@@ -50,14 +57,18 @@ parse_ascii_int(base, pos, maxpos, result)
     unsigned long *result;
 {
     unsigned long n;
+    unsigned long d;
 
     if (!ISNUM(base[pos]))
 	return -1;
 
     n = 0;
     while (pos < maxpos && ISNUM(base[pos])) {
-	/* XXX: check for overflow in n */
-	n = n * 10 + (base[pos] - '0');
+	d = base[pos] - '0';
+	/* Check that we don't exceed the range of our machine int */
+	if (n > (~0UL / 10) || (n == (~0UL/10) && d > (~0UL - 10 * (~0UL/10))))
+	    return -1;
+	n = n * 10 + d;
 	pos++;
     }
     *result = n;
@@ -67,7 +78,7 @@ parse_ascii_int(base, pos, maxpos, result)
 /*
  * Appends a DER-encoded OID element to an OID buffer.
  * If the buffer is NULL, no data is stored.
- * Returns the new position.
+ * Returns the new offset into the buffer (even if the buffer was NULL)
  */
 static int
 append_der_int(buf, pos, num)
@@ -135,95 +146,91 @@ append_ascii_int(buf, pos, num)
     return pos;
 }
 
-
-OM_uint32
-gss_str_to_oid(minor_status, oid_str, oid)
-    OM_uint32 *minor_status;
-    gss_buffer_t oid_str;
-    gss_OID *oid;
+/* Converts a string to elements of a DER-encoded OBJECT IDENTIFIER sequence.
+ * Returns 1 on success and fills in oidbuf, otherwise returns -1 
+ * on no-memory or 0 if the input string was malformed.
+ */
+int
+_pgss_str_to_oid(strbuf, oidbuf)
+    gss_buffer_t strbuf, oidbuf;
 {
-    int state;
+    int pass;
     char *out = NULL;
-    int outlen = 0;
-    const char *in = (const char *)oid_str->value;
-    const int inmax = oid_str->length;
-    gss_OID o;
+    int outlen = -1;
+    const char *str = (const char *)strbuf->value;
+    const int strlen = strbuf->length;
 
-    for (state = 0; state < 2; state++) {
+    /*
+     * This is a two-pass conversion. The first pass determines
+     * how much storage is required in out[], and the second
+     * pass fills in the out[] buffer.
+     */
+    for (pass = 1; pass <= 2; pass++) {
 	int first, inpos, outpos;
-	unsigned long n;
+	unsigned long n, n2;
 
 	inpos = 0;
 	outpos = 0;
 	first = 1;
-	while (inpos < inmax) {
-	    while (inpos < inmax && !ISNUM(in[inpos]))
+	while (inpos < strlen) {
+	    /* skip all non-numbers; assume they are delimiters */
+	    while (inpos < strlen && !ISNUM(str[inpos]))
 		inpos++;
-	    if (inpos < inmax) {
-		inpos = parse_ascii_int(in, inpos, inmax, &n);
-		if (first && inpos >= 0) {
-		    unsigned long n2;
-		    while (inpos < inmax && !ISNUM(in[inpos]))
+	    if (inpos < strlen) {
+		inpos = parse_ascii_int(str, inpos, strlen, &n);
+		if (inpos < 0)
+		    return 0;	    /* malformed */
+		if (first) {
+		    /* The first arc is combined with the second to
+		     * form the first element of the OID sequence */
+		    while (inpos < strlen && !ISNUM(str[inpos]))
 			inpos++;
-		    inpos = parse_ascii_int(in, inpos, inmax, &n2);
-		    if (inpos < 0 || n2 >= 40) {
-			*minor_status = 0; /* XXX malformed */
-			return GSS_S_FAILURE;
-		    }
+		    inpos = parse_ascii_int(str, inpos, strlen, &n2);
+		    if (inpos < 0 || n2 >= 40)
+			return 0;	    /* malformed (bad 2nd number) */
 		    n = (n * 40) + n2;
 		    first = 0;
-		}
-		if (inpos < 0) {
-		    *minor_status = 0; /* XXX malformed */
-		    return GSS_S_FAILURE;
 		}
 		outpos = append_der_int(out, outpos, n);
 	    }
 	}
+	if (first)
+	    return 0;			    /* malformed (empty) */
 
-	if (state == 0) {
+	/* At the end of the first pass, we allocate storage for out[] */
+	if (pass == 1) {
 	    outlen = outpos;
 	    out = malloc(outlen);
-	    if (!out) {
-		*minor_status = 0; /* XXX: ENOMEM */
-		return GSS_S_FAILURE;
-	    }
-	}
+	    if (!out) 
+		return -1;		    /* ENOMEM */
+	} else if (pass == 2)
+	    assert(outlen == outpos);
     }
 
-    o = (gss_OID)malloc(sizeof *o);
-    if (!o) {
-	free(out);
-	*minor_status = 0; /* XXX: ENOMEM */
-	return GSS_S_FAILURE;
-    }
-
-    o->length = outlen;
-    o->elements = out;
-
-    *oid = o;
-    return GSS_S_COMPLETE;
+    oidbuf->length = outlen;
+    oidbuf->value = out;
+    return 1;
 }
 
-OM_uint32
-gss_oid_to_str(minor_status, oid, oid_str)
-    OM_uint32 *minor_status;
+/* Converts a gss_OID into a string of the form {a b c d}. Returns 1
+ * on successful conversion, 0 if the gss_OID doesn't contain a properly
+ * DER-encoded OID, or -1 if there was a memory allocation error.  */
+int
+_pgss_oid_to_str(oid, oid_str)
     gss_OID oid;
     gss_buffer_t oid_str;
 {
     char *out = NULL;
-    int state, outlen = 0;
+    int pass, outlen = 0;
 
-    if (minor_status)
-	*minor_status = 0;
+    assert(oid != NULL);
 
     /*
      * This is a two-pass conversion. The first pass calculates
-     * the length of the generated string, and the second
-     * fills in the buffer
+     * the length of the buffer to allocate, and the second
+     * allocates then fills in the buffer.
      */
-    if (oid)
-    for (state = 0; state < 2; state++) {
+    for (pass = 1; pass <= 2; pass++) {
 	int inpos = 0, outpos = 0, first = 1;
 	unsigned long n;
 	const char *base = (const char *)oid->elements;
@@ -231,10 +238,8 @@ gss_oid_to_str(minor_status, oid, oid_str)
 
 	while (inpos < inmax) {
 	    inpos = parse_der_int(base, inpos, inmax, &n);
-	    if (inpos < 0) {
-		*minor_status = 0; /* XXX: "Malformed OID" */
-		return GSS_S_FAILURE;
-	    }
+	    if (inpos < 0) 
+		return 0;
 	    if (first) {
 		if (out) out[outpos] = '{';
 	       	outpos++;
@@ -246,22 +251,22 @@ gss_oid_to_str(minor_status, oid, oid_str)
 	    outpos++;
 	    outpos = append_ascii_int(out, outpos, n);
 	}
+	if (first)
+	    return 0;	/* malformed: empty OID sequence */
 	if (out) out[outpos] = '}';
 	outpos++;
 
-	if (state == 0) {
+	if (pass == 1) {
 	    outlen = outpos;
 	    out = malloc(outlen + 1);
-	    if (!out) {
-		*minor_status = 0; /* XXX: ENOMEM */
-		return GSS_S_FAILURE;
-	    }
+	    if (!out)
+		return -1;
 	    out[outlen] = '\0';
 	}
     }
     oid_str->value = out;
     oid_str->length = outlen;
-    return GSS_S_COMPLETE;
+    return 1;
 }
 
 /*------------------------------------------------------------

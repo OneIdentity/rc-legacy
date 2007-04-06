@@ -15,6 +15,7 @@
 #include "pgss-dispatch.h"
 #include "pgss-gss2.h"
 #include "pgss-config.h"
+#include "pgss-oidstr.h"
 
 struct error_tab {
     OM_uint32   code;
@@ -26,7 +27,7 @@ static OM_uint32 complete(OM_uint32 *minor_status);
 static OM_uint32 error(OM_uint32 *minor_status, const OM_uint32 major, 
 		    const OM_uint32 minor);
 static OM_uint32 failure(OM_uint32 *minor_status, const OM_uint32 minor);
-static OM_uint32 failure_from_errno(OM_uint32 *minor_status);
+static OM_uint32 failure_from_errno(OM_uint32 *minor_status, int err);
 static OM_uint32 mech_error(OM_uint32 *minor_status, const OM_uint32 major, 
 		    struct pgss_dispatch *dispatch);
 
@@ -155,10 +156,11 @@ failure(minor_status, minor)
  * Convenience function.
  */
 static OM_uint32
-failure_from_errno(minor_status)
+failure_from_errno(minor_status, err)
     OM_uint32 *minor_status;
 {
-    return failure(minor_status, (OM_uint32)errno);
+    /* strerror(err) */
+    return failure(minor_status, 0);
 }
 
 /*
@@ -2053,5 +2055,78 @@ gss_unseal(minor_status, context_handle, input_message_buffer,
     if (qop_state && !GSS_ERROR(major))
 	*qop_state = (int)qop;
     return major;
+}
+
+/* Deprecated non-standard functions */
+
+OM_uint32
+gss_str_to_oid(minor_status, oid_str, oid_return)
+    OM_uint32 *minor_status;
+    gss_buffer_t oid_str;
+    gss_OID *oid_return;
+{
+    gss_buffer_desc der_buf;
+    gss_OID oid;
+
+    if (!oid_str)
+	return error(minor_status, 
+		GSS_S_FAILURE | GSS_S_CALL_INACCESSIBLE_READ, 0);
+
+    zero_buffer(&der_buf);
+    *oid_return = GSS_C_NO_OID;
+
+    switch (_pgss_str_to_oid(oid_str, &der_buf)) {
+    case -1:
+	return failure_from_errno(minor_status, ENOMEM);
+    case 0:
+	return error(minor_status, 
+		GSS_S_FAILURE | GSS_S_CALL_BAD_STRUCTURE, 0);
+    }
+
+    oid = new(gss_OID_desc);
+    if (!oid) {
+	(void)gss_release_buffer(NULL, &der_buf);
+	return failure_from_errno(minor_status, ENOMEM);
+    }
+
+    oid->elements = der_buf.value;
+    oid->length = der_buf.length;
+    *oid_return = oid;
+    return complete(minor_status);
+}
+
+OM_uint32
+gss_release_oid(minor_status, oid)
+    OM_uint32 *minor_status;
+    gss_OID *oid;
+{
+    if (*oid) {
+	free((*oid)->elements);
+	free(*oid);
+	*oid = GSS_C_NO_OID;
+    }
+    return complete(minor_status);
+}
+
+OM_uint32
+gss_oid_to_str(minor_status, oid, str)
+    OM_uint32 *minor_status;
+    gss_OID oid;
+    gss_buffer_t str;
+{
+    if (!oid)
+	return error(minor_status, 
+		GSS_S_FAILURE | GSS_S_CALL_INACCESSIBLE_READ, 0);
+    zero_buffer(str);
+
+    switch(_pgss_oid_to_str(oid, str)) {
+    case -1:
+	return failure_from_errno(minor_status, ENOMEM);
+    case 0:
+	return error(minor_status, 
+		GSS_S_FAILURE | GSS_S_CALL_BAD_STRUCTURE, 0);
+    }
+
+    return complete(minor_status);
 }
 

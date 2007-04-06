@@ -22,6 +22,7 @@ libpgss_la_SOURCES=	pgss-common.h \
 			pgss-gss2.c \
 			pgss-gss2.h \
 			pgss-oidstr.c \
+			pgss-oidstr.h \
 			pgss-unavail.c
 
 pkgconfigdir=		$(libdir)/pkgconfig
