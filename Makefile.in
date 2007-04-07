@@ -167,18 +167,18 @@ bin_dist: all $(TESTS)
 @NOLAM@@DO32@@DO64@	@cp sys-auth32.so.@VERSION@ sys-auth64.so.@VERSION@ upgrade.sh install.sh install_das.sh INSTALL LICENSE README $(PAMALL) NEWS AUTHORS TESTING ChangeLog pam.conf.aix $(TESTS) test.conf Troubleshooting DB2_sys-auth/
 @NOLAM@@NO64@	@cp sys-auth32.so.@VERSION@ upgrade.sh install.sh install_das.sh INSTALL README LICENSE $(PAM32) NEWS AUTHORS TESTING ChangeLog pam.conf.aix $(TESTS) test.conf Troubleshooting DB2_sys-auth/
 @NOLAM@@NO32@	@cp sys-auth64.so.@VERSION@ upgrade.sh install.sh install_das.sh INSTALL README LICENSE $(PAM64) NEWS AUTHORS TESTING ChangeLog pam.conf.aix $(TESTS) test.conf Troubleshooting DB2_sys-auth/
-	@tar -cvf DB2_sys-auth_@PLATFORM@.tar DB2_sys-auth/*
+	@tar -cvf DB2_sys-auth_@PLATFORM@.@VERSION@.tar DB2_sys-auth/*
 	@rm -rf DB2_sys-auth
-	@gzip DB2_sys-auth_@PLATFORM@.tar
+	@gzip DB2_sys-auth_@PLATFORM@.@VERSION@.tar
 
 
 src_dist: all
 	@rm -rf DB2_sys-auth
 	@mkdir DB2_sys-auth
 	@cp configure config.h.in log.h log.c vsyslog.c vsyslog.h sys-auth.c upgrade.sh.in install.sh.in Makefile.in INSTALL README LICENSE pamAuth.c lamAuth.c NEWS AUTHORS TESTING ChangeLog pam.conf.aix ctest.c ctest.h csuite.c csuite.h test_all.c test.conf bool.h Troubleshooting db2dassecLam.c db2dassecPam.c DB2_sys-auth/ 
-	@tar -cvf DB2_sys-auth_src.tar DB2_sys-auth/*
+	@tar -cvf DB2_sys-auth_src.@VERSION@.tar DB2_sys-auth/*
 	@rm -rf DB2_sys-auth
-	@gzip DB2_sys-auth_src.tar
+	@gzip DB2_sys-auth_src.@VERSION@.tar
 
 
 dist: bin_dist src_dist
