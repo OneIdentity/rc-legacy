@@ -1,0 +1,9 @@
+
+pgssapi
+
+This is an alpha-quality pluggable GSSAPI library demonstrating how 
+external vendor GSSAPI (GSSABI?) libraries can be dynamically loaded
+together and separately dispatched by a run-time configuration file.
+
+Please send questions/comments to David.Leonard(a)quest.com.
+

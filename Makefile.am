@@ -36,7 +36,7 @@ test_LDADD=		libpgss.la
 test_DEPENDENCIES=	libpgss.la
 
 CLEANFILES= 		design.html design.unpg tmp.xml libpgss.pc
-EXTRA_DIST=		design.xml test.conf libpgss.pc.in
+EXTRA_DIST=		design.xml test.conf libpgss.pc.in README LICENSE
 
 XML2HTML=		xml2html
 XML2UNPG=		xml2unpg
