@@ -35,8 +35,9 @@ test_SOURCES=		test.c
 test_LDADD=		libpgss.la
 test_DEPENDENCIES=	libpgss.la
 
-CLEANFILES= 		design.html design.unpg tmp.xml
-EXTRA_DISTFILES=	design.xml
+CLEANFILES= 		design.html design.unpg tmp.xml libpgss.pc
+EXTRA_DIST=		design.xml test.conf libpgss.pc.in
+
 XML2HTML=		xml2html
 XML2UNPG=		xml2unpg
 design.html: design.xml
