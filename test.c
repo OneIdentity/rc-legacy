@@ -1,14 +1,306 @@
+/* (c) 2007 Quest Software Inc. All rights reserved. */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <assert.h>
 
 #include "gssapi.h"
 #include "pgssapi.h"
 #include "pgss-dispatch.h"
 #include "pgss-config.h"
 
-/* print a gss error and exit */
+
+/*------------------------------------------------------------
+ * RFC2045 base64 encoding and decoding 
+ */
+
+static int base64_debug = 1;
+
+/* State type for the base64 stream encoder functions. */
+typedef struct base64_enc_state {
+    char grp[3];
+    int  inpos;
+} base64_enc_state_t;
+
+/* State type for the base64 stream decoder functions. */
+typedef struct base64_dec_state {
+    char grp[4];
+    int inpos;
+    int pad;
+    int n;
+} base64_dec_state_t;
+
+/* Encoding table: value to digit */
+static char enctab[] =  "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+			"abcdefghijklmnopqrstuvwxyz"
+			"0123456789+/";
+
+/* Decoding table: digit to value */
+static signed char dectab[128] = {
+    -1,-1,-1,-1,-1,-1,-1,-1,   /* -1: invalid */
+    -1,-2,-2,-2,-2,-2,-1,-1,   /* -2: whitespace */
+    -1,-1,-1,-1,-1,-1,-1,-1,   /* 0..63: base64 digit */
+    -1,-1,-1,-1,-1,-1,-1,-1,
+    -2,-1,-1,-1,-1,-1,-1,-1,
+    -1,-1,-1,62,-1,-1,-1,63,
+    52,53,54,55,56,57,58,59,
+    60,61,-1,-1,-1,-1,-1,-1,
+    -1, 0, 1, 2, 3, 4, 5, 6,
+     7, 8, 9,10,11,12,13,14,
+    15,16,17,18,19,20,21,22,
+    23,24,25,-1,-1,-1,-1,-1,
+    -1,26,27,28,29,30,31,32,
+    33,34,35,36,37,38,39,40,
+    41,42,43,44,45,46,47,48,
+    49,50,51,-1,-1,-1,-1,-1
+};
+
+static void
+base64_encode_init(state)
+    base64_enc_state_t *state;
+{
+    state->inpos = 0;
+}
+
+static int
+base64_encode_sub(state, inbuf, inbuflen, outbuf, outbuflen)
+    base64_enc_state_t *state;
+    const char *inbuf;
+    int inbuflen;
+    char *outbuf;
+    int outbuflen;
+{
+    int inpos = 0;
+    int outpos = 0;
+
+    /* Encode as many whole input triples into 4 output chars as possible */
+    while (inpos < inbuflen) {
+	state->grp[(state->inpos + inpos) % 3] = inbuf[inpos]; inpos++;
+	if ((state->inpos + inpos) % 3 == 0) {
+	    if (outpos < outbuflen)
+		outbuf[outpos] = enctab[(state->grp[0] & 0xfc) >> 2 & 0x3f];
+	    outpos++;
+	    if (outpos < outbuflen)
+		outbuf[outpos] = enctab[((state->grp[0] & 0x03) << 4 |
+				      (state->grp[1] & 0xf0) >> 4) & 0x3f];
+	    outpos++;
+	    if (outpos < outbuflen)
+		outbuf[outpos] = enctab[((state->grp[1] & 0x0f) << 2 | 
+				      (state->grp[2] & 0xc0) >> 6) & 0x3f];
+	    outpos++;
+	    if (outpos < outbuflen)
+		outbuf[outpos] = enctab[state->grp[2] & 0x3f];
+	    outpos++;
+	}
+    }
+    state->inpos = state->inpos + inpos;
+    return outpos;
+}
+
+static int
+base64_encode_fini(state, outbuf, outbuflen)
+    base64_enc_state_t *state;
+    char *outbuf;
+    int outbuflen;
+{
+    int outpos = 0, i;
+
+    /* Handle remaining characters that don't fit into a triple */
+    if (state->inpos % 3 != 0) {
+	for (i = state->inpos % 3; i < 3; i++)
+	    state->grp[i] = 0;
+	if (outpos < outbuflen)
+	    outbuf[outpos] = enctab[(state->grp[0] & 0xfc) >> 2 & 0x3f];
+	outpos++;
+	if (outpos < outbuflen)
+	    outbuf[outpos] = enctab[((state->grp[0] & 0x03) << 4 |
+				  (state->grp[1] & 0xf0) >> 4) & 0x3f];
+	outpos++;
+	if (outpos < outbuflen)
+	    outbuf[outpos] = (state->inpos % 3 > 1) 
+		? enctab[((state->grp[1] &0x0f) << 2) & 0x3f]
+		: '=';
+	outpos++;
+	if (outpos < outbuflen)
+	    outbuf[outpos] = '=';
+	outpos++;
+    }
+
+    return outpos;
+}
+
+/* Prints base64 data to the given file, followed by a '.' */
+static void
+base64_print(file, buffer)
+    FILE *file;
+    gss_buffer_t buffer;
+{
+    const char *buf = (const char *)buffer->value;
+    int buflen = buffer->length;;
+    base64_enc_state_t state;
+    char out[5];
+    int outlen;
+
+    /* Encode using triples of input */
+    base64_encode_init(&state);
+    while (buflen) {
+	int bufstep = buflen > 3 ? 3 : buflen;
+	outlen = base64_encode_sub(&state, buf, bufstep,
+		out, sizeof out);
+	assert(outlen < sizeof out);
+	out[outlen] = '\0';
+	fputs(out, file);
+	buflen -= bufstep;
+	buf += bufstep;
+    }
+    outlen = base64_encode_fini(&state, buf, sizeof buf);
+    out[outlen] = '\0';
+    fputs(out, file);
+
+    fputs(".\n", file);
+}
+
+static void
+base64_decode_init(state)
+    base64_dec_state_t *state;
+{
+    state->pad = 0;
+    state->inpos = 0;
+    state->n = 0;
+}
+
+static int
+base64_decode_sub(state, inbuf, inbuflen, outbuf, outbuflen)
+    base64_dec_state_t *state;
+    const char *inbuf;
+    int inbuflen;
+    char *outbuf;
+    int outbuflen;
+{
+    int inpos = 0;
+    int outpos = 0;
+
+    if (state->n || !state->pad)
+	while (inpos < inbuflen) {
+	    unsigned char c = (unsigned char)inbuf[inpos++];
+
+	    /* Classify input bytes as padding, ignorable or codes */
+	    if (c == '=') {
+		if (state->n < 2) {
+		    if (base64_debug)
+			fprintf(stderr, "spurious '=' at index %d\n", inpos-1);
+		    return -1;
+		}
+		state->pad++;
+		state->grp[state->n++] = 0;
+	    } else if ((c & 0x80) || dectab[(unsigned int)c] == -1) {
+		if (base64_debug)
+		    fprintf(stderr, "INVALID CHARACTER '%c' #%x"
+		       	" at index %d of %d\n", c, c, inpos - 1, inbuflen);
+		return -1;
+	    } else if (dectab[(unsigned int)c] == -2) 
+		continue;
+	    else {
+		if (state->pad) {
+		    if (base64_debug)
+			fprintf(stderr, "bad char '%c' #%x after padding"
+			       " at index %d\n", c, c, inpos - 1);
+		    return -1;
+		}
+		state->grp[state->n++] = dectab[(unsigned int)c];
+	    }
+
+	    /* When a group of 4 has been filled, convert to 3 output bytes */
+	    if (state->n == 4) {
+		if (state->pad > 2) {
+		    if (base64_debug)
+		       	fprintf(stderr, "too many padding =s\n");
+		    return -1;	
+		}
+		if (outpos < outbuflen)
+		    outbuf[outpos] = state->grp[0] << 2 | state->grp[1] >> 4;
+		outpos++;
+		if (state->pad < 2) {
+		  if (outpos < outbuflen)
+		    outbuf[outpos] = (state->grp[1] << 4 | state->grp[2] >> 2) 
+			& 0xff;
+		  outpos++;
+		}
+		if (state->pad < 1) {
+		  if (outpos < outbuflen)
+		    outbuf[outpos] = (state->grp[2] << 6 | state->grp[3]) 
+			& 0xff;
+		  outpos++;
+		}
+		state->n = 0;
+		if (state->pad)
+		    break;
+	    }
+	}
+
+    /* Return -1 if there is non-whitespace after any padding */
+    while (state->pad && inpos < inbuflen) {
+	char c = inbuf[inpos++];
+	if (dectab[(unsigned int)c] != -2) {
+	    if (base64_debug)
+		fprintf(stderr, "EXTRA CHARACTER '%c' #%x at index %d of %d\n",
+		    c, c, inpos - 1, inbuflen);
+	    return -1;
+	}
+    }
+
+    return outpos;
+}
+
+static int
+base64_decode_fini(state)
+    base64_dec_state_t *state;
+{
+
+    /* Return -1 if there are undecodable characters remaining */
+    if (state->n != 0) {
+	if (base64_debug)
+	    fprintf(stderr, "%d leftover characters\n", state->n);
+	return -1;
+    }
+
+    return 0;
+}
+
+static void
+base64_scan(file, buffer)
+    FILE *file;
+    gss_buffer_t buffer;
+{
+    int buflen = 8192;
+    int bufpos = 0;
+    int outlen;
+    char *buf = malloc(buflen);
+    int ch;
+    char inbuf[1];
+    base64_dec_state_t state;
+
+    base64_decode_init(&state);
+    while ((ch = getc(file)) != EOF && ch != '.') {
+	inbuf[0] = ch;
+	outlen = base64_decode_sub(&state, inbuf, sizeof inbuf,
+		buf + bufpos, buflen - bufpos);
+	assert(outlen >= 0);
+	assert(outlen + bufpos <= buflen);
+	bufpos += outlen;
+    }
+    outlen = base64_decode_fini(&state);
+    assert(outlen == 0);
+    buffer->value = buf;
+    buffer->length = bufpos;
+}
+
+/*------------------------------------------------------------
+ * GSS error display
+ */
+
 static void
 gsserr(const char *msg, OM_uint32 major, OM_uint32 minor, gss_OID mech)
 {
@@ -70,6 +362,10 @@ gsserr(const char *msg, OM_uint32 major, OM_uint32 minor, gss_OID mech)
 
     exit(1);
 }
+
+/*------------------------------------------------------------
+ * Functionality tests
+ */
 
 static void
 load_conf(const char *conffile)
@@ -155,105 +451,6 @@ enum_mechs()
     printf("(config after enumerating:)\n");
     dump_conf();
     printf("\n");
-}
-
-/* Prints a binary token in quotes */
-static void
-print_binary(gss_buffer_t buf)
-{
-    OM_uint32 i;
-
-    if (!buf) {
-	printf("(null)\n");
-	return;
-    }
-
-    putchar('"');
-    for (i = 0; i < buf->length; i++) {
-	unsigned char ch = ((unsigned char *)buf->value)[i];
-
-	if (ch == '\\' || ch == '\"')
-	    printf("\\%c", ch);
-	else if (ch == '\0')
-	    printf("\\0", ch);
-	else if (ch == '\n')
-	    printf("\\n", ch);
-	else if (ch >= ' ' && ch <= '~')
-	    putchar(ch);
-	else
-	    printf("\\x%02x", ch);
-    }
-    printf("\"\n");
-}
-
-/* Scans two hex digits and stores the resulting char. Returns -1 on error */
-static int
-scan_hex(const char *s, unsigned char *v)
-{
-    int i;
-    unsigned char result = 0;
-    char c;
-
-    for (i = 0; i < 2; i++) {
-	while (*s == '\n') s++;
-	c = *s;
-	result <<= 4;
-	if (c >= '0' && c <= '9')
-	    result = result | (c - '0');
-	else if (c >= 'a' && c <= 'f')
-	    result = result | (c - 'a' + 10);
-	else if (c >= 'A' && c <= 'F')
-	    result = result | (c - 'A' + 10);
-	else
-	    return -1;
-    }
-    *v = result;
-    return 0;
-}
-
-
-/* Reduces a quoted string to its binary form in situ, and then
- * sets buffer to span it. Newlines are ignored. Returns -1 on error */
-static int
-scan_binary(char *s, gss_buffer_t buf)
-{
-    char *start, *t;
-
-    while (*s && *s != '"')
-	s++;
-    if (*s != '"')
-	return -1;
-    s++;
-    start = s;
-    t = start;
-    while (*s && *s != '"') {
-	if (*s == '\n') {	/* skip newlines */
-	    s++;
-	    continue;
-	}
-	if (*s != '\\') {
-	    *t++ = *s++;
-	    continue;
-	}
-	s++;
-	while (*s == '\n') s++;
-	switch (*s) {
-	case 'x':
-	    if (scan_hex(s + 1, (unsigned char *)t) == -1)
-		return -1;
-	    s++;
-	    break;
-	case 'n': *t = '\n'; break;
-	case '0': *t = '\0'; break;
-	default:  *t = *s;
-	}
-	t++; s++;
-    }
-    if (*s != '"')
-	return -1;
-    buf->value = start;
-    buf->length = t - start;
-    return 0;
 }
 
 static int
@@ -349,24 +546,87 @@ test_init(char *target, char *client)
 	cred = GSS_C_NO_CREDENTIAL;
 
 
-    ctx = GSS_C_NO_CONTEXT;
-    major = gss_init_sec_context(&minor, cred, &ctx, target_name, 
-	    GSS_C_NO_OID, 0, GSS_C_INDEFINITE, GSS_C_NO_CHANNEL_BINDINGS,
-	    GSS_C_NO_BUFFER, NULL, &out, NULL, NULL);
-    if (GSS_ERROR(major))
-	gsserr("gss_init_sec_context", major, minor, GSS_C_NO_OID);
+    for (;;) {
+	ctx = GSS_C_NO_CONTEXT;
+	major = gss_init_sec_context(&minor, cred, &ctx, target_name, 
+		GSS_C_NO_OID, 0, GSS_C_INDEFINITE, GSS_C_NO_CHANNEL_BINDINGS,
+		GSS_C_NO_BUFFER, NULL, &out, NULL, NULL);
 
-    printf("first token: ");
-    print_binary(&out);
+	if (out.length) {
+	    printf("\noutput token: ");
+	    base64_print(stdout, &out);
+	    printf("\n");
+	}
+	if (GSS_ERROR(major) == GSS_S_COMPLETE)
+	    break;
+	if (GSS_ERROR(major) != GSS_S_CONTINUE_NEEDED)
+	    gsserr("gss_init_sec_context", major, minor, GSS_C_NO_OID);
+    }
+    printf("init completed.\n");
 
-    (void)gss_release_buffer(&minor, &out);
+    if (GSS_ERROR(major = gss_release_buffer(&minor, &out)))
+	gsserr("gss_release_buffer", major, minor, GSS_C_NO_OID);
+    if (GSS_ERROR(major = gss_release_cred(&minor, &cred)))
+	gsserr("gss_release_cred", major, minor, GSS_C_NO_OID);
+    if (GSS_ERROR(major = gss_delete_sec_context(&minor, &ctx, 0)))
+	gsserr("gss_delete_sec_context", major, minor, GSS_C_NO_OID);
 }
 
 static void
 test_accept(char *target)
 {
-    fprintf(stderr, "test_accept: TBD\n"); exit(1);
+    OM_uint32 major, minor;
+    gss_ctx_id_t ctx = GSS_C_NO_CONTEXT;
+    gss_name_t name = GSS_C_NO_NAME;
+    gss_OID mech = GSS_C_NO_OID;
+    gss_buffer_desc input, output;
+    OM_uint32 flags, time;
+    gss_cred_id_t deleg = GSS_C_NO_CREDENTIAL;
+    gss_name_t target_name;
+    gss_cred_id_t cred = GSS_C_NO_CREDENTIAL;
+
+    import_name(target, &target_name);
+
+    if (target_name) {
+	printf("acquiring credentials...\n");
+	major = gss_acquire_cred(&minor, target_name, GSS_C_INDEFINITE,
+		GSS_C_NO_OID_SET, GSS_C_ACCEPT, &cred, NULL, NULL);
+	if (GSS_ERROR(major))
+	    gsserr("gss_acquire_cred", major, minor, GSS_C_NO_OID);
+    } else
+	cred = GSS_C_NO_CREDENTIAL;
+
+    for (;;) {
+	printf("input token? "); fflush(stdout);
+	base64_scan(stdin, &input);
+
+	major = gss_accept_sec_context(&minor, &ctx, cred,
+		&input, GSS_C_NO_CHANNEL_BINDINGS,
+		&name, &mech, &output, &flags, &time, &deleg);
+
+	if (output.length) {
+	    printf("\noutput token: ");
+	    base64_print(stdout, &output);
+	    printf("\n");
+	}
+	if (GSS_ERROR(major) == GSS_S_COMPLETE)
+	    break;
+	if (GSS_ERROR(major) != GSS_S_CONTINUE_NEEDED)
+	    gsserr("gss_accept_sec_context", major, minor, GSS_C_NO_OID);
+    }
+    printf("accept completed.\n");
+
+    if (GSS_ERROR(major = gss_release_cred(&minor, &deleg)))
+	gsserr("gss_release_cred(&deleg)", major, minor, GSS_C_NO_OID);
+    if (GSS_ERROR(major = gss_release_cred(&minor, &cred)))
+	gsserr("gss_release_cred(&cred)", major, minor, GSS_C_NO_OID);
+    if (GSS_ERROR(major = gss_delete_sec_context(&minor, &ctx, 0)))
+	gsserr("gss_delete_sec_context", major, minor, GSS_C_NO_OID);
 }
+
+/*------------------------------------------------------------
+ * Driver
+ */
 
 static void
 usage(const char *argv0)
@@ -403,7 +663,7 @@ main(int argc, char **argv)
 	optind += optind + 2 < argc ? 3 : 2;
     } else if (strcmp(argv[optind], "-a") == 0) {
 	/* -a: acceptor test */
-	if (optind + 1 >= argc) usage(argv0);
+	if (optind >= argc) usage(argv0);
 	test_accept(optind + 1 < argc ? argv[optind + 1] : NULL);
 	optind += optind + 1 < argc ? 1 : 2;
     } else
