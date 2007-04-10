@@ -21,8 +21,9 @@ struct pgss_ctx_id {
 struct pgss_cred_id {
     OM_uint32 count;		/* number of elements */
     struct pgss_cred_element {
-	gss_OID_desc mech;	/* provider (dup_oid) */
+	struct pgss_dispatch *owner;
 	D_gss_cred_id_t cred;	/* gss_cred_id_t */
+	gss_OID_set mechs;	/* mechs added */
     } element[1];
 };
 

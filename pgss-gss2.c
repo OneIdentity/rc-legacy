@@ -61,13 +61,11 @@ static void      free_name(struct pgss_name **name_return);
 static OM_uint32 alloc_cred_id(OM_uint32 *minor_status, 
 		    struct pgss_cred_id **cred_return, OM_uint32 size);
 static void      free_cred_id(struct pgss_cred_id **cred_return);
-static OM_uint32 append_cred_id(OM_uint32 *minor_status, 
-		    struct pgss_cred_id **cred_return, gss_OID mech, 
-		    void *cred);
 
 static OM_uint32 dup_oid(OM_uint32 *minor_status, const gss_OID oid, 
 		    gss_OID oid_copy);
 static void      free_oid(gss_OID oid);
+static int	 get_token_tag(const gss_buffer_t token, gss_OID oid_ret);
 
 static const char *error_tab_search(const struct error_tab *tab,OM_uint32 code);
 static const char *major_display_status_opt(OM_uint32 code, OM_uint32 context);
@@ -405,6 +403,55 @@ free_oid_pointer(oid)
     }
 }
 
+/*
+ * Builds an OID from an initial token buffer. See s3 of RFC2743.
+ * Returns 0 if the token buffer doesn't start with an OID, otherwise
+ * returns 1 if the OID descriptor was filled in with element pointing
+ * into the token buffer.
+ */
+static int
+get_token_tag(token, oid_ret)
+    const gss_buffer_t token;
+    gss_OID oid_ret;
+{
+    unsigned char *p, *end;
+    unsigned char octets;
+    OM_uint32 length;
+
+    p = (unsigned char *)token->value;
+    end = p + token->length;
+
+    /* Start with 0x60 */
+    if (p >= end)
+       	return 0;
+    if (*p++ != 0x60) 
+	return 0;
+
+    if (p >= end)
+	return 0;
+    if (*p & 0x80) {
+	/* number of octets in length, followed by length, msb first */
+        octets = *p++ & 0x7f;
+	if (octets > sizeof length || p + octets > end)
+	    return 0;
+	length = 0;
+	while (octets) {
+	    length = (length << 8) | *p++;
+	    octets--;
+	}
+    } else
+	/* short length <128 are directly encoded */
+	length = *p++;
+
+    /* Must be enough space in the token for the elements */
+    if (p + length > end)
+       	return 0;
+
+    oid_ret->elements = p;
+    oid_ret->length = length;
+    return 1;
+}
+
 /*----------------------------------------
  * OID set routines
  */
@@ -511,10 +558,10 @@ nomem:
  * On error, the underlying name will be released.
  */
 static OM_uint32
-copyout_name(minor_status, dispatch, mech_name, name_return, is_mn)
+copyout_name(minor_status, dispatch, name, name_return, is_mn)
     OM_uint32 *minor_status;
     struct pgss_dispatch *dispatch;
-    D_gss_name_t mech_name;
+    D_gss_name_t name;
     gss_name_t *name_return;
     OM_uint32 is_mn;
 {
@@ -525,14 +572,14 @@ copyout_name(minor_status, dispatch, mech_name, name_return, is_mn)
 		    GSS_C_NO_OID, &new_name)))
     {
 	if (dispatch->gss_release_name)
-	    (void)(*dispatch->gss_release_name)(&ignore, mech_name);
+	    (void)(*dispatch->gss_release_name)(&ignore, name);
 	return major;
     }
 
     new_name->is_imported = 0;
     new_name->is_mn = is_mn;
 
-    if ((major = add_mech_name(minor_status, new_name, dispatch, mech_name))) {
+    if ((major = add_mech_name(minor_status, new_name, dispatch, name))) {
 	free_name(&new_name);
 	return major;
     }
@@ -742,34 +789,42 @@ alloc_cred_id(minor_status, cred_return, size)
 /*
  * Extracts a provider credential suitable for the given mechanism
  */
-static OM_uint32
-get_cred_by_mech(minor_status, cred, mech, cred_return)
-    OM_uint32 *minor_status;
+static struct pgss_cred_element *
+get_cred_by_mech(cred, mech)
     struct pgss_cred_id *cred;
     gss_OID mech;
-    D_gss_cred_id_t *cred_return;
+{
+    OM_uint32 i;
+    int present = -1;
+
+    for (i = 0; i < cred->count; i++) {
+	(void)gss_test_oid_set_member(NULL, mech, 
+		  cred->element[i].mechs, &present);
+	if (present)
+	    return &cred->element[i];
+    }
+    return NULL;
+}
+
+/*
+ * Returns a cred slot by owner.
+ */
+static struct pgss_cred_element *
+get_cred_by_dispatch(cred, dispatch)
+    struct pgss_cred_id *cred;
+    struct pgss_dispatch *dispatch;
 {
     OM_uint32 i;
 
-    if (!cred) {
-	if (cred_return)
-	    *cred_return = NULL;
-	return complete(minor_status);
-    }
-
     for (i = 0; i < cred->count; i++)
-	if (OID_EQUALS(&cred->element[i].mech, mech)) {
-	    if (cred_return)
-		*cred_return = cred->element[i].cred;
-	    return complete(minor_status);
-	}
-
-    return error(minor_status, GSS_S_BAD_MECH, 0);
+	if (cred->element[i].owner == dispatch)
+	    return &cred->element[i];
+    return NULL;
 }
 
 /*
  * Releases storage for a cred_id structure.
- * DOES NOT RELEASE THE MECHANISM CREDS.
+ * Does not release the underlying mechanism creds!
  */
 static void
 free_cred_id(cred_return)
@@ -778,56 +833,12 @@ free_cred_id(cred_return)
     OM_uint32 i;
 
     for (i = 0; i < (*cred_return)->count; i++)
-	free_oid(&(*cred_return)->element[i].mech);
+	(void)gss_release_oid_set(NULL, &(*cred_return)->element[i].mechs);
     free(*cred_return);
     *cred_return = NULL;
 }
 
-/*
- * Resizes a pgss_cred_id structure to fit another credential.
- * On failure, makes no changes to the original credentials.
- * On success, replaces the cred_return pointer with the new pointer.
- */
-static OM_uint32
-append_cred_id(minor_status, cred_return, mech, cred)
-    OM_uint32 *minor_status;
-    struct pgss_cred_id **cred_return;
-    gss_OID mech;
-    void *cred;
-{
-    OM_uint32 major;
-    struct pgss_cred_id *new_cred_id;
-
-    /* Allocate slightly larger storgae */
-    new_cred_id = (struct pgss_cred_id *)malloc(sizeof *new_cred_id + 
-	    ((*cred_return)->count - 1 + 1) * sizeof *new_cred_id->element);
-    if (!new_cred_id)
-	return failure(minor_status, ENOMEM);
-
-    /* Copy in the old elements */
-    new_cred_id->count = (*cred_return)->count + 1;
-    memcpy(new_cred_id->element, 
-	    (*cred_return)->element,
-	    (*cred_return)->count * sizeof *new_cred_id->element);
-
-    /* Copy the mech OID of the newly appended element */
-    if ((major = dup_oid(minor_status, mech, 
-	&new_cred_id->element[new_cred_id->count - 1].mech)))
-    {
-	free(new_cred_id);
-	return major;
-    }
-
-    /* Copying the cred doesn't require anything special */
-    new_cred_id->element[new_cred_id->count - 1].cred = cred;
-
-    /* Release the smaller structure */
-    free(*cred_return);
-    *cred_return = new_cred_id;
-
-    return complete(minor_status);
-}
-
+/* Allocates and initialises storage for a context wrapper */
 OM_uint32
 alloc_ctx(minor_status, dispatch, ctx, ctx_return)
     OM_uint32 *minor_status;
@@ -887,6 +898,7 @@ gss_acquire_cred(minor_status, desired_name, time_req,
     gss_OID_set desired;
     struct pgss_cred_id *creds = NULL;
     gss_OID_set_desc default_mech;
+    struct pgss_cred_element *element;
 
     if ((major = init(minor_status)))
 	return major;
@@ -912,15 +924,32 @@ gss_acquire_cred(minor_status, desired_name, time_req,
     if ((major = alloc_cred_id(minor_status, &creds, desired->count)))
 	goto failed;
 
-    /* Acquire creds for each of the listed mechs */
+    /* Break the set of mechs up by their provider, creating cred slots */
     for (i = 0; i < desired->count; i++) {
-	gss_cred_id_t cred;
-	gss_OID_set_desc dmech;
-
 	mech = desired->elements + i;
 	if ((major = find_dispatch(minor_status, mech, &dispatch)))
 	    goto failed;
 
+	element = get_cred_by_dispatch(creds, dispatch);
+	if (!element) {
+	    element = &creds->element[creds->count];
+	    element->owner = dispatch;
+	    element->cred = GSS_C_NO_CREDENTIAL;
+	    if ((major = gss_create_empty_oid_set(minor_status,
+			    &element->mechs)))
+		goto failed;
+	    creds->count++;
+	}
+	if ((major = gss_add_oid_set_member(minor_status, mech, 
+		&element->mechs)))
+	    goto failed;
+    }
+
+    /* Acquire creds for each of the provider slots */
+    for (i = 0; i < creds->count; i++) {
+	element = &creds->element[i];
+
+	dispatch = creds->element[i].owner;
 	if (!dispatch->gss_acquire_cred || !dispatch->gss_release_cred)
 	{
 	    major = error(minor_status, GSS_S_BAD_MECH, 0);
@@ -928,25 +957,13 @@ gss_acquire_cred(minor_status, desired_name, time_req,
 	}
 
 	if ((major = (*dispatch->gss_acquire_cred)(minor_status, 
-		desired_name, time_req, make_singleton_oid_set(&dmech, mech), 
-		cred_usage, &creds->element[creds->count].cred,
+		desired_name, time_req, element->mechs, 
+		cred_usage, &element->cred,
 		&actual_ret, time_rec ? &trec : NULL)))
 	    goto failed;
 
-	if ((major = dup_oid(minor_status, mech, 
-			&creds->element[creds->count].mech)))
-	{
-	    if (dispatch->gss_release_oid_set)
-		(void)(*dispatch->gss_release_oid_set)(&ignore, &actual_ret);
-	    if (dispatch->gss_release_cred)
-		(void)(*dispatch->gss_release_cred)(&ignore,
-		    &creds->element[creds->count].cred);
-	    goto failed;
-	}
-	creds->count++;
-
 	/* 
-	 * Accumulate the mechanisms for which the credential is valid.
+	 * Accumulate the global mech set for which the credential is valid.
 	 * Since the provider may return OIDs of unconfigured mechs, 
 	 * the unknown ones are stripped out.
 	 */
@@ -983,7 +1000,7 @@ gss_acquire_cred(minor_status, desired_name, time_req,
     if (time_rec)
 	*time_rec = mintrec;
 
-    major = complete(minor_status);
+    return complete(minor_status);
 
 failed:
     (void)gss_release_cred(NULL, &creds);
@@ -1021,16 +1038,14 @@ gss_release_cred(minor_status, cred_handle)
 	 * still potentially usable.
 	 */
 	el = &creds->element[creds->count - 1];
-	major = find_dispatch(minor_status, &el->mech, &dispatch);
-	if (GSS_ERROR(major))
-	    return major;
+	dispatch = el->owner;
 	if (dispatch->gss_release_cred) {
 	    major = (*dispatch->gss_release_cred)(&minor, 
 		    &creds->element[i].cred);
 	    if (GSS_ERROR(major))
 		return error(minor_status, major, minor);
 	}
-	free_oid(&el->mech);
+	(void)gss_release_oid_set(NULL, &el->mechs);
 	creds->count--;
     }
     free(creds);
@@ -1064,6 +1079,7 @@ gss_init_sec_context(minor_status, initiator_cred_handle, context_handle,
     struct pgss_ctx_id *new_id = NULL;
     D_gss_name_t target;
     D_gss_cred_id_t init_cred;
+    static struct pgss_cred_element *element;
 
     if ((major = init(minor_status)))
 	return major;
@@ -1093,12 +1109,17 @@ gss_init_sec_context(minor_status, initiator_cred_handle, context_handle,
     if (!dispatch->gss_init_sec_context)
 	return error(minor_status, GSS_S_UNAVAILABLE, 0);
 
+    /* Get a raw name for the target */
     if ((major = get_mech_name(minor_status, target_name, dispatch, &target)))
 	return major;
 
-    if ((major = get_cred_by_mech(minor_status, initiator_cred_handle,
-	    mech, &init_cred)))
-	return major;
+    /* Get suitable credentials */
+    if (initiator_cred_handle) {
+	if (!(element = get_cred_by_dispatch(initiator_cred_handle, dispatch)))
+	    return error(minor_status, GSS_S_NO_CRED, 0);
+	init_cred = element->cred;
+    } else
+	init_cred = NULL;
 
     /*
      * Initialise the output token to empty so that on 'failure',
@@ -1150,13 +1171,121 @@ gss_accept_sec_context(minor_status, context_handle, acceptor_cred_handle,
     OM_uint32 *time_rec;
     gss_cred_id_t *delegated_cred_handle;
 {
-    OM_uint32 major;
+    OM_uint32 major, major2, minor, ignore;
+    gss_OID_desc initial_oid;
+    struct pgss_cred_element *element;
+    struct pgss_dispatch *dispatch;
+    D_gss_ctx_id_t ctx, *ctx_ptr;
+    D_gss_cred_id_t cred;
+    D_gss_name_t name = NULL;
+    D_gss_cred_id_t deleg;
+    gss_OID mech = GSS_C_NO_OID;
 
     if ((major = init(minor_status)))
 	return major;
 
-    return error(minor_status, GSS_S_UNAVAILABLE, 0);
-    /* TBD */
+    if (!*context_handle) {
+	/* Pull the OID tag from the beginning of the first token,
+	 * and check to see if we have a corresponding mech */
+	if (!get_token_tag(input_token_buffer, &initial_oid))
+	    return error(minor_status, GSS_S_DEFECTIVE_TOKEN, 0);
+	if ((major = find_dispatch(minor_status, &initial_oid, &dispatch)))
+	    return major;
+	ctx_ptr = &ctx;
+    } else {
+	dispatch = (*context_handle)->owner;
+	ctx_ptr = &(*context_handle)->ctx;
+    }
+
+    /* Figure out which cred to use */
+    if (acceptor_cred_handle == GSS_C_NO_CREDENTIAL)
+	cred = NULL;
+    else {
+	element = get_cred_by_dispatch(acceptor_cred_handle, dispatch);
+	if (!element)
+	    return error(minor_status, GSS_S_NO_CRED, 0);
+	cred = element->cred;
+    }
+
+    /* Clear output variables */
+    zero_buffer(output_token);
+    deleg = GSS_C_NO_CREDENTIAL;
+    name = GSS_C_NO_NAME;
+    ctx = GSS_C_NO_CONTEXT;
+    if (delegated_cred_handle)
+	*delegated_cred_handle = GSS_C_NO_CREDENTIAL;
+    if (src_name)
+	*src_name = GSS_C_NO_NAME;
+
+    /* Call the underlying mech */
+    if (!dispatch->gss_accept_sec_context)
+	return error(minor_status, GSS_S_UNAVAILABLE, 0);
+    if (GSS_ERROR(major = (*dispatch->gss_accept_sec_context)(&minor, 
+	    ctx_ptr, cred, input_token_buffer, input_chan_bindings,
+	    src_name ? &name : NULL, &mech, output_token,
+	    ret_flags, time_rec, delegated_cred_handle ? &deleg : NULL)))
+	return error(minor_status, major, minor);
+
+    /* Copy out output tokens */
+    if ((major2 = copyout_buffer(minor_status, dispatch, output_token)))
+	goto fail;
+
+    /* Copy out src_names */
+    if (name) {
+	major2 = copyout_name(minor_status, dispatch, name, src_name, 1);
+	name = GSS_C_NO_NAME;
+	if (major2)
+	    goto fail;
+    }
+
+    /* Wrap any delegated credentials */
+    if (deleg) {
+	if ((major2 = alloc_cred_id(minor_status, delegated_cred_handle, 1))) 
+	    goto fail;
+	element = &(*delegated_cred_handle)->element[0];
+	element->cred = deleg;
+	deleg = NULL;
+	element->owner = dispatch;
+	element->mechs = GSS_C_NO_OID_SET;
+	(*delegated_cred_handle)->count = 1;
+	if ((major2 = gss_create_empty_oid_set(minor_status, &element->mechs)))
+	    goto fail;
+	if ((major2 = gss_add_oid_set_member(minor_status, mech, 
+		&element->mechs)))
+	    goto fail;
+    }
+
+    /* Wrap new context handles */
+    if (ctx) {
+	if ((major2 = alloc_ctx(minor_status, dispatch, ctx, context_handle)))
+	    goto fail;
+	ctx = NULL;
+    }
+
+    if (mech_type && mech)
+	*mech_type = mech;
+
+    *context_handle = ctx;
+
+    if (minor_status)
+	*minor_status = minor;
+    return major;
+
+fail:
+    (void)gss_delete_sec_context(NULL, context_handle, GSS_C_NO_BUFFER);
+    (void)gss_release_buffer(NULL, output_token);
+    (void)gss_release_cred(NULL, delegated_cred_handle);
+    (void)gss_release_name(NULL, src_name);
+
+    if (name && dispatch->gss_release_name)
+	(void)(*dispatch->gss_release_name)(&ignore, &name);
+    if (deleg && dispatch->gss_release_cred)
+	(void)(*dispatch->gss_release_cred)(&ignore, &deleg);
+    if (!*context_handle && ctx && dispatch->gss_delete_sec_context)
+	(void)(*dispatch->gss_delete_sec_context)(&ignore, &ctx, 
+		GSS_C_NO_BUFFER);
+
+    return major2;
 }
 
 OM_uint32
@@ -1716,7 +1845,8 @@ gss_release_name(minor_status, input_name)
     if ((major = init(minor_status)))
 	return major;
 
-    free_name(input_name);
+    if (input_name)
+	free_name(input_name);
     return complete(minor_status);
 }
 
