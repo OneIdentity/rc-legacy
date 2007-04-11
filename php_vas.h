@@ -34,8 +34,8 @@
 # define ZEND_VAS_ARG_INFO( name )          \
         static zend_arg_info _info##name =  \
         {                                   \
-            name,                           \
-            sizeof( name ) - 1,             \
+            #name,                          \
+            sizeof( #name ) - 1,            \
             "", 0,                          \
             0, 0, 0, 0, 0                   \
         }
