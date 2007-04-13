@@ -4,13 +4,15 @@ php-vas: Vintela Authentication Services API for PHP
 Summary
 -------
 This PHP module provides access to the VAS API.
-Please see http://rc.vintela.com/topics/php-vas/ for more information 
+Please see http://rc.vintela.com/topics/php-vas/ for more information
 about this package.
 
 
 Authors
 -------
 Daniel Kerns
+Russell Bateman
+David Leonard
 
 
 License
@@ -31,15 +33,23 @@ To compile the source code you will need
 For development, you will also need
     autotools (i.e. autoconf, automake)
     doxygen
-    
+
+
+Note on VAS SDK requirement
+---------------------------
+The VAS SDK installation leaves headers on /opt/quest/include,
+    in particular, vas.h, vas_gss.h and vas_ldap.h. It also places
+    libvas.so on /opt/quest/lib--required to build the PHP-VAS
+    extension, the module referenced from your PHP program that
+    gives you access to VAS APIs.
+
 
 Installing into a web server
 ----------------------------
-
 If your platform does not come with a standard installation of PHP,
 please run the vas-php-setup script.
 
-    
+
 Building
 --------
 If your distribution contains the file 'configure', then simply run
@@ -67,18 +77,18 @@ Debugging notes
 Known issues
 ------------
 
-* All of the vas.h API's are supported although they are not completely tested.
+* All of the vas.h APIs are supported although they are not completely tested.
 
-* Of the vas_gss.h API's, only vas_gss_initialize, vas_gss_acquire_cred, 
+* Of the vas_gss.h APIs, only vas_gss_initialize, vas_gss_acquire_cred,
   vas_gss_auth are implemented.
 
-* None of the krb5 or ldap api's are implemented yet.  
+* None of the krb5 or ldap APIs are implemented yet.
   Implementing these is pretty easy, just not done yet.
 
-* The vas libraries are not thread safe. Locking needs to be put in place 
+* The VAS libraries are not thread safe. Locking needs to be put in place
   to accommodate that.
 
 * A test suite needs to be brought online.
 
-* The high level API needs more work.  
+* The high-level API needs more work.
   Need to write a couple of sample applications to see if it makes sense.
