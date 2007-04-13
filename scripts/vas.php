@@ -54,9 +54,9 @@ if ( $VAS_LOADED__ ) return;
 $VAS_LOADED__ = true;
 
 /* if our extension has not been loaded, do what we can */
-if ( ! extension_loaded( "php_vas" ) )
+if ( ! extension_loaded( "vas" ) )
 {
-	if ( ! dl( "php_vas.so" ) )
+	if ( ! dl( "vas.so" ) )
         return;
 }
 /** @endcond **/
