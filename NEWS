@@ -1,3 +1,2 @@
-4.3.0
-    - VAS SDK PHP bindings created and committed to RC for VAS library
-      version 4.3.0
+1.0.0
+    - Initial release of PHP bindings to VAS (for VASAPI version 4.3.0)
