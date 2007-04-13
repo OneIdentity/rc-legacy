@@ -1,4 +1,84 @@
-Vintela Authentication Services, Software Developer's Kit, PHP Bindings. Please
-see http://rc.vintela.com/topics/php-vas/ for detailed information about this
-package, its prerequisites and instructions on how to build, install and use
-it.
+
+php-vas: Vintela Authentication Services API for PHP
+
+Summary
+-------
+This PHP module provides access to the VAS API.
+Please see http://rc.vintela.com/topics/php-vas/ for more information 
+about this package.
+
+
+Authors
+-------
+Daniel Kerns
+
+
+License
+-------
+Please see the file LICENSE in this directory.
+
+
+Requirements
+------------
+To use the module, you will need VAS 3.0 client libraries or later.
+
+To compile the source code you will need
+    VAS SDK (vasdev)
+    PHP SDK (php-devel or php-dev)
+    a C compiler and related toolchain
+    make
+
+For development, you will also need
+    autotools (i.e. autoconf, automake)
+    doxygen
+    
+
+Installing into a web server
+----------------------------
+
+If your platform does not come with a standard installation of PHP,
+please run the vas-php-setup script.
+
+    
+Building
+--------
+If your distribution contains the file 'configure', then simply run
+
+    configure
+    make
+    make check
+    make package
+
+If you have checked out the sources from subversion, then generate the
+configure script by first running
+
+    sh bootstrap.sh
+
+
+Debugging notes
+---------------
+
+* Seg faults usually caused by symbol collisions with other modules.
+
+* Add this line to the PHP script so that errors are logged:
+      error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
+
+
+Known issues
+------------
+
+* All of the vas.h API's are supported although they are not completely tested.
+
+* Of the vas_gss.h API's, only vas_gss_initialize, vas_gss_acquire_cred, 
+  vas_gss_auth are implemented.
+
+* None of the krb5 or ldap api's are implemented yet.  
+  Implementing these is pretty easy, just not done yet.
+
+* The vas libraries are not thread safe. Locking needs to be put in place 
+  to accommodate that.
+
+* A test suite needs to be brought online.
+
+* The high level API needs more work.  
+  Need to write a couple of sample applications to see if it makes sense.

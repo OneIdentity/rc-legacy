@@ -47,7 +47,7 @@ clean-vas_so:
 
 EXTRA_DIST		= $(vas_so_sources) \
 			  extension/config.m4 \
-			  AUTHORS COPYING INSTALL LICENCE NEWS NOTES README \
+			  LICENCE NEWS README \
 			  doxvas.in
 
 if HAVE_DOXYGEN
