@@ -4,6 +4,8 @@ EXTRA_INSTALL_HOOKS 	=
 EXTRA_UNINSTALL_HOOKS 	=
 EXTRA_CLEAN_HOOKS 	=
 
+AUTOMAKE_OPTIONS	= foreign
+
 # The directories that we install into
 scriptdir 		= $(datadir)/php
 docdir			= $(datadir)/doc
@@ -81,11 +83,11 @@ clean-local: clean-vas_so $(EXTRA_CLEAN_HOOKS)
 #------------------------------------------------------------------------------
 package:
 	$(MAKE) install DESTDIR=$$PWD/pkgroot
-	$(srcdir)/pp --destdir=$$PWD/pkgroot $(srcdir)/php_vas.pp \
-		version=$(PKG_VERSION) \
+	$(srcdir)/pp --destdir=$$PWD/pkgroot $(srcdir)/php-vas.pp \
+		version=$(VERSION) \
 		scriptdir=$(scriptdir) \
-		extensiondir=$(extensiondir) \
-		docdir=$(docdir)
+		docdir=$(docdir) \
+		datadir=$(datadir)
 
 EXTRA_DIST += pp php-vas.pp
 

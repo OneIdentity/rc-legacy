@@ -6,7 +6,8 @@
  Services Developer SDK (PHP-VAS bindings). Using php-vas, you can write PHP\
  programs to the VAS API set."
 
- pp_solaris_name=php-vas
+ name=php-vas
+ pp_solaris_name=QSFTphpv
 
 # AIX cannot handle non-digits in its version identifier
 [aix] summary="$name $version"
@@ -14,9 +15,8 @@
 
 %files doc
  $scriptdir/
- $scriptdir/**
- $datadir/
- $datadir/**
+ $scriptdir/*.php
+ $datadir/vas.*
 
 %files doc
  $docdir/
