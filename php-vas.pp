@@ -12,37 +12,13 @@
 [aix] summary="$name $version"
 [aix] version=`echo $version | tr _ . | tr -d a-zA-Z`
 
-%files dev
-# $libdir/*.a       ignore-others
- $prefix/include/*
-
-%files
- $libdir/
- $libdir/**
- $lockdir/
- $piddir/            root:
- $logfilebase/
- $mandir/man*/*
- $spooldir/          1777
-
-#[rpm] /sbin/*
+%files doc
+ $scriptdir/
+ $scriptdir/**
+ $datadir/
+ $datadir/**
 
 %files doc
- $swatdir/
- $swatdir/**
-[rpm] /etc/xinetd.d/swat-quest optional
+ $docdir/
+ $docdir/**
 
-# stuff to fix here...
-%service nmbd-quest
-    cmd="$prefix/sbin/pooporickie -F"
-    group="ph-vas-quest"
-    description="php-vas library"
-
-# ...and here!
-%post [sd]
-    if /usr/bin/id php-vas >/dev/null 2>&1; then
-      : php-vas user exists
-    else
-      /usr/sbin/groupadd php-vas || :
-      /usr/sbin/useradd -g php-vas -d "/noexist/php-vas" -s /usr/bin/false -c "PHP-VAS user" php-vas
-    fi
