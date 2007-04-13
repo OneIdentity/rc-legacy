@@ -98,7 +98,7 @@ TESTS_ENVIRONMENT= EXTDIR=$$PWD/extension \
 		   $(SHELL) $(srcdir)/tests/driver -f
 
 EXTRA_DIST +=	tests/driver tests/driver.php \
-		tests/tests.php tests/checkAttributes.php
+		tests/test.php tests/checkAttribute.php
 
 TESTS = \
 		tests/t_vas_ctx_alloc.php \
