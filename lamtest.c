@@ -400,6 +400,7 @@ main(argc, argv)
 	if (error != 0) {
 	    debug("  setpcred() -> %d [errno %d]", error, errno);
 	    perror("setpcred");
+	    exit(1);
 	} else
 	    debug("  setpcred() -> %d [success]", error);
 
