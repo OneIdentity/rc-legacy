@@ -25,14 +25,22 @@ Requirements
 To use the module, you will need VAS 3.0 client libraries or later.
 
 To compile the source code you will need
-    VAS SDK (vasdev)
     PHP SDK (php-devel or php-dev)
+    VAS SDK (vasdev)
     a C compiler and related toolchain
     make
 
 For development, you will also need
     autotools (i.e. autoconf, automake)
     doxygen
+
+You will need to install the PHP SDK including phpize. You may find that you
+need autoconf 2.59 and automake 1.9.
+
+
+Supported versions of PHP
+-------------------------
+PHP-VAS has been built with php4 and php5.
 
 
 Note on VAS SDK requirement
