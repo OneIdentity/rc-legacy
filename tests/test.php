@@ -99,7 +99,7 @@ function myprint($s)
 
   if (isset($_SERVER["REQUEST_METHOD"]))
   {
-    print("<BR>");
+    print("<br />");
   }
   else
   {
@@ -107,12 +107,14 @@ function myprint($s)
   }
 }
 
-function runTest($t) {
-    $rv = $t();
-    if ($rv > 0) {
-	print("      $t() -> $rv\n");
-	exit(1);
-    }
+function runTest($t)
+{
+  $rv = $t();
+  if ($rv > 0)
+  {
+    print("      $t() -> $rv\n");
+    exit(1);
+  }
 }
 
 ?>
