@@ -7,28 +7,28 @@
 #ifndef PHP_VAS_H
 #define PHP_VAS_H
 
+#include <php_version.h>
+
 #include "vas.h"
 #include "vas_gss.h"
 #include "vas_ldap.h"
+
+#if !defined( PHP_MAJOR_VERSION )
+# error PHP_MAJOR_VERSION not defined!
+#endif
 
 /*
  * Coerce the functions, their names and definitions into what PHP's Zend core
  * needs. These are some VAS macros atop Zend's own.
  */
 #define WRAP( name )          _wrap_##name
-#if defined( __PHP_4__ )
+
+#if PHP_MAJOR_VERSION == 4
 # define ZEND_VAS( name )     ZEND_NAMED_FE( name, WRAP(name), NULL )
 # define ZEND_VAS2( name, i ) ZEND_NAMED_FE( name, WRAP(name), i )
 # define ZEND_VAS_ARG_INFO( name )  /* (unused in PHP-4...) */
 
-#elif defined( __PHP_5__ )
-/* ZEND_NAMED_FE(zend_name, name, arg_info)	ZEND_FENTRY(zend_name, name, arg_info, 0)
-	char *fname;
-	void (*handler)(INTERNAL_FUNCTION_PARAMETERS);
-	struct _zend_arg_info *arg_info;
-	zend_uint num_args;
-	zend_uint flags;
- * */
+#elif PHP_MAJOR_VERSION == 5
 # define ZEND_VAS( name )     ZEND_NAMED_FE( name, WRAP(name), &_info##name )
 # define ZEND_VAS2( name, i ) ZEND_VAS( name )
 # define ZEND_VAS_ARG_INFO( name )          \
@@ -39,9 +39,6 @@
             "", 0,                          \
             0, 0, 0, 0, 0                   \
         }
-
-#else
-# error You must define __PHP_4__ or __PHP_5__
 #endif
 
 #define ZEND_VAS_NAMED_FUNC( name ) ZEND_NAMED_FUNCTION( WRAP( name ) )

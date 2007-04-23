@@ -7,10 +7,6 @@
 
 /*#define SPE_DEBUG*/
 
-#ifndef __PHP_5__
-# define __PHP_4__
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -845,18 +841,16 @@ function_entry vas_functions[] =
     ZEND_VAS( gss_release_oid_set )
     ZEND_VAS( gss_release_buffer )
     ZEND_VAS( gss_indicate_mechs )
-#if defined( __PHP_4__ )
+#if PHP_MAJOR_VERSION == 4
     { /* fname */          NULL,
       /* handler */        NULL,
       /* func_arg_types */ NULL }
-#elif defined( __PHP_5__ )
+#elif PHP_MAJOR_VERSION == 5
     { /* fname */          NULL,
       /* handler */        NULL,
       /* arg_info */       NULL,
       /* num_args */       0,
       /* flags */          0 }
-#else
-# error You must define __PHP_4__ or __PHP_5__
 #endif
 };
 
