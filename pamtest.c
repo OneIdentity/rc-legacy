@@ -69,13 +69,37 @@ static struct err {
 /* Returns the string representation of a PAM error code */
 static const char *
 mypam_strerror(pam_handle_t *pamh, int error) {
+    static char namebuf[128];
     struct err *err;
-    static char sbuf[128];
+    const char *name = NULL;
+
     for (err = errors; err->desc; err++)
-	if (err->error == error)
-	    return err->desc;
-    snprintf(sbuf, sizeof sbuf, "error %d\n", error);
-    return sbuf;
+	if (err->error == error) {
+	    name = err->desc;
+	    break;
+	}
+    if (!name) {
+	snprintf(namebuf, sizeof namebuf, "error %d", error);
+	name = namebuf;
+    }
+    if (error == PAM_SUCCESS)
+	return name;
+#if HAVE_PAM_STRERROR
+    if (pamh) {
+	static char sbuf[128];
+	const char *pe = pam_strerror(pamh, error);
+	int pelen;
+
+	if (!pe)
+	    pe = "(null)";
+	pelen = strlen(pe);
+	while (pelen > 0 && pe[pelen - 1] == '\n')  /* Strip \n */
+	    pelen--;
+	snprintf(sbuf, sizeof sbuf, "%s: \"%.*s\"", name, pelen, pe);
+	name = sbuf;
+    }
+#endif
+    return name;
 }
 
 static void
@@ -100,7 +124,7 @@ mypam_log2(pam_handle_t *pamh, int result)
     if (pam_err != (expectedresult)) { \
 	debug_err("[" __FILE__ ":%d: " #pamexpr \
 		" did not return %s]", __LINE__, \
-                mypam_strerror(pamh, expectedresult)); \
+                mypam_strerror(0, expectedresult)); \
 	exit(1); \
     } \
 } while(0)
@@ -247,10 +271,10 @@ main(int argc, char *argv[])
 
     /* run as unprivileged if -p is given */
     if (pflag && privsep_fork(privsep_uid) == PRIVSEP_PARENT) {
-	/* Forked. Now we wait for the privsep_return() call below */
+	/* Forked. Now we wait for the privsep_exit() call below */
 	int ret = privsep_wait();
 	if (ret != 1) {
-	    fprintf(stderr, "[unpriv child failed: %d]\n", ret);
+	    debug_err("unprivileged child failed: %d", ret);
 	    exit(1);
 	}
 	goto end_privsep;

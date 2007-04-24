@@ -42,7 +42,7 @@ AM_CONDITIONAL(HAVE_PAM, test x$have_pam = xtrue)
 AC_CHECK_FUNC([authenticate], [have_lam=true], [have_lam=false])
 AM_CONDITIONAL(HAVE_LAM, test x$have_lam = xtrue)
 
-AC_CHECK_FUNCS([getenv setreuid getpwnam])
+AC_CHECK_FUNCS([pam_strerror getenv setreuid getpwnam])
 
 # AC_CHECK_FUNC([getpass])
 # HP-UX's getpass is broken; hard to test
