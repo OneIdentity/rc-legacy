@@ -19,7 +19,7 @@ AM_MAINTAINER_MODE
 
 AC_PATH_PROG([KRB5CONFIG], [krb5-config], [no], [/opt/quest/bin:$PATH])
 if test x"$KRB5CONFIG" = x"no"; then
-    AC_MSG_ERROR([krb5-config was not found; is the VAS SDK installed?])
+    AC_MSG_WARN([krb5-config was not found; is the VAS SDK installed?])
 else
     KRB5_CFLAGS=`$KRB5CONFIG --cflags`;       AC_SUBST(KRB5_CFLAGS)
     KRB5_LIBS=`$KRB5CONFIG --libs`;           AC_SUBST(KRB5_LIBS) 
@@ -42,11 +42,14 @@ AM_CONDITIONAL(HAVE_PAM, test x$have_pam = xtrue)
 AC_CHECK_FUNC([authenticate], [have_lam=true], [have_lam=false])
 AM_CONDITIONAL(HAVE_LAM, test x$have_lam = xtrue)
 
-AC_CHECK_FUNCS([getenv setreuid getpwnam getpass])
+AC_CHECK_FUNCS([getenv setreuid getpwnam])
 
+# AC_CHECK_FUNC([getpass])
 # HP-UX's getpass is broken; hard to test
-if test x`uname -s 2>/dev/null` = x"HP-UX"; then
-    AC_LIBOBJ([getpass])
-fi
+# Solaris 8's getpass is also broken. Only returns first 8 chars.
+# So, remove the testing code here and assume its broken everywhere.
+
+AC_SYS_POSIX_TERMIOS
+AC_LIBOBJ([getpass])
 
 AC_OUTPUT

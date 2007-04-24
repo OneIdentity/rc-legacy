@@ -4,6 +4,9 @@
 # include <config.h>
 #endif
 
+/* Redefine getpass so that system declarations are ignored */
+#define getpass getpass_ignored
+
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -12,6 +15,8 @@
 #include <string.h>
 #include <signal.h>
 #include <termios.h>
+
+#undef getpass
 
 /* 
  * On some platforms, getpass() is missing or totally broken.
@@ -61,5 +66,10 @@ getpass(char *prompt)
     s = fgets(buf, sizeof buf, stdin);
     gp_restore();
     putchar('\n');
+    if (s && *s) {
+	int len = strlen(s);
+	if (s[len - 1] == '\n')
+	    s[len - 1] = 0;
+    }
     return s;
 }

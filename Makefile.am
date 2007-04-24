@@ -9,17 +9,20 @@ man_MANS = 		kuserok.1 gss-server.1 gss-client.1
 
 kuserok_CFLAGS =	@KRB5_CFLAGS@
 kuserok_LDFLAGS =	@KRB5_LIBS@
-kuserok_LDADD =		libauthtest.a
+kuserok_LDADD =		-L. -lauthtest
+kuserok_DEPENDENCIES =	libauthtest.a
 
 if HAVE_PAM
 bin_PROGRAMS +=		pamtest
-pamtest_LDADD =		libauthtest.a
+pamtest_LDADD =		-L. -lauthtest $(LIBOBJS)
+pamtest_DEPENDENCIES =	libauthtest.a $(LIBOBJS)
 man_MANS +=		pamtest.1
 endif
 
 if HAVE_LAM
 bin_PROGRAMS +=		lamtest
-lamtest_LDADD =		libauthtest.a
+lamtest_LDADD =		-L. -lauthtest $(LIBOBJS)
+lamtest_DEPENDENCIES =	libauthtest.a $(LIBOBJS)
 man_MANS +=		lamtest.1
 endif
 
