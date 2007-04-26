@@ -13,12 +13,14 @@
 [aix] summary="$name $version"
 [aix] version=`echo $version | tr _ . | tr -d a-zA-Z`
 
-%files doc
+%files
  $scriptdir/
  $scriptdir/*.php
  $datadir/vas.*
 
+%if -n "$docdir"
 %files doc
  $docdir/
  $docdir/**
+%endif
 

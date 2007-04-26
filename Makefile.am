@@ -4,11 +4,12 @@ EXTRA_INSTALL_HOOKS 	=
 EXTRA_UNINSTALL_HOOKS 	=
 EXTRA_CLEAN_HOOKS 	=
 
+PPFLAGS			=
+
 AUTOMAKE_OPTIONS	= foreign
 
 # The directories that we install into
 scriptdir 		= $(datadir)/php
-docdir			= $(datadir)/doc
 
 # installed PHP scripts, also used as documentation source
 dist_script_DATA	= scripts/vasapi.php \
@@ -57,6 +58,9 @@ if HAVE_DOXYGEN
 # Create the documentation, html and man pages, in the doc subdirectory.
 #------------------------------------------------------------------------------
 
+docdir			= $(datadir)/doc
+PPFLAGS	+= docdir=$(docdir)
+
 doc/html/index.html: $(script_DATA) doxvas
 	$(DOXYGEN) doxvas
 doxvas: doxvas.in
@@ -86,8 +90,8 @@ package:
 	$(srcdir)/pp --destdir=$$PWD/pkgroot $(srcdir)/php-vas.pp \
 		version=$(VERSION) \
 		scriptdir=$(scriptdir) \
-		docdir=$(docdir) \
-		datadir=$(datadir)
+		datadir=$(datadir) \
+		$(PPFLAGS)
 
 EXTRA_DIST += pp php-vas.pp
 
@@ -198,7 +202,7 @@ TESTS = \
 		tests/t_vas_ldap_set_attributes3.php \
 		tests/t_vas_ldap_set_attributes4.php \
 		# end of tests
-MISSING_TESTS =		
+MISSING_TESTS =	\
 		tests/t_vas_gss_krb5_get_subkey.php \
 		tests/t_vas_krb5_get_credentials.php \
 		tests/t_vas_krb5_validate_credentials.php \
