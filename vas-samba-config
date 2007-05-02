@@ -71,6 +71,28 @@ check_and_fix () {
 	return 0
 }
 
+#-- returns true if the old parameter name was in use, and was renamed
+#   usage: check_and_rename $old_name $new_name $conf_file
+check_and_rename () {
+
+	PREG=`echo "$1" | sed -e "s/$SP$SP*/$LSP$LSP*/g"`
+	PNEW="$2"
+	CONFFILE="$3"
+
+	if grep -i "^$SP*$PREG$SP*=" ${CONFFILE} >/dev/null
+       	then
+	    # old param name is in use
+	    echo "Renaming parameter '$1' to '$2'"
+	    # stand fast ye and behold the mighty power of sed
+	    sed "/^$SP*$PREG$SP*=/{h;s/^/#/p;x;s/$PREG/$PNEW/;}" \
+                            < ${CONFFILE} > ${CONFFILE}.new || exit 1
+	    mv ${CONFFILE}.new ${CONFFILE} || exit 1
+	    return 0
+	fi
+
+	return 1
+}
+
 #-- figure out how to echo without newlines
 echo1 () { echo -n "$*"; }
 echo2 () { echo "$*\\c"; }
@@ -202,6 +224,24 @@ echo "Stopping Samba services..."
 # Verify/Modify smb.conf #
 ##########################
 
+SAMBAVERSION=`/opt/quest/sbin/smbd --version | 
+    sed -e 's/^Version //;s/-Quest-/./'`
+
+#-- is_lt returns true iff dotted version $1 < $2
+is_lt () {
+    a="$1" b="$2"
+    while test -n "$a" -o -n "$b"; do
+	if test "${a%%.*}" -eq "${b%%.*}"; then
+	    case "$a" in *.*) a="${a#*.}";; *) a="";; esac
+	    case "$b" in *.*) b="${b#*.}";; *) b="";; esac
+	    continue
+	fi
+	test "${a%%.*}" -lt "${b%%.*}"
+	return
+    done
+    return 1
+}
+
 echo "Checking $SAMBACONF..."
 
 CONFMOD=${SAMBACONF}.mod
@@ -275,9 +315,20 @@ check_parm "idmap uid" "${CONFMOD}" ||
 check_parm "idmap gid" "${CONFMOD}" ||
     echo "  idmap gid = 1-2147483647" >> $NEWTEXT  # FIXME is this portable?
 
-check_parm "idmap expire time" "${CONFMOD}" ||
+if is_lt $SAMBAVERSION 3.0.25; then
+  check_parm "idmap expire time" "${CONFMOD}" ||
     echo "  idmap expire time = 300   # Expire the tdb cache every 5 minutes" \
         >> $NEWTEXT
+else
+  #-- check for old param names
+  check_and_rename "idmap expire time"   "idmap cache time" \
+	"${CONFMOD}"
+  check_and_rename "idmap negative time" "idmap negative cache time" \
+	"${CONFMOD}"
+  check_parm "idmap cache time" "${CONFMOD}" ||
+    echo "  idmap cache time = 300   # Expire the tdb cache every 5 minutes" \
+        >> $NEWTEXT
+fi
 
 if [ "$PAMOPT" = "yes" ]; then
     check_and_fix "obey pam restrictions" "yes" "${CONFMOD}" ||
