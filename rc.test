@@ -420,3 +420,5 @@ gidNumber: $gid2
 .
 
 exit $EXIT
+
+# TODO add some extra tests from http://www.occam.com/tools/ad_auth.html
