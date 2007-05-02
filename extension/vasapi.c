@@ -5,11 +5,12 @@
  **
  **/
 
-/*#define SPE_DEBUG*/
+#define SPE_DEBUG
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
 #include "zend.h"
 #include "zend_API.h"
 #include "php.h"
@@ -20,8 +21,8 @@ extern "C" {
 /*
  * These TSRMLS_ definitions should already be available now, but with older
  * PHP under Red Hat are not. This affects the last argument in the wrapped
- * function argument list defined by INTERNAL_FUNCTION_PARAMETERS. These define
- * out the executor_globals (search in this file on this term).
+ * (zif) function argument list defined by INTERNAL_FUNCTION_PARAMETERS. These
+ * #define out the executor_globals (search in this file on this term).
  */
 #ifndef TSRMLS_D
 # define TSRMLS_D
@@ -41,13 +42,14 @@ extern "C" {
 #endif
 
 #define PHP_vas_ctx_t_RES_NAME "vas_ctx_t"
-static int le_vas_ctx_t;
+static int              le_vas_ctx_t;
 static zend_class_entry *vas_CVAS_passwd_entry;
 static zend_class_entry *vas_CVAS_err_info_entry;
 
 ZEND_DECLARE_MODULE_GLOBALS(vas)
 
 #ifdef SPE_DEBUG
+# define ZEND_PRINTF    zend_printf
 void SPEPRINTF( const char *format, ... );
 void SPEPRINTF( const char *format, ... )
 {
@@ -57,18 +59,19 @@ void SPEPRINTF( const char *format, ... )
     va_end( ap );
 }
 #else
+# define ZEND_PRINTF    SPEPRINTF
 void SPEPRINTF( void *arg, ... );
 void SPEPRINTF( void *arg, ... )
 {
     /*EMPTY*/
 }
-#endif /* SPE_DEUBG */
+#endif
 
 #ifdef SPE_DEBUG
-    #define SPE_zend_error zend_error
+# define SPE_zend_error zend_error
 #else
-    #define SPE_zend_error(a, b, c)
-#endif /* SPE_DEBUG */
+# define SPE_zend_error(a, b, c)
+#endif
 
 static void vas_attrs_t_free( vas_ctx_t *ctx, vas_attrs_t *object )
 {
@@ -115,16 +118,19 @@ static void gss_delete_sec_context_internal( vas_ctx_t *ctx, gss_ctx_id_t* cred_
 {
     /* These are now deleted when the ctx is deleted and deinitialize is called
      * OM_uint32 minor_status;
-     * gss_delete_sec_context(&minor_status, cred_handle, GSS_C_NO_BUFFER); */
+     * gss_delete_sec_context(&minor_status, cred_handle, GSS_C_NO_BUFFER);
+     */
 }
 
-/*
+#if 0
 static void gss_release_buffer_internal( vas_ctx_t *ctx, gss_buffer_t buffer )
 {
-  * Note that the gss_release_buffer is actually done when this object is created.
+  /* Note that the gss_release_buffer is actually done when this object is
+   * created.
+   */
   efree(buffer->value);
 }
-*/
+#endif
 
 static void krb5_free_keyblock_internal( vas_ctx_t *ctx, krb5_keyblock *key )
 {
@@ -162,24 +168,25 @@ static void free_ldap_internal( vas_ctx_t *ctx, LDAP *ld )
     ldap_unbind( ld );
 }
 
-/* SPE_vas_groups_list_t represents a linked list of vas_group_t** pointers.
- * These are the return values from vas_user_get_groups().  That function
- * returns a vector of vas_group_t's and we copy the groups into our
- * resources.  These resources must be free'ed by calling vas_group_free_groups()
- * or there will be a leak of the ** pointers.
+/* SPE_vas_groups_list_t represents a linked list of vas_group_t ** pointers.
+ * These are the return values from vas_user_get_groups(). That function
+ * returns a vector of vas_group_t's and we copy the groups into our resources.
+ * These resources must be free'd by calling vas_group_free_groups() or there
+ * will be a leak of the ** pointers.
  *
- * We will defer the free until we finally free the ctx.*/
-
+ * We will defer the free until we finally free the ctx.
+ */
 typedef struct SPE_vas_groups_list_t
 {
     vas_group_t                  **groups;
     struct SPE_vas_groups_list_t *next;
 } SPE_vas_groups_list_t;
 
-/* SPE_vas_gss_ctx_list_t is similar to the groups list above but
- * for a different purpose.  I discovered that if a gss_ctx_id_t is released
- * before associated gss_cred_id_t's that the release of the cred_id_t's
- * would fault.  This defers the releasing of the gss_ctx_id_t's.*/
+/* SPE_vas_gss_ctx_list_t is similar to the groups list above but has a
+ * different purpose. It has been discovered that if a gss_ctx_id_t is released
+ * before its associated gss_cred_id_t(s) that the release of the cred_id_t(s)
+ * will fault. This defers the releasing of the gss_ctx_id_t(s).
+ */
 typedef struct SPE_vas_gss_ctx_list_t
 {
     gss_ctx_id_t                  gssctx;
@@ -191,13 +198,14 @@ typedef struct
     vas_ctx_t              *ctx;
     unsigned int           referenceCount;
     SPE_vas_groups_list_t  *groups_list;
-    unsigned char          freeGSS;  /* Set to true if we have to call vas_gss_deinitialize.*/
+    unsigned char          freeGSS;  /* set true if calling vas_gss_deinitialize */
     SPE_vas_gss_ctx_list_t *gssctx_list;
 } SPE_vas_ctx_t;
 
 static void SPE_add_groups( SPE_vas_ctx_t *ctx, vas_group_t **groups )
 {
-  SPE_vas_groups_list_t *g = ( SPE_vas_groups_list_t * )emalloc( sizeof( SPE_vas_groups_list_t ) );
+  SPE_vas_groups_list_t *g =
+      ( SPE_vas_groups_list_t * ) emalloc( sizeof( SPE_vas_groups_list_t ) );
 
   g->next = ctx->groups_list;
   g->groups = groups;
@@ -211,7 +219,7 @@ static void SPE_free_groups( SPE_vas_ctx_t *ctx )
     while( p )
     {
         SPE_vas_groups_list_t *n = p->next;
-        SPEPRINTF( "%p: Freeing groups at %p\n", p, p->groups );
+        ZEND_PRINTF( "_____Freeing groups at %p (%p)\n", p, p->groups );
         vas_group_free_groups( ctx->ctx, p->groups );
         efree( p );
         p = n;
@@ -220,9 +228,10 @@ static void SPE_free_groups( SPE_vas_ctx_t *ctx )
 
 static void SPE_add_gss_ctx( SPE_vas_ctx_t *ctx, gss_ctx_id_t gssctx )
 {
-    SPE_vas_gss_ctx_list_t *g = ( SPE_vas_gss_ctx_list_t * )emalloc( sizeof( SPE_vas_gss_ctx_list_t ) );
+    SPE_vas_gss_ctx_list_t *g =
+        ( SPE_vas_gss_ctx_list_t * )emalloc( sizeof( SPE_vas_gss_ctx_list_t ) );
 
-    /* printf( "Adding gssctx %p to list\n", gssctx ); */
+    ZEND_PRINTF( "_____Adding gssctx %p to list\n", gssctx );
     g->next = ctx->gssctx_list;
     g->gssctx = gssctx;
     ctx->gssctx_list = g;
@@ -233,7 +242,7 @@ static void SPE_remove_gss_ctx( SPE_vas_ctx_t *ctx, gss_ctx_id_t gssctx )
     SPE_vas_gss_ctx_list_t *prev = NULL;
     SPE_vas_gss_ctx_list_t *next = ctx->gssctx_list;
 
-    /* printf("Removing gssctx %p from list\n", gssctx); */
+    ZEND_PRINTF( "_____Removing gssctx %p from list\n", gssctx );
 
 startover:
     for( next = ctx->gssctx_list; next; prev = next, next = next->next )
@@ -241,7 +250,7 @@ startover:
         if( next->gssctx == gssctx )
         {
             if( prev )
-            {  /* Delete item in middle. */
+            {  /* delete item in middle */
                 prev->next = next->next;
                 efree( next );
                 next = prev;
@@ -265,7 +274,7 @@ static void SPE_free_gss_ctx( SPE_vas_ctx_t *ctx )
         OM_uint32 minor_status;
         SPE_vas_gss_ctx_list_t *n = p->next;
 
-        SPEPRINTF( "%p: Freeing gss_ctx_id at %p\n", p, p->gssctx );
+        ZEND_PRINTF( "_____Freeing gss_ctx_id %p at %p\n", p, p->gssctx );
         gss_delete_sec_context( &minor_status, &( p->gssctx ), GSS_C_NO_BUFFER );
         efree( p );
         p = n;
@@ -279,173 +288,180 @@ static vas_err_t SPE_vas_ctx_alloc( SPE_vas_ctx_t **vc )
 
     if( err == VAS_ERR_SUCCESS )
     {
-        *vc = ( SPE_vas_ctx_t* )emalloc( sizeof( SPE_vas_ctx_t ) );
+        *vc = ( SPE_vas_ctx_t * ) emalloc( sizeof( SPE_vas_ctx_t ) );
 
         ( *vc )->referenceCount = 1;
-        ( *vc )->ctx = ctx;
-        ( *vc )->groups_list = NULL;
-        ( *vc )->freeGSS = 0;
-        ( *vc )->gssctx_list = NULL;
-        SPEPRINTF( "%p: Allocated SPE_vas_ctx.  ctx is %p\n", *vc, ctx );
+        ( *vc )->ctx            = ctx;
+        ( *vc )->groups_list    = NULL;
+        ( *vc )->freeGSS        = 0;
+        ( *vc )->gssctx_list    = NULL;
+        ZEND_PRINTF( "_____Allocated SPE_vas_ctx %p (%p)\n", *vc, ctx );
     }
     return err;
 }
 
-static void SPE_vas_ctx_free( SPE_vas_ctx_t *vas_ctx )
+static void SPE_vas_ctx_free( SPE_vas_ctx_t *spe_vas_ctx )
 {
-    SPEPRINTF( "%p: Calling SPE_vas_ctx_free -- ref count %d\n", vas_ctx, vas_ctx->referenceCount );
+    ZEND_PRINTF( "_____Calling SPE_vas_ctx_free %p, reference count %d\n",
+               spe_vas_ctx, spe_vas_ctx->referenceCount );
 
-    if( vas_ctx && vas_ctx->referenceCount > 0 )
+    if( spe_vas_ctx && spe_vas_ctx->referenceCount > 0 )
     {
-        if( --vas_ctx->referenceCount == 0 )
+        if( --spe_vas_ctx->referenceCount == 0 )
         {
-            SPEPRINTF( "%p: Calling vas_ctx_free on %p\n", vas_ctx, vas_ctx->ctx );
+            ZEND_PRINTF( "_____Calling vas_ctx_free on %p (%p)\n",
+                       spe_vas_ctx, spe_vas_ctx->ctx );
 
-            SPE_free_groups( vas_ctx );
-            SPE_free_gss_ctx( vas_ctx );
+            SPE_free_groups( spe_vas_ctx );
+            SPE_free_gss_ctx( spe_vas_ctx );
 
-            if( vas_ctx->freeGSS )
-            {
-                vas_gss_deinitialize( vas_ctx->ctx );
-            }
-            vas_ctx_free( vas_ctx->ctx );
-            efree( vas_ctx );
+            if( spe_vas_ctx->freeGSS )
+                vas_gss_deinitialize( spe_vas_ctx->ctx );
+
+            vas_ctx_free( spe_vas_ctx->ctx );
+            efree( spe_vas_ctx );
         }
     }
-    /* SPEPRINTF( "%p: Free done\n", vas_ctx ); */
+
+    ZEND_PRINTF( "_____Free done (%p)\n", spe_vas_ctx );
 }
 
 static void php_vas_ctx_t_dtor( zend_rsrc_list_entry *rsrc TSRMLS_DC )
 {
-    SPE_vas_ctx_t *vas_ctx = ( SPE_vas_ctx_t* ) rsrc->ptr;
+    SPE_vas_ctx_t *spe_vas_ctx = ( SPE_vas_ctx_t* ) rsrc->ptr;
 
-    SPEPRINTF( "%p: Calling vas_ctx_dtor\n", vas_ctx );
+    ZEND_PRINTF( "_____Calling vas_ctx_dtor (%p)\n", spe_vas_ctx );
 
-    SPE_vas_ctx_free( vas_ctx );
+    SPE_vas_ctx_free( spe_vas_ctx );
 }
 
-#define SPE_DECLARE_DTOR_USING_CTX2_NO_POINTER( TYPE, FREE ) \
-static char* PHP_##TYPE##_RES_NAME = #TYPE; \
-static int le_##TYPE; \
-typedef struct \
-{ \
-    SPE_vas_ctx_t* ctx; \
-    TYPE raw; \
-    unsigned char noFree; \
-} SPE_##TYPE; \
-static void php_##TYPE##_dtor( zend_rsrc_list_entry *rsrc TSRMLS_DC ) \
-{ \
-    SPE_##TYPE* thing = ( SPE_##TYPE* ) rsrc->ptr; \
-    SPEPRINTF( "%p: Calling " #TYPE "_dtor. noFree=%d\n", thing, thing->noFree ); \
-    if( thing && thing->raw ) \
-    { \
-        if( thing->noFree == 0 ) \
-        { \
-            FREE( thing->ctx->ctx, &( thing->raw ) ); \
-        } \
-        SPE_vas_ctx_free( thing->ctx ); \
-        efree( thing ); \
-    } \
-}
+#define SPE_DECLARE_DTOR_USING_CTX2_NO_POINTER( TYPE, FREE )                \
+    static char *PHP_##TYPE##_RES_NAME = #TYPE;                             \
+    static int le_##TYPE;                                                   \
+    typedef struct                                                          \
+    {                                                                       \
+        SPE_vas_ctx_t *ctx;                                                 \
+        TYPE           raw;                                                 \
+        unsigned char  noFree;                                              \
+    } SPE_##TYPE;                                                           \
+    static void php_##TYPE##_dtor( zend_rsrc_list_entry *rsrc TSRMLS_DC )   \
+    {                                                                       \
+        SPE_##TYPE *thing = ( SPE_##TYPE * ) rsrc->ptr;                     \
+        ZEND_PRINTF( "_____Calling " #TYPE "_dtor %p, noFree=%d\n",         \
+                   thing, thing->noFree );                                  \
+        if( thing && thing->raw )                                           \
+        {                                                                   \
+            if( thing->noFree == 0 )                                        \
+            {                                                               \
+                FREE( thing->ctx->ctx, &( thing->raw ) );                   \
+            }                                                               \
+            SPE_vas_ctx_free( thing->ctx );                                 \
+            efree( thing );                                                 \
+        }                                                                   \
+    }
 
-#define SPE_DECLARE_DTOR_USING_CTX2_NO_POINTER_BY_VALUE( TYPE, FREE ) \
-static char* PHP_##TYPE##_RES_NAME = #TYPE; \
-static int le_##TYPE; \
-typedef struct \
-{ \
-    SPE_vas_ctx_t *ctx; \
-    TYPE raw; \
-    unsigned char noFree; \
-} SPE_##TYPE; \
-static void php_##TYPE##_dtor( zend_rsrc_list_entry *rsrc TSRMLS_DC ) \
-{ \
-    SPE_##TYPE *thing = ( SPE_##TYPE* ) rsrc->ptr; \
-    SPEPRINTF( "%p: Calling " #TYPE "_dtor. noFree=%d\n", thing, thing->noFree ); \
-    if( thing && thing->raw ) \
-    { \
-        if( thing->noFree == 0 ) \
-        { \
-            FREE( thing->ctx->ctx, thing->raw ); \
-        } \
-        SPE_vas_ctx_free(thing->ctx); \
-        efree( thing ); \
-    } \
-}
+#define SPE_DECLARE_DTOR_USING_CTX2_NO_POINTER_BY_VALUE( TYPE, FREE )       \
+    static char* PHP_##TYPE##_RES_NAME = #TYPE;                             \
+    static int le_##TYPE;                                                   \
+    typedef struct                                                          \
+    {                                                                       \
+        SPE_vas_ctx_t *ctx;                                                 \
+        TYPE          raw;                                                  \
+        unsigned char noFree;                                               \
+    } SPE_##TYPE;                                                           \
+    static void php_##TYPE##_dtor( zend_rsrc_list_entry *rsrc TSRMLS_DC )   \
+    {                                                                       \
+        SPE_##TYPE *thing = ( SPE_##TYPE * ) rsrc->ptr;                     \
+        ZEND_PRINTF( "_____Calling " #TYPE "_dtor %p, noFree=%d\n",         \
+                   thing, thing->noFree );                                  \
+        if( thing && thing->raw )                                           \
+        {                                                                   \
+            if( thing->noFree == 0 )                                        \
+            {                                                               \
+                FREE( thing->ctx->ctx, thing->raw );                        \
+            }                                                               \
+            SPE_vas_ctx_free(thing->ctx);                                   \
+            efree( thing );                                                 \
+        }                                                                   \
+    }
 
-#define SPE_DECLARE_DTOR_USING_CTX2( TYPE, FREE ) \
-static char* PHP_##TYPE##_RES_NAME = #TYPE; \
-static int le_##TYPE; \
-typedef struct \
-{ \
-    SPE_vas_ctx_t *ctx; \
-    TYPE *raw; \
-    unsigned char noFree; \
-} SPE_##TYPE; \
-static void php_##TYPE##_dtor( zend_rsrc_list_entry *rsrc TSRMLS_DC ) \
-{ \
-    SPE_##TYPE* thing = ( SPE_##TYPE* ) rsrc->ptr; \
-    SPEPRINTF( "%p: Calling " #TYPE "_dtor. noFree=%d\n", thing, thing->noFree ); \
-    if( thing && thing->raw ) \
-    { \
-        if( thing->noFree == 0 ) \
-        { \
-            FREE( thing->ctx->ctx, thing->raw ); \
-        } \
-        SPE_vas_ctx_free( thing->ctx ); \
-        efree( thing ); \
-    } \
-}
+#define SPE_DECLARE_DTOR_USING_CTX2( TYPE, FREE )                           \
+    static char *PHP_##TYPE##_RES_NAME = #TYPE;                             \
+    static int le_##TYPE;                                                   \
+    typedef struct                                                          \
+    {                                                                       \
+        SPE_vas_ctx_t *ctx;                                                 \
+        TYPE          *raw;                                                 \
+        unsigned char noFree;                                               \
+    } SPE_##TYPE;                                                           \
+    static void php_##TYPE##_dtor( zend_rsrc_list_entry *rsrc TSRMLS_DC )   \
+    {                                                                       \
+        SPE_##TYPE *thing = ( SPE_##TYPE* ) rsrc->ptr;                      \
+        ZEND_PRINTF( "_____Calling " #TYPE "_dtor %p, noFree=%d\n",         \
+                   thing, thing->noFree );                                  \
+        if( thing && thing->raw )                                           \
+        {                                                                   \
+            if( thing->noFree == 0 )                                        \
+            {                                                               \
+                FREE( thing->ctx->ctx, thing->raw );                        \
+            }                                                               \
+            SPE_vas_ctx_free( thing->ctx );                                 \
+            efree( thing );                                                 \
+        }                                                                   \
+    }
 
-#define SPE_DECLARE_DTOR_USING_CTX( TYPE ) \
-  SPE_DECLARE_DTOR_USING_CTX2( TYPE, TYPE##_free )
+#define SPE_DECLARE_DTOR_USING_CTX( TYPE )                                  \
+    SPE_DECLARE_DTOR_USING_CTX2( TYPE, TYPE##_free )
 
-#define SPE_REGISTER_DTOR( TYPE ) \
-    le_##TYPE = zend_register_list_destructors_ex( php_##TYPE##_dtor, NULL, PHP_##TYPE##_RES_NAME, module_number )
+#define SPE_REGISTER_DTOR( TYPE )                                           \
+    le_##TYPE = zend_register_list_destructors_ex( php_##TYPE##_dtor, NULL, \
+                        PHP_##TYPE##_RES_NAME, module_number )
 
-#define SPE_CONS_VALUE( VARIABLE, TYPE, VAR ) \
-{ \
-    SPE_##TYPE* thing; \
-    thing = ( SPE_##TYPE* )emalloc( sizeof( SPE_##TYPE ) ); \
-    thing->ctx = ctx; \
-    thing->ctx->referenceCount++; \
-    thing->raw = VAR; \
-    thing->noFree = 0; \
-    ZEND_REGISTER_RESOURCE( VARIABLE, thing, le_##TYPE ); \
-}
+#define SPE_CONS_VALUE( VARIABLE, TYPE, VAR )                               \
+    {                                                                       \
+        SPE_##TYPE *thing;                                                  \
+        thing         = ( SPE_##TYPE * ) emalloc( sizeof( SPE_##TYPE ) );   \
+        thing->ctx    = ctx; thing->ctx->referenceCount++;                  \
+        thing->raw    = VAR;                                                \
+        thing->noFree = 0;                                                  \
+        ZEND_REGISTER_RESOURCE( VARIABLE, thing, le_##TYPE );               \
+    }
 
-#define SPE_CONS_RETURN_VALUE( TYPE, VAR ) \
-{ \
-    SPE_CONS_VALUE( return_value, TYPE, VAR ); \
-}
+#define SPE_CONS_RETURN_VALUE( TYPE, VAR )                                  \
+    {                                                                       \
+        SPE_CONS_VALUE( return_value, TYPE, VAR );                          \
+    }
 
-#define SPE_CHECK_ARGS( n ) \
-{ \
-    int argbase = 0; \
-    if( this_ptr && this_ptr->type==IS_OBJECT ) { argbase++; } \
-    if( ZEND_NUM_ARGS() + argbase != ( n ) ) { WRONG_PARAM_COUNT; } \
-  }
+#define SPE_CHECK_ARGS( n )                                                 \
+    {                                                                       \
+        int argbase = 0;                                                    \
+        if( this_ptr && this_ptr->type==IS_OBJECT ) { argbase++; }          \
+        if( ZEND_NUM_ARGS() + argbase != ( n ) ) { WRONG_PARAM_COUNT; }     \
+    }
 
 /*  || ( zend_get_parameters_array_ex( 1 - argbase, args ) != SUCCESS ) */
 
-#define SPE_SET_VAS_ERR( code ) \
-{ \
-    VAS_G( g_vas_err ) = ( code ); \
-}
+#define SPE_SET_VAS_ERR( code )                                             \
+    {                                                                       \
+        VAS_G( g_vas_err ) = ( code );                                      \
+    }
 
-#define SPE_SET_VAS_ERR2( code, minor ) \
-{ \
-    VAS_G( g_vas_err ) = ( code ); \
-    VAS_G( g_vas_err_minor ) = ( minor ); \
-}
+#define SPE_SET_VAS_ERR2( code, minor )                                     \
+    {                                                                       \
+        VAS_G( g_vas_err ) = ( code );                                      \
+        VAS_G( g_vas_err_minor ) = ( minor );                               \
+    }
 
-#define SPE_CHOKE_PARAMS() \
-{ \
-    SPE_zend_error( E_WARNING, "Invalid option parameters %s()", get_active_function_name( TSRMLS_C ) ); \
-    SPE_SET_VAS_ERR( VAS_ERR_INVALID_PARAM ); \
-    vas_id_alloc( ctx->ctx, NULL, NULL ); /* Throw INVALID_PARAM error on ctx */ \
-}
+#define SPE_CHOKE_PARAMS()                                                  \
+    {                                                                       \
+        SPE_zend_error( E_WARNING, "Invalid option parameters %s()",        \
+                        get_active_function_name( TSRMLS_C ) );             \
+        SPE_SET_VAS_ERR( VAS_ERR_INVALID_PARAM );                           \
+        /* Throw INVALID_PARAM error on ctx */                              \
+        vas_id_alloc( ctx->ctx, NULL, NULL );                               \
+    }
 
-#define RAW( x ) ( ( x ) == NULL ? NULL : ( x )->raw )
+#define RAW( x ) ( ( ( x ) == NULL ) ? NULL : ( x )->raw )
 
 SPE_DECLARE_DTOR_USING_CTX( vas_attrs_t );
 SPE_DECLARE_DTOR_USING_CTX( vas_id_t );
@@ -476,8 +492,8 @@ extern gss_OID GSS_C_NT_EXPORT_NAME;
 extern gss_OID GSS_SPNEGO_MECHANISM;
 */
 
-#ifdef __PHP_5__
-/* TODO: PHP-5 doesn't have these definitions, but perhaps this is done
+#if PHP_MAJOR_VERSION == 5
+/* TODO: php5 doesn't have these definitions, but perhaps this is done
  * differently there? See definition of macro ZEND_VAS2() for PHP-5.
  */
 #define BYREF_NONE          0
@@ -678,12 +694,12 @@ ZEND_VAS_ARG_INFO( vas_ldap_set_attributes );
  * Every user-visible function must have an entry here. This introduces them to
  * Zend by name as it should appear in PHP (the expected, VAS API name) and the
  * underlying, implementation name (which, for now, is the same but prefixed by
- * _wrap_--PHP really wants this to be prefixed with zif_ and we should change
- * this later).
+ * zif_, Zend-compliant internal function, according to Zend/PHP policy).
  *
- * This information comes from
- * http://devzone.zend.com/manual/view/page/zend.structure.html. This document
- * covers only PHP-4 and there are differences introduced in PHP-5.
+ * http://devzone.zend.com/manual/view/page/zend.structure.html
+ *
+ * This document covers only php4 and there are differences introduced in php5
+ * which we have attempted to compensate for here.
  */
 function_entry vas_functions[] =
 {
@@ -944,18 +960,21 @@ ZEND_VAS_NAMED_FUNC( vas_ctx_alloc )
 
 ZEND_VAS_NAMED_FUNC( vas_ctx_set_option )
 {
-    zval *zctx;
-    zval *zarg1 = NULL, *zarg2 = NULL, *zarg3 = NULL, *zarg4 = NULL, *zarg5 = NULL;
-    SPE_vas_ctx_t* ctx;
-    long option;
-    vas_err_t err;
+    SPE_vas_ctx_t   *ctx;
+    zval            *zctx, *zarg1 = NULL, *zarg2 = NULL, *zarg3 = NULL,
+                    *zarg4 = NULL, *zarg5 = NULL;
+    vas_err_t       err;
+    long            option;
+
     /* Make sure there are at least three arguments. */
     {
         int argbase=0;
         if( this_ptr && this_ptr->type == IS_OBJECT ) { argbase++; }
         if( ZEND_NUM_ARGS() + argbase < 3 ) { WRONG_PARAM_COUNT; }
     }
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rl|zzzzz", &zctx, &option, &zarg1, &zarg2, &zarg3, &zarg4, &zarg5 ) == FAILURE )
+
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rl|zzzzz",
+           &zctx, &option, &zarg1, &zarg2, &zarg3, &zarg4, &zarg5 ) == FAILURE )
     {
         RETURN_NULL();
     }
@@ -1037,19 +1056,21 @@ ZEND_VAS_NAMED_FUNC( vas_ctx_set_option )
 
 ZEND_VAS_NAMED_FUNC( vas_ctx_get_option )
 {
-    zval* zctx;
-    SPE_vas_ctx_t* ctx;
-    long option;
-    vas_err_t err;
-    int intvalue;
+    SPE_vas_ctx_t   *ctx;
+    zval            *zctx;
+    vas_err_t       err;
+    long            option;
+    int             intvalue;
 
     SPE_CHECK_ARGS( 2 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rl", &zctx, &option ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rl",
+                                    &zctx, &option ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                                PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
     switch( option )
     {
@@ -1080,23 +1101,25 @@ ZEND_VAS_NAMED_FUNC( vas_ctx_get_option )
 
 ZEND_VAS_NAMED_FUNC( vas_id_alloc )
 {
-    SPE_vas_ctx_t* ctx;
-    vas_id_t* id = NULL;
-    vas_err_t err;
-    zval* zctx;
-    char* name;
-    int name_len;
+    SPE_vas_ctx_t   *ctx;
+    zval            *zctx;
+    vas_err_t       err;
+    char            *name = NULL;
+    int             name_len;
+    vas_id_t        *id = NULL;
 
     SPE_CHECK_ARGS( 2 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rs", &zctx, &name, &name_len ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rs",
+                                    &zctx, &name, &name_len ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                                PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
-    /* SPEPRINTF("vas_id_alloc: ctx is %p\n", ctx->ctx); */
-    /* SPEPRINTF("vas_id_alloc: name %s, length %d\n", name, name_len); */
+    ZEND_PRINTF( "_____vas_id_alloc: ctx = %p\n", ctx->ctx );
+    ZEND_PRINTF( "_____vas_id_alloc: name = %s, length = %d\n", name, name_len);
 
     err = vas_id_alloc( ctx->ctx, name, &id );
 
@@ -1114,21 +1137,23 @@ ZEND_VAS_NAMED_FUNC( vas_id_alloc )
 
 ZEND_VAS_NAMED_FUNC( vas_id_get_ccache_name )
 {
-    zval* zctx;
-    zval* zid;
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* id;
-    char* name;
-    vas_err_t err;
+    SPE_vas_ctx_t   *ctx;
+    SPE_vas_id_t    *id = NULL;
+    zval            *zctx, *zid;
+    vas_err_t       err;
+    char            *name = NULL;
 
     SPE_CHECK_ARGS( 2 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rr", &zctx, &zid ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rr",
+                                    &zctx, &zid ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
-    ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                                PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1,
+                                PHP_vas_id_t_RES_NAME, le_vas_id_t );
 
     err = vas_id_get_ccache_name( ctx->ctx, RAW( id ), &name );
 
@@ -1147,21 +1172,23 @@ ZEND_VAS_NAMED_FUNC( vas_id_get_ccache_name )
 
 ZEND_VAS_NAMED_FUNC( vas_id_get_keytab_name )
 {
-    zval* zctx;
-    zval* zid;
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* id;
-    char* name;
-    vas_err_t err;
+    SPE_vas_ctx_t   *ctx;
+    SPE_vas_id_t    *id = NULL;
+    zval            *zctx, *zid;
+    vas_err_t       err;
+    char            *name = NULL;
 
     SPE_CHECK_ARGS( 2 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rr", &zctx, &zid ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rr",
+                                    &zctx, &zid ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
-    ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                                PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1,
+                                PHP_vas_id_t_RES_NAME, le_vas_id_t );
 
     err = vas_id_get_keytab_name( ctx->ctx, RAW( id ), &name );
 
@@ -1180,23 +1207,23 @@ ZEND_VAS_NAMED_FUNC( vas_id_get_keytab_name )
 
 ZEND_VAS_NAMED_FUNC( vas_id_get_name )
 {
-    zval* zctx;
-    zval* zId;
-    zval* zprinc;
-    zval* zdn;
-    SPE_vas_ctx_t *ctx;
-    SPE_vas_id_t *id;
-    vas_err_t err;
-    char *princ, *dn;
+    SPE_vas_ctx_t   *ctx;
+    SPE_vas_id_t    *id = NULL;
+    zval            *zctx, *zId, *zprinc, *zdn;
+    vas_err_t       err;
+    char            *princ = NULL, *dn = NULL;
 
     SPE_CHECK_ARGS( 4 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrzz", &zctx, &zId, &zprinc, &zdn ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrzz",
+                                    &zctx, &zId, &zprinc, &zdn ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
-    ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zId, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                                PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zId, -1,
+                                PHP_vas_id_t_RES_NAME, le_vas_id_t );
 
     err = vas_id_get_name( ctx->ctx, RAW( id ), &princ, &dn );
 
@@ -1214,21 +1241,23 @@ ZEND_VAS_NAMED_FUNC( vas_id_get_name )
 
 ZEND_VAS_NAMED_FUNC( vas_id_get_user )
 {
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* id;
-    vas_user_t* user = NULL;
-    vas_err_t err;
-    zval* zctx;
-    zval* zId;
+    SPE_vas_ctx_t   *ctx;
+    SPE_vas_id_t    *id = NULL;
+    zval            *zctx, *zId;
+    vas_err_t       err;
+    vas_user_t      *user = NULL;
 
     SPE_CHECK_ARGS( 2 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rr", &zctx, &zId ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rr",
+                                    &zctx, &zId ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
-    ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zId, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                                PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zId, -1,
+                                PHP_vas_id_t_RES_NAME, le_vas_id_t );
 
     err = vas_id_get_user( ctx->ctx, RAW( id ), &user );
 
@@ -1246,20 +1275,22 @@ ZEND_VAS_NAMED_FUNC( vas_id_get_user )
 
 ZEND_VAS_NAMED_FUNC( vas_id_is_cred_established )
 {
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* id;
-    vas_err_t err;
-    zval* zctx;
-    zval* zId;
+    SPE_vas_ctx_t   *ctx;
+    SPE_vas_id_t    *id = NULL;
+    zval            *zctx, *zId;
+    vas_err_t       err;
 
     SPE_CHECK_ARGS( 2 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rr", &zctx, &zId ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rr",
+                                    &zctx, &zId ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
-    ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zId, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                                PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zId, -1,
+                                PHP_vas_id_t_RES_NAME, le_vas_id_t );
 
     err = vas_id_is_cred_established( ctx->ctx, RAW( id ) );
 
@@ -1269,23 +1300,25 @@ ZEND_VAS_NAMED_FUNC( vas_id_is_cred_established )
 
 ZEND_VAS_NAMED_FUNC( vas_id_establish_cred_password )
 {
-    zval* zctx;
-    zval* zid;
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* id;
-    long credFlags;
-    const char* pw;
-    int pw_len;
-    vas_err_t err;
+    SPE_vas_ctx_t   *ctx;
+    SPE_vas_id_t    *id = NULL;
+    zval            *zctx, *zid;
+    vas_err_t       err;
+    long            credFlags;
+    const char      *pw;
+    int             pw_len;
 
     SPE_CHECK_ARGS( 4 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrls", &zctx, &zid, &credFlags, &pw, &pw_len ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrls",
+                            &zctx, &zid, &credFlags, &pw, &pw_len ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
-    ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                                PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1,
+                                PHP_vas_id_t_RES_NAME, le_vas_id_t );
 
     err = vas_id_establish_cred_password( ctx->ctx, RAW( id ), credFlags, pw );
 
@@ -1295,23 +1328,25 @@ ZEND_VAS_NAMED_FUNC( vas_id_establish_cred_password )
 
 ZEND_VAS_NAMED_FUNC( vas_id_establish_cred_keytab )
 {
-    zval* zctx;
-    zval* zid;
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* id;
-    long credFlags;
-    const char* keytab;
-    int szkeytab;
-    vas_err_t err;
+    SPE_vas_ctx_t   *ctx;
+    SPE_vas_id_t    *id = NULL;
+    zval            *zctx, *zid;
+    vas_err_t       err;
+    long            credFlags;
+    const char      *keytab;
+    int             szkeytab;
 
     SPE_CHECK_ARGS( 4 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrls", &zctx, &zid, &credFlags, &keytab, &szkeytab ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrls",
+                    &zctx, &zid, &credFlags, &keytab, &szkeytab ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t *, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
-    ZEND_FETCH_RESOURCE( id, SPE_vas_id_t *, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t *, &zctx, -1,
+                                PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( id, SPE_vas_id_t *, &zid, -1,
+                                PHP_vas_id_t_RES_NAME, le_vas_id_t );
 
     if( *keytab == '\0' )
     {
@@ -1325,21 +1360,23 @@ ZEND_VAS_NAMED_FUNC( vas_id_establish_cred_keytab )
 
 ZEND_VAS_NAMED_FUNC( vas_id_renew_cred )
 {
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* id;
-    vas_err_t err;
-    zval* zctx;
-    zval* zId;
-    long credFlags;
+    SPE_vas_ctx_t   *ctx;
+    SPE_vas_id_t    *id = NULL;
+    zval            *zctx, *zId;
+    vas_err_t       err;
+    long            credFlags;
 
     SPE_CHECK_ARGS( 3 );
 
-    if( zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rrl", &zctx, &zId, &credFlags ) == FAILURE )
+    if( zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rrl",
+                                &zctx, &zId, &credFlags ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
-    ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zId, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                                PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zId, -1,
+                                PHP_vas_id_t_RES_NAME, le_vas_id_t );
 
     err = vas_id_renew_cred( ctx->ctx, RAW( id ), credFlags );
 
@@ -1349,14 +1386,12 @@ ZEND_VAS_NAMED_FUNC( vas_id_renew_cred )
 
 ZEND_VAS_NAMED_FUNC( vas_auth )
 {
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* idClient;
-    SPE_vas_id_t* idServer;
-    vas_auth_t* auth = NULL;
-    vas_err_t err;
-    zval* zctx;
-    zval* zClient;
-    zval* zServer;
+    SPE_vas_ctx_t   *ctx;
+    SPE_vas_id_t    *idClient;
+    SPE_vas_id_t    *idServer;
+    vas_err_t       err;
+    vas_auth_t      *auth = NULL;
+    zval            *zctx, *zClient, *zServer;
 
     SPE_CHECK_ARGS( 3 );
 
@@ -1384,26 +1419,29 @@ ZEND_VAS_NAMED_FUNC( vas_auth )
 
 ZEND_VAS_NAMED_FUNC( vas_auth_with_password )
 {
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* idServer;
-    vas_auth_t* auth = NULL;
-    vas_err_t err;
-    zval* zctx;
-    zval* zServer;
-    const char* szClientName;
-    const char* szClientPass;
-    int lClientName, lClientPass;
+    SPE_vas_ctx_t   *ctx;
+    SPE_vas_id_t    *idServer;
+    zval            *zctx, *zServer;
+    vas_err_t       err;
+    vas_auth_t      *auth = NULL;
+    const char      *szClientName, *szClientPass;
+    int             lClientName, lClientPass;
 
     SPE_CHECK_ARGS( 4 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rssr", &zctx, &szClientName, &lClientName, &szClientPass, &lClientPass, &zServer ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rssr",
+                &zctx, &szClientName, &lClientName, &szClientPass,
+                &lClientPass, &zServer ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
-    ZEND_FETCH_RESOURCE( idServer, SPE_vas_id_t*, &zServer, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                                PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( idServer, SPE_vas_id_t*, &zServer, -1,
+                                PHP_vas_id_t_RES_NAME, le_vas_id_t );
 
-    err = vas_auth_with_password( ctx->ctx, szClientName, szClientPass, idServer->raw, &auth );
+    err = vas_auth_with_password( ctx->ctx, szClientName, szClientPass,
+                                idServer->raw, &auth );
 
     SPE_SET_VAS_ERR( err );
 
@@ -1419,31 +1457,34 @@ ZEND_VAS_NAMED_FUNC( vas_auth_with_password )
 
 ZEND_VAS_NAMED_FUNC( vas_auth_check_client_membership )
 {
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* id = NULL;
-    SPE_vas_auth_t *auth;
-    vas_err_t err;
-    zval* zctx;
-    zval* zid;
-    zval* zauth;
-    const char *szGroup;
-    int lGroup;
+    SPE_vas_ctx_t   *ctx;
+    SPE_vas_id_t    *id = NULL;
+    SPE_vas_auth_t  *auth;
+    zval            *zctx, *zid, *zauth;
+    vas_err_t       err;
+    const char      *szGroup;
+    int             lGroup;
 
     SPE_CHECK_ARGS( 4 );
 
-    if( zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rzrs", &zctx, &zid, &zauth, &szGroup, &lGroup ) == FAILURE )
+    if( zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rzrs",
+                        &zctx, &zid, &zauth, &szGroup, &lGroup ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                                PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
     if( ! ZVAL_IS_NULL( zid ) )
     {
-        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1,
+                                PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
-    ZEND_FETCH_RESOURCE( auth, SPE_vas_auth_t *, &zauth, -1, PHP_vas_auth_t_RES_NAME, le_vas_auth_t );
+    ZEND_FETCH_RESOURCE( auth, SPE_vas_auth_t *, &zauth, -1,
+                                PHP_vas_auth_t_RES_NAME, le_vas_auth_t );
 
-    err = vas_auth_check_client_membership( ctx->ctx, RAW( id ), auth->raw, szGroup );
+    err = vas_auth_check_client_membership( ctx->ctx, RAW( id ),
+                                auth->raw, szGroup );
 
     SPE_SET_VAS_ERR( err );
     RETURN_LONG( err );
@@ -1451,28 +1492,30 @@ ZEND_VAS_NAMED_FUNC( vas_auth_check_client_membership )
 
 ZEND_VAS_NAMED_FUNC( vas_auth_get_client_groups )
 {
-    zval* zctx;
-    zval* zid;
-    zval* zauth;
-    SPE_vas_ctx_t *ctx;
-    SPE_vas_id_t* id = NULL;
-    SPE_vas_auth_t* auth;
-    vas_err_t err;
-    vas_group_t** groups;
+    SPE_vas_ctx_t   *ctx;
+    SPE_vas_id_t    *id = NULL;
+    SPE_vas_auth_t  *auth;
+    zval            *zctx, *zid, *zauth;
+    vas_err_t       err;
+    vas_group_t     **groups = NULL;
 
     SPE_CHECK_ARGS( 3 );
 
-    if( zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zauth) == FAILURE )
+    if( zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rzr",
+                                &zctx, &zid, &zauth) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                            PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
     if( ! ZVAL_IS_NULL( zid ) )
     {
-        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1,
+                                PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
-    ZEND_FETCH_RESOURCE( auth, SPE_vas_auth_t*, &zauth, -1, PHP_vas_auth_t_RES_NAME, le_vas_auth_t );
+    ZEND_FETCH_RESOURCE( auth, SPE_vas_auth_t*, &zauth, -1,
+                            PHP_vas_auth_t_RES_NAME, le_vas_auth_t );
 
     err = vas_auth_get_client_groups( ctx->ctx, RAW( id ), auth->raw, &groups );
 
@@ -1515,24 +1558,26 @@ ZEND_VAS_NAMED_FUNC( vas_auth_get_client_groups )
 
 ZEND_VAS_NAMED_FUNC( vas_attrs_alloc )
 {
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* id = NULL;
-    vas_attrs_t* attrs = NULL;
-    vas_err_t err;
-    zval* zctx;
-    zval* zid;
+    SPE_vas_ctx_t *ctx;
+    SPE_vas_id_t  *id = NULL;
+    vas_attrs_t   *attrs = NULL;
+    vas_err_t     err;
+    zval          *zctx, *zid;
 
     SPE_CHECK_ARGS( 2 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rz", &zctx, &zid ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rz",
+                                    &zctx, &zid ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                                    PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
     if( ! ZVAL_IS_NULL( zid ) )
     {
-        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1,
+                                    PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
     err = vas_attrs_alloc( ctx->ctx, RAW( id ), &attrs );
 
@@ -1550,33 +1595,31 @@ ZEND_VAS_NAMED_FUNC( vas_attrs_alloc )
 
 ZEND_VAS_NAMED_FUNC( vas_attrs_find )
 {
-    zval* zctx;
-    zval* zattrs;
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_attrs_t* attrs;
-    const char *uri, *scope, *base, *filter;
-    vas_err_t err;
-    int l;
-    zval* zanames;
-    HashTable* htanames;
-    HashPosition panames;
-    int anames_count;
-    const char** anames;
-    zval** data;
-    int anames_index = 0;
+    SPE_vas_ctx_t   *ctx;
+    SPE_vas_attrs_t *attrs;
+    zval            *zanames, *zctx, *zattrs, **data;
+    int             l, anames_count, anames_index = 0;
+    const char      *uri, *scope, *base, *filter;
+    vas_err_t       err;
+    HashTable       *htanames;
+    HashPosition    panames;
+    const char      **anames = NULL;
 
     SPE_CHECK_ARGS( 7 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrssssa", &zctx, &zattrs, &uri, &l, &scope, &l, &base, &l, &filter, &l, &zanames ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrssssa",
+            &zctx, &zattrs, &uri, &l, &scope, &l, &base, &l, &filter,
+            &l, &zanames ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
-    ZEND_FETCH_RESOURCE( attrs, SPE_vas_attrs_t*, &zattrs, -1, PHP_vas_attrs_t_RES_NAME, le_vas_attrs_t );
-    /*DRK -- anames parameter is optional*/
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                                PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( attrs, SPE_vas_attrs_t*, &zattrs, -1,
+                                PHP_vas_attrs_t_RES_NAME, le_vas_attrs_t );
+    /* anames parameter is optional*/
 
-    /* Create the anames array.*/
-
+    /* Create the anames array */
     htanames = Z_ARRVAL_P( zanames );
     anames_count = zend_hash_num_elements( htanames );
     anames = emalloc( ( anames_count + 1 ) * sizeof( const char* ) );
@@ -1602,20 +1645,22 @@ ZEND_VAS_NAMED_FUNC( vas_attrs_find )
 
 ZEND_VAS_NAMED_FUNC( vas_attrs_find_continue )
 {
-    zval* zctx;
-    zval* zattrs;
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_attrs_t* attrs;
-    vas_err_t err;
+    SPE_vas_ctx_t   *ctx;
+    SPE_vas_attrs_t *attrs;
+    zval            *zctx, *zattrs;
+    vas_err_t       err;
 
     SPE_CHECK_ARGS( 2 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rr", &zctx, &zattrs ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rr",
+                                &zctx, &zattrs ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
-    ZEND_FETCH_RESOURCE( attrs, SPE_vas_attrs_t*, &zattrs, -1, PHP_vas_attrs_t_RES_NAME, le_vas_attrs_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                            PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( attrs, SPE_vas_attrs_t*, &zattrs, -1,
+                            PHP_vas_attrs_t_RES_NAME, le_vas_attrs_t );
 
     err = vas_attrs_find_continue( ctx->ctx, attrs->raw );
 
@@ -1625,23 +1670,24 @@ ZEND_VAS_NAMED_FUNC( vas_attrs_find_continue )
 
 ZEND_VAS_NAMED_FUNC( vas_attrs_set_option )
 {
-    zval* zctx;
-    zval* zattrs;
-    zval* zvalue;
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_attrs_t* attrs;
-    long option;
-    vas_err_t err;
-    char* strvalue;
+    SPE_vas_ctx_t   *ctx;
+    SPE_vas_attrs_t *attrs;
+    zval            *zctx, *zattrs, *zvalue;
+    vas_err_t       err;
+    long            option;
+    char            *strvalue = NULL;
 
     SPE_CHECK_ARGS( 4 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrlz", &zctx, &zattrs, &option, &zvalue ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrlz",
+                                &zctx, &zattrs, &option, &zvalue ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
-    ZEND_FETCH_RESOURCE( attrs, SPE_vas_attrs_t*, &zattrs, -1, PHP_vas_attrs_t_RES_NAME, le_vas_attrs_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                                PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( attrs, SPE_vas_attrs_t*, &zattrs, -1,
+                                PHP_vas_attrs_t_RES_NAME, le_vas_attrs_t );
 
     switch( option )
     {
@@ -1668,7 +1714,8 @@ ZEND_VAS_NAMED_FUNC( vas_attrs_set_option )
     case VAS_ATTRS_OPTION_LDAP_PAGESIZE:
         if( Z_TYPE_P( zvalue ) == IS_LONG )
         {
-            err = vas_attrs_set_option( ctx->ctx, attrs->raw, option, Z_LVAL_P( zvalue ) );
+            err = vas_attrs_set_option( ctx->ctx, attrs->raw, option,
+                                                        Z_LVAL_P( zvalue ) );
             SPE_SET_VAS_ERR( err );
         }
         else
@@ -1677,7 +1724,8 @@ ZEND_VAS_NAMED_FUNC( vas_attrs_set_option )
         }
         break;
     default:
-        SPE_zend_error( E_WARNING, "Invalid option specified %s()", get_active_function_name( TSRMLS_C ) );
+        SPE_zend_error( E_WARNING, "Invalid option specified %s()",
+                                get_active_function_name( TSRMLS_C ) );
         SPE_SET_VAS_ERR( VAS_ERR_INVALID_PARAM );
         break;
     }
@@ -1686,23 +1734,25 @@ ZEND_VAS_NAMED_FUNC( vas_attrs_set_option )
 
 ZEND_VAS_NAMED_FUNC( vas_attrs_get_option )
 {
-    zval* zctx;
-    zval* zattrs;
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_attrs_t* attrs;
-    long option;
-    vas_err_t err;
-    int intvalue;
-    char* strvalue;
+    SPE_vas_ctx_t   *ctx;
+    SPE_vas_attrs_t *attrs;
+    zval            *zctx, *zattrs;
+    vas_err_t       err;
+    long            option;
+    int             intvalue;
+    char            *strvalue = NULL;
 
     SPE_CHECK_ARGS( 3 );
 
-    if( zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rrl", &zctx, &zattrs, &option ) == FAILURE )
+    if( zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rrl",
+                                &zctx, &zattrs, &option ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
-    ZEND_FETCH_RESOURCE( attrs, SPE_vas_attrs_t*, &zattrs, -1, PHP_vas_attrs_t_RES_NAME, le_vas_attrs_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                                PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( attrs, SPE_vas_attrs_t*, &zattrs, -1,
+                                PHP_vas_attrs_t_RES_NAME, le_vas_attrs_t );
 
     switch( option )
     {
@@ -1720,7 +1770,8 @@ ZEND_VAS_NAMED_FUNC( vas_attrs_get_option )
                 RETVAL_STRING( strvalue, 1 );
             }
 
-            /* SPE, DRK -- if you do this free (which you should) the heap get wrecked.
+            /* SPE, DRK -- if you do this free (which you should) the heap
+             * will get wrecked.
                free(strvalue); */
         }
         break;
@@ -1734,7 +1785,8 @@ ZEND_VAS_NAMED_FUNC( vas_attrs_get_option )
         }
         break;
     default:
-        SPE_zend_error( E_WARNING, "Invalid option specified %s()", get_active_function_name( TSRMLS_C ) );
+        SPE_zend_error( E_WARNING, "Invalid option specified %s()",
+                            get_active_function_name( TSRMLS_C ) );
         SPE_SET_VAS_ERR( VAS_ERR_INVALID_PARAM );
         RETVAL_NULL();
         break;
@@ -1743,24 +1795,25 @@ ZEND_VAS_NAMED_FUNC( vas_attrs_get_option )
 
 ZEND_VAS_NAMED_FUNC( vas_vals_get_string )
 {
-    zval* zctx;
-    zval* zattrs;
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_attrs_t* attrs;
-    const char* aname;
-    int aname_len;
-    vas_err_t err;
-    char** strvals;
-    int count;
+    SPE_vas_ctx_t   *ctx;
+    SPE_vas_attrs_t *attrs;
+    zval            *zctx, *zattrs;
+    vas_err_t       err;
+    const char      *aname;
+    int             count = 0, aname_len;
+    char            **strvals = NULL;
 
     SPE_CHECK_ARGS( 3 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrs", &zctx, &zattrs, &aname, &aname_len ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrs",
+                        &zctx, &zattrs, &aname, &aname_len ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
-    ZEND_FETCH_RESOURCE( attrs, SPE_vas_attrs_t*, &zattrs, -1, PHP_vas_attrs_t_RES_NAME, le_vas_attrs_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                        PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( attrs, SPE_vas_attrs_t*, &zattrs, -1,
+                        PHP_vas_attrs_t_RES_NAME, le_vas_attrs_t );
 
     err = vas_vals_get_string( ctx->ctx, attrs->raw, aname, &strvals, &count );
     SPE_SET_VAS_ERR( err );
@@ -1785,24 +1838,25 @@ ZEND_VAS_NAMED_FUNC( vas_vals_get_string )
 
 ZEND_VAS_NAMED_FUNC( vas_vals_get_integer )
 {
-    zval* zctx;
-    zval* zattrs;
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_attrs_t* attrs;
-    const char* aname;
-    int aname_len;
-    vas_err_t err;
-    int* intvals;
-    int count;
+    SPE_vas_ctx_t   *ctx;
+    SPE_vas_attrs_t *attrs;
+    zval            *zctx, *zattrs;
+    vas_err_t       err;
+    const char      *aname;
+    int             count = 0, aname_len;
+    int             *intvals = NULL;
 
     SPE_CHECK_ARGS( 3 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrs", &zctx, &zattrs, &aname, &aname_len ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrs",
+                            &zctx, &zattrs, &aname, &aname_len ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
-    ZEND_FETCH_RESOURCE( attrs, SPE_vas_attrs_t*, &zattrs, -1, PHP_vas_attrs_t_RES_NAME, le_vas_attrs_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                            PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( attrs, SPE_vas_attrs_t*, &zattrs, -1,
+                            PHP_vas_attrs_t_RES_NAME, le_vas_attrs_t );
 
     err = vas_vals_get_integer( ctx->ctx, attrs->raw, aname, &intvals, &count );
 
@@ -1828,24 +1882,25 @@ ZEND_VAS_NAMED_FUNC( vas_vals_get_integer )
 
 ZEND_VAS_NAMED_FUNC( vas_vals_get_binary )
 {
-    zval* zctx;
-    zval* zattrs;
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_attrs_t* attrs;
-    const char* aname;
-    int aname_len;
-    vas_err_t err;
-    vas_val_binary_t* binvals;
-    int count;
+    SPE_vas_ctx_t       *ctx;
+    SPE_vas_attrs_t     *attrs;
+    zval                *zctx, *zattrs;
+    const char          *aname;
+    int                 count = 0, aname_len;
+    vas_err_t           err;
+    vas_val_binary_t    *binvals = NULL;
 
     SPE_CHECK_ARGS( 3 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrs", &zctx, &zattrs, &aname, &aname_len ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrs",
+                            &zctx, &zattrs, &aname, &aname_len ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
-    ZEND_FETCH_RESOURCE( attrs, SPE_vas_attrs_t*, &zattrs, -1, PHP_vas_attrs_t_RES_NAME, le_vas_attrs_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                        PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( attrs, SPE_vas_attrs_t*, &zattrs, -1,
+                        PHP_vas_attrs_t_RES_NAME, le_vas_attrs_t );
 
     err = vas_vals_get_binary( ctx->ctx, attrs->raw, aname, &binvals, &count );
     SPE_SET_VAS_ERR( err );
@@ -1871,22 +1926,25 @@ ZEND_VAS_NAMED_FUNC( vas_vals_get_binary )
 
 ZEND_VAS_NAMED_FUNC( vas_vals_get_anames )
 {
-    zval* zctx;
-    zval* zattrs;
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_attrs_t* attrs;
-    vas_err_t err;
-    char** anames;
-    int count;
+    SPE_vas_ctx_t       *ctx;
+    SPE_vas_attrs_t     *attrs;
+    zval                *zctx, *zattrs;
+    const char          *aname;
+    int                 count = 0, aname_len;
+    vas_err_t           err;
+    char                **anames = NULL;
 
     SPE_CHECK_ARGS( 2 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rr", &zctx, &zattrs ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rr",
+                                &zctx, &zattrs ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
-    ZEND_FETCH_RESOURCE( attrs, SPE_vas_attrs_t*, &zattrs, -1, PHP_vas_attrs_t_RES_NAME, le_vas_attrs_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                            PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( attrs, SPE_vas_attrs_t*, &zattrs, -1,
+                            PHP_vas_attrs_t_RES_NAME, le_vas_attrs_t );
 
     err = vas_vals_get_anames( ctx->ctx, attrs->raw, &anames, &count );
     SPE_SET_VAS_ERR(err);
@@ -1911,21 +1969,23 @@ ZEND_VAS_NAMED_FUNC( vas_vals_get_anames )
 
 ZEND_VAS_NAMED_FUNC( vas_vals_get_dn )
 {
-    zval* zctx;
-    zval* zattrs;
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_attrs_t* attrs;
-    vas_err_t err;
-    char* dn;
+    SPE_vas_ctx_t   *ctx;
+    SPE_vas_attrs_t *attrs;
+    zval            *zctx, *zattrs;
+    vas_err_t       err;
+    char            *dn = NULL;
 
     SPE_CHECK_ARGS( 2 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rr", &zctx, &zattrs ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rr",
+                                &zctx, &zattrs ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
-    ZEND_FETCH_RESOURCE( attrs, SPE_vas_attrs_t*, &zattrs, -1, PHP_vas_attrs_t_RES_NAME, le_vas_attrs_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                        PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( attrs, SPE_vas_attrs_t*, &zattrs, -1,
+                        PHP_vas_attrs_t_RES_NAME, le_vas_attrs_t );
 
     err = vas_vals_get_dn( ctx->ctx, attrs->raw, &dn );
     SPE_SET_VAS_ERR( err );
@@ -1944,21 +2004,23 @@ ZEND_VAS_NAMED_FUNC( vas_vals_get_dn )
 
 ZEND_VAS_NAMED_FUNC( vas_name_to_principal )
 {
-    zval* zctx;
-    const char* szName;
-    int lName;
-    SPE_vas_ctx_t* ctx;
-    vas_err_t err;
-    long hint, flags;
-    char* nameout;
+    SPE_vas_ctx_t   *ctx;
+    zval            *zctx;
+    const char      *szName;
+    int             lName;
+    vas_err_t       err;
+    long            hint, flags;
+    char            *nameout = NULL;
 
     SPE_CHECK_ARGS( 4 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rsll", &zctx, &szName, &lName, &hint, &flags ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rsll",
+                        &zctx, &szName, &lName, &hint, &flags ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                            PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
     err = vas_name_to_principal( ctx->ctx, szName, hint, flags, &nameout );
 
@@ -1978,32 +2040,33 @@ ZEND_VAS_NAMED_FUNC( vas_name_to_principal )
 
 ZEND_VAS_NAMED_FUNC( vas_name_to_dn )
 {
-    zval* zctx;
-    zval* zid;
-    zval* znameout;
-    zval* zdomainout;
-    const char *szName;
-    int lName;
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* id = NULL;
-    vas_err_t err;
-    long hint, flags;
-    char* nameout;
-    char* domainout;
+    SPE_vas_ctx_t   *ctx;
+    SPE_vas_id_t    *id = NULL;
+    zval            *zctx, *zid, *znameout, *zdomainout;
+    const char      *szName;
+    int             lName;
+    vas_err_t       err;
+    long            hint, flags;
+    char            *nameout = NULL, *domainout = NULL;
 
     SPE_CHECK_ARGS( 7 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzsllzz", &zctx, &zid, &szName, &lName, &hint, &flags, &znameout, &zdomainout ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzsllzz",
+            &zctx, &zid, &szName, &lName, &hint, &flags,
+            &znameout, &zdomainout ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                            PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
     if( ! ZVAL_IS_NULL( zid ) )
     {
-        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1,
+                                PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
-    err = vas_name_to_dn( ctx->ctx, RAW( id ), szName, hint, flags, &nameout, &domainout );
+    err = vas_name_to_dn( ctx->ctx, RAW( id ), szName, hint, flags,
+                            &nameout, &domainout );
 
     SPE_SET_VAS_ERR( err );
 
@@ -2019,21 +2082,20 @@ ZEND_VAS_NAMED_FUNC( vas_name_to_dn )
 
 ZEND_VAS_NAMED_FUNC( vas_info_forest_root )
 {
-    zval* zctx;
-    zval* zroot;
-    zval* zrootdn;
-    SPE_vas_ctx_t* ctx;
-    vas_err_t err;
-    char* root;
-    char* rootdn;
+    SPE_vas_ctx_t   *ctx;
+    zval            *zctx, *zroot, *zrootdn;
+    vas_err_t       err;
+    char            *root = NULL, *rootdn = NULL;
 
     SPE_CHECK_ARGS( 3 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzz", &zctx, &zroot, &zrootdn ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzz",
+                                &zctx, &zroot, &zrootdn ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                            PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
     err = vas_info_forest_root( ctx->ctx, &root, &rootdn );
     SPE_SET_VAS_ERR( err );
@@ -2050,21 +2112,20 @@ ZEND_VAS_NAMED_FUNC( vas_info_forest_root )
 
 ZEND_VAS_NAMED_FUNC( vas_info_joined_domain )
 {
-    zval* zctx;
-    zval* zdomain;
-    zval* zdomaindn;
-    SPE_vas_ctx_t* ctx;
-    vas_err_t err;
-    char* domain;
-    char* domaindn;
+    SPE_vas_ctx_t   *ctx;
+    zval            *zctx, *zdomain, *zdomaindn;
+    vas_err_t       err;
+    char            *domain = NULL, *domaindn = NULL;
 
     SPE_CHECK_ARGS( 3 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzz", &zctx, &zdomain, &zdomaindn ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzz",
+                                &zctx, &zdomain, &zdomaindn ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                            PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
     err = vas_info_joined_domain( ctx->ctx, &domain, &domaindn );
     SPE_SET_VAS_ERR( err );
@@ -2081,10 +2142,10 @@ ZEND_VAS_NAMED_FUNC( vas_info_joined_domain )
 
 ZEND_VAS_NAMED_FUNC( vas_info_site )
 {
-    zval* zctx;
-    SPE_vas_ctx_t* ctx;
-    vas_err_t err;
-    char* site;
+    SPE_vas_ctx_t   *ctx;
+    zval            *zctx;
+    vas_err_t       err;
+    char            *site = NULL;
 
     SPE_CHECK_ARGS( 1 );
 
@@ -2092,7 +2153,8 @@ ZEND_VAS_NAMED_FUNC( vas_info_site )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t *, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t *, &zctx, -1,
+                                PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
     err = vas_info_site( ctx->ctx, &site );
     SPE_SET_VAS_ERR( err );
@@ -2111,27 +2173,26 @@ ZEND_VAS_NAMED_FUNC( vas_info_site )
 
 ZEND_VAS_NAMED_FUNC( vas_info_domains )
 {
-    zval* zctx;
-    zval* zId;
-    zval* zdomains;
-    zval* zdomains_dn;
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* id = NULL;
-    vas_err_t err;
-    char** domains = NULL;
-    char** domains_dn = NULL;
+    SPE_vas_id_t    *id = NULL;
+    SPE_vas_ctx_t   *ctx;
+    zval            *zctx, *zId, *zdomains, *zdomains_dn;
+    vas_err_t       err;
+    char            **domains = NULL, **domains_dn = NULL;
 
     SPE_CHECK_ARGS( 4 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzzz", &zctx, &zId, &zdomains, &zdomains_dn ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzzz",
+                        &zctx, &zId, &zdomains, &zdomains_dn ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                            PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
     if( ! ZVAL_IS_NULL( zId ) )
     {
-        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zId, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zId, -1,
+                                PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
 
     err = vas_info_domains( ctx->ctx, RAW( id ), &domains, &domains_dn );
@@ -2160,22 +2221,24 @@ ZEND_VAS_NAMED_FUNC( vas_info_domains )
 
 ZEND_VAS_NAMED_FUNC( vas_info_servers )
 {
-    zval* zctx;
-    SPE_vas_ctx_t* ctx;
-    vas_err_t err;
-    const char* szDomain;
-    const char* szSite;
-    int lDomain, lSite;
-    long srvinfo;
-    char** servers;
+    SPE_vas_ctx_t   *ctx;
+    zval            *zctx;
+    vas_err_t       err;
+    const char      *szDomain, *szSite;
+    int             lDomain, lSite;
+    long            srvinfo;
+    char            **servers = NULL;
 
     SPE_CHECK_ARGS( 4 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rssl", &zctx, &szDomain, &lDomain, &szSite, &lSite, &srvinfo ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rssl",
+                    &zctx, &szDomain, &lDomain,
+                    &szSite, &lSite, &srvinfo ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t *, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t *, &zctx, -1,
+                        PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
     err = vas_info_servers( ctx->ctx,
                             *szDomain == '\0' ? NULL : szDomain,
@@ -2204,21 +2267,22 @@ ZEND_VAS_NAMED_FUNC( vas_info_servers )
 
 ZEND_VAS_NAMED_FUNC( vas_prompt_for_cred_string )
 {
-    zval* zctx;
-    SPE_vas_ctx_t* ctx;
-    vas_err_t err;
-    const char* szprompt;
-    const char* szverify;
-    int lprompt, lverify;
-    char* credstr;
+    SPE_vas_ctx_t   *ctx;
+    zval            *zctx;
+    vas_err_t       err;
+    const char      *szprompt, *szverify;
+    int             lprompt, lverify;
+    char            *credstr = NULL;
 
     SPE_CHECK_ARGS( 3 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rss", &zctx, &szprompt, &lprompt, &szverify, &lverify ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rss",
+                &zctx, &szprompt, &lprompt, &szverify, &lverify ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t *, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t *, &zctx, -1,
+                            PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
     err = vas_prompt_for_cred_string( ctx->ctx, szprompt, szverify, &credstr );
     SPE_SET_VAS_ERR( err );
@@ -2237,9 +2301,9 @@ ZEND_VAS_NAMED_FUNC( vas_prompt_for_cred_string )
 
 ZEND_VAS_NAMED_FUNC( vas_err_get_code )
 {
-    zval* zctx;
-    SPE_vas_ctx_t* ctx;
-    vas_err_t code;
+    SPE_vas_ctx_t   *ctx;
+    zval            *zctx;
+    vas_err_t       code;
 
     SPE_CHECK_ARGS( 1 );
 
@@ -2255,18 +2319,20 @@ ZEND_VAS_NAMED_FUNC( vas_err_get_code )
 
 ZEND_VAS_NAMED_FUNC( vas_err_get_string )
 {
-    zval* zctx;
-    SPE_vas_ctx_t* ctx;
-    const char* s;
-    long with_cause;
+    zval            *zctx;
+    SPE_vas_ctx_t   *ctx;
+    const char      *s;
+    long            with_cause;
 
     SPE_CHECK_ARGS( 2 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rl", &zctx, &with_cause ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rl",
+                                &zctx, &with_cause ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t *, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t *, &zctx, -1,
+                                PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
     s = vas_err_get_string( ctx->ctx, with_cause );
     RETURN_STRING( ( char* ) s, 1 );
@@ -2274,9 +2340,9 @@ ZEND_VAS_NAMED_FUNC( vas_err_get_string )
 
 ZEND_VAS_NAMED_FUNC( vas_err_clear )
 {
-    zval* zctx;
-    SPE_vas_ctx_t* ctx;
-    vas_err_t err;
+    zval            *zctx;
+    SPE_vas_ctx_t   *ctx;
+    vas_err_t       err;
 
     SPE_CHECK_ARGS( 1 );
 
@@ -2284,7 +2350,8 @@ ZEND_VAS_NAMED_FUNC( vas_err_clear )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t *, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t *, &zctx, -1,
+                                PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
     err = vas_err_clear( ctx->ctx );
     SPE_SET_VAS_ERR( err );
@@ -2305,11 +2372,10 @@ class CVAS_err_info
 };
 #endif
 
-static void
-add_err_cause_to_zval( vas_err_info_t *err, zval *z TSRMLS_DC )
+static void add_err_cause_to_zval( vas_err_info_t *err, zval *z TSRMLS_DC )
 {
-    zval *cause;
-    vas_err_info_t *c = err->cause;
+    zval            *cause;
+    vas_err_info_t  *c = err->cause;
 
     object_init_ex( z, vas_CVAS_err_info_entry );
 
@@ -2335,9 +2401,9 @@ add_err_cause_to_zval( vas_err_info_t *err, zval *z TSRMLS_DC )
 
 ZEND_VAS_NAMED_FUNC( vas_err_get_info )
 {
-    SPE_vas_ctx_t* ctx;
-    zval* zctx;
-    vas_err_info_t* err;
+    SPE_vas_ctx_t   *ctx;
+    zval            *zctx;
+    vas_err_info_t  *err = NULL;
 
     SPE_CHECK_ARGS( 1 );
 
@@ -2345,7 +2411,8 @@ ZEND_VAS_NAMED_FUNC( vas_err_get_info )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t *, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t *, &zctx, -1,
+                            PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
     err = vas_err_get_info( ctx->ctx );
 
@@ -2362,21 +2429,22 @@ ZEND_VAS_NAMED_FUNC( vas_err_get_info )
 
 ZEND_VAS_NAMED_FUNC( vas_err_info_get_string )
 {
-    SPE_vas_ctx_t* ctx;
-    zval* zctx;
-    zval* zerr;
-    long with_cause;
-    vas_err_info_t* err;
-    char* s;
-    zval** z;
+    SPE_vas_ctx_t   *ctx;
+    zval            **z, *zctx, *zerr;
+    long            with_cause;
+    vas_err_info_t  *err;
+    char            *s = NULL;
 
     SPE_CHECK_ARGS( 3 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rOl", &zctx, &zerr, vas_CVAS_err_info_entry, &with_cause ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rOl",
+                    &zctx, &zerr, vas_CVAS_err_info_entry,
+                    &with_cause ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t *, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t *, &zctx, -1,
+                            PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
     err = ( vas_err_info_t* )emalloc( sizeof( vas_err_info_t ) );
 
@@ -2415,18 +2483,20 @@ ZEND_VAS_NAMED_FUNC( vas_err_info_get_string )
 
 ZEND_VAS_NAMED_FUNC( vas_err_get_cause_by_type )
 {
-    SPE_vas_ctx_t* ctx;
-    zval* zctx;
-    long type;
-    vas_err_info_t* err;
+    SPE_vas_ctx_t   *ctx;
+    zval            *zctx;
+    long            type;
+    vas_err_info_t  *err;
 
     SPE_CHECK_ARGS( 2 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rl", &zctx, &type ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rl",
+                                    &zctx, &type ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t *, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t *, &zctx, -1,
+                                PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
     err = vas_err_get_cause_by_type( ctx->ctx, type );
 
@@ -2443,27 +2513,28 @@ ZEND_VAS_NAMED_FUNC( vas_err_get_cause_by_type )
 
 ZEND_VAS_NAMED_FUNC( vas_user_init )
 {
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* id = NULL;
-    vas_user_t* user = NULL;
-    vas_err_t err;
-    zval* zctx;
-    zval* zId;
-    int flags;
-    const char* szName;
-    int lName;
+    SPE_vas_ctx_t   *ctx;
+    SPE_vas_id_t    *id = NULL;
+    zval            *zctx, *zId;
+    vas_user_t      *user = NULL;
+    vas_err_t       err;
+    int             flags, lName;
+    const char      *szName;
 
     SPE_CHECK_ARGS( 4 );
 
-    if( zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rzsl", &zctx, &zId, &szName, &lName, &flags ) == FAILURE )
+    if( zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rzsl",
+                        &zctx, &zId, &szName, &lName, &flags ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                            PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
     if( ! ZVAL_IS_NULL( zId ) )
     {
-        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t *, &zId, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t *, &zId, -1,
+                                PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
 
     err = vas_user_init( ctx->ctx, RAW( id ), szName, flags, &user );
@@ -2481,27 +2552,32 @@ ZEND_VAS_NAMED_FUNC( vas_user_init )
 
 ZEND_VAS_NAMED_FUNC( vas_user_is_member )
 {
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* id = NULL;
-    SPE_vas_user_t* user;
-    SPE_vas_group_t* group;
-    vas_err_t err;
-    zval *zctx, *zid, *zuser, *zgroup;
+    SPE_vas_ctx_t   *ctx;
+    SPE_vas_id_t    *id = NULL;
+    SPE_vas_user_t  *user;
+    SPE_vas_group_t *group;
+    zval            *zctx, *zid, *zuser, *zgroup;
+    vas_err_t       err;
 
     SPE_CHECK_ARGS( 4 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzrr", &zctx, &zid, &zuser, &zgroup ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzrr",
+                                &zctx, &zid, &zuser, &zgroup ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                            PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
     if( ! ZVAL_IS_NULL( zid ) )
     {
-        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t *, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t *, &zid, -1,
+                                PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
-    ZEND_FETCH_RESOURCE( user, SPE_vas_user_t*, &zuser, -1, PHP_vas_user_t_RES_NAME, le_vas_user_t );
-    ZEND_FETCH_RESOURCE( group, SPE_vas_group_t*, &zgroup, -1, PHP_vas_group_t_RES_NAME, le_vas_group_t );
+    ZEND_FETCH_RESOURCE( user, SPE_vas_user_t*, &zuser, -1,
+                            PHP_vas_user_t_RES_NAME, le_vas_user_t );
+    ZEND_FETCH_RESOURCE( group, SPE_vas_group_t*, &zgroup, -1,
+                            PHP_vas_group_t_RES_NAME, le_vas_group_t );
 
     err = vas_user_is_member( ctx->ctx, RAW(id), user->raw, group->raw );
     SPE_SET_VAS_ERR( err );
@@ -2510,26 +2586,30 @@ ZEND_VAS_NAMED_FUNC( vas_user_is_member )
 
 ZEND_VAS_NAMED_FUNC( vas_user_get_groups )
 {
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* id = NULL;
-    SPE_vas_user_t* user;
-    vas_err_t err;
-    vas_group_t** groups;
-    zval *zctx, *zid, *zuser;
+    SPE_vas_ctx_t   *ctx;
+    SPE_vas_id_t    *id = NULL;
+    SPE_vas_user_t  *user;
+    zval            *zctx, *zid, *zuser;
+    vas_err_t       err;
+    vas_group_t     **groups = NULL;
 
     SPE_CHECK_ARGS( 3 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zuser ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr",
+                            &zctx, &zid, &zuser ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                        PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
     if( ! ZVAL_IS_NULL( zid ) )
     {
-        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1,
+                            PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
-    ZEND_FETCH_RESOURCE( user, SPE_vas_user_t*, &zuser, -1, PHP_vas_user_t_RES_NAME, le_vas_user_t );
+    ZEND_FETCH_RESOURCE( user, SPE_vas_user_t*, &zuser, -1,
+                        PHP_vas_user_t_RES_NAME, le_vas_user_t );
 
     err = vas_user_get_groups( ctx->ctx, RAW( id ), user->raw, &groups );
     SPE_SET_VAS_ERR( err );
@@ -2569,32 +2649,34 @@ ZEND_VAS_NAMED_FUNC( vas_user_get_groups )
 
 ZEND_VAS_NAMED_FUNC( vas_user_get_attrs )
 {
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* id = NULL;
-    SPE_vas_user_t* user;
-    vas_err_t err;
-    const char** anames = NULL;
-    vas_attrs_t* attrs;
-    HashTable* htanames;
-    HashPosition panames;
-    int anames_count;
-    int anames_index = 0;
-    zval *zctx, *zid, *zuser, *zanames;
-    zval** data;
+    SPE_vas_ctx_t   *ctx;
+    SPE_vas_id_t    *id = NULL;
+    SPE_vas_user_t  *user;
+    zval            *zctx, *zid, *zuser, *zanames, **data;
+    vas_err_t       err;
+    const char      **anames = NULL;
+    vas_attrs_t     *attrs = NULL;
+    HashTable       *htanames;
+    HashPosition    panames;
+    int             anames_count, anames_index = 0;
 
     SPE_CHECK_ARGS( 4 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzra", &zctx, &zid, &zuser, &zanames ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzra",
+                                &zctx, &zid, &zuser, &zanames ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t *, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t *, &zctx, -1,
+                            PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
     if( ! ZVAL_IS_NULL( zid ) )
     {
-        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t *, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t *, &zid, -1,
+                                PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
-    ZEND_FETCH_RESOURCE( user, SPE_vas_user_t *, &zuser, -1, PHP_vas_user_t_RES_NAME, le_vas_user_t );
+    ZEND_FETCH_RESOURCE( user, SPE_vas_user_t *, &zuser, -1,
+                            PHP_vas_user_t_RES_NAME, le_vas_user_t );
 
     /*DRK test to make sure this works when null!!*/
     if( ! ZVAL_IS_NULL( zanames ) )
@@ -2635,26 +2717,30 @@ ZEND_VAS_NAMED_FUNC( vas_user_get_attrs )
 
 ZEND_VAS_NAMED_FUNC( vas_user_get_dn )
 {
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* id = NULL;
-    SPE_vas_user_t* user;
-    vas_err_t err;
-    char* dn;
-    zval *zctx, *zid, *zuser;
+    SPE_vas_ctx_t   *ctx;
+    SPE_vas_id_t    *id = NULL;
+    SPE_vas_user_t  *user;
+    zval            *zctx, *zid, *zuser;
+    vas_err_t       err;
+    char            *dn = NULL;
 
     SPE_CHECK_ARGS( 3 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zuser ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr",
+                                &zctx, &zid, &zuser ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                            PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
     if( ! ZVAL_IS_NULL( zid ) )
     {
-        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1,
+                                PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
-    ZEND_FETCH_RESOURCE( user, SPE_vas_user_t*, &zuser, -1, PHP_vas_user_t_RES_NAME, le_vas_user_t );
+    ZEND_FETCH_RESOURCE( user, SPE_vas_user_t*, &zuser, -1,
+                            PHP_vas_user_t_RES_NAME, le_vas_user_t );
 
     err = vas_user_get_dn( ctx->ctx, RAW( id ), user->raw, &dn );
     SPE_SET_VAS_ERR( err );
@@ -2673,26 +2759,30 @@ ZEND_VAS_NAMED_FUNC( vas_user_get_dn )
 
 ZEND_VAS_NAMED_FUNC( vas_user_get_domain )
 {
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* id = NULL;
-    SPE_vas_user_t* user;
-    vas_err_t err;
-    char* domain;
-    zval *zctx, *zid, *zuser;
+    SPE_vas_ctx_t   *ctx;
+    SPE_vas_id_t    *id = NULL;
+    SPE_vas_user_t  *user;
+    zval            *zctx, *zid, *zuser;
+    vas_err_t       err;
+    char            *domain = NULL;
 
     SPE_CHECK_ARGS( 3 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zuser ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr",
+                                &zctx, &zid, &zuser ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t *, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t *, &zctx, -1,
+                            PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
     if( ! ZVAL_IS_NULL( zid ) )
     {
-        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t *, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t *, &zid, -1,
+                                PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
-    ZEND_FETCH_RESOURCE( user, SPE_vas_user_t *, &zuser, -1, PHP_vas_user_t_RES_NAME, le_vas_user_t );
+    ZEND_FETCH_RESOURCE( user, SPE_vas_user_t *, &zuser, -1,
+                            PHP_vas_user_t_RES_NAME, le_vas_user_t );
 
     err = vas_user_get_domain( ctx->ctx, RAW( id ), user->raw, &domain );
     SPE_SET_VAS_ERR( err );
@@ -2711,26 +2801,30 @@ ZEND_VAS_NAMED_FUNC( vas_user_get_domain )
 
 ZEND_VAS_NAMED_FUNC( vas_user_get_sam_account_name )
 {
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* id = NULL;
-    SPE_vas_user_t* user;
-    vas_err_t err;
-    char* sam;
-    zval *zctx, *zid, *zuser;
+    SPE_vas_ctx_t   *ctx;
+    SPE_vas_id_t    *id = NULL;
+    SPE_vas_user_t  *user;
+    zval            *zctx, *zid, *zuser;
+    vas_err_t       err;
+    char            *sam = NULL;
 
     SPE_CHECK_ARGS( 3 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zuser ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr",
+                                &zctx, &zid, &zuser ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                            PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
     if( ! ZVAL_IS_NULL( zid ) )
     {
-        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1,
+                                PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
-    ZEND_FETCH_RESOURCE( user, SPE_vas_user_t*, &zuser, -1, PHP_vas_user_t_RES_NAME, le_vas_user_t );
+    ZEND_FETCH_RESOURCE( user, SPE_vas_user_t*, &zuser, -1,
+                            PHP_vas_user_t_RES_NAME, le_vas_user_t );
 
     err = vas_user_get_sam_account_name( ctx->ctx, RAW( id ), user->raw, &sam );
     SPE_SET_VAS_ERR( err );
@@ -2749,26 +2843,30 @@ ZEND_VAS_NAMED_FUNC( vas_user_get_sam_account_name )
 
 ZEND_VAS_NAMED_FUNC( vas_user_get_sid )
 {
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* id = NULL;
-    SPE_vas_user_t* user;
-    vas_err_t err;
-    char* sid;
-    zval *zctx, *zid, *zuser;
+    SPE_vas_ctx_t   *ctx;
+    SPE_vas_id_t    *id = NULL;
+    SPE_vas_user_t  *user;
+    zval            *zctx, *zid, *zuser;
+    vas_err_t       err;
+    char            *sid = NULL;
 
     SPE_CHECK_ARGS( 3 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zuser ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr",
+                                &zctx, &zid, &zuser ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                            PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
     if( ! ZVAL_IS_NULL( zid ) )
     {
-        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1,
+                                PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
-    ZEND_FETCH_RESOURCE( user, SPE_vas_user_t*, &zuser, -1, PHP_vas_user_t_RES_NAME, le_vas_user_t );
+    ZEND_FETCH_RESOURCE( user, SPE_vas_user_t*, &zuser, -1,
+                            PHP_vas_user_t_RES_NAME, le_vas_user_t );
 
     err = vas_user_get_sid( ctx->ctx, RAW( id ), user->raw, &sid );
     SPE_SET_VAS_ERR( err );
@@ -2787,26 +2885,30 @@ ZEND_VAS_NAMED_FUNC( vas_user_get_sid )
 
 ZEND_VAS_NAMED_FUNC( vas_user_get_upn )
 {
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* id = NULL;
-    SPE_vas_user_t* user;
-    vas_err_t err;
-    char* upn;
-    zval *zctx, *zid, *zuser;
+    SPE_vas_ctx_t   *ctx;
+    SPE_vas_id_t    *id = NULL;
+    SPE_vas_user_t  *user;
+    zval            *zctx, *zid, *zuser;
+    vas_err_t       err;
+    char            *upn = NULL;
 
     SPE_CHECK_ARGS( 3 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zuser ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr",
+                                &zctx, &zid, &zuser ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                            PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
     if( ! ZVAL_IS_NULL( zid ) )
     {
-        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1,
+                                PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
-    ZEND_FETCH_RESOURCE( user, SPE_vas_user_t*, &zuser, -1, PHP_vas_user_t_RES_NAME, le_vas_user_t );
+    ZEND_FETCH_RESOURCE( user, SPE_vas_user_t*, &zuser, -1,
+                            PHP_vas_user_t_RES_NAME, le_vas_user_t );
 
     err = vas_user_get_upn( ctx->ctx, RAW( id ), user->raw, &upn );
     SPE_SET_VAS_ERR( err );
@@ -2825,28 +2927,35 @@ ZEND_VAS_NAMED_FUNC( vas_user_get_upn )
 
 ZEND_VAS_NAMED_FUNC( vas_user_get_pwinfo )
 {
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* id = NULL;
-    SPE_vas_user_t* user;
-    vas_err_t err;
-    struct passwd* pwd;
-    zval *zctx, *zid, *zuser;
+    SPE_vas_ctx_t   *ctx;
+    SPE_vas_id_t    *id = NULL;
+    SPE_vas_user_t  *user;
+    zval            *zctx, *zid, *zuser;
+    vas_err_t       err;
+    struct passwd   *pwd = NULL;
 
     SPE_CHECK_ARGS( 3 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zuser ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr",
+                                &zctx, &zid, &zuser ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                                PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
     if( ! ZVAL_IS_NULL( zid ) )
     {
-        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1,
+                                PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
-    ZEND_FETCH_RESOURCE( user, SPE_vas_user_t*, &zuser, -1, PHP_vas_user_t_RES_NAME, le_vas_user_t );
+
+    ZEND_FETCH_RESOURCE( user, SPE_vas_user_t*, &zuser, -1,
+                                PHP_vas_user_t_RES_NAME, le_vas_user_t );
 
     err = vas_user_get_pwinfo( ctx->ctx, RAW( id ), user->raw, &pwd );
+
     SPE_SET_VAS_ERR( err );
 
     if( err == VAS_ERR_SUCCESS )
@@ -2872,28 +2981,33 @@ ZEND_VAS_NAMED_FUNC( vas_user_get_pwinfo )
 
 ZEND_VAS_NAMED_FUNC( vas_user_get_krb5_client_name )
 {
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* id = NULL;
-    SPE_vas_user_t* user;
-    vas_err_t err;
-    char* client_name;
-    zval *zctx, *zid, *zuser;
+    SPE_vas_ctx_t   *ctx;
+    SPE_vas_id_t    *id = NULL;
+    SPE_vas_user_t  *user;
+    zval            *zctx, *zid, *zuser;
+    vas_err_t       err;
+    char            *client_name = NULL;
 
     SPE_CHECK_ARGS( 3 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zuser ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr",
+                                &zctx, &zid, &zuser ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                            PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
     if( ! ZVAL_IS_NULL( zid ) )
     {
-        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1,
+                                PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
-    ZEND_FETCH_RESOURCE( user, SPE_vas_user_t*, &zuser, -1, PHP_vas_user_t_RES_NAME, le_vas_user_t );
+    ZEND_FETCH_RESOURCE( user, SPE_vas_user_t*, &zuser, -1,
+                            PHP_vas_user_t_RES_NAME, le_vas_user_t );
 
-    err = vas_user_get_krb5_client_name( ctx->ctx, RAW( id ), user->raw, &client_name );
+    err = vas_user_get_krb5_client_name( ctx->ctx, RAW( id ),
+                            user->raw, &client_name );
     SPE_SET_VAS_ERR( err );
 
     if( err == VAS_ERR_SUCCESS )
@@ -2910,26 +3024,30 @@ ZEND_VAS_NAMED_FUNC( vas_user_get_krb5_client_name )
 
 ZEND_VAS_NAMED_FUNC( vas_user_get_account_control )
 {
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* id = NULL;
-    SPE_vas_user_t* user;
-    vas_err_t err;
-    int account_control;
-    zval *zctx, *zid, *zuser;
+    SPE_vas_ctx_t   *ctx;
+    SPE_vas_id_t    *id = NULL;
+    SPE_vas_user_t  *user;
+    zval            *zctx, *zid, *zuser;
+    vas_err_t       err;
+    int             account_control;
 
     SPE_CHECK_ARGS( 3 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zuser ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr",
+                                &zctx, &zid, &zuser ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                            PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
     if( ! ZVAL_IS_NULL( zid ) )
     {
-        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1,
+                                PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
-    ZEND_FETCH_RESOURCE( user, SPE_vas_user_t*, &zuser, -1, PHP_vas_user_t_RES_NAME, le_vas_user_t );
+    ZEND_FETCH_RESOURCE( user, SPE_vas_user_t*, &zuser, -1,
+                            PHP_vas_user_t_RES_NAME, le_vas_user_t );
 
     err = vas_user_get_account_control( ctx->ctx, RAW( id ), user->raw, &account_control );
     SPE_SET_VAS_ERR( err );
@@ -2947,11 +3065,12 @@ ZEND_VAS_NAMED_FUNC( vas_user_get_account_control )
 
 ZEND_VAS_NAMED_FUNC( vas_user_check_access )
 {
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_user_t* user;
-    vas_err_t err;
-    const char* szService = NULL;
-    zval *zctx, *zsrv, *zuser;
+    SPE_vas_ctx_t   *ctx;
+    SPE_vas_id_t    *id = NULL;
+    SPE_vas_user_t  *user;
+    zval            *zctx, *zsrv, *zuser;
+    vas_err_t       err;
+    const char      *szService = NULL;
 
     SPE_CHECK_ARGS( 3 );
 
@@ -2959,8 +3078,10 @@ ZEND_VAS_NAMED_FUNC( vas_user_check_access )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
-    ZEND_FETCH_RESOURCE( user, SPE_vas_user_t*, &zuser, -1, PHP_vas_user_t_RES_NAME, le_vas_user_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                            PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( user, SPE_vas_user_t*, &zuser, -1,
+                            PHP_vas_user_t_RES_NAME, le_vas_user_t );
 
     if( Z_TYPE_P( zsrv ) == IS_STRING )
     {
@@ -2974,20 +3095,22 @@ ZEND_VAS_NAMED_FUNC( vas_user_check_access )
 
 ZEND_VAS_NAMED_FUNC( vas_user_check_conflicts )
 {
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_user_t* user;
-    vas_err_t err;
-    zval* zctx;
-    zval* zuser;
+    SPE_vas_ctx_t   *ctx;
+    SPE_vas_user_t  *user;
+    zval            *zctx, *zuser;
+    vas_err_t       err;
 
     SPE_CHECK_ARGS( 2 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rr", &zctx, &zuser ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rr",
+                                &zctx, &zuser ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
-    ZEND_FETCH_RESOURCE( user, SPE_vas_user_t*, &zuser, -1, PHP_vas_user_t_RES_NAME, le_vas_user_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                            PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( user, SPE_vas_user_t*, &zuser, -1,
+                            PHP_vas_user_t_RES_NAME, le_vas_user_t );
 
     err = vas_user_check_conflicts( ctx->ctx, user->raw );
     SPE_SET_VAS_ERR( err );
@@ -2996,27 +3119,29 @@ ZEND_VAS_NAMED_FUNC( vas_user_check_conflicts )
 
 ZEND_VAS_NAMED_FUNC( vas_group_init )
 {
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* id = NULL;
-    vas_group_t* group = NULL;
-    vas_err_t err;
-    int flags;
-    const char* szName;
-    int lName;
-    zval* zctx;
-    zval* zId;
+    SPE_vas_ctx_t   *ctx;
+    SPE_vas_id_t    *id = NULL;
+    SPE_vas_user_t  *user;
+    zval            *zctx, *zId;
+    vas_group_t     *group = NULL;
+    vas_err_t       err;
+    int             flags, lName;
+    const char      *szName;
 
     SPE_CHECK_ARGS( 4 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzsl", &zctx, &zId, &szName, &lName, &flags ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzsl",
+                            &zctx, &zId, &szName, &lName, &flags ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                        PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
     if( ! ZVAL_IS_NULL( zId ) )
     {
-        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zId, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zId, -1,
+                            PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
     err = vas_group_init( ctx->ctx, RAW( id ), szName, flags, &group );
     SPE_SET_VAS_ERR( err );
@@ -3033,27 +3158,32 @@ ZEND_VAS_NAMED_FUNC( vas_group_init )
 
 ZEND_VAS_NAMED_FUNC( vas_group_has_member )
 {
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* id = NULL;
-    SPE_vas_group_t* group;
-    SPE_vas_user_t* user;
-    vas_err_t err;
-    zval *zctx, *zid, *zgroup, *zuser;
+    SPE_vas_ctx_t   *ctx;
+    SPE_vas_id_t    *id = NULL;
+    SPE_vas_user_t  *user;
+    SPE_vas_group_t *group;
+    zval            *zctx, *zid, *zgroup, *zuser;
+    vas_err_t       err;
 
     SPE_CHECK_ARGS( 4 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzrr", &zctx, &zid, &zgroup, &zuser ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzrr",
+                                &zctx, &zid, &zgroup, &zuser ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                            PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
     if( ! ZVAL_IS_NULL( zid ) )
     {
-        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1,
+                                PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
-    ZEND_FETCH_RESOURCE( group, SPE_vas_group_t*, &zgroup, -1, PHP_vas_group_t_RES_NAME, le_vas_group_t );
-    ZEND_FETCH_RESOURCE( user, SPE_vas_user_t*, &zuser, -1, PHP_vas_user_t_RES_NAME, le_vas_user_t );
+    ZEND_FETCH_RESOURCE( group, SPE_vas_group_t*, &zgroup, -1,
+                            PHP_vas_group_t_RES_NAME, le_vas_group_t );
+    ZEND_FETCH_RESOURCE( user, SPE_vas_user_t*, &zuser, -1,
+                            PHP_vas_user_t_RES_NAME, le_vas_user_t );
 
     err = vas_group_has_member( ctx->ctx, RAW( id ), group->raw, user->raw );
     SPE_SET_VAS_ERR( err );
@@ -3062,32 +3192,34 @@ ZEND_VAS_NAMED_FUNC( vas_group_has_member )
 
 ZEND_VAS_NAMED_FUNC( vas_group_get_attrs )
 {
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* id = NULL;
-    SPE_vas_group_t* group;
-    vas_err_t err;
-    const char** anames;
-    vas_attrs_t* attrs;
-    HashTable* htanames;
-    HashPosition panames;
-    int anames_count;
-    int anames_index = 0;
-    zval *zctx, *zid, *zgroup, *zanames;
-    zval** data;
+    SPE_vas_ctx_t   *ctx;
+    SPE_vas_id_t    *id = NULL;
+    SPE_vas_group_t *group;
+    zval            *zctx, *zid, *zgroup, *zanames, **data;
+    vas_err_t       err;
+    const char      **anames;
+    vas_attrs_t     *attrs = NULL;
+    HashTable       *htanames;
+    HashPosition    panames;
+    int             anames_count, anames_index = 0;
 
     SPE_CHECK_ARGS( 4 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzra", &zctx, &zid, &zgroup, &zanames ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzra",
+                            &zctx, &zid, &zgroup, &zanames ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                            PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
     if( ! ZVAL_IS_NULL( zid ) )
     {
-        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1,
+                                PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
-    ZEND_FETCH_RESOURCE( group, SPE_vas_group_t*, &zgroup, -1, PHP_vas_group_t_RES_NAME, le_vas_group_t );
+    ZEND_FETCH_RESOURCE( group, SPE_vas_group_t*, &zgroup, -1,
+                            PHP_vas_group_t_RES_NAME, le_vas_group_t );
     /* Create the anames array. */
     htanames = Z_ARRVAL_P( zanames );
     anames_count = zend_hash_num_elements( htanames );
@@ -3120,26 +3252,30 @@ ZEND_VAS_NAMED_FUNC( vas_group_get_attrs )
 
 ZEND_VAS_NAMED_FUNC( vas_group_get_dn )
 {
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* id = NULL;
-    SPE_vas_group_t* group;
-    vas_err_t err;
-    char* dn;
-    zval *zctx, *zid, *zgroup;
+    SPE_vas_ctx_t   *ctx;
+    SPE_vas_id_t    *id = NULL;
+    SPE_vas_group_t *group;
+    zval            *zctx, *zid, *zgroup;
+    vas_err_t       err;
+    char            *dn = NULL;
 
     SPE_CHECK_ARGS( 3 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zgroup ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr",
+                                    &zctx, &zid, &zgroup ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                                PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
     if( ! ZVAL_IS_NULL( zid ) )
     {
-        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1,
+                                    PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
-    ZEND_FETCH_RESOURCE( group, SPE_vas_group_t*, &zgroup, -1, PHP_vas_group_t_RES_NAME, le_vas_group_t );
+    ZEND_FETCH_RESOURCE( group, SPE_vas_group_t*, &zgroup, -1,
+                                PHP_vas_group_t_RES_NAME, le_vas_group_t );
 
     err = vas_group_get_dn( ctx->ctx, RAW( id ), group->raw, &dn );
     SPE_SET_VAS_ERR( err );
@@ -3158,26 +3294,30 @@ ZEND_VAS_NAMED_FUNC( vas_group_get_dn )
 
 ZEND_VAS_NAMED_FUNC( vas_group_get_domain )
 {
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* id = NULL;
-    SPE_vas_group_t* group;
-    vas_err_t err;
-    char* domain;
-    zval *zctx, *zid, *zgroup;
+    SPE_vas_ctx_t   *ctx;
+    SPE_vas_id_t    *id = NULL;
+    SPE_vas_group_t *group;
+    zval            *zctx, *zid, *zgroup;
+    vas_err_t       err;
+    char            *domain = NULL;
 
     SPE_CHECK_ARGS( 3 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zgroup ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr",
+                                &zctx, &zid, &zgroup ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                            PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
     if( ! ZVAL_IS_NULL( zid ) )
     {
-        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1,
+                                PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
-    ZEND_FETCH_RESOURCE( group, SPE_vas_group_t*, &zgroup, -1, PHP_vas_group_t_RES_NAME, le_vas_group_t );
+    ZEND_FETCH_RESOURCE( group, SPE_vas_group_t*, &zgroup, -1,
+                            PHP_vas_group_t_RES_NAME, le_vas_group_t );
 
     err = vas_group_get_domain( ctx->ctx, RAW( id ), group->raw, &domain );
     SPE_SET_VAS_ERR( err );
@@ -3196,26 +3336,30 @@ ZEND_VAS_NAMED_FUNC( vas_group_get_domain )
 
 ZEND_VAS_NAMED_FUNC( vas_group_get_sid )
 {
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* id = NULL;
-    SPE_vas_group_t* group;
-    vas_err_t err;
-    char* sid;
-    zval *zctx, *zid, *zgroup;
+    SPE_vas_ctx_t   *ctx;
+    SPE_vas_id_t    *id = NULL;
+    SPE_vas_group_t *group;
+    zval            *zctx, *zid, *zgroup;
+    vas_err_t       err;
+    char            *sid = NULL;
 
     SPE_CHECK_ARGS( 3 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zgroup) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr",
+                            &zctx, &zid, &zgroup) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                            PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
     if( ! ZVAL_IS_NULL( zid ) )
     {
-        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1,
+                                PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
-    ZEND_FETCH_RESOURCE( group, SPE_vas_group_t*, &zgroup, -1, PHP_vas_group_t_RES_NAME, le_vas_group_t );
+    ZEND_FETCH_RESOURCE( group, SPE_vas_group_t*, &zgroup, -1,
+                            PHP_vas_group_t_RES_NAME, le_vas_group_t );
 
     err = vas_group_get_sid( ctx->ctx, RAW( id ), group->raw, &sid );
     SPE_SET_VAS_ERR( err );
@@ -3234,27 +3378,28 @@ ZEND_VAS_NAMED_FUNC( vas_group_get_sid )
 
 ZEND_VAS_NAMED_FUNC( vas_service_init )
 {
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* id = NULL;
-    vas_service_t* service = NULL;
-    vas_err_t err;
-    int flags;
-    const char* szName;
-    int lName;
-    zval* zctx;
-    zval* zId;
+    SPE_vas_ctx_t   *ctx;
+    SPE_vas_id_t    *id = NULL;
+    zval            *zctx, *zId;
+    vas_service_t   *service = NULL;
+    vas_err_t       err;
+    int             flags, lName;
+    const char      *szName;
 
     SPE_CHECK_ARGS( 4 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzsl", &zctx, &zId, &szName, &lName, &flags ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzsl",
+                        &zctx, &zId, &szName, &lName, &flags ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                    PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
     if( ! ZVAL_IS_NULL( zId ) )
     {
-        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zId, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zId, -1,
+                        PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
 
     err = vas_service_init( ctx->ctx, RAW( id ), szName, flags, &service );
@@ -3272,32 +3417,34 @@ ZEND_VAS_NAMED_FUNC( vas_service_init )
 
 ZEND_VAS_NAMED_FUNC( vas_service_get_attrs )
 {
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* id = NULL;
-    SPE_vas_service_t* service;
-    vas_err_t err;
-    const char** anames;
-    vas_attrs_t* attrs;
-    HashTable* htanames;
-    HashPosition panames;
-    int anames_count;
-    int anames_index = 0;
-    zval** data;
-    zval *zctx, *zid, *zservice, *zanames;
+    SPE_vas_ctx_t       *ctx;
+    SPE_vas_id_t        *id = NULL;
+    SPE_vas_service_t   *service;
+    zval                *zctx, *zid, *zservice, *zanames, **data;
+    vas_err_t           err;
+    const char          **anames;
+    vas_attrs_t         *attrs;
+    HashTable           *htanames;
+    HashPosition        panames;
+    int                 anames_count, anames_index = 0;
 
     SPE_CHECK_ARGS( 4 );
 
-    if( zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rzra", &zctx, &zid, &zservice, &zanames ) == FAILURE )
+    if( zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rzra",
+                            &zctx, &zid, &zservice, &zanames ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                        PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
     if( ! ZVAL_IS_NULL( zid ) )
     {
-        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1,
+                            PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
-    ZEND_FETCH_RESOURCE( service, SPE_vas_service_t*, &zservice, -1, PHP_vas_service_t_RES_NAME, le_vas_service_t );
+    ZEND_FETCH_RESOURCE( service, SPE_vas_service_t*, &zservice, -1,
+                        PHP_vas_service_t_RES_NAME, le_vas_service_t );
     /* Create the anames array. */
     htanames = Z_ARRVAL_P( zanames );
     anames_count = zend_hash_num_elements( htanames );
@@ -3330,26 +3477,30 @@ ZEND_VAS_NAMED_FUNC( vas_service_get_attrs )
 
 ZEND_VAS_NAMED_FUNC( vas_service_get_dn )
 {
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* id = NULL;
-    SPE_vas_service_t* service;
-    vas_err_t err;
-    char* dn;
-    zval *zctx, *zid, *zservice;
+    SPE_vas_ctx_t       *ctx;
+    SPE_vas_id_t        *id = NULL;
+    SPE_vas_service_t   *service;
+    zval                *zctx, *zid, *zservice;
+    vas_err_t           err;
+    char                *dn = NULL;
 
     SPE_CHECK_ARGS( 3 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zservice ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr",
+                                    &zctx, &zid, &zservice ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                                PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
     if( ! ZVAL_IS_NULL( zid ) )
     {
-        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1,
+                                    PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
-    ZEND_FETCH_RESOURCE( service, SPE_vas_service_t*, &zservice, -1, PHP_vas_service_t_RES_NAME, le_vas_service_t );
+    ZEND_FETCH_RESOURCE( service, SPE_vas_service_t*, &zservice, -1,
+                                PHP_vas_service_t_RES_NAME, le_vas_service_t );
 
     err = vas_service_get_dn( ctx->ctx, RAW( id ), service->raw, &dn );
     SPE_SET_VAS_ERR( err );
@@ -3368,26 +3519,30 @@ ZEND_VAS_NAMED_FUNC( vas_service_get_dn )
 
 ZEND_VAS_NAMED_FUNC( vas_service_get_domain )
 {
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* id = NULL;
-    SPE_vas_service_t* service;
-    vas_err_t err;
-    char* domain;
-    zval *zctx, *zid, *zservice;
+    SPE_vas_ctx_t       *ctx;
+    SPE_vas_id_t        *id = NULL;
+    SPE_vas_service_t   *service;
+    zval                *zctx, *zid, *zservice;
+    vas_err_t           err;
+    char                *domain = NULL;
 
     SPE_CHECK_ARGS( 3 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zservice ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr",
+                                &zctx, &zid, &zservice ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                            PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
     if( ! ZVAL_IS_NULL( zid ) )
     {
-        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1,
+                                PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
-    ZEND_FETCH_RESOURCE( service, SPE_vas_service_t*, &zservice, -1, PHP_vas_service_t_RES_NAME, le_vas_service_t );
+    ZEND_FETCH_RESOURCE( service, SPE_vas_service_t*, &zservice, -1,
+                            PHP_vas_service_t_RES_NAME, le_vas_service_t );
 
     err = vas_service_get_domain( ctx->ctx, RAW( id ), service->raw, &domain );
     SPE_SET_VAS_ERR( err );
@@ -3406,28 +3561,33 @@ ZEND_VAS_NAMED_FUNC( vas_service_get_domain )
 
 ZEND_VAS_NAMED_FUNC( vas_service_get_krb5_client_name )
 {
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* id = NULL;
-    SPE_vas_service_t* service;
-    vas_err_t err;
-    char* client_name;
-    zval *zctx, *zid, *zservice;
+    SPE_vas_ctx_t       *ctx;
+    SPE_vas_id_t        *id = NULL;
+    SPE_vas_service_t   *service;
+    zval                *zctx, *zid, *zservice;
+    vas_err_t           err;
+    char                *client_name = NULL;
 
     SPE_CHECK_ARGS( 3 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zservice ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr",
+                                &zctx, &zid, &zservice ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                            PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
     if( ! ZVAL_IS_NULL( zid ) )
     {
-        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1,
+                                PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
-    ZEND_FETCH_RESOURCE( service, SPE_vas_service_t*, &zservice, -1, PHP_vas_service_t_RES_NAME, le_vas_service_t );
+    ZEND_FETCH_RESOURCE( service, SPE_vas_service_t*, &zservice, -1,
+                            PHP_vas_service_t_RES_NAME, le_vas_service_t );
 
-    err = vas_service_get_krb5_client_name( ctx->ctx, RAW( id ), service->raw, &client_name );
+    err = vas_service_get_krb5_client_name( ctx->ctx, RAW( id ),
+                            service->raw, &client_name );
     SPE_SET_VAS_ERR( err );
 
     if( err == VAS_ERR_SUCCESS )
@@ -3444,26 +3604,30 @@ ZEND_VAS_NAMED_FUNC( vas_service_get_krb5_client_name )
 
 ZEND_VAS_NAMED_FUNC( vas_service_get_spns )
 {
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* id = NULL;
-    SPE_vas_service_t* service;
-    vas_err_t err;
-    char** spns;
-    zval *zctx, *zid, *zservice;
+    SPE_vas_ctx_t       *ctx;
+    SPE_vas_id_t        *id = NULL;
+    SPE_vas_service_t   *service;
+    zval                *zctx, *zid, *zservice;
+    vas_err_t           err;
+    char                **spns = NULL;
 
     SPE_CHECK_ARGS( 3 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zservice ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr",
+                                &zctx, &zid, &zservice ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                            PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
     if( ! ZVAL_IS_NULL( zid ) )
     {
-        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1,
+                                PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
-    ZEND_FETCH_RESOURCE( service, SPE_vas_service_t*, &zservice, -1, PHP_vas_service_t_RES_NAME, le_vas_service_t );
+    ZEND_FETCH_RESOURCE( service, SPE_vas_service_t*, &zservice, -1,
+                            PHP_vas_service_t_RES_NAME, le_vas_service_t );
 
     err = vas_service_get_spns( ctx->ctx, RAW( id ), service->raw, &spns );
     SPE_SET_VAS_ERR( err );
@@ -3489,26 +3653,30 @@ ZEND_VAS_NAMED_FUNC( vas_service_get_spns )
 
 ZEND_VAS_NAMED_FUNC( vas_service_get_upn )
 {
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* id = NULL;
-    SPE_vas_service_t* service;
-    vas_err_t err;
-    char* upn;
-    zval *zctx, *zid, *zservice;
+    SPE_vas_ctx_t       *ctx;
+    SPE_vas_id_t        *id = NULL;
+    SPE_vas_service_t   *service;
+    zval                *zctx, *zid, *zservice;
+    vas_err_t           err;
+    char                *upn = NULL;
 
     SPE_CHECK_ARGS( 3 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zservice ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr",
+                                &zctx, &zid, &zservice ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                            PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
     if( ! ZVAL_IS_NULL( zid ) )
     {
-        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1,
+                                PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
-    ZEND_FETCH_RESOURCE( service, SPE_vas_service_t*, &zservice, -1, PHP_vas_service_t_RES_NAME, le_vas_service_t );
+    ZEND_FETCH_RESOURCE( service, SPE_vas_service_t*, &zservice, -1,
+                            PHP_vas_service_t_RES_NAME, le_vas_service_t );
 
     err = vas_service_get_upn( ctx->ctx, RAW( id ), service->raw, &upn );
     SPE_SET_VAS_ERR( err );
@@ -3527,27 +3695,28 @@ ZEND_VAS_NAMED_FUNC( vas_service_get_upn )
 
 ZEND_VAS_NAMED_FUNC( vas_computer_init )
 {
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* id = NULL;
-    vas_computer_t* computer = NULL;
-    vas_err_t err;
-    int flags;
-    const char* szName;
-    int lName;
-    zval* zctx;
-    zval* zId;
+    SPE_vas_ctx_t   *ctx;
+    SPE_vas_id_t    *id = NULL;
+    zval            *zctx, *zId;
+    vas_computer_t  *computer = NULL;
+    vas_err_t       err;
+    int             flags, lName;
+    const char      *szName;
 
     SPE_CHECK_ARGS( 4 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzsl", &zctx, &zId, &szName, &lName, &flags ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzsl",
+                            &zctx, &zId, &szName, &lName, &flags ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                        PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
     if( ! ZVAL_IS_NULL( zId ) )
     {
-        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zId, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zId, -1,
+                            PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
 
     err = vas_computer_init( ctx->ctx, RAW( id ), szName, flags, &computer );
@@ -3565,27 +3734,32 @@ ZEND_VAS_NAMED_FUNC( vas_computer_init )
 
 ZEND_VAS_NAMED_FUNC( vas_computer_is_member )
 {
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* id = NULL;
-    SPE_vas_computer_t* computer;
-    SPE_vas_group_t* group;
-    vas_err_t err;
-    zval *zctx, *zid, *zcomputer, *zgroup;
+    SPE_vas_ctx_t       *ctx;
+    SPE_vas_id_t        *id = NULL;
+    SPE_vas_computer_t  *computer;
+    SPE_vas_group_t     *group;
+    zval                *zctx, *zid, *zcomputer, *zgroup;
+    vas_err_t           err;
 
     SPE_CHECK_ARGS( 4 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzrr", &zctx, &zid, &zcomputer, &zgroup ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzrr",
+                            &zctx, &zid, &zcomputer, &zgroup ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                        PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
     if( ! ZVAL_IS_NULL( zid ) )
     {
-        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1,
+                            PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
-    ZEND_FETCH_RESOURCE( computer, SPE_vas_computer_t*, &zcomputer, -1, PHP_vas_computer_t_RES_NAME, le_vas_computer_t );
-    ZEND_FETCH_RESOURCE( group, SPE_vas_group_t*, &zgroup, -1, PHP_vas_group_t_RES_NAME, le_vas_group_t );
+    ZEND_FETCH_RESOURCE( computer, SPE_vas_computer_t*, &zcomputer, -1,
+                        PHP_vas_computer_t_RES_NAME, le_vas_computer_t );
+    ZEND_FETCH_RESOURCE( group, SPE_vas_group_t*, &zgroup, -1,
+                        PHP_vas_group_t_RES_NAME, le_vas_group_t );
 
     err = vas_computer_is_member( ctx->ctx, RAW( id ), computer->raw, group->raw );
     SPE_SET_VAS_ERR( err );
@@ -3594,32 +3768,34 @@ ZEND_VAS_NAMED_FUNC( vas_computer_is_member )
 
 ZEND_VAS_NAMED_FUNC( vas_computer_get_attrs )
 {
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* id = NULL;
-    SPE_vas_computer_t* computer;
-    vas_err_t err;
-    const char** anames;
-    vas_attrs_t* attrs;
-    HashTable* htanames;
-    HashPosition panames;
-    int anames_count;
-    int anames_index = 0;
-    zval *zctx, *zid, *zcomputer, *zanames;
-    zval** data;
+    SPE_vas_ctx_t       *ctx;
+    SPE_vas_id_t        *id = NULL;
+    SPE_vas_computer_t  *computer;
+    zval                *zctx, *zid, *zcomputer, *zanames, **data;
+    vas_err_t           err;
+    const char          **anames;
+    vas_attrs_t         *attrs = NULL;
+    HashTable           *htanames;
+    HashPosition        panames;
+    int                 anames_count, anames_index = 0;
 
     SPE_CHECK_ARGS( 4 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzra", &zctx, &zid, &zcomputer, &zanames ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzra",
+                            &zctx, &zid, &zcomputer, &zanames ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                        PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
     if( ! ZVAL_IS_NULL( zid ) )
     {
-        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1,
+                            PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
-    ZEND_FETCH_RESOURCE( computer, SPE_vas_computer_t*, &zcomputer, -1, PHP_vas_computer_t_RES_NAME, le_vas_computer_t );
+    ZEND_FETCH_RESOURCE( computer, SPE_vas_computer_t*, &zcomputer, -1,
+                        PHP_vas_computer_t_RES_NAME, le_vas_computer_t );
     /* Create the anames array.*/
     htanames = Z_ARRVAL_P( zanames );
     anames_count = zend_hash_num_elements( htanames );
@@ -3652,24 +3828,27 @@ ZEND_VAS_NAMED_FUNC( vas_computer_get_attrs )
 
 ZEND_VAS_NAMED_FUNC( vas_computer_get_dn )
 {
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* id = NULL;
-    SPE_vas_computer_t* computer;
-    vas_err_t err;
-    char* dn;
-    zval *zctx, *zid, *zcomputer;
+    SPE_vas_ctx_t       *ctx;
+    SPE_vas_id_t        *id = NULL;
+    SPE_vas_computer_t  *computer;
+    zval                *zctx, *zid, *zcomputer;
+    vas_err_t           err;
+    char                *dn = NULL;
 
     SPE_CHECK_ARGS( 3 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zcomputer ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr",
+                            &zctx, &zid, &zcomputer ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                        PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
     if( ! ZVAL_IS_NULL( zid ) )
     {
-        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1,
+                            PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
     ZEND_FETCH_RESOURCE( computer, SPE_vas_computer_t*, &zcomputer, -1, PHP_vas_computer_t_RES_NAME, le_vas_computer_t );
 
@@ -3690,28 +3869,33 @@ ZEND_VAS_NAMED_FUNC( vas_computer_get_dn )
 
 ZEND_VAS_NAMED_FUNC( vas_computer_get_dns_hostname )
 {
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* id = NULL;
-    SPE_vas_computer_t* computer;
-    vas_err_t err;
-    char* dns_hostname;
-    zval *zctx, *zid, *zcomputer;
+    SPE_vas_ctx_t       *ctx;
+    SPE_vas_id_t        *id = NULL;
+    SPE_vas_computer_t  *computer;
+    zval                *zctx, *zid, *zcomputer;
+    vas_err_t           err;
+    char                *dns_hostname = NULL;
 
     SPE_CHECK_ARGS( 3 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zcomputer ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr",
+                                &zctx, &zid, &zcomputer ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                            PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
     if( ! ZVAL_IS_NULL( zid ) )
     {
-        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1,
+                                PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
-    ZEND_FETCH_RESOURCE( computer, SPE_vas_computer_t*, &zcomputer, -1, PHP_vas_computer_t_RES_NAME, le_vas_computer_t );
+    ZEND_FETCH_RESOURCE( computer, SPE_vas_computer_t*, &zcomputer, -1,
+                            PHP_vas_computer_t_RES_NAME, le_vas_computer_t );
 
-    err = vas_computer_get_dns_hostname( ctx->ctx, RAW( id ), computer->raw, &dns_hostname );
+    err = vas_computer_get_dns_hostname( ctx->ctx, RAW( id ),
+                            computer->raw, &dns_hostname );
     SPE_SET_VAS_ERR( err );
 
     if( err == VAS_ERR_SUCCESS )
@@ -3728,26 +3912,30 @@ ZEND_VAS_NAMED_FUNC( vas_computer_get_dns_hostname )
 
 ZEND_VAS_NAMED_FUNC( vas_computer_get_domain )
 {
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* id = NULL;
-    SPE_vas_computer_t* computer;
-    vas_err_t err;
-    char* domain;
-    zval *zctx, *zid, *zcomputer;
+    SPE_vas_ctx_t       *ctx;
+    SPE_vas_id_t        *id = NULL;
+    SPE_vas_computer_t  *computer;
+    zval                *zctx, *zid, *zcomputer;
+    vas_err_t           err;
+    char                *domain = NULL;
 
     SPE_CHECK_ARGS( 3 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zcomputer ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr",
+                                &zctx, &zid, &zcomputer ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                            PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
     if( ! ZVAL_IS_NULL( zid ) )
     {
-        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1,
+                                PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
-    ZEND_FETCH_RESOURCE( computer, SPE_vas_computer_t*, &zcomputer, -1, PHP_vas_computer_t_RES_NAME, le_vas_computer_t );
+    ZEND_FETCH_RESOURCE( computer, SPE_vas_computer_t*, &zcomputer, -1,
+                            PHP_vas_computer_t_RES_NAME, le_vas_computer_t );
 
     err = vas_computer_get_domain( ctx->ctx, RAW( id ), computer->raw, &domain );
     SPE_SET_VAS_ERR( err );
@@ -3766,26 +3954,30 @@ ZEND_VAS_NAMED_FUNC( vas_computer_get_domain )
 
 ZEND_VAS_NAMED_FUNC( vas_computer_get_sid )
 {
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* id = NULL;
-    SPE_vas_computer_t* computer;
-    vas_err_t err;
-    char* sid;
-    zval *zctx, *zid, *zcomputer;
+    SPE_vas_ctx_t       *ctx;
+    SPE_vas_id_t        *id = NULL;
+    SPE_vas_computer_t  *computer;
+    zval                *zctx, *zid, *zcomputer;
+    vas_err_t           err;
+    char                *sid = NULL;
 
     SPE_CHECK_ARGS( 3 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zcomputer ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr",
+                                &zctx, &zid, &zcomputer ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                            PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
     if( ! ZVAL_IS_NULL( zid ) )
     {
-        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1,
+                                PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
-    ZEND_FETCH_RESOURCE( computer, SPE_vas_computer_t*, &zcomputer, -1, PHP_vas_computer_t_RES_NAME, le_vas_computer_t );
+    ZEND_FETCH_RESOURCE( computer, SPE_vas_computer_t*, &zcomputer, -1,
+                            PHP_vas_computer_t_RES_NAME, le_vas_computer_t );
 
     err = vas_computer_get_sid( ctx->ctx, RAW( id ), computer->raw, &sid );
     SPE_SET_VAS_ERR( err );
@@ -3806,26 +3998,30 @@ ZEND_VAS_NAMED_FUNC( vas_computer_get_sid )
 
 ZEND_VAS_NAMED_FUNC( vas_computer_get_spns )
 {
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* id = NULL;
-    SPE_vas_computer_t* computer;
-    vas_err_t err;
-    char** spns;
-    zval *zctx, *zid, *zcomputer;
+    SPE_vas_ctx_t       *ctx;
+    SPE_vas_id_t        *id = NULL;
+    SPE_vas_computer_t  *computer;
+    zval                *zctx, *zid, *zcomputer;
+    vas_err_t           err;
+    char                **spns = NULL;
 
     SPE_CHECK_ARGS( 3 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zcomputer ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr",
+                                &zctx, &zid, &zcomputer ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                            PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
     if( ! ZVAL_IS_NULL( zid ) )
     {
-        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1,
+                                PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
-    ZEND_FETCH_RESOURCE( computer, SPE_vas_computer_t*, &zcomputer, -1, PHP_vas_computer_t_RES_NAME, le_vas_computer_t );
+    ZEND_FETCH_RESOURCE( computer, SPE_vas_computer_t*, &zcomputer, -1,
+                            PHP_vas_computer_t_RES_NAME, le_vas_computer_t );
 
     err = vas_computer_get_spns( ctx->ctx, RAW( id ), computer->raw, &spns );
     SPE_SET_VAS_ERR( err );
@@ -3851,28 +4047,33 @@ ZEND_VAS_NAMED_FUNC( vas_computer_get_spns )
 
 ZEND_VAS_NAMED_FUNC( vas_computer_get_sam_account_name )
 {
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* id = NULL;
-    SPE_vas_computer_t* computer;
-    vas_err_t err;
-    char* sam;
-    zval *zctx, *zid, *zcomputer;
+    SPE_vas_ctx_t       *ctx;
+    SPE_vas_id_t        *id = NULL;
+    SPE_vas_computer_t  *computer;
+    zval                *zctx, *zid, *zcomputer;
+    vas_err_t           err;
+    char                *sam = NULL;
 
     SPE_CHECK_ARGS( 3 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zcomputer ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr",
+                                &zctx, &zid, &zcomputer ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                            PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
     if( ! ZVAL_IS_NULL( zid ) )
     {
-        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1,
+                                PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
-    ZEND_FETCH_RESOURCE( computer, SPE_vas_computer_t*, &zcomputer, -1, PHP_vas_computer_t_RES_NAME, le_vas_computer_t );
+    ZEND_FETCH_RESOURCE( computer, SPE_vas_computer_t*, &zcomputer, -1,
+                            PHP_vas_computer_t_RES_NAME, le_vas_computer_t );
 
-    err = vas_computer_get_sam_account_name( ctx->ctx, RAW( id ), computer->raw, &sam );
+    err = vas_computer_get_sam_account_name( ctx->ctx, RAW( id ),
+                            computer->raw, &sam );
     SPE_SET_VAS_ERR( err );
 
     if( err == VAS_ERR_SUCCESS )
@@ -3889,26 +4090,30 @@ ZEND_VAS_NAMED_FUNC( vas_computer_get_sam_account_name )
 
 ZEND_VAS_NAMED_FUNC( vas_computer_get_upn )
 {
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* id = NULL;
-    SPE_vas_computer_t* computer;
-    vas_err_t err;
-    char* upn;
-    zval *zctx, *zid, *zcomputer;
+    SPE_vas_ctx_t       *ctx;
+    SPE_vas_id_t        *id = NULL;
+    SPE_vas_computer_t  *computer;
+    zval                *zctx, *zid, *zcomputer;
+    vas_err_t           err;
+    char                *upn = NULL;
 
     SPE_CHECK_ARGS( 3 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zcomputer ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr",
+                            &zctx, &zid, &zcomputer ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                            PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
     if( ! ZVAL_IS_NULL( zid ) )
     {
-        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1,
+                                PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
-    ZEND_FETCH_RESOURCE( computer, SPE_vas_computer_t*, &zcomputer, -1, PHP_vas_computer_t_RES_NAME, le_vas_computer_t );
+    ZEND_FETCH_RESOURCE( computer, SPE_vas_computer_t*, &zcomputer, -1,
+                            PHP_vas_computer_t_RES_NAME, le_vas_computer_t );
 
     err = vas_computer_get_upn( ctx->ctx, RAW( id ), computer->raw, &upn );
     SPE_SET_VAS_ERR( err );
@@ -3927,28 +4132,33 @@ ZEND_VAS_NAMED_FUNC( vas_computer_get_upn )
 
 ZEND_VAS_NAMED_FUNC( vas_computer_get_krb5_client_name )
 {
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* id = NULL;
-    SPE_vas_computer_t* computer;
-    vas_err_t err;
-    char* client_name;
-    zval *zctx, *zid, *zcomputer;
+    SPE_vas_ctx_t       *ctx;
+    SPE_vas_id_t        *id = NULL;
+    SPE_vas_computer_t  *computer;
+    zval                *zctx, *zid, *zcomputer;
+    vas_err_t           err;
+    char                *client_name = NULL;
 
     SPE_CHECK_ARGS( 3 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zcomputer ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr",
+                                    &zctx, &zid, &zcomputer ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                                PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
     if( ! ZVAL_IS_NULL( zid ) )
     {
-        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1,
+                                    PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
-    ZEND_FETCH_RESOURCE( computer, SPE_vas_computer_t*, &zcomputer, -1, PHP_vas_computer_t_RES_NAME, le_vas_computer_t );
+    ZEND_FETCH_RESOURCE( computer, SPE_vas_computer_t*, &zcomputer, -1,
+                                PHP_vas_computer_t_RES_NAME, le_vas_computer_t );
 
-    err = vas_computer_get_krb5_client_name( ctx->ctx, RAW( id ), computer->raw, &client_name );
+    err = vas_computer_get_krb5_client_name( ctx->ctx, RAW( id ),
+                                computer->raw, &client_name );
     SPE_SET_VAS_ERR( err );
 
     if( err == VAS_ERR_SUCCESS )
@@ -3965,28 +4175,33 @@ ZEND_VAS_NAMED_FUNC( vas_computer_get_krb5_client_name )
 
 ZEND_VAS_NAMED_FUNC( vas_computer_get_host_spn )
 {
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* id = NULL;
-    SPE_vas_computer_t* computer;
-    vas_err_t err;
-    char* host_spn;
-    zval *zctx, *zid, *zcomputer;
+    SPE_vas_ctx_t       *ctx;
+    SPE_vas_id_t        *id = NULL;
+    SPE_vas_computer_t  *computer;
+    zval                *zctx, *zid, *zcomputer;
+    vas_err_t           err;
+    char                *host_spn = NULL;
 
     SPE_CHECK_ARGS( 3 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zcomputer ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr",
+                                    &zctx, &zid, &zcomputer ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                                PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
     if( ! ZVAL_IS_NULL( zid ) )
     {
-        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1,
+                                    PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
-    ZEND_FETCH_RESOURCE( computer, SPE_vas_computer_t*, &zcomputer, -1, PHP_vas_computer_t_RES_NAME, le_vas_computer_t );
+    ZEND_FETCH_RESOURCE( computer, SPE_vas_computer_t*, &zcomputer, -1,
+                                PHP_vas_computer_t_RES_NAME, le_vas_computer_t );
 
-    err = vas_computer_get_host_spn( ctx->ctx, RAW( id ), computer->raw, &host_spn );
+    err = vas_computer_get_host_spn( ctx->ctx, RAW( id ), computer->raw,
+                                &host_spn );
     SPE_SET_VAS_ERR( err );
 
     if( err == VAS_ERR_SUCCESS )
@@ -4003,28 +4218,33 @@ ZEND_VAS_NAMED_FUNC( vas_computer_get_host_spn )
 
 ZEND_VAS_NAMED_FUNC( vas_computer_get_account_control )
 {
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* id = NULL;
-    SPE_vas_computer_t* computer;
-    vas_err_t err;
-    int account_control;
-    zval *zctx, *zid, *zcomputer;
+    SPE_vas_ctx_t       *ctx;
+    SPE_vas_id_t        *id = NULL;
+    SPE_vas_computer_t  *computer;
+    zval                *zctx, *zid, *zcomputer;
+    vas_err_t           err;
+    int                 account_control = 0;
 
     SPE_CHECK_ARGS( 3 );
 
-    if( zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rzr", &zctx, &zid, &zcomputer ) == FAILURE )
+    if( zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rzr",
+                                    &zctx, &zid, &zcomputer ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                                PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
     if( ! ZVAL_IS_NULL( zid ) )
     {
-        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1,
+                                    PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
-    ZEND_FETCH_RESOURCE( computer, SPE_vas_computer_t*, &zcomputer, -1, PHP_vas_computer_t_RES_NAME, le_vas_computer_t );
+    ZEND_FETCH_RESOURCE( computer, SPE_vas_computer_t*, &zcomputer, -1,
+                            PHP_vas_computer_t_RES_NAME, le_vas_computer_t );
 
-    err = vas_computer_get_account_control( ctx->ctx, RAW( id ), computer->raw, &account_control );
+    err = vas_computer_get_account_control( ctx->ctx, RAW( id ),
+                            computer->raw, &account_control );
     SPE_SET_VAS_ERR( err );
 
     if( err == VAS_ERR_SUCCESS )
@@ -4040,23 +4260,25 @@ ZEND_VAS_NAMED_FUNC( vas_computer_get_account_control )
 
 ZEND_VAS_NAMED_FUNC( vas_gss_initialize )
 {
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* id = NULL;
-    vas_err_t err;
-    zval* zctx;
-    zval* zid;
+    SPE_vas_ctx_t   *ctx;
+    SPE_vas_id_t    *id = NULL;
+    zval            *zctx, *zid;
+    vas_err_t       err;
 
     SPE_CHECK_ARGS( 2 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rz", &zctx, &zid ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rz",
+                                    &zctx, &zid ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                                PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
     if( ! ZVAL_IS_NULL( zid ) )
     {
-        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1,
+                                    PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
     err = vas_gss_initialize( ctx->ctx, RAW( id ) );
 
@@ -4073,28 +4295,31 @@ struct gss_cred_id_t_desc_struct;
 
 ZEND_VAS_NAMED_FUNC( vas_gss_acquire_cred )
 {
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* id = NULL;
-    gss_cred_id_t cred = NULL;
-    vas_err_t err;
-    OM_uint32 minor_status;
-    int usage;
-    zval* zctx;
-    zval* zid;
+    SPE_vas_ctx_t   *ctx;
+    SPE_vas_id_t    *id = NULL;
+    gss_cred_id_t   cred = NULL;
+    zval            *zctx, *zid;
+    vas_err_t       err;
+    OM_uint32       minor_status;
+    int             usage;
 
     SPE_CHECK_ARGS( 3 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzl", &zctx, &zid, &usage ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzl",
+                                    &zctx, &zid, &usage ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                                    PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
     if( ! ZVAL_IS_NULL( zid ) )
     {
-        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1,
+                                    PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
-    err = vas_gss_acquire_cred( ctx->ctx, RAW( id ), &minor_status, usage, &cred );
+    err = vas_gss_acquire_cred( ctx->ctx, RAW( id ), &minor_status,
+                                    usage, &cred );
 
     SPE_SET_VAS_ERR2( err, minor_status );
 
@@ -4110,23 +4335,27 @@ ZEND_VAS_NAMED_FUNC( vas_gss_acquire_cred )
 
 ZEND_VAS_NAMED_FUNC( vas_gss_auth )
 {
-    SPE_vas_ctx_t* ctx;
-    SPE_gss_cred_id_t* cred;
-    SPE_gss_ctx_id_t* context;
-    OM_uint32 minor_status = 0;
-    vas_err_t err;
-    vas_auth_t* auth;
-    zval *zctx, *zcred, *zcontext;
+    SPE_vas_ctx_t       *ctx;
+    SPE_gss_cred_id_t   *cred;
+    SPE_gss_ctx_id_t    *context;
+    zval                *zctx, *zcred, *zcontext;
+    vas_err_t           err;
+    OM_uint32           minor_status = 0;
+    vas_auth_t          *auth = NULL;
 
     SPE_CHECK_ARGS( 3 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrr", &zctx, &zcred, &zcontext ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrr",
+                                &zctx, &zcred, &zcontext ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
-    ZEND_FETCH_RESOURCE( cred, SPE_gss_cred_id_t*, &zcred, -1, PHP_gss_cred_id_t_RES_NAME, le_gss_cred_id_t );
-    ZEND_FETCH_RESOURCE( context, SPE_gss_ctx_id_t*, &zcontext, -1, PHP_gss_ctx_id_t_RES_NAME, le_gss_ctx_id_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                            PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( cred, SPE_gss_cred_id_t*, &zcred, -1,
+                            PHP_gss_cred_id_t_RES_NAME, le_gss_cred_id_t );
+    ZEND_FETCH_RESOURCE( context, SPE_gss_ctx_id_t*, &zcontext, -1,
+                            PHP_gss_ctx_id_t_RES_NAME, le_gss_ctx_id_t );
 
     err = vas_gss_auth( ctx->ctx, cred->raw, context->raw, &auth );
     SPE_SET_VAS_ERR2( err, minor_status );
@@ -4143,21 +4372,17 @@ ZEND_VAS_NAMED_FUNC( vas_gss_auth )
 
 ZEND_VAS_NAMED_FUNC( vas_gss_spnego_initiate )
 {
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* id;
-    const char* szIntoken;
-    int lIntoken;
-    const char* szName;
-    int lName;
-    int flags;
-    int encoding;
-    OM_uint32 err;
-    gss_buffer_t real_intoken = NULL;
-    gss_buffer_desc outtoken = GSS_C_EMPTY_BUFFER;
-    gss_ctx_id_t mygssctx = GSS_C_NO_CONTEXT;
-    gss_ctx_id_t mygssctx_in = GSS_C_NO_CONTEXT;
-    SPE_gss_ctx_id_t* gssctx = NULL;
-    zval *zctx, *zid, *zreserved, *zgssctx, *zouttoken;
+    SPE_vas_ctx_t       *ctx;
+    SPE_vas_id_t        *id = NULL;
+    SPE_gss_ctx_id_t    *gssctx = NULL;
+    zval                *zctx, *zid, *zreserved, *zgssctx, *zouttoken;
+    const char          *szIntoken, *szName;
+    int                 lIntoken, lName, flags, encoding;
+    OM_uint32           err;
+    gss_buffer_t        real_intoken = NULL;
+    gss_buffer_desc     outtoken = GSS_C_EMPTY_BUFFER;
+    gss_ctx_id_t        mygssctx = GSS_C_NO_CONTEXT;
+    gss_ctx_id_t        mygssctx_in = GSS_C_NO_CONTEXT;
 
     SPE_CHECK_ARGS( 9 );
 
@@ -4177,14 +4402,17 @@ ZEND_VAS_NAMED_FUNC( vas_gss_spnego_initiate )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
-    ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                                PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1,
+                                PHP_vas_id_t_RES_NAME, le_vas_id_t );
     /*Ignore Reserved*/
     if( ! ZVAL_IS_NULL( zgssctx ) )
     {
         if( Z_TYPE_P( zgssctx ) != IS_LONG || Z_LVAL_P( zgssctx ) != 0 )
         {
-            ZEND_FETCH_RESOURCE( gssctx, SPE_gss_ctx_id_t*, &zgssctx, -1, PHP_gss_ctx_id_t_RES_NAME, le_gss_ctx_id_t );
+            ZEND_FETCH_RESOURCE( gssctx, SPE_gss_ctx_id_t*, &zgssctx, -1,
+                                   PHP_gss_ctx_id_t_RES_NAME, le_gss_ctx_id_t );
             mygssctx = gssctx->raw;
         }
     }
@@ -4240,22 +4468,20 @@ ZEND_VAS_NAMED_FUNC( vas_gss_spnego_initiate )
 
 ZEND_VAS_NAMED_FUNC( vas_gss_spnego_accept )
 {
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* id;
-    const char* szIntoken;
-    int lIntoken;
-    OM_uint32 flags;
-    int encoding;
-    OM_uint32 err;
-    gss_buffer_t real_intoken = NULL;
-    gss_buffer_desc outtoken = GSS_C_EMPTY_BUFFER;
-    vas_auth_t* myauth = NULL;
-    gss_ctx_id_t mygssctx = GSS_C_NO_CONTEXT;
-    gss_ctx_id_t mygssctx_in = GSS_C_NO_CONTEXT;
-    gss_cred_id_t deleg_cred = GSS_C_NO_CREDENTIAL;
-    SPE_gss_ctx_id_t* gssctx = NULL;
-    zval *zctx, *zid, *zauth, *zgssctx;
-    zval *zflags, *zouttoken, *zdeleg_cred;
+    SPE_vas_ctx_t       *ctx;
+    SPE_vas_id_t        *id = NULL;
+    SPE_gss_ctx_id_t    *gssctx = NULL;
+    zval                *zctx, *zid, *zauth, *zgssctx;
+    zval                *zflags, *zouttoken, *zdeleg_cred;
+    const char          *szIntoken;
+    int                 lIntoken, encoding;
+    OM_uint32           flags, err;
+    gss_buffer_t        real_intoken = NULL;
+    gss_buffer_desc     outtoken = GSS_C_EMPTY_BUFFER;
+    vas_auth_t          *myauth = NULL;
+    gss_ctx_id_t        mygssctx = GSS_C_NO_CONTEXT;
+    gss_ctx_id_t        mygssctx_in = GSS_C_NO_CONTEXT;
+    gss_cred_id_t       deleg_cred = GSS_C_NO_CREDENTIAL;
 
     SPE_CHECK_ARGS( 9 );
 
@@ -4273,13 +4499,16 @@ ZEND_VAS_NAMED_FUNC( vas_gss_spnego_accept )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
-    ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                                PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1,
+                                PHP_vas_id_t_RES_NAME, le_vas_id_t );
     if( ! ZVAL_IS_NULL( zgssctx ) )
     {
         if( Z_TYPE_P( zgssctx ) != IS_LONG || Z_LVAL_P( zgssctx ) != 0 )
         {
-            ZEND_FETCH_RESOURCE( gssctx, SPE_gss_ctx_id_t*, &zgssctx, -1, PHP_gss_ctx_id_t_RES_NAME, le_gss_ctx_id_t );
+            ZEND_FETCH_RESOURCE( gssctx, SPE_gss_ctx_id_t*, &zgssctx, -1,
+                                PHP_gss_ctx_id_t_RES_NAME, le_gss_ctx_id_t );
             mygssctx = gssctx->raw;
         }
     }
@@ -4397,20 +4626,23 @@ done:
 
 ZEND_VAS_NAMED_FUNC( vas_gss_krb5_get_subkey )
 {
-    SPE_vas_ctx_t* ctx;
-    SPE_gss_ctx_id_t* gssctx;
-    OM_uint32 err;
-    krb5_keyblock* key;
-    zval *zctx, *zgssctx, *zkey;
+    SPE_vas_ctx_t       *ctx;
+    SPE_gss_ctx_id_t    *gssctx;
+    zval                *zctx, *zgssctx, *zkey;
+    OM_uint32           err;
+    krb5_keyblock       *key = NULL;
 
     SPE_CHECK_ARGS( 3 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrz", &zctx, &zgssctx, &zkey ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrz",
+                                    &zctx, &zgssctx, &zkey ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
-    ZEND_FETCH_RESOURCE( gssctx, SPE_gss_ctx_id_t*, &zgssctx, -1, PHP_gss_ctx_id_t_RES_NAME, le_gss_ctx_id_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                                PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( gssctx, SPE_gss_ctx_id_t*, &zgssctx, -1,
+                                PHP_gss_ctx_id_t_RES_NAME, le_gss_ctx_id_t );
 
     err = vas_gss_krb5_get_subkey( ctx->ctx, gssctx->raw, &key );
 
@@ -4725,18 +4957,20 @@ ZEND_VAS_NAMED_FUNC( gss_indicate_mechs )
 
 ZEND_VAS_NAMED_FUNC( vas_krb5_get_context )
 {
-    zval *zctx;
-    SPE_vas_ctx_t *ctx;
-    vas_err_t err;
-    krb5_context krb5ctx;
+    SPE_vas_ctx_t   *ctx;
+    zval            *zctx;
+    vas_err_t       err;
+    krb5_context    krb5ctx;
 
     SPE_CHECK_ARGS( 1 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "r", &zctx ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "r",
+                                        &zctx ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                                    PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
 
     err = vas_krb5_get_context( ctx->ctx, &krb5ctx );
 
@@ -4754,21 +4988,23 @@ ZEND_VAS_NAMED_FUNC( vas_krb5_get_context )
 
 ZEND_VAS_NAMED_FUNC( vas_krb5_get_principal )
 {
-    zval* zctx;
-    zval* zid;
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* id;
-    vas_err_t err;
-    krb5_principal krb5princ;
+    SPE_vas_ctx_t   *ctx;
+    SPE_vas_id_t    *id;
+    zval            *zctx, *zid;
+    vas_err_t       err;
+    krb5_principal  krb5princ;
 
     SPE_CHECK_ARGS( 2 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rr", &zctx, &zid ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rr",
+                                        &zctx, &zid ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
-    ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                                    PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1,
+                                    PHP_vas_id_t_RES_NAME, le_vas_id_t );
 
     err = vas_krb5_get_principal( ctx->ctx, id->raw, &krb5princ );
 
@@ -4786,21 +5022,23 @@ ZEND_VAS_NAMED_FUNC( vas_krb5_get_principal )
 
 ZEND_VAS_NAMED_FUNC( vas_krb5_get_ccache )
 {
-    zval* zctx;
-    zval* zid;
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* id;
-    vas_err_t err;
-    krb5_ccache krb5cc;
+    SPE_vas_ctx_t   *ctx;
+    SPE_vas_id_t    *id;
+    zval            *zctx, *zid;
+    vas_err_t       err;
+    krb5_ccache     krb5cc;
 
     SPE_CHECK_ARGS( 2 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rr", &zctx, &zid ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rr",
+                                    &zctx, &zid ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
-    ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                                PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1,
+                                PHP_vas_id_t_RES_NAME, le_vas_id_t );
 
     err = vas_krb5_get_ccache( ctx->ctx, id->raw, &krb5cc );
 
@@ -4818,26 +5056,29 @@ ZEND_VAS_NAMED_FUNC( vas_krb5_get_ccache )
 
 ZEND_VAS_NAMED_FUNC( vas_krb5_get_credentials )
 {
-    zval* zctx;
-    zval* zid;
-    const char* szTarget;
-    int lTarget;
-    long addtocache;
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* id;
-    vas_err_t err;
-    krb5_creds* creds;
+    SPE_vas_ctx_t   *ctx;
+    SPE_vas_id_t    *id;
+    zval            *zctx, *zid;
+    vas_err_t       err;
+    const char      *szTarget;
+    int             lTarget;
+    long            addtocache;
+    krb5_creds      *creds;
 
     SPE_CHECK_ARGS( 4 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrsl", &zctx, &zid, &szTarget, &lTarget, &addtocache ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrsl",
+                    &zctx, &zid, &szTarget, &lTarget, &addtocache ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
-    ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                                PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1,
+                                PHP_vas_id_t_RES_NAME, le_vas_id_t );
 
-    err = vas_krb5_get_credentials( ctx->ctx, id->raw, lTarget == 0 ? NULL : szTarget, addtocache, &creds );
+    err = vas_krb5_get_credentials( ctx->ctx, id->raw,
+                        lTarget == 0 ? NULL : szTarget, addtocache, &creds );
 
     SPE_SET_VAS_ERR( err );
 
@@ -4853,23 +5094,25 @@ ZEND_VAS_NAMED_FUNC( vas_krb5_get_credentials )
 
 ZEND_VAS_NAMED_FUNC( vas_krb5_validate_credentials )
 {
-    zval* zctx;
-    zval* zcreds;
-    SPE_vas_ctx_t* ctx;
-    SPE_krb5_creds* creds;
-    const char* szKeytab;
-    int lKeytab;
-    vas_err_t err;
-    vas_auth_t* auth;
+    SPE_vas_ctx_t   *ctx;
+    SPE_krb5_creds  *creds;
+    zval            *zctx, *zcreds;
+    vas_err_t       err;
+    const char      *szKeytab;
+    int             lKeytab;
+    vas_auth_t      *auth = NULL;
 
     SPE_CHECK_ARGS( 3 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrs", &zctx, &zcreds, &szKeytab, &lKeytab ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrs",
+                            &zctx, &zcreds, &szKeytab, &lKeytab ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
-    ZEND_FETCH_RESOURCE( creds, SPE_krb5_creds*, &zcreds, -1, PHP_krb5_creds_RES_NAME, le_krb5_creds );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                        PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( creds, SPE_krb5_creds*, &zcreds, -1,
+                        PHP_krb5_creds_RES_NAME, le_krb5_creds );
 
     err = vas_krb5_validate_credentials( ctx->ctx, creds->raw, szKeytab, &auth );
 
@@ -4887,25 +5130,27 @@ ZEND_VAS_NAMED_FUNC( vas_krb5_validate_credentials )
 
 ZEND_VAS_NAMED_FUNC( vas_ldap_init_and_bind )
 {
-    zval* zctx;
-    zval* zid;
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* id = NULL;
-    const char* szUri;
-    int lUri;
-    vas_err_t err;
-    LDAP* ld;
+    SPE_vas_ctx_t   *ctx;
+    SPE_vas_id_t    *id = NULL;
+    zval            *zctx, *zid;
+    vas_err_t       err;
+    const char      *szUri;
+    int             lUri;
+    LDAP            *ld = NULL;
 
     SPE_CHECK_ARGS( 3 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrs", &zctx, &zid, &szUri, &lUri ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrs",
+                                &zctx, &zid, &szUri, &lUri ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                            PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
     if( ! ZVAL_IS_NULL( zid ) )
     {
-        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1,
+                                PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
     err = vas_ldap_init_and_bind( ctx->ctx, id ? id->raw : NULL, szUri, &ld );
 
@@ -4923,37 +5168,34 @@ ZEND_VAS_NAMED_FUNC( vas_ldap_init_and_bind )
 
 ZEND_VAS_NAMED_FUNC( vas_ldap_set_attributes )
 {
-    zval* zctx;
-    zval* zid;
-    SPE_vas_ctx_t* ctx;
-    SPE_vas_id_t* id = NULL;
-    const char* szUri;
-    const char* szDn;
-    int lUri;
-    int lDn;
-    vas_err_t err = VAS_ERR_SUCCESS;
-    zval* zmods;
-    HashTable* htmods;
-    HashPosition pmods;
-    LDAPMod** mods = NULL;
-    int mods_index = 0;
-    int mods_count;
-    zval** dataArray;
-    zval** dataObject;
+    SPE_vas_ctx_t   *ctx;
+    SPE_vas_id_t    *id = NULL;
+    zval            *zctx, *zid, *zmods, **dataArray, **dataObject;
+    vas_err_t       err = VAS_ERR_SUCCESS;
+    const char      *szUri, *szDn;
+    int             lUri, lDn;
+    HashTable       *htmods;
+    HashPosition    pmods;
+    LDAPMod         **mods = NULL;
+    int             mods_index = 0, mods_count;
 
     SPE_CHECK_ARGS( 5 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrssz", &zctx, &zid, &szUri, &lUri, &szDn, &lDn, &zmods ) == FAILURE )
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrssz",
+                &zctx, &zid, &szUri, &lUri, &szDn, &lDn, &zmods ) == FAILURE )
     {
         RETURN_NULL();
     }
-    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1, PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                            PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
     if( ! ZVAL_IS_NULL( zid ) )
     {
-        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1, PHP_vas_id_t_RES_NAME, le_vas_id_t );
+        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1,
+                            PHP_vas_id_t_RES_NAME, le_vas_id_t );
     }
     /* Create the mods array.
-     * DRK: Test with null mod_values -- should be OK -- pass null mod_values.*/
+     * Test with null mod_values--should be OK--pass null mod_values.
+     */
     if( Z_TYPE_P( zmods ) != IS_ARRAY )
     {
         err = VAS_ERR_INVALID_PARAM;
@@ -4965,7 +5207,8 @@ ZEND_VAS_NAMED_FUNC( vas_ldap_set_attributes )
         mods = emalloc( ( mods_count + 1 ) * sizeof( LDAPMod* ) );
 
         for( zend_hash_internal_pointer_reset_ex( htmods, &pmods );
-              zend_hash_get_current_data_ex( htmods, ( void** )&dataArray, &pmods ) == SUCCESS;
+              zend_hash_get_current_data_ex( htmods, ( void** )&dataArray,
+                                            &pmods ) == SUCCESS;
               zend_hash_move_forward_ex( htmods, &pmods ) )
         {
             if( Z_TYPE_PP( dataArray ) == IS_OBJECT )
@@ -4985,7 +5228,10 @@ ZEND_VAS_NAMED_FUNC( vas_ldap_set_attributes )
                 memset( m, 0, sizeof( *m ) );
 
                 /* get mod_op*/
-                if( zend_hash_find( Z_OBJPROP_PP( dataArray ), "mod_op", sizeof( "mod_op" ), ( void** )&dataObject ) == FAILURE )
+                if( zend_hash_find( Z_OBJPROP_PP( dataArray ),
+                                    "mod_op",
+                                    sizeof( "mod_op" ),
+                                    ( void** )&dataObject ) == FAILURE )
                 {
                     err = VAS_ERR_INVALID_PARAM;
                     continue;
@@ -4998,7 +5244,10 @@ ZEND_VAS_NAMED_FUNC( vas_ldap_set_attributes )
                 m->mod_op = Z_LVAL_PP( dataObject );
 
                 /* get mod_type*/
-                if( zend_hash_find( Z_OBJPROP_PP( dataArray ), "mod_type", sizeof( "mod_type" ), ( void** )&dataObject ) == FAILURE )
+                if( zend_hash_find( Z_OBJPROP_PP( dataArray ),
+                                    "mod_type",
+                                    sizeof( "mod_type" ),
+                                    ( void** )&dataObject ) == FAILURE )
                 {
                     err = VAS_ERR_INVALID_PARAM;
                     continue;
@@ -5012,7 +5261,10 @@ ZEND_VAS_NAMED_FUNC( vas_ldap_set_attributes )
                 /*printf( "m->mod_type: %s\n", m->mod_type );*/
 
                 /* get mod_values -- array of strings.*/
-                if( zend_hash_find( Z_OBJPROP_PP( dataArray ), "mod_values", sizeof( "mod_values" ), ( void** )&dataObject ) == FAILURE )
+                if( zend_hash_find( Z_OBJPROP_PP( dataArray ),
+                                    "mod_values",
+                                    sizeof( "mod_values" ),
+                                    ( void** )&dataObject ) == FAILURE )
                 {
                     err = VAS_ERR_INVALID_PARAM;
                     continue;
@@ -5035,14 +5287,18 @@ ZEND_VAS_NAMED_FUNC( vas_ldap_set_attributes )
                     int values_count = zend_hash_num_elements( htvalues );
                     int values_index = 0;
 
-                    m->mod_values = emalloc( ( values_count + 1 ) * sizeof( const char * ) );
+                    m->mod_values = emalloc( ( values_count + 1 )
+                                                * sizeof( const char * ) );
 
-                    for( zend_hash_internal_pointer_reset_ex( htvalues, &pvalues );
-                          zend_hash_get_current_data_ex( htvalues, ( void** ) &value, &pvalues ) == SUCCESS;
+                    for( zend_hash_internal_pointer_reset_ex( htvalues,
+                                                              &pvalues );
+                          zend_hash_get_current_data_ex( htvalues,
+                                      ( void** ) &value, &pvalues ) == SUCCESS;
                           zend_hash_move_forward_ex( htvalues, &pvalues ) )
                     {
                         m->mod_values[values_index++] = Z_STRVAL_PP( value );
-                        /* printf("m->mod_values: %s\n", Z_STRVAL_PP(value)); */
+                        ZEND_PRINTF( "_____m->mod_values = %s\n",
+                                     Z_STRVAL_PP( value ) );
                     }
                     m->mod_values[values_index++] = NULL;
                 }
@@ -5064,7 +5320,8 @@ ZEND_VAS_NAMED_FUNC( vas_ldap_set_attributes )
      * can't do that since they can't call efree().
      *
      * Note that all the strings are pointers into the PHP data structures
-     * so we don't free those.*/
+     * so we don't free those.
+     */
     if( mods )
     {
         LDAPMod** m;
@@ -5086,7 +5343,8 @@ ZEND_VAS_NAMED_FUNC( vas_ldap_set_attributes )
     RETURN_NULL();
 }
 
-/* end wrapper section */
+/* end zif_ section */
+
 /* init section */
 #ifdef __cplusplus
 extern "C" {
@@ -5097,7 +5355,9 @@ ZEND_GET_MODULE( vas )
 #endif
 
 static void php_vas_init_globals( zend_vas_globals* vas_globals )
-{}
+{
+    /* EMPTY */
+}
 
 PHP_MSHUTDOWN_FUNCTION( vas )
 {
@@ -5284,15 +5544,17 @@ REGISTER_LONG_CONSTANT(    "LDAP_MOD_BVALUES",                     0x0080,      
 /* end vinit subsection */
 
    /*SPE*/
-    memset( &( VAS_G( g_vas_err ) ), sizeof( VAS_G( g_vas_err ) ), 0 );
+    memset( &( VAS_G( g_vas_err ) ),       sizeof( VAS_G( g_vas_err ) ), 0 );
     memset( &( VAS_G( g_vas_err_minor ) ), sizeof( VAS_G( g_vas_err_minor ) ), 0 );
 
     return SUCCESS;
 }
+
 PHP_RSHUTDOWN_FUNCTION( vas )
 {
     return SUCCESS;
 }
+
 PHP_MINFO_FUNCTION( vas )
 {
 }

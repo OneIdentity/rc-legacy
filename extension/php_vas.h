@@ -21,7 +21,7 @@
  * Coerce the functions, their names and definitions into what PHP's Zend core
  * needs. These are some VAS macros atop Zend's own.
  */
-#define WRAP( name )          _wrap_##name
+#define WRAP( name )          zif_##name
 
 #if PHP_MAJOR_VERSION == 4
 # define ZEND_VAS( name )     ZEND_NAMED_FE( name, WRAP(name), NULL )
