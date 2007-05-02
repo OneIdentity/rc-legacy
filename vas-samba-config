@@ -214,11 +214,18 @@ fi
 TODAY=`date +"%Y%m%d"`
 
 ### Make sure samba services are stopped while checking and updating configuration
+
+#-- bug 254: this may need updating when porting
+case `uname -s` in
+    HP-UX)  initdir=/sbin/init.d;;
+    *)	    initdir=/etc/init.d;;
+esac
+
 echo "Stopping Samba services..."
-/etc/init.d/winbindd-quest stop  >/dev/null
-/etc/init.d/smbd-quest stop      >/dev/null
-/etc/init.d/vasidmapd stop       >/dev/null
-/etc/init.d/nmbd-quest stop      >/dev/null
+$initdir/winbindd-quest stop  >/dev/null
+$initdir/smbd-quest stop      >/dev/null
+$initdir/vasidmapd stop       >/dev/null
+$initdir/nmbd-quest stop      >/dev/null
 
 ##########################
 # Verify/Modify smb.conf #
@@ -463,7 +470,7 @@ fi
 
 ### Finally restart samba services
 echo "Starting Samba services..."
-/etc/init.d/vasidmapd start
-/etc/init.d/nmbd-quest start
-/etc/init.d/smbd-quest start
-/etc/init.d/winbindd-quest start
+$initdir/vasidmapd start
+$initdir/nmbd-quest start
+$initdir/smbd-quest start
+$initdir/winbindd-quest start
