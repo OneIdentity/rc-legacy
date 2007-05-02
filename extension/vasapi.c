@@ -18,6 +18,8 @@ extern "C" {
 #include "ext/standard/info.h"
 #include "php_vas.h"
 
+typedef struct group    sys_group_t;
+
 /*
  * These TSRMLS_ definitions should already be available now, but with older
  * PHP under Red Hat are not. This affects the last argument in the wrapped
@@ -96,6 +98,14 @@ static void vas_user_t_free( vas_ctx_t *ctx, vas_user_t *object )
 static void vas_group_t_free( vas_ctx_t *ctx, vas_group_t *object )
 {
     vas_group_free( ctx, object );
+}
+
+static void sys_group_t_free( vas_ctx_t *ctx, sys_group_t *object )
+{
+    /* This is standard struct group including its string pointers which
+     * vas_group_get_grinfo() has allocated in a single, continguous buffer.
+     */
+    free( object );
 }
 
 static void vas_service_t_free( vas_ctx_t *ctx, vas_service_t *object )
@@ -468,6 +478,7 @@ SPE_DECLARE_DTOR_USING_CTX( vas_id_t );
 SPE_DECLARE_DTOR_USING_CTX( vas_auth_t );
 SPE_DECLARE_DTOR_USING_CTX( vas_user_t );
 SPE_DECLARE_DTOR_USING_CTX( vas_group_t );
+SPE_DECLARE_DTOR_USING_CTX( sys_group_t );
 SPE_DECLARE_DTOR_USING_CTX( vas_service_t );
 SPE_DECLARE_DTOR_USING_CTX( vas_computer_t );
 
@@ -592,6 +603,7 @@ ZEND_VAS_ARG_INFO( vas_group_get_attrs );
 ZEND_VAS_ARG_INFO( vas_group_get_dn );
 ZEND_VAS_ARG_INFO( vas_group_get_domain );
 ZEND_VAS_ARG_INFO( vas_group_get_sid );
+ZEND_VAS_ARG_INFO( vas_group_get_grinfo );
 ZEND_VAS_ARG_INFO( vas_service_init );
 ZEND_VAS_ARG_INFO( vas_service_get_attrs );
 ZEND_VAS_ARG_INFO( vas_service_get_dn );
@@ -770,6 +782,7 @@ function_entry vas_functions[] =
     ZEND_VAS( vas_group_get_dn )
     ZEND_VAS( vas_group_get_domain )
     ZEND_VAS( vas_group_get_sid )
+    ZEND_VAS( vas_group_get_grinfo )
     ZEND_VAS( vas_service_init )
     ZEND_VAS( vas_service_get_attrs )
     ZEND_VAS( vas_service_get_dn )
@@ -3369,6 +3382,50 @@ ZEND_VAS_NAMED_FUNC( vas_group_get_sid )
         RETVAL_STRING( sid, 1 );
         free( sid );
         return;
+    }
+    else
+    {
+        RETURN_NULL();
+    }
+}
+
+ZEND_VAS_NAMED_FUNC( vas_group_get_grinfo )
+{
+    SPE_vas_ctx_t   *ctx;
+    SPE_vas_id_t    *id = NULL;
+    SPE_vas_group_t *group;
+    zval            *zctx, *zid, *zgroup;
+    vas_err_t       err;
+    struct group    *grp = NULL;
+
+    SPE_CHECK_ARGS( 3 );
+
+    /* TODO: I still don't know what this "rzr" is that I stole from the
+     * function immediately preceeding.
+     */
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr",
+                            &zctx, &zid, &zgroup) == FAILURE )
+    {
+        RETURN_NULL();
+    }
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                            PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+
+    if( ! ZVAL_IS_NULL( zid ) )
+    {
+        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1,
+                                PHP_vas_id_t_RES_NAME, le_vas_id_t );
+    }
+    ZEND_FETCH_RESOURCE( group, SPE_vas_group_t*, &zgroup, -1,
+                            PHP_vas_group_t_RES_NAME, le_vas_group_t );
+
+    err = vas_group_get_grinfo( ctx->ctx, RAW( id ), group->raw, &grp );
+
+    SPE_SET_VAS_ERR( err );
+
+    if( err == VAS_ERR_SUCCESS )
+    {
+        SPE_CONS_RETURN_VALUE( sys_group_t, grp );
     }
     else
     {
