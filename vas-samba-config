@@ -232,7 +232,7 @@ $initdir/nmbd-quest stop      >/dev/null
 ##########################
 
 SAMBAVERSION=`/opt/quest/sbin/smbd --version | 
-    sed -e 's/^Version //;s/-Quest-/./'`
+    sed -e 's/^Version //;s/-Quest-/./;s/[^0-9.][^.]*//g'`
 
 #-- is_lt returns true iff dotted version $1 < $2
 is_lt () {
