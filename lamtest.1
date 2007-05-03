@@ -4,7 +4,7 @@
 lamtest \- AIX authentication test tool
 .SH SYNOPSIS
 .B lamtest
-[\-lr]
+[\-Alr]
 .RI [\-m\  mode ]
 .RI [\-p\  password ]
 .RI [\-h\  hostname ]
@@ -35,6 +35,13 @@ should be called after an authentication attempt.
 \-r
 causes the authentication loop to restart on failure.
 This simulates how servers like OpenSSH perform multiple authentications.
+.TP
+.RI \-A
+Disables changing the administrative domain to the user's registry
+before authentication.
+Practically this stops
+.IR setauthdb (3)
+from being called.
 .TP
 .RI \-m\  mode
 specifies the authentication mode.

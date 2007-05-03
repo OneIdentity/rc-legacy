@@ -124,6 +124,7 @@ main(argc, argv)
 	int logresult = 0;
 	int failreason = AUDIT_FAIL;
 	char *nocred[] = {NULL};
+	int Aflag = 0;
         int rflag = 0;
         int sflag = 0;
 	char *registry = NULL;
@@ -133,8 +134,11 @@ main(argc, argv)
 
         authtest_init();
 
-	while ((ch = getopt(argc, argv, "h:lm:p:rst:")) != -1)
+	while ((ch = getopt(argc, argv, "Ah:lm:p:rst:")) != -1)
 	    switch (ch) {
+	    case 'A':
+		Aflag = 1;	    /* don't call setauthdb() */
+		break;
 	    case 'h':
 		hostname = optarg;
 		break;
@@ -172,7 +176,7 @@ main(argc, argv)
 	    arg_username = argv[optind++];
 	
 	if (error || optind < argc) {
-	    fprintf(stderr, "usage: %s [-lrs] [-m mode] [-p passwd]"
+	    fprintf(stderr, "usage: %s [-Alrs] [-m mode] [-p passwd]"
 			    " [-t tty] [-h host] [username]\n",
 		argv[0]);
 	    exit(1);
@@ -193,6 +197,27 @@ main(argc, argv)
 	    username = readline("username: ");
 	    if (!username)
 		exit(1);
+	}
+
+	error = getuserattr(username, S_REGISTRY, &registry, SEC_CHAR);
+	if (error != 0) {
+	    debug("getuserattr(,S_REGISTRY,) -> %d [errno %d]", error, errno);
+	    perror("getuserattr");
+	} else {
+	    debug("getuserattr(,S_REGISTRY,) -> %s", str(registry));
+	    if (Aflag)
+		debug("[-A: skipping call to setauthdb()]");
+	    else {
+		error = setauthdb(registry, olddb);
+		if (error != 0) {
+		    debug("setauthdb(%s,) -> %d [errno %d]", str(registry),
+			    error, errno);
+		    perror("setauthdb");
+		    exit(1);
+		}
+		olddb[16] = '\0';
+		debug("setauthdb(%s,) -> %s", str(registry), str(olddb));
+	    }
 	}
 
 #if 0
@@ -397,24 +422,6 @@ main(argc, argv)
 	/*
 	 * 5. setpcred
 	 */
-
-	error = getuserattr(username, S_REGISTRY, &registry, SEC_CHAR);
-	if (error != 0) {
-	    debug("getuserattr(,S_REGISTRY,) -> %d [errno %d]", error, errno);
-	    perror("getuserattr");
-	    exit(1);
-	}
-	debug("getuserattr(,S_REGISTRY,) -> %s", str(registry));
-
-	error = setauthdb(registry, olddb);
-	if (error != 0) {
-	    debug("setauthdb(%s,) -> %d [errno %d]", str(registry),
-		    error, errno);
-	    perror("setauthdb");
-	    exit(1);
-	}
-	olddb[16] = '\0';
-	debug("setauthdb(%s,) -> %s", str(registry), str(olddb));
 
 	debug("calling setpcred(%s, [])", str(username));
 	error = setpcred(username, nocred);
