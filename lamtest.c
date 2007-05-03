@@ -126,6 +126,10 @@ main(argc, argv)
 	char *nocred[] = {NULL};
         int rflag = 0;
         int sflag = 0;
+	char *registry = NULL;
+	char olddb[17];
+	gid_t groups[NGROUPS_MAX];
+	int ngroups;
 
         authtest_init();
 
@@ -390,10 +394,27 @@ main(argc, argv)
             }
         }
 
-#if 1
 	/*
 	 * 5. setpcred
 	 */
+
+	error = getuserattr(username, S_REGISTRY, &registry, SEC_CHAR);
+	if (error != 0) {
+	    debug("getuserattr(,S_REGISTRY,) -> %d [errno %d]", error, errno);
+	    perror("getuserattr");
+	    exit(1);
+	}
+	debug("getuserattr(,S_REGISTRY,) -> %s", str(registry));
+
+	error = setauthdb(registry, olddb);
+	if (error != 0) {
+	    debug("setauthdb(%s,) -> %d [errno %d]", str(registry),
+		    error, errno);
+	    perror("setauthdb");
+	    exit(1);
+	}
+	olddb[16] = '\0';
+	debug("setauthdb(%s,) -> %s", str(registry), str(olddb));
 
 	debug("calling setpcred(%s, [])", str(username));
 	error = setpcred(username, nocred);
@@ -405,7 +426,17 @@ main(argc, argv)
 	    debug("  setpcred() -> %d [success]", error);
 
         debug("getuid()=%d geteuid()=%d", getuid(), geteuid());
-#endif
+        debug("getgid()=%d getegid()=%d", getgid(), getegid());
+	ngroups = getgroups(sizeof groups / sizeof groups[0], groups);
+	if (ngroups < 0) perror("getgroups");
+	else { 
+	    int i;
+
+	    debug_nonl("getgroups() = [");
+	    for (i = 0; i < ngroups; i++)
+		debug_nonl(" %d", (int)groups[i]);
+	    debug(" ]");
+	}
 
 	exit(0);
 
