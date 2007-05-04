@@ -966,16 +966,11 @@ ZEND_VAS_NAMED_FUNC( vas_ctx_alloc )
     }
 }
 
-#define S1ARG zarg1 && !zarg2
-#define S2ARG zarg1 && zarg2 && !zarg3
-#define S3ARG zarg1 && zarg2 && zarg3 && !zarg4
-#define S4ARG zarg1 && zarg2 && zarg3 && zarg4 && !zarg5
-
 ZEND_VAS_NAMED_FUNC( vas_ctx_set_option )
 {
     SPE_vas_ctx_t   *ctx;
     zval            *zctx, *zarg1 = NULL, *zarg2 = NULL, *zarg3 = NULL,
-                    *zarg4 = NULL, *zarg5 = NULL;
+                    *zarg4 = NULL, *zarg5 = NULL, **zargX = NULL;
     vas_err_t       err;
     long            option;
 
@@ -995,12 +990,20 @@ ZEND_VAS_NAMED_FUNC( vas_ctx_set_option )
 
     switch( option )
     {
+#define S1ARG zarg1 && !zarg2
+#define S2ARG zarg1 && zarg2 && !zarg3
+#define S3ARG zarg1 && zarg2 && zarg3 && !zarg4
+#define S4ARG zarg1 && zarg2 && zarg3 && zarg4 && !zarg5
+
     case VAS_CTX_OPTION_DEFAULT_REALM:
         if( S1ARG && Z_TYPE_P( zarg1 ) == IS_STRING )
         {
-            char *str1 = Z_STRVAL_P( zarg1 );
-            err = vas_ctx_set_option( ctx->ctx, option, str1 );
+            char    *realm = Z_STRVAL_P( zarg1 );
+            err = vas_ctx_set_option( ctx->ctx, option, realm );
             SPE_SET_VAS_ERR( err );
+            zend_printf(
+"WARNING: vas_ctx_set_option(ctx, VAS_CTX_OPTION_DEFAULT_REALM, ...)\n"
+" --may break VAS on this host.\n" );
         }
         else
         {
@@ -1008,14 +1011,22 @@ ZEND_VAS_NAMED_FUNC( vas_ctx_set_option )
         }
         break;
     case VAS_CTX_OPTION_SITE_AND_FOREST_ROOT:
+        /* the option is two strings... */
         if( S2ARG &&
              ( Z_TYPE_P(zarg1) == IS_STRING || Z_TYPE_P( zarg1 ) == IS_NULL ) &&
              ( Z_TYPE_P(zarg2) == IS_STRING || Z_TYPE_P( zarg2 ) == IS_NULL ) )
         {
-            char* str1 = Z_TYPE_P( zarg1 ) == IS_STRING ? Z_STRVAL_P( zarg1 ) : NULL;
-            char* str2 = Z_TYPE_P( zarg2 ) == IS_STRING ? Z_STRVAL_P( zarg2 ) : NULL;
-            err = vas_ctx_set_option( ctx->ctx, option, str1, str2 );
+            char    *site = ( Z_TYPE_P( zarg1 ) == IS_STRING )
+                                    ? Z_STRVAL_P( zarg1 )
+                                    : NULL;
+            char    *forest = ( Z_TYPE_P( zarg2 ) == IS_STRING )
+                                    ? Z_STRVAL_P( zarg2 )
+                                    : NULL;
+            err = vas_ctx_set_option( ctx->ctx, option, site, forest );
             SPE_SET_VAS_ERR( err );
+            zend_printf(
+"WARNING: vas_ctx_set_option(ctx, VAS_CTX_OPTION_SITE_AND_FOREST_ROOT, ...)\n"
+" --may break VAS on this host.\n" );
         }
         else
         {
@@ -1024,16 +1035,22 @@ ZEND_VAS_NAMED_FUNC( vas_ctx_set_option )
         break;
     case VAS_CTX_OPTION_ADD_SERVER:
         if( S4ARG &&
-             ( Z_TYPE_P( zarg1 ) == IS_STRING ) &&
-             ( Z_TYPE_P( zarg2 ) == IS_STRING || Z_TYPE_P( zarg2 ) == IS_NULL ) &&
-             ( Z_TYPE_P( zarg3 ) == IS_STRING || Z_TYPE_P( zarg3 ) == IS_NULL ) &&
+             ( Z_TYPE_P( zarg1 ) == IS_STRING )   &&    /* (cannot be nil) */
+             ( Z_TYPE_P( zarg2 ) == IS_STRING
+                || Z_TYPE_P( zarg2 ) == IS_NULL ) &&
+             ( Z_TYPE_P( zarg3 ) == IS_STRING
+                || Z_TYPE_P( zarg3 ) == IS_NULL ) &&
              ( Z_TYPE_P( zarg4 ) == IS_LONG ) )
         {
-            char* str1 = Z_STRVAL_P( zarg1 );
-            char* str2 = Z_TYPE_P( zarg2 ) == IS_STRING ? Z_STRVAL_P( zarg2 ) : NULL;
-            char* str3 = Z_TYPE_P( zarg3 ) == IS_STRING ? Z_STRVAL_P( zarg3 ) : NULL;
-            long  int1 = Z_LVAL_P( zarg4 );
-            err = vas_ctx_set_option(ctx->ctx, option, str1, str2, str3, int1);
+            char    *host = Z_STRVAL_P( zarg1 );
+            char    *domain = ( Z_TYPE_P( zarg2 ) == IS_STRING )
+                                    ? Z_STRVAL_P( zarg2 )
+                                    : NULL;
+            char    *site = ( Z_TYPE_P( zarg3 ) == IS_STRING )
+                                    ? Z_STRVAL_P( zarg3 )
+                                    : NULL;
+            long    srvinfo = Z_LVAL_P( zarg4 );
+            err = vas_ctx_set_option(ctx->ctx, option, host, domain, site, srvinfo);
             SPE_SET_VAS_ERR( err );
         }
         else
@@ -1041,6 +1058,7 @@ ZEND_VAS_NAMED_FUNC( vas_ctx_set_option )
             SPE_CHOKE_PARAMS();
         }
         break;
+
     case VAS_CTX_OPTION_USE_GSSAPI_AUTHZ:
     case VAS_CTX_OPTION_USE_TCP_ONLY:
     case VAS_CTX_OPTION_USE_DNSSRV:
@@ -1048,10 +1066,13 @@ ZEND_VAS_NAMED_FUNC( vas_ctx_set_option )
     case VAS_CTX_OPTION_USE_SERVER_REFERRALS:
     case VAS_CTX_OPTION_USE_VASCACHE:
     case VAS_CTX_OPTION_USE_VASCACHE_IPC:
+    case VAS_CTX_OPTION_USE_SRVINFO_CONF:
+    case VAS_CTX_OPTION_SRVINFO_DETECT_ONLY_UNTIL_FOUND:
+        /* setting the Boolean options... */
         if( S1ARG && Z_TYPE_P( zarg1 ) == IS_LONG )
         {
-            long int1 = Z_LVAL_P( zarg1 );
-            err = vas_ctx_set_option( ctx->ctx, option, int1 );
+            long    __bool_value = Z_LVAL_P( zarg1 );
+            err = vas_ctx_set_option( ctx->ctx, option, __bool_value );
             SPE_SET_VAS_ERR( err );
         }
         else
@@ -1059,8 +1080,65 @@ ZEND_VAS_NAMED_FUNC( vas_ctx_set_option )
             SPE_CHOKE_PARAMS();
         }
         break;
+        /* TODO: these need to be implemented. The C implementation is here;
+         * compare to previously implemented options for binding.
+         */
+    case VAS_CTX_OPTION_SEPARATOR_IN_ERROR_MESSAGE_STRING:
+        if( S1ARG &&
+             ( Z_TYPE_P(zarg1) == IS_STRING || Z_TYPE_P( zarg1 ) == IS_NULL ) )
+        {
+            char    *sep = ( Z_TYPE_P( zarg1 ) == IS_STRING )
+                                ? Z_STRVAL_P( zarg1 )
+                                : NULL;
+            err = vas_ctx_set_option( ctx->ctx, option, sep );
+            SPE_SET_VAS_ERR( err );
+        }
+        else
+        {
+            SPE_CHOKE_PARAMS();
+        }
+        break;
+
+    case VAS_CTX_OPTION_DNS_FAILURE_TIMELIMIT:
+        /* setting time_t option... */
+        if( S1ARG && Z_TYPE_P( zarg1 ) == IS_LONG )
+        {
+            time_t    timeout = Z_LVAL_P( zarg1 );
+            err = vas_ctx_set_option( ctx->ctx, option, timeout );
+            SPE_SET_VAS_ERR( err );
+        }
+        else
+        {
+            SPE_CHOKE_PARAMS();
+        }
+        break;
+
+    case VAS_CTX_OPTION_DOMAIN_NAMING_CONTEXT:
+        /* the option is a string and a string list... */
+        zargX = ( zval ** ) zarg2;  /* recast zarg2 for char **value */
+
+        if( S2ARG &&
+            ( Z_TYPE_P(zarg1) == IS_STRING || Z_TYPE_P( zarg1 ) == IS_NULL ) &&
+            ( Z_TYPE_PP(zargX) == IS_STRING || Z_TYPE_PP( zargX ) == IS_NULL ) )
+        {
+            char    *domain = ( Z_TYPE_P( zarg1 ) == IS_STRING )
+                                ? Z_STRVAL_P( zarg1 )
+                                : NULL;
+            char    *value = ( Z_TYPE_PP( zargX ) == IS_STRING )
+                                ? Z_STRVAL_PP( zargX )
+                                : NULL;
+            err = vas_ctx_set_option( ctx->ctx, option, domain, value );
+            SPE_SET_VAS_ERR( err );
+        }
+        else
+        {
+            SPE_CHOKE_PARAMS();
+        }
+        break;
+
     default:
-        SPE_zend_error( E_WARNING, "Invalid option specified %s()", get_active_function_name( TSRMLS_C ) );
+        SPE_zend_error( E_WARNING, "Invalid option specified %s()",
+                        get_active_function_name( TSRMLS_C ) );
         SPE_SET_VAS_ERR( VAS_ERR_INVALID_PARAM );
         break;
     }
@@ -1087,28 +1165,42 @@ ZEND_VAS_NAMED_FUNC( vas_ctx_get_option )
 
     switch( option )
     {
-    case VAS_CTX_OPTION_DEFAULT_REALM:
-    case VAS_CTX_OPTION_SITE_AND_FOREST_ROOT:
-    case VAS_CTX_OPTION_ADD_SERVER:
-    case VAS_CTX_OPTION_USE_TCP_ONLY:
-    case VAS_CTX_OPTION_USE_GSSAPI_AUTHZ:
-    case VAS_CTX_OPTION_USE_SRVINFO_CACHE:
-    case VAS_CTX_OPTION_USE_DNSSRV:
-    case VAS_CTX_OPTION_USE_VASCACHE:
-    case VAS_CTX_OPTION_USE_VASCACHE_IPC:
-    case VAS_CTX_OPTION_USE_SERVER_REFERRALS:
-        err = vas_ctx_get_option( ctx->ctx, option, &intvalue );
-        SPE_SET_VAS_ERR( err );
-        if( err == VAS_ERR_SUCCESS )
-        {
-            RETURN_LONG( intvalue );
-        }
-        break;
-    default:
-        SPE_zend_error( E_WARNING, "Invalid option specified %s()", get_active_function_name( TSRMLS_C ) );
-        SPE_SET_VAS_ERR( VAS_ERR_INVALID_PARAM );
-        RETURN_NULL();
-        break;
+        case VAS_CTX_OPTION_USE_TCP_ONLY:
+        case VAS_CTX_OPTION_USE_GSSAPI_AUTHZ:
+        case VAS_CTX_OPTION_USE_SRVINFO_CACHE:
+        case VAS_CTX_OPTION_USE_DNSSRV:
+        case VAS_CTX_OPTION_USE_VASCACHE:
+        case VAS_CTX_OPTION_USE_VASCACHE_IPC:
+        case VAS_CTX_OPTION_USE_SERVER_REFERRALS:
+        case VAS_CTX_OPTION_SEPARATOR_IN_ERROR_MESSAGE_STRING:
+        case VAS_CTX_OPTION_SRVINFO_DETECT_ONLY_UNTIL_FOUND:
+        case VAS_CTX_OPTION_DNS_FAILURE_TIMELIMIT:
+        case VAS_CTX_OPTION_USE_SRVINFO_CONF:
+            err = vas_ctx_get_option( ctx->ctx, option, &intvalue );
+            SPE_SET_VAS_ERR( err );
+            if( err == VAS_ERR_SUCCESS )
+            {
+                RETURN_LONG( intvalue );
+            }
+            break;
+
+        case VAS_CTX_OPTION_ADD_SERVER:
+        case VAS_CTX_OPTION_DEFAULT_REALM:
+        case VAS_CTX_OPTION_SITE_AND_FOREST_ROOT:
+        case VAS_CTX_OPTION_DOMAIN_NAMING_CONTEXT:
+            SPE_zend_error( E_WARNING,
+                            "Unimplemented get-option specified--"
+                            "see documentation, %s()",
+                            get_active_function_name( TSRMLS_C ) );
+            SPE_SET_VAS_ERR( VAS_ERR_INVALID_PARAM );
+            RETURN_NULL();
+        default:
+            SPE_zend_error( E_WARNING,
+                            "Invalid option specified %s()",
+                            get_active_function_name( TSRMLS_C ) );
+            SPE_SET_VAS_ERR( VAS_ERR_INVALID_PARAM );
+            RETURN_NULL();
+            break;
     }
 }
 
@@ -2694,7 +2786,7 @@ ZEND_VAS_NAMED_FUNC( vas_user_get_attrs )
     /*DRK test to make sure this works when null!!*/
     if( ! ZVAL_IS_NULL( zanames ) )
     {
-        /* Create the anames array. */
+        /* Create the anames array */
         htanames = Z_ARRVAL_P( zanames );
         anames_count = zend_hash_num_elements( htanames );
         anames = emalloc( ( anames_count + 1 ) * sizeof( const char* ) );
@@ -3233,7 +3325,7 @@ ZEND_VAS_NAMED_FUNC( vas_group_get_attrs )
     }
     ZEND_FETCH_RESOURCE( group, SPE_vas_group_t*, &zgroup, -1,
                             PHP_vas_group_t_RES_NAME, le_vas_group_t );
-    /* Create the anames array. */
+    /* Create the anames array */
     htanames = Z_ARRVAL_P( zanames );
     anames_count = zend_hash_num_elements( htanames );
     anames = emalloc( ( anames_count + 1 ) * sizeof( const char* ) );
@@ -3502,7 +3594,7 @@ ZEND_VAS_NAMED_FUNC( vas_service_get_attrs )
     }
     ZEND_FETCH_RESOURCE( service, SPE_vas_service_t*, &zservice, -1,
                         PHP_vas_service_t_RES_NAME, le_vas_service_t );
-    /* Create the anames array. */
+    /* Create the anames array */
     htanames = Z_ARRVAL_P( zanames );
     anames_count = zend_hash_num_elements( htanames );
     anames = emalloc( ( anames_count + 1 ) * sizeof( const char* ) );
@@ -3853,7 +3945,7 @@ ZEND_VAS_NAMED_FUNC( vas_computer_get_attrs )
     }
     ZEND_FETCH_RESOURCE( computer, SPE_vas_computer_t*, &zcomputer, -1,
                         PHP_vas_computer_t_RES_NAME, le_vas_computer_t );
-    /* Create the anames array.*/
+    /* Create the anames array */
     htanames = Z_ARRVAL_P( zanames );
     anames_count = zend_hash_num_elements( htanames );
     anames = emalloc( ( anames_count + 1 ) * sizeof( const char* ) );
@@ -5315,9 +5407,9 @@ ZEND_VAS_NAMED_FUNC( vas_ldap_set_attributes )
                     continue;
                 }
                 m->mod_type = Z_STRVAL_PP( dataObject );
-                /*printf( "m->mod_type: %s\n", m->mod_type );*/
+                ZEND_PRINTF( "m->mod_type: %s\n", m->mod_type );
 
-                /* get mod_values -- array of strings.*/
+                /* get mod_values--array of strings */
                 if( zend_hash_find( Z_OBJPROP_PP( dataArray ),
                                     "mod_values",
                                     sizeof( "mod_values" ),
@@ -5329,7 +5421,7 @@ ZEND_VAS_NAMED_FUNC( vas_ldap_set_attributes )
                 if( Z_TYPE_PP( dataObject ) == IS_NULL )
                 {
                     m->mod_values = NULL;
-                    /*printf( "m->mod_values: NULL\n" );*/
+                    ZEND_PRINTF( "m->mod_values: NULL\n" );
                 }
                 else if( Z_TYPE_PP( dataObject ) != IS_ARRAY )
                 {
@@ -5457,144 +5549,294 @@ PHP_MINIT_FUNCTION( vas )
 PHP_RINIT_FUNCTION( vas )
 {
 /* cinit subsection */
-REGISTER_LONG_CONSTANT(    "VAS_ID_FLAG_USE_MEMORY_CCACHE",        ( 1 << 0 ),                           CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_ID_FLAG_KEEP_COPY_OF_CRED",        ( 1 << 1 ),                           CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_ID_FLAG_DO_NOT_DERIVE_KEYTAB",     ( 1 << 2 ),                           CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_ID_FLAG_NO_INITIAL_TGT",           ( 1 << 3 ),                           CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_ID_CRED_FLAG_RENEWABLE",           ( 1 << 4 ),                           CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_NAME_FLAG_NO_CACHE",               ( 1 << 0 ),                           CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_NAME_FLAG_NO_LDAP",                ( 1 << 1 ),                           CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_NAME_FLAG_NO_IMPLICIT",            ( 1 << 2 ),                           CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_NAME_FLAG_NO_DNS_EXPAND",          ( 1 << 3 ),                           CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_NAME_FLAG_FOREST_SCOPE",           ( 1 << 4 ),                           CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_ERR_BAD_ERR",                      VAS_ERR_BAD_ERR,                      CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_ERR_SUCCESS",                      VAS_ERR_SUCCESS,                      CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_ERR_FAILURE",                      VAS_ERR_FAILURE,                      CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_ERR_KRB5",                         VAS_ERR_KRB5,                         CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_ERR_KPASSWD",                      VAS_ERR_KPASSWD,                      CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_ERR_LDAP",                         VAS_ERR_LDAP,                         CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_ERR_INVALID_PARAM",                VAS_ERR_INVALID_PARAM,                CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_ERR_NO_MEMORY",                    VAS_ERR_NO_MEMORY,                    CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_ERR_ACCESS",                       VAS_ERR_ACCESS,                       CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_ERR_NOT_FOUND",                    VAS_ERR_NOT_FOUND,                    CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_ERR_THREAD",                       VAS_ERR_THREAD,                       CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_ERR_CONFIG",                       VAS_ERR_CONFIG,                       CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_ERR_INTERNAL",                     VAS_ERR_INTERNAL,                     CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_ERR_EXISTS",                       VAS_ERR_EXISTS,                       CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_ERR_DNS",                          VAS_ERR_DNS,                          CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_ERR_CRED_EXPIRED",                 VAS_ERR_CRED_EXPIRED,                 CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_ERR_CRED_NEEDED",                  VAS_ERR_CRED_NEEDED,                  CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_ERR_MORE_VALS",                    VAS_ERR_MORE_VALS,                    CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_ERR_TIMEDOUT",                     VAS_ERR_TIMEDOUT,                     CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_ERR_INCOMPLETE",                   VAS_ERR_INCOMPLETE,                   CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_ERR_TYPE_VAS",                     VAS_ERR_TYPE_VAS,                     CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_ERR_TYPE_SYS",                     VAS_ERR_TYPE_SYS,                     CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_ERR_TYPE_KRB5",                    VAS_ERR_TYPE_KRB5,                    CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_ERR_TYPE_KPASSWD",                 VAS_ERR_TYPE_KPASSWD,                 CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_ERR_TYPE_LDAP",                    VAS_ERR_TYPE_LDAP,                    CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_CTX_OPTION_DEFAULT_REALM",         VAS_CTX_OPTION_DEFAULT_REALM,         CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_CTX_OPTION_SITE_AND_FOREST_ROOT",  VAS_CTX_OPTION_SITE_AND_FOREST_ROOT,  CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_CTX_OPTION_ADD_SERVER",            VAS_CTX_OPTION_ADD_SERVER,            CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_CTX_OPTION_USE_TCP_ONLY",          VAS_CTX_OPTION_USE_TCP_ONLY,          CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_CTX_OPTION_USE_GSSAPI_AUTHZ",      VAS_CTX_OPTION_USE_GSSAPI_AUTHZ,      CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_CTX_OPTION_USE_SRVINFO_CACHE",     VAS_CTX_OPTION_USE_SRVINFO_CACHE,     CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_CTX_OPTION_USE_DNSSRV",            VAS_CTX_OPTION_USE_DNSSRV,            CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_CTX_OPTION_USE_VASCACHE",          VAS_CTX_OPTION_USE_VASCACHE,          CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_CTX_OPTION_USE_VASCACHE_IPC",      VAS_CTX_OPTION_USE_VASCACHE_IPC,      CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_CTX_OPTION_USE_SERVER_REFERRALS",  VAS_CTX_OPTION_USE_SERVER_REFERRALS,  CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_ATTRS_OPTION_SEARCH_TIMEOUT",      VAS_ATTRS_OPTION_SEARCH_TIMEOUT,      CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_ATTRS_OPTION_LDAP_PAGESIZE",       VAS_ATTRS_OPTION_LDAP_PAGESIZE,       CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_ATTRS_B64_ENCODE_ATTRS",           VAS_ATTRS_B64_ENCODE_ATTRS,           CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_SRVINFO_TYPE_ANY",                 VAS_SRVINFO_TYPE_ANY,                 CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_SRVINFO_TYPE_DC",                  VAS_SRVINFO_TYPE_DC,                  CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_SRVINFO_TYPE_PDC",                 VAS_SRVINFO_TYPE_PDC,                 CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_SRVINFO_TYPE_GC",                  VAS_SRVINFO_TYPE_GC,                  CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_NAME_TYPE_UNKNOWN",                VAS_NAME_TYPE_UNKNOWN,                CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_NAME_TYPE_USER",                   VAS_NAME_TYPE_USER,                   CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_NAME_TYPE_GROUP",                  VAS_NAME_TYPE_GROUP,                  CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_NAME_TYPE_SERVICE",                VAS_NAME_TYPE_SERVICE,                CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_NAME_TYPE_HOST",                   VAS_NAME_TYPE_HOST,                   CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_NAME_TYPE_DN",                     VAS_NAME_TYPE_DN,                     CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_NAME_TYPE_SID",                    VAS_NAME_TYPE_SID,                    CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_GSS_SPNEGO_ENCODING_DER",          VAS_GSS_SPNEGO_ENCODING_DER,          CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "VAS_GSS_SPNEGO_ENCODING_BASE64",       VAS_GSS_SPNEGO_ENCODING_BASE64,       CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_C_AF_UNSPEC",                      0,                                    CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_C_AF_LOCAL",                       1,                                    CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_C_AF_INET",                        2,                                    CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_C_AF_IMPLINK",                     3,                                    CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_C_AF_PUP",                         4,                                    CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_C_AF_CHAOS",                       5,                                    CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_C_AF_NS",                          6,                                    CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_C_AF_NBS",                         7,                                    CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_C_AF_ECMA",                        8,                                    CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_C_AF_DATAKIT",                     9,                                    CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_C_AF_CCITT",                       10,                                   CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_C_AF_SNA",                         11,                                   CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_C_AF_DECnet",                      12,                                   CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_C_AF_DLI",                         13,                                   CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_C_AF_LAT",                         14,                                   CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_C_AF_HYLINK",                      15,                                   CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_C_AF_APPLETALK",                   16,                                   CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_C_AF_BSC",                         17,                                   CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_C_AF_DSS",                         18,                                   CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_C_AF_OSI",                         19,                                   CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_C_AF_X25",                         21,                                   CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_C_AF_INET6",                       24,                                   CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_C_AF_NULLADDR",                    255,                                  CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_C_DELEG_FLAG",                     1,                                    CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_C_MUTUAL_FLAG",                    2,                                    CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_C_REPLAY_FLAG",                    4,                                    CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_C_SEQUENCE_FLAG",                  8,                                    CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_C_CONF_FLAG",                      16,                                   CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_C_INTEG_FLAG",                     32,                                   CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_C_ANON_FLAG",                      64,                                   CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_C_PROT_READY_FLAG",                128,                                  CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_C_TRANS_FLAG",                     256,                                  CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_C_BOTH",                           0,                                    CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_C_INITIATE",                       1,                                    CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_C_ACCEPT",                         2,                                    CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_C_GSS_CODE",                       1,                                    CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_C_MECH_CODE",                      2,                                    CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_C_QOP_DEFAULT",                    0,                                    CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_C_INDEFINITE",                     0xfffffffful,                         CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_C_CALLING_ERROR_OFFSET",           24,                                   CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_C_ROUTINE_ERROR_OFFSET",           16,                                   CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_C_SUPPLEMENTARY_OFFSET",           0,                                    CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_C_NO_CONTEXT",                     0,                                    CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_C_NO_CREDENTIAL",                  0,                                    CONST_CS | CONST_PERSISTENT );
-REGISTER_STRING_CONSTANT(  "GSS_C_NO_BUFFER",                      "",                                   CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_S_CALL_INACCESSIBLE_READ",         ( 1ul << 24 ),                        CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_S_CALL_INACCESSIBLE_WRITE",        ( 2ul << 24 ),                        CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_S_CALL_BAD_STRUCTURE",             ( 3ul << 24 ),                        CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_S_BAD_MECH",                       ( 1ul << 16 ),                        CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_S_BAD_NAME",                       ( 2ul << 16 ),                        CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_S_BAD_NAMETYPE",                   ( 3ul << 16 ),                        CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_S_BAD_BINDINGS",                   ( 4ul << 16 ),                        CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_S_BAD_STATUS",                     ( 5ul << 16 ),                        CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_S_BAD_MIC",                        ( 6ul << 16 ),                        CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_S_BAD_SIG",                        ( 6ul << 16 ),                        CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_S_NO_CRED",                        ( 7ul << 16 ),                        CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_S_NO_CONTEXT",                     ( 8ul << 16 ),                        CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_S_DEFECTIVE_TOKEN",                ( 9ul << 16 ),                        CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_S_DEFECTIVE_CREDENTIAL",           ( 10ul << 16 ),                       CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_S_CREDENTIALS_EXPIRED",            ( 11ul << 16 ),                       CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_S_CONTEXT_EXPIRED",                ( 12ul << 16 ),                       CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_S_FAILURE",                        ( 13ul << 16 ),                       CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_S_BAD_QOP",                        ( 14ul << 16 ),                       CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_S_UNAUTHORIZED",                   ( 15ul << 16 ),                       CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_S_UNAVAILABLE",                    ( 16ul << 16 ),                       CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_S_DUPLICATE_ELEMENT",              ( 17ul << 16 ),                       CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_S_NAME_NOT_MN",                    ( 18ul << 16 ),                       CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_S_CONTINUE_NEEDED",                ( 1ul << ( 0 + 0 ) ),                 CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_S_DUPLICATE_TOKEN",                ( 1ul << ( 0 + 1 ) ),                 CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_S_OLD_TOKEN",                      ( 1ul << ( 0 + 2 ) ),                 CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_S_UNSEQ_TOKEN",                    ( 1ul << ( 0 + 3 ) ),                 CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_S_GAP_TOKEN",                      ( 1ul << ( 0 + 4 ) ),                 CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "GSS_S_COMPLETE",                       0,                                    CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "LDAP_MOD_ADD",                         0x0000,                               CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "LDAP_MOD_DELETE",                      0x0001,                               CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "LDAP_MOD_REPLACE",                     0x0002,                               CONST_CS | CONST_PERSISTENT );
-REGISTER_LONG_CONSTANT(    "LDAP_MOD_BVALUES",                     0x0080,                               CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_ID_FLAG_USE_MEMORY_CCACHE",
+                            ( 1 << 0 ),           CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_ID_FLAG_KEEP_COPY_OF_CRED",
+                            ( 1 << 1 ),           CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_ID_FLAG_DO_NOT_DERIVE_KEYTAB",
+                            ( 1 << 2 ),           CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_ID_FLAG_NO_INITIAL_TGT",
+                            ( 1 << 3 ),           CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_ID_CRED_FLAG_RENEWABLE",
+                            ( 1 << 4 ),           CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_NAME_FLAG_NO_CACHE",
+                            ( 1 << 0 ),           CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_NAME_FLAG_NO_LDAP",
+                            ( 1 << 1 ),           CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_NAME_FLAG_NO_IMPLICIT",
+                            ( 1 << 2 ),           CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_NAME_FLAG_NO_DNS_EXPAND",
+                            ( 1 << 3 ),           CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_NAME_FLAG_FOREST_SCOPE",
+                            ( 1 << 4 ),           CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_ERR_BAD_ERR",
+                            VAS_ERR_BAD_ERR,      CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_ERR_SUCCESS",
+                            VAS_ERR_SUCCESS,      CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_ERR_FAILURE",
+                            VAS_ERR_FAILURE,      CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_ERR_KRB5",
+                            VAS_ERR_KRB5,         CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_ERR_KPASSWD",
+                            VAS_ERR_KPASSWD,      CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_ERR_LDAP",
+                            VAS_ERR_LDAP,         CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_ERR_INVALID_PARAM",
+                            VAS_ERR_INVALID_PARAM,CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_ERR_NO_MEMORY",
+                            VAS_ERR_NO_MEMORY,    CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_ERR_ACCESS",
+                            VAS_ERR_ACCESS,       CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_ERR_NOT_FOUND",
+                            VAS_ERR_NOT_FOUND,    CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_ERR_THREAD",
+                            VAS_ERR_THREAD,       CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_ERR_CONFIG",
+                            VAS_ERR_CONFIG,       CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_ERR_INTERNAL",
+                            VAS_ERR_INTERNAL,     CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_ERR_EXISTS",
+                            VAS_ERR_EXISTS,       CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_ERR_DNS",
+                            VAS_ERR_DNS,          CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_ERR_CRED_EXPIRED",
+                            VAS_ERR_CRED_EXPIRED, CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_ERR_CRED_NEEDED",
+                            VAS_ERR_CRED_NEEDED,  CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_ERR_MORE_VALS",
+                            VAS_ERR_MORE_VALS,    CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_ERR_TIMEDOUT",
+                            VAS_ERR_TIMEDOUT,     CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_ERR_INCOMPLETE",
+                            VAS_ERR_INCOMPLETE,   CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_ERR_TYPE_VAS",
+                            VAS_ERR_TYPE_VAS,     CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_ERR_TYPE_SYS",
+                            VAS_ERR_TYPE_SYS,     CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_ERR_TYPE_KRB5",
+                            VAS_ERR_TYPE_KRB5,    CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_ERR_TYPE_KPASSWD",
+                            VAS_ERR_TYPE_KPASSWD, CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_ERR_TYPE_LDAP",
+                            VAS_ERR_TYPE_LDAP,    CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_CTX_OPTION_DEFAULT_REALM",
+                            VAS_CTX_OPTION_DEFAULT_REALM,  CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_CTX_OPTION_SITE_AND_FOREST_ROOT",
+                            VAS_CTX_OPTION_SITE_AND_FOREST_ROOT,  CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_CTX_OPTION_ADD_SERVER",
+                            VAS_CTX_OPTION_ADD_SERVER,            CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_CTX_OPTION_USE_TCP_ONLY",
+                            VAS_CTX_OPTION_USE_TCP_ONLY,          CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_CTX_OPTION_USE_GSSAPI_AUTHZ",
+                            VAS_CTX_OPTION_USE_GSSAPI_AUTHZ,      CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_CTX_OPTION_USE_SRVINFO_CACHE",
+                            VAS_CTX_OPTION_USE_SRVINFO_CACHE,     CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_CTX_OPTION_USE_DNSSRV",
+                            VAS_CTX_OPTION_USE_DNSSRV,            CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_CTX_OPTION_USE_VASCACHE",
+                            VAS_CTX_OPTION_USE_VASCACHE,          CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_CTX_OPTION_USE_VASCACHE_IPC",
+                            VAS_CTX_OPTION_USE_VASCACHE_IPC,      CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_CTX_OPTION_USE_SERVER_REFERRALS",
+                            VAS_CTX_OPTION_USE_SERVER_REFERRALS,  CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_CTX_OPTION_SEPARATOR_IN_ERROR_MESSAGE_STRING",
+VAS_CTX_OPTION_SEPARATOR_IN_ERROR_MESSAGE_STRING, CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_CTX_OPTION_SRVINFO_DETECT_ONLY_UNTIL_FOUND",
+VAS_CTX_OPTION_SRVINFO_DETECT_ONLY_UNTIL_FOUND,   CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_CTX_OPTION_DNS_FAILURE_TIMELIMIT",
+VAS_CTX_OPTION_DNS_FAILURE_TIMELIMIT,             CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_CTX_OPTION_DOMAIN_NAMING_CONTEXT",
+VAS_CTX_OPTION_DOMAIN_NAMING_CONTEXT,             CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_CTX_OPTION_USE_SRVINFO_CONF",
+VAS_CTX_OPTION_USE_SRVINFO_CONF,                  CONST_CS | CONST_PERSISTENT );
+
+
+REGISTER_LONG_CONSTANT(    "VAS_ATTRS_OPTION_SEARCH_TIMEOUT",
+                            VAS_ATTRS_OPTION_SEARCH_TIMEOUT,    CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_ATTRS_OPTION_LDAP_PAGESIZE",
+                            VAS_ATTRS_OPTION_LDAP_PAGESIZE,     CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_ATTRS_B64_ENCODE_ATTRS",
+                            VAS_ATTRS_B64_ENCODE_ATTRS,         CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_SRVINFO_TYPE_ANY",
+                            VAS_SRVINFO_TYPE_ANY, CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_SRVINFO_TYPE_DC",
+                            VAS_SRVINFO_TYPE_DC,  CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_SRVINFO_TYPE_PDC",
+                            VAS_SRVINFO_TYPE_PDC, CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_SRVINFO_TYPE_GC",
+                            VAS_SRVINFO_TYPE_GC,  CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_NAME_TYPE_UNKNOWN",
+                            VAS_NAME_TYPE_UNKNOWN,CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_NAME_TYPE_USER",
+                            VAS_NAME_TYPE_USER,   CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_NAME_TYPE_GROUP",
+                            VAS_NAME_TYPE_GROUP,  CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_NAME_TYPE_SERVICE",
+                            VAS_NAME_TYPE_SERVICE,CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_NAME_TYPE_HOST",
+                            VAS_NAME_TYPE_HOST,   CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_NAME_TYPE_DN",
+                            VAS_NAME_TYPE_DN,     CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_NAME_TYPE_SID",
+                            VAS_NAME_TYPE_SID,    CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_GSS_SPNEGO_ENCODING_DER",
+                            VAS_GSS_SPNEGO_ENCODING_DER,    CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "VAS_GSS_SPNEGO_ENCODING_BASE64",
+                            VAS_GSS_SPNEGO_ENCODING_BASE64, CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_C_AF_UNSPEC",
+                            0,                    CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_C_AF_LOCAL",
+                            1,                    CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_C_AF_INET",
+                            2,                    CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_C_AF_IMPLINK",
+                            3,                    CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_C_AF_PUP",
+                            4,                    CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_C_AF_CHAOS",
+                            5,                    CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_C_AF_NS",
+                            6,                    CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_C_AF_NBS",
+                            7,                    CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_C_AF_ECMA",
+                            8,                    CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_C_AF_DATAKIT",
+                            9,                    CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_C_AF_CCITT",
+                            10,                   CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_C_AF_SNA",
+                            11,                   CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_C_AF_DECnet",
+                            12,                   CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_C_AF_DLI",
+                            13,                   CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_C_AF_LAT",
+                            14,                   CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_C_AF_HYLINK",
+                            15,                   CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_C_AF_APPLETALK",
+                            16,                   CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_C_AF_BSC",
+                            17,                   CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_C_AF_DSS",
+                            18,                   CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_C_AF_OSI",
+                            19,                   CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_C_AF_X25",
+                            21,                   CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_C_AF_INET6",
+                            24,                   CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_C_AF_NULLADDR",
+                            255,                  CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_C_DELEG_FLAG",
+                            1,                    CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_C_MUTUAL_FLAG",
+                            2,                    CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_C_REPLAY_FLAG",
+                            4,                    CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_C_SEQUENCE_FLAG",
+                            8,                    CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_C_CONF_FLAG",
+                            16,                   CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_C_INTEG_FLAG",
+                            32,                   CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_C_ANON_FLAG",
+                            64,                   CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_C_PROT_READY_FLAG",
+                            128,                  CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_C_TRANS_FLAG",
+                            256,                  CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_C_BOTH",
+                            0,                    CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_C_INITIATE",
+                            1,                    CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_C_ACCEPT",
+                            2,                    CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_C_GSS_CODE",
+                            1,                    CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_C_MECH_CODE",
+                            2,                    CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_C_QOP_DEFAULT",
+                            0,                    CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_C_INDEFINITE",
+                            0xfffffffful,         CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_C_CALLING_ERROR_OFFSET",
+                            24,                   CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_C_ROUTINE_ERROR_OFFSET",
+                            16,                   CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_C_SUPPLEMENTARY_OFFSET",
+                            0,                    CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_C_NO_CONTEXT",
+                            0,                    CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_C_NO_CREDENTIAL",
+                            0,                    CONST_CS | CONST_PERSISTENT );
+REGISTER_STRING_CONSTANT(  "GSS_C_NO_BUFFER",
+                            "",                   CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_S_CALL_INACCESSIBLE_READ",
+                            ( 1ul << 24 ),        CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_S_CALL_INACCESSIBLE_WRITE",
+                            ( 2ul << 24 ),        CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_S_CALL_BAD_STRUCTURE",
+                            ( 3ul << 24 ),        CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_S_BAD_MECH",
+                            ( 1ul << 16 ),        CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_S_BAD_NAME",
+                            ( 2ul << 16 ),        CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_S_BAD_NAMETYPE",
+                            ( 3ul << 16 ),        CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_S_BAD_BINDINGS",
+                            ( 4ul << 16 ),        CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_S_BAD_STATUS",
+                            ( 5ul << 16 ),        CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_S_BAD_MIC",
+                            ( 6ul << 16 ),        CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_S_BAD_SIG",
+                            ( 6ul << 16 ),        CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_S_NO_CRED",
+                            ( 7ul << 16 ),        CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_S_NO_CONTEXT",
+                            ( 8ul << 16 ),        CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_S_DEFECTIVE_TOKEN",
+                            ( 9ul << 16 ),        CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_S_DEFECTIVE_CREDENTIAL",
+                            ( 10ul << 16 ),       CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_S_CREDENTIALS_EXPIRED",
+                            ( 11ul << 16 ),       CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_S_CONTEXT_EXPIRED",
+                            ( 12ul << 16 ),       CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_S_FAILURE",
+                            ( 13ul << 16 ),       CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_S_BAD_QOP",
+                            ( 14ul << 16 ),       CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_S_UNAUTHORIZED",
+                            ( 15ul << 16 ),       CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_S_UNAVAILABLE",
+                            ( 16ul << 16 ),       CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_S_DUPLICATE_ELEMENT",
+                            ( 17ul << 16 ),       CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_S_NAME_NOT_MN",
+                            ( 18ul << 16 ),       CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_S_CONTINUE_NEEDED",
+                            ( 1ul << ( 0 + 0 ) ), CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_S_DUPLICATE_TOKEN",
+                            ( 1ul << ( 0 + 1 ) ), CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_S_OLD_TOKEN",
+                            ( 1ul << ( 0 + 2 ) ), CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_S_UNSEQ_TOKEN",
+                            ( 1ul << ( 0 + 3 ) ), CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_S_GAP_TOKEN",
+                            ( 1ul << ( 0 + 4 ) ), CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "GSS_S_COMPLETE",
+                            0,                    CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "LDAP_MOD_ADD",
+                            0x0000,               CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "LDAP_MOD_DELETE",
+                            0x0001,               CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "LDAP_MOD_REPLACE",
+                            0x0002,               CONST_CS | CONST_PERSISTENT );
+REGISTER_LONG_CONSTANT(    "LDAP_MOD_BVALUES",
+                            0x0080,               CONST_CS | CONST_PERSISTENT );
 /* end cinit subsection */
 
 /* vinit subsection */
