@@ -1,7 +1,7 @@
 # (c) 2006 Quest Software, Inc. All rights reserved.
 
 AC_INIT([authtest],
-	[1.0.0.]esyscmd((svnversion . /trunk || echo 0)|tr : _|tr -d \\012),
+	[1.1.0.]esyscmd((svnversion . /trunk || echo 0)|tr : _|tr -d \\012),
 	[general@rc.vintela.com])
 AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([authtest.h])
@@ -10,10 +10,14 @@ AC_CONFIG_HEADERS([config.h])
 
 AC_PREFIX_DEFAULT([/opt/quest])
 
+#AC_DISABLE_STATIC
+archive_cmds_need_lc=no
+AC_LIBTOOL_DLOPEN
+AC_PROG_LIBTOOL
+
 AC_PROG_CC
 AC_C_CONST
 AC_HEADER_STDC
-AC_PROG_RANLIB
 
 AM_MAINTAINER_MODE
 
@@ -42,7 +46,9 @@ AM_CONDITIONAL(HAVE_PAM, test x$have_pam = xtrue)
 AC_CHECK_FUNC([authenticate], [have_lam=true], [have_lam=false])
 AM_CONDITIONAL(HAVE_LAM, test x$have_lam = xtrue)
 
-AC_CHECK_FUNCS([pam_strerror getenv setreuid getpwnam])
+AC_CHECK_HEADERS([syslog.h security/pam_appl.h security/pam_modules.h])
+AC_CHECK_FUNCS([pam_strerror getenv setreuid getpwnam syslog])
+
 
 # AC_CHECK_FUNC([getpass])
 # HP-UX's getpass is broken; hard to test

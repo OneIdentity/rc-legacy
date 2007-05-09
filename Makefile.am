@@ -13,10 +13,20 @@ kuserok_LDADD =		-L. -lauthtest
 kuserok_DEPENDENCIES =	libauthtest.a
 
 if HAVE_PAM
+
 bin_PROGRAMS +=		pamtest
 pamtest_LDADD =		-L. -lauthtest $(LIBOBJS)
 pamtest_DEPENDENCIES =	libauthtest.a $(LIBOBJS)
 man_MANS +=		pamtest.1
+
+securitydir =		$(libdir)/security
+security_LTLIBRARIES =  pam_debug.la
+pam_debug_la_SOURCES =  pam_debug.c syslog.c
+pam_debug_la_LDFLAGS =  -module -XCClinker -nostdlib
+#pam_debug_la_LIBADD =	$(LIBOBJS)
+
+install-pam: pam_debug.la
+	sudo $(MAKE) install-securityLTLIBRARIES
 endif
 
 if HAVE_LAM
