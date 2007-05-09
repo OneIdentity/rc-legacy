@@ -9,6 +9,8 @@
 # include <config.h>
 #endif
 
+#include <sys/types.h>
+
 #if HAVE_SECURITY_PAM_APPL_H
 # include <security/pam_appl.h>
 # include <security/pam_modules.h>
