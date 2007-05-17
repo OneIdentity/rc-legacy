@@ -58,7 +58,6 @@ if HAVE_DOXYGEN
 # Create the documentation, html and man pages, in the doc subdirectory.
 #------------------------------------------------------------------------------
 
-docdir			= $(datadir)/doc
 PPFLAGS	+= docdir=$(docdir)
 
 doc/html/index.html: $(script_DATA) doxvas
