@@ -312,14 +312,14 @@ static vas_err_t SPE_vas_ctx_alloc( SPE_vas_ctx_t **vc )
 
 static void SPE_vas_ctx_free( SPE_vas_ctx_t *spe_vas_ctx )
 {
-    ZEND_PRINTF( "_____Calling SPE_vas_ctx_free %p, reference count %d\n",
+    ZEND_PRINTF( "_____Cleaning up SPE_vas_ctx_free %p, reference count %d\n",
                spe_vas_ctx, spe_vas_ctx->referenceCount );
 
     if( spe_vas_ctx && spe_vas_ctx->referenceCount > 0 )
     {
         if( --spe_vas_ctx->referenceCount == 0 )
         {
-            ZEND_PRINTF( "_____Calling vas_ctx_free on %p (%p)\n",
+            ZEND_PRINTF( "_____Cleaning up vas_ctx_free on %p (%p)\n",
                        spe_vas_ctx, spe_vas_ctx->ctx );
 
             SPE_free_groups( spe_vas_ctx );
@@ -340,7 +340,7 @@ static void php_vas_ctx_t_dtor( zend_rsrc_list_entry *rsrc TSRMLS_DC )
 {
     SPE_vas_ctx_t *spe_vas_ctx = ( SPE_vas_ctx_t* ) rsrc->ptr;
 
-    ZEND_PRINTF( "_____Calling vas_ctx_dtor (%p)\n", spe_vas_ctx );
+    ZEND_PRINTF( "_____Cleaning up vas_ctx_dtor (%p)\n", spe_vas_ctx );
 
     SPE_vas_ctx_free( spe_vas_ctx );
 }
@@ -357,7 +357,7 @@ static void php_vas_ctx_t_dtor( zend_rsrc_list_entry *rsrc TSRMLS_DC )
     static void php_##TYPE##_dtor( zend_rsrc_list_entry *rsrc TSRMLS_DC )   \
     {                                                                       \
         SPE_##TYPE *thing = ( SPE_##TYPE * ) rsrc->ptr;                     \
-        ZEND_PRINTF( "_____Calling " #TYPE "_dtor %p, noFree=%d\n",         \
+        ZEND_PRINTF( "_____Cleaning up " #TYPE "_dtor %p, noFree=%d\n",     \
                    thing, thing->noFree );                                  \
         if( thing && thing->raw )                                           \
         {                                                                   \
@@ -382,7 +382,7 @@ static void php_vas_ctx_t_dtor( zend_rsrc_list_entry *rsrc TSRMLS_DC )
     static void php_##TYPE##_dtor( zend_rsrc_list_entry *rsrc TSRMLS_DC )   \
     {                                                                       \
         SPE_##TYPE *thing = ( SPE_##TYPE * ) rsrc->ptr;                     \
-        ZEND_PRINTF( "_____Calling " #TYPE "_dtor %p, noFree=%d\n",         \
+        ZEND_PRINTF( "_____Cleaning up " #TYPE "_dtor %p, noFree=%d\n",     \
                    thing, thing->noFree );                                  \
         if( thing && thing->raw )                                           \
         {                                                                   \
@@ -407,7 +407,7 @@ static void php_vas_ctx_t_dtor( zend_rsrc_list_entry *rsrc TSRMLS_DC )
     static void php_##TYPE##_dtor( zend_rsrc_list_entry *rsrc TSRMLS_DC )   \
     {                                                                       \
         SPE_##TYPE *thing = ( SPE_##TYPE* ) rsrc->ptr;                      \
-        ZEND_PRINTF( "_____Calling " #TYPE "_dtor %p, noFree=%d\n",         \
+        ZEND_PRINTF( "_____Cleaning up " #TYPE "_dtor %p, noFree=%d\n",     \
                    thing, thing->noFree );                                  \
         if( thing && thing->raw )                                           \
         {                                                                   \
