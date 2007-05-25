@@ -172,16 +172,21 @@ enum vas_err_type_t
  **/
 enum vas_ctx_opt_t
 {
-    VAS_CTX_OPTION_DEFAULT_REALM         =  1,
-    VAS_CTX_OPTION_SITE_AND_FOREST_ROOT  =  2,
-    VAS_CTX_OPTION_ADD_SERVER            =  3,
-    VAS_CTX_OPTION_USE_TCP_ONLY          =  4,
-    VAS_CTX_OPTION_USE_GSSAPI_AUTHZ      =  5,
-    VAS_CTX_OPTION_USE_SRVINFO_CACHE     =  6,
-    VAS_CTX_OPTION_USE_DNSSRV            =  7,
-    VAS_CTX_OPTION_USE_VASCACHE          =  8,
-    VAS_CTX_OPTION_USE_VASCACHE_IPC      =  9,
-    VAS_CTX_OPTION_USE_SERVER_REFERRALS  =  10
+    VAS_CTX_OPTION_DEFAULT_REALM                     =  1,
+    VAS_CTX_OPTION_SITE_AND_FOREST_ROOT              =  2,
+    VAS_CTX_OPTION_ADD_SERVER                        =  3,
+    VAS_CTX_OPTION_USE_TCP_ONLY                      =  4,
+    VAS_CTX_OPTION_USE_GSSAPI_AUTHZ                  =  5,
+    VAS_CTX_OPTION_USE_SRVINFO_CACHE                 =  6,
+    VAS_CTX_OPTION_USE_DNSSRV                        =  7,
+    VAS_CTX_OPTION_USE_VASCACHE                      =  8,
+    VAS_CTX_OPTION_USE_VASCACHE_IPC                  =  9,
+    VAS_CTX_OPTION_USE_SERVER_REFERRALS              =  10,
+    VAS_CTX_OPTION_SEPARATOR_IN_ERROR_MESSAGE_STRING =  11,
+    VAS_CTX_OPTION_SRVINFO_DETECT_ONLY_UNTIL_FOUND   =  12,
+    VAS_CTX_OPTION_DNS_FAILURE_TIMELIMIT             =  13,
+    VAS_CTX_OPTION_DOMAIN_NAMING_CONTEXT             =  14,
+    VAS_CTX_OPTION_USE_SRVINFO_CONF                  =  15
 };
 
 
@@ -428,47 +433,109 @@ function vas_ctx_alloc();
  *
  * @param ctx       A ::vas_ctx_t obtained from vas_ctx_alloc().
  *
- * @param option    The option to set. The following options are defined:
+ * @param option    The option to set.  The following options are defined:
  *                  - VAS_CTX_OPTION_DEFAULT_REALM - set the default realm
- *                    for this vas_ctx_t. Argument is a single realm
+ *                    for this vas_ctx_t. The argument is a single char * realm
  *                    name string. Setting the default realm using
  *                    this option overrides the default_realm setting in
  *                    vas.conf or allows the VAS API to operate without the
- *                    default_realm setting in vas.conf.
+ *                    default_realm setting in vas.conf. <b>However, this
+ *                    operation should not be attempted as it might damage
+ *                    VAS.</b>
  *                  - VAS_CTX_OPTION_SITE_AND_FOREST_ROOT - Specify the
- *                    site and forest root. Arguments are: strings site,
- *                    and forest_root. Either argument may be NULL.
+ *                    site and forest root. The arguments are: char *site,
+ *                    char *forest_root. Either argument may be NULL.
+ *                    <b>However, this operation should not be attempted as it
+ *                    might damage VAS.</b>
  *                  - VAS_CTX_OPTION_ADD_SERVER - Specify a server that will be
- *                    used for Kerberos and LDAP traffic. Arguments are:
- *                    string host, string domain, string site,
- *                    vas_srvinfo_type_t srvinfo.
- *                    The DNS host name name is required, domain and site may be
- *                    NULL.
+ *                    used for Kerberos and LDAP traffic. The arguments are:
+ *                    char *host, char *domain, char *site,
+ *                    ::vas_srvinfo_type_t *srvinfo. The DNS host name name is
+ *                    required, domain and site may be NULL.
  *                  - VAS_CTX_OPTION_USE_SRVINFO_CACHE - Specify whether or
  *                    not to use the server information cache (maintained by
- *                    vasd) to locate domain controllers. The arguments are:
+ *                    vasd) to locate domain controllers.  The argument is:
  *                    a single int where 1 turns on use of srvinfo cache (the
  *                    usual vas.conf default) and 0 turns off use of srvinfo
  *                    cache.
  *                  - VAS_CTX_OPTION_USE_DNSSRV - Specify whether or not to use
- *                    DNS SRV lookups to locate domain controllers. Arguments
- *                    are a single int where 1 turns on use of dns lookup
- *                    (the usual vas.conf default) and 0, turns off use of
- *                    dns lookup.
- *                  - VAS_CTX_OPTION_USE_TCP_ONLY - Specify the exclusive use of
- *                    TCP for communication with servers. Arguments are a single
- *                    int value. If value is 1, the library will use TCP only.
- *                    If value is 0 the library will use UDP with failover to
- *                    TCP (the usual vas.conf default).
+ *                    DNS SRV lookups to locate domain controllers. The
+ *                    argument is a single int where 1 turns on use of DNS
+ *                    lookup (the usual vas.conf default) and 0, turns off use
+ *                    of DNS lookup.
+ *                  - VAS_CTX_OPTION_USE_TCP_ONLY - Specify the exclusive use
+ *                    of TCP for communication with servers. The argument is a
+ *                    single int value. If value is 1, the library will use TCP
+ *                    only. If value is 0 the library will use UDP with
+ *                    failover to TCP (the usual vas.conf default).
  *                  - VAS_CTX_OPTION_USE_GSSAPI_AUTHZ - Specify whether or not
  *                    authorization checking will occur for GSSAPI acceptors.
- *                    Arguments are a single integer where 1 turns on
+ *                    The argument is a single integer where 1 turns on
  *                    authorization checking and 0 (the usual vas.conf default)
  *                    turns it off.
  *                  - VAS_CTX_OPTION_USE_SERVER_REFERRALS - Specify whether or
- *                    not to use Kerberos server referrals. Arguments are a
+ *                    not to use Kerberos server referrals. The argument is a
  *                    single integer where 1 turns on server referrals on
  *                    and 0 (the usual vas.conf default) turns it off.
+ *                  - VAS_CTX_OPTION_SEPARATOR_IN_ERROR_MESSAGE_STRING -
+ *                    Specify the string to be used to separate error message
+ *                    phrases when printed or logged. The default is the
+ *                    newline, but syslog will not accept that value which
+ *                    truncates the string. With this option, the newline can
+ *                    be changed to any string containing between 1 and 15
+ *                    characters (null-terminated). A longer string passed to
+ *                    this function will be truncated and no error will issue.
+ *                  - VAS_CTX_OPTION_SRVINFO_DETECT_ONLY_UNTIL_FOUND - Setting
+ *                    this option to 1 will ensure that any VAS API call that
+ *                    does domain controller detection will stop and return
+ *                    the necessary servers as soon as it finds them. Some API
+ *                    calls (vas_info_servers for example) have a default
+ *                    behavior which involves detecting ALL servers every time
+ *                    it is called. This is especially unecessary on any
+ *                    subsequent call of a function that performs detection as
+ *                    the initial call will have stored the entire result set
+ *                    of the server detection inside the VAS context handle.
+ *                    Setting this option to zero will return any API call to
+ *                    its default behavior.
+ *                  - VAS_CTX_OPTION_DNS_FAILURE_TIMELIMIT - If this option is
+ *                    to set to a value greater than 0, then the internal VAS
+ *                    code that deals with DNS resolution will track how long
+ *                    DNS failures take, and error out if any failures take
+ *                    longer then the set amount of time. This setting is 0 by
+ *                    default. This will be most useful for callers that need
+ *                    to fail over to alternative forms of authentication
+ *                    quickly if Active Directory is not reachable. The
+ *                    supplied option must be a time_t value that specifies the
+ *                    number of seconds after which DNS lookup attempts should
+ *                    be abandoned.
+ *                  - VAS_CTX_OPTION_USE_SRVINFO_CONF - Setting to control if
+ *                    the VAS API should load srvinfo information from the
+ *                    vas.conf file. This is really only ever used in a
+ *                    bootstrap scenario (i.e.: join) where there may be an
+ *                    existing vas.conf that has srvinfo specified, and the new
+ *                    join shouldn't use them.
+ *                  - VAS_CTX_OPTION_USE_VASCACHE - The argument is
+ *                    int (Boolean). Setting to control whether or not the
+ *                    VAS API should look up items in the cache (i.e.: misc
+ *                    entries, user/group entries, etc.).
+ *                  - VAS_CTX_OPTION_USE_VASCACHE_IPC - The argument is
+ *                    int (Boolean). Setting to control whether or not
+ *                    the VAS API should send IPC requests during user/group
+ *                    lookups. vasd should be the only process that needs to
+ *                    set this value.
+ *                  - VAS_CTX_OPTION_SRVINFO_DETECT_ONLY_UNTIL_FOUND - The
+ *                    argument is time_t. Setting used within the
+ *                    VAS API when looking for server information. If one
+ *                    server that matches the query is found, it will not
+ *                    continue loading the srvinfo list with all available
+ *                    servers.
+ *                  - VAS_CTX_OPTION_DOMAIN_NAMING_CONTEXT - The arguments are
+ *                    char *domain and char **value. Used to set the default
+ *                    naming context for the given domain. This is mainly set
+ *                    or retrieved from within the VAS API. If a
+ *                    search base was not set and a domain was used,
+ *                    vas_attrs_find() queries the default naming context for
+ *                    the domain from the DC (or if stored in the ctx handle).
  *
  * @return vas_err().
  *
@@ -477,6 +544,23 @@ function vas_ctx_alloc();
  *                    codes:
  *                  - VAS_ERR_INVALID_PARAM   - An invalid parameter was passed
  *                  - VAS_ERR_NO_MEMORY       - Memory allocation failed
+ *
+ * @code
+ *
+ * // EXAMPLE:
+ * {
+ *     ...
+ *
+ *     if( vas_ctx_set_option( ctx, VAS_CTX_OPTION_USE_SRVINFO_CACHE, 1 ) )
+ *         print( "Unable to set context option VAS_CTX_OPTION_USE_SRVINFO_CACHE!\n" );
+ *
+ *     if( vas_ctx_set_option( ctx, VAS_CTX_OPTION_SEPARATOR_IN_ERROR_MESSAGE_STRING, "\r\n" ) )
+ *         print( "Unable to prescribe separator to be used in syslog messages to \"\\r\\n\"!\n" );
+ *     ...
+ * }
+ *
+ * @endcode
+
  **/
 function vas_ctx_set_option( $ctx, $option, ... );
 
@@ -485,22 +569,32 @@ function vas_ctx_set_option( $ctx, $option, ... );
  *
  * @param ctx       A ::vas_ctx_t obtained from vas_ctx_alloc().
  *
- * @param option    The option to get. The following options are defined:
- *                  - VAS_CTX_OPTION_USE_SRVINFO_CACHE -  The return value is
- *                    a single int. See vas_ctx_set_option() for the meaning
- *                    of returned values.
- *                  - VAS_CTX_OPTION_USE_DNSSRV - The return value is
- *                    a single int. See vas_ctx_set_option() for the meaning
- *                    of returned values.
- *                  - VAS_CTX_OPTION_USE_TCP_ONLY - The return value is
- *                    a single int. See vas_ctx_set_option() for the meaning
- *                    of returned values.
- *                  - VAS_CTX_OPTION_USE_GSSAPI_AUTHZ - The return value is
- *                    a single int. See vas_ctx_set_option() for the meaning
- *                    of returned values.
- *                  - VAS_CTX_OPTION_USE_SERVER_REFERRALS - The return value is
- *                    a single int. See vas_ctx_set_option() for the meaning
- *                    of returned values.
+ * @param option    The option to get. See vas_ctx_set_option() for the meaning
+ *                    of returned values in each of these cases. Just as for
+ *                    vas_ctx_set_option(), the values for the following
+ *                    options are returned as output arguments, pointers for
+ *                    which the caller provides storage. The types are as
+ *                    follows. Unless otherwise noted these take int *value
+ *                    and the value returned is to be treated as Boolean (see
+ *                    the sample code below).
+ *                  - VAS_CTX_OPTION_USE_SRVINFO_CACHE
+ *                  - VAS_CTX_OPTION_USE_DNSSRV
+ *                  - VAS_CTX_OPTION_USE_TCP_ONLY
+ *                  - VAS_CTX_OPTION_USE_GSSAPI_AUTHZ
+ *                  - VAS_CTX_OPTION_USE_SERVER_REFERRALS
+ *                  - VAS_CTX_OPTION_USE_SRVINFO_CONF
+ *                  - VAS_CTX_OPTION_USE_VASCACHE
+ *                  - VAS_CTX_OPTION_USE_VASCACHE_IPC
+ *                  - VAS_CTX_OPTION_SRVINFO_DETECT_ONLY_UNTIL_FOUND
+ *                  - VAS_CTX_OPTION_SEPARATOR_IN_ERROR_MESSAGE_STRING - The
+ *                    argument is char *separator, pointing to storage at least
+ *                    16 bytes. (This option is one rather more "set" than
+ *                    "got.")
+ *                  - VAS_CTX_OPTION_DNS_FAILURE_TIMELIMIT - The argument is
+ *                    time_t *timeout pointing to a valid time_t variable.
+ *                  - VAS_CTX_OPTION_DOMAIN_NAMING_CONTEXT - The arguments are
+ *                    char *domain (input: name of domain) and char **value
+ *                    (output argument).
  *
  * @return  the value of the option.
  *
@@ -508,6 +602,28 @@ function vas_ctx_set_option( $ctx, $option, ... );
  *          -VAS_ERR_SUCCESS on success or one of the following error codes:
  *          - VAS_ERR_INVALID_PARAM   - An invalid parameter was passed
  *          - VAS_ERR_NO_MEMORY       - Memory allocation failed
+ *
+ * @code
+ *
+ * // EXAMPLE:
+ * {
+ *     $use_srvinfo_cache = 0;
+ *     $errmsg_separator[16];
+ *     ...
+ *
+ *     $use_srvinfo_cache = vas_ctx_get_option( ctx, VAS_CTX_OPTION_USE_SRVINFO_CACHE );
+ *
+ *     $errmsg_separator = vas_ctx_get_option( ctx, VAS_CTX_OPTION_SEPARATOR_IN_ERROR_MESSAGE_STRING );
+ *
+ *     ...
+ *
+ *     if( $user_srvinfo_cache )
+ *         ...
+ * }
+ *
+ * @endcode
+ *
+
  **/
 function vas_ctx_get_option( $ctx, $option );
 
@@ -1015,19 +1131,19 @@ function vas_attrs_alloc( $ctx, $id );
  * @code
  *
  * {
- *     const char* anames[] = { "cn", NULL };
+ *     $anames = array { "cn", NULL };
  *     ...
  *
  *     // Typical vas_attrs_find() loop
  *     // (searches defaultNamingContext of DC in default_realm domain).
- *     if( (rval = vas_attrs_find( ctx,
- *                                 attrs,
- *                                 "DC://",
- *                                 "sub",
- *                                  NULL,
- *                                 "(objectClass=*)",
- *                                 anames )) )
- *     while( rval == VAS_ERR_SUCCESS )
+ *     if( ($rval = vas_attrs_find( $ctx,
+ *                                  $attrs,
+ *                                  "DC://",
+ *                                  "sub",
+ *                                   NULL,
+ *                                  "(objectClass=*)",
+ *                                  $anames )) )
+ *     while( $rval == VAS_ERR_SUCCESS )
  *     {
  *        ...
  *
