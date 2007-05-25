@@ -9,9 +9,15 @@
 
 #include <php_version.h>
 
-#include "vas.h"
-#include "vas_gss.h"
-#include "vas_ldap.h"
+#include <vas.h>
+#include <vas_gss.h>
+#include <vas_ldap.h>
+
+/*
+ * A useful macro to test if the VAS API is at the level indicated
+ */
+#define VAS_API_IS(major,minor) \
+    (VAS_API_VERSION_MAJOR == (major) && VAS_API_VERSION_MINOR >= (minor))
 
 #if !defined( PHP_MAJOR_VERSION )
 # error PHP_MAJOR_VERSION not defined!
@@ -25,11 +31,13 @@
 
 #if PHP_MAJOR_VERSION == 4
 # define ZEND_VAS( name )     ZEND_NAMED_FE( name, WRAP(name), NULL )
+# define ZEND_VAS_ALIAS( name, alias )     ZEND_NAMED_FE( alias, WRAP(name), NULL )
 # define ZEND_VAS2( name, i ) ZEND_NAMED_FE( name, WRAP(name), i )
 # define ZEND_VAS_ARG_INFO( name )  /* (unused in PHP-4...) */
 
 #elif PHP_MAJOR_VERSION == 5
 # define ZEND_VAS( name )     ZEND_NAMED_FE( name, WRAP(name), &_info##name )
+# define ZEND_VAS_ALIAS( name, alias )     ZEND_NAMED_FE( alias, WRAP(name), &_info##name )
 # define ZEND_VAS2( name, i ) ZEND_VAS( name )
 # define ZEND_VAS_ARG_INFO( name )          \
         static zend_arg_info _info##name =  \
@@ -77,13 +85,10 @@ ZEND_VAS_NAMED_FUNC( vas_id_establish_cred_keytab );
 ZEND_VAS_NAMED_FUNC( vas_id_renew_cred );
 ZEND_VAS_NAMED_FUNC( vas_auth );
 ZEND_VAS_NAMED_FUNC( vas_auth_with_password );
-ZEND_VAS_NAMED_FUNC( vas_auth_check_client_membership );
-ZEND_VAS_NAMED_FUNC( vas_auth_get_client_groups );
 ZEND_VAS_NAMED_FUNC( vas_attrs_alloc );
 ZEND_VAS_NAMED_FUNC( vas_attrs_find );
 ZEND_VAS_NAMED_FUNC( vas_attrs_find_continue );
 ZEND_VAS_NAMED_FUNC( vas_attrs_set_option );
-ZEND_VAS_NAMED_FUNC( vas_attrs_get_option );
 ZEND_VAS_NAMED_FUNC( vas_vals_get_string );
 ZEND_VAS_NAMED_FUNC( vas_vals_get_integer );
 ZEND_VAS_NAMED_FUNC( vas_vals_get_binary );
@@ -108,7 +113,6 @@ ZEND_VAS_NAMED_FUNC( vas_user_is_member );
 ZEND_VAS_NAMED_FUNC( vas_user_get_groups );
 ZEND_VAS_NAMED_FUNC( vas_user_get_attrs );
 ZEND_VAS_NAMED_FUNC( vas_user_get_dn );
-ZEND_VAS_NAMED_FUNC( vas_user_get_domain );
 ZEND_VAS_NAMED_FUNC( vas_user_get_sam_account_name );
 ZEND_VAS_NAMED_FUNC( vas_user_get_sid );
 ZEND_VAS_NAMED_FUNC( vas_user_get_upn );
@@ -121,13 +125,13 @@ ZEND_VAS_NAMED_FUNC( vas_group_init );
 ZEND_VAS_NAMED_FUNC( vas_group_has_member );
 ZEND_VAS_NAMED_FUNC( vas_group_get_attrs );
 ZEND_VAS_NAMED_FUNC( vas_group_get_dn );
-ZEND_VAS_NAMED_FUNC( vas_group_get_domain );
 ZEND_VAS_NAMED_FUNC( vas_group_get_sid );
+#if VAS_API_IS(4,2)
 ZEND_VAS_NAMED_FUNC( vas_group_get_grinfo );
+#endif
 ZEND_VAS_NAMED_FUNC( vas_service_init );
 ZEND_VAS_NAMED_FUNC( vas_service_get_attrs );
 ZEND_VAS_NAMED_FUNC( vas_service_get_dn );
-ZEND_VAS_NAMED_FUNC( vas_service_get_domain );
 ZEND_VAS_NAMED_FUNC( vas_service_get_krb5_client_name );
 ZEND_VAS_NAMED_FUNC( vas_service_get_spns );
 ZEND_VAS_NAMED_FUNC( vas_service_get_upn );
@@ -136,7 +140,6 @@ ZEND_VAS_NAMED_FUNC( vas_computer_is_member );
 ZEND_VAS_NAMED_FUNC( vas_computer_get_attrs );
 ZEND_VAS_NAMED_FUNC( vas_computer_get_dn );
 ZEND_VAS_NAMED_FUNC( vas_computer_get_dns_hostname );
-ZEND_VAS_NAMED_FUNC( vas_computer_get_domain );
 ZEND_VAS_NAMED_FUNC( vas_computer_get_sid );
 ZEND_VAS_NAMED_FUNC( vas_computer_get_spns );
 ZEND_VAS_NAMED_FUNC( vas_computer_get_sam_account_name );
@@ -217,6 +220,22 @@ ZEND_VAS_NAMED_FUNC( vas_krb5_get_credentials );
 ZEND_VAS_NAMED_FUNC( vas_krb5_validate_credentials );
 ZEND_VAS_NAMED_FUNC( vas_ldap_init_and_bind );
 ZEND_VAS_NAMED_FUNC( vas_ldap_set_attributes );
+
+#if VAS_API_IS(4,1)
+ZEND_VAS_NAMED_FUNC( vas_auth_check_client_membership );
+ZEND_VAS_NAMED_FUNC( vas_auth_get_client_groups );
+ZEND_VAS_NAMED_FUNC( vas_attrs_get_option );
+ZEND_VAS_NAMED_FUNC( vas_user_get_domain );
+ZEND_VAS_NAMED_FUNC( vas_group_get_domain );
+ZEND_VAS_NAMED_FUNC( vas_service_get_domain );
+ZEND_VAS_NAMED_FUNC( vas_computer_get_domain );
+#elif VAS_API_IS(4,0)
+ZEND_VAS_NAMED_FUNC( vas_auth_is_client_membership );
+ZEND_VAS_NAMED_FUNC( vas_user_get_realm );
+ZEND_VAS_NAMED_FUNC( vas_group_get_realm );
+ZEND_VAS_NAMED_FUNC( vas_service_get_realm );
+ZEND_VAS_NAMED_FUNC( vas_computer_get_realm );
+#endif
 
 ZEND_BEGIN_MODULE_GLOBALS( vas )
      vas_err_t g_vas_err;
