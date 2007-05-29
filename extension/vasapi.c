@@ -568,6 +568,7 @@ ZEND_VAS_ARG_INFO( vas_vals_get_anames );
 ZEND_VAS_ARG_INFO( vas_vals_get_dn );
 ZEND_VAS_ARG_INFO( vas_name_to_principal );
 ZEND_VAS_ARG_INFO( vas_name_to_dn );
+ZEND_VAS_ARG_INFO( vas_name_compare );
 ZEND_VAS_ARG_INFO( vas_info_forest_root );
 ZEND_VAS_ARG_INFO( vas_info_joined_domain );
 ZEND_VAS_ARG_INFO( vas_info_site );
@@ -581,6 +582,7 @@ ZEND_VAS_ARG_INFO( vas_err_get_info );
 ZEND_VAS_ARG_INFO( vas_err_info_get_string );
 ZEND_VAS_ARG_INFO( vas_err_get_cause_by_type );
 ZEND_VAS_ARG_INFO( vas_user_init );
+ZEND_VAS_ARG_INFO( vas_user_compare );
 ZEND_VAS_ARG_INFO( vas_user_is_member );
 ZEND_VAS_ARG_INFO( vas_user_get_groups );
 ZEND_VAS_ARG_INFO( vas_user_get_attrs );
@@ -771,6 +773,7 @@ function_entry vas_functions[] =
     ZEND_VAS( vas_err_info_get_string )
     ZEND_VAS( vas_err_get_cause_by_type )
     ZEND_VAS( vas_user_init )
+    ZEND_VAS( vas_user_compare )
     ZEND_VAS( vas_user_is_member )
     ZEND_VAS( vas_user_get_groups )
     ZEND_VAS( vas_user_get_attrs )
@@ -2238,6 +2241,39 @@ ZEND_VAS_NAMED_FUNC( vas_name_to_dn )
     RETURN_LONG( err );
 }
 
+ZEND_VAS_NAMED_FUNC( vas_name_compare )
+{
+    SPE_vas_ctx_t   *ctx;
+    SPE_vas_id_t    *id = NULL;
+    zval            *zctx, *zid;
+    const char      *szName_a, *szName_b;
+    vas_err_t       err;
+    long            hint, flags;
+
+    SPE_CHECK_ARGS( 7 );
+
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzsllzz",
+            &zctx, &zid, &szName_a, &szName_b, &hint, &flags ) == FAILURE )
+    {
+        RETURN_NULL();
+    }
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                            PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+
+    if( ! ZVAL_IS_NULL( zid ) )
+    {
+        ZEND_FETCH_RESOURCE( id, SPE_vas_id_t*, &zid, -1,
+                                PHP_vas_id_t_RES_NAME, le_vas_id_t );
+    }
+
+    err = vas_name_compare( ctx->ctx, RAW( id ), szName_a, szName_b,
+                        hint, flags );
+
+    SPE_SET_VAS_ERR( err );
+
+    RETURN_LONG( err );
+}
+
 ZEND_VAS_NAMED_FUNC( vas_info_forest_root )
 {
     SPE_vas_ctx_t   *ctx;
@@ -2706,6 +2742,34 @@ ZEND_VAS_NAMED_FUNC( vas_user_init )
     {
         RETURN_NULL();
     }
+}
+
+ZEND_VAS_NAMED_FUNC( vas_user_compare )
+{
+    SPE_vas_ctx_t   *ctx;
+    SPE_vas_user_t  *user_a, *user_b;
+    zval            *zctx, *zid, *zuser_a, *zuser_b;
+    vas_err_t       err;
+
+    SPE_CHECK_ARGS( 7 );
+
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzsllzz",
+            &zctx, &zuser_a, &zuser_b ) == FAILURE )
+    {
+        RETURN_NULL();
+    }
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                            PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( user_a, SPE_vas_user_t*, &zuser_a, -1,
+                            PHP_vas_user_t_RES_NAME, le_vas_user_t );
+    ZEND_FETCH_RESOURCE( user_b, SPE_vas_user_t*, &zuser_b, -1,
+                            PHP_vas_user_t_RES_NAME, le_vas_user_t );
+
+    err = vas_user_compare( ctx->ctx, user_a->raw, user_b->raw );
+
+    SPE_SET_VAS_ERR( err );
+
+    RETURN_LONG( err );
 }
 
 ZEND_VAS_NAMED_FUNC( vas_user_is_member )
