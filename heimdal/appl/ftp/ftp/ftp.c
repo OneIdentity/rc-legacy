@@ -213,6 +213,22 @@ login (char *host)
 	user = username;
     }
     n = command("USER %s", user);
+
+    if (n == ERROR) {
+	/* Try the username without the realm */
+	char *at = strchr(user, '@');
+	if (at) {
+	    *at = '\0';
+	    n = command("USER %s", user);
+
+	    if (   n == COMPLETE
+		&& user != username
+		&& (at = strchr(username, '@'))) {
+		    *at = '\0';
+	    }
+	}
+    }
+
     if (n == COMPLETE) 
        n = command("PASS dummy"); /* DK: Compatibility with gssftp daemon */
     else if(n == CONTINUE) {
