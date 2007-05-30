@@ -96,7 +96,6 @@ ZEND_VAS_NAMED_FUNC( vas_vals_get_anames );
 ZEND_VAS_NAMED_FUNC( vas_vals_get_dn );
 ZEND_VAS_NAMED_FUNC( vas_name_to_principal );
 ZEND_VAS_NAMED_FUNC( vas_name_to_dn );
-ZEND_VAS_NAMED_FUNC( vas_name_compare );
 ZEND_VAS_NAMED_FUNC( vas_info_forest_root );
 ZEND_VAS_NAMED_FUNC( vas_info_joined_domain );
 ZEND_VAS_NAMED_FUNC( vas_info_site );
@@ -110,7 +109,6 @@ ZEND_VAS_NAMED_FUNC( vas_err_get_info );
 ZEND_VAS_NAMED_FUNC( vas_err_info_get_string );
 ZEND_VAS_NAMED_FUNC( vas_err_get_cause_by_type );
 ZEND_VAS_NAMED_FUNC( vas_user_init );
-ZEND_VAS_NAMED_FUNC( vas_user_compare );
 ZEND_VAS_NAMED_FUNC( vas_user_is_member );
 ZEND_VAS_NAMED_FUNC( vas_user_get_groups );
 ZEND_VAS_NAMED_FUNC( vas_user_get_attrs );
@@ -149,6 +147,15 @@ ZEND_VAS_NAMED_FUNC( vas_computer_get_upn );
 ZEND_VAS_NAMED_FUNC( vas_computer_get_krb5_client_name );
 ZEND_VAS_NAMED_FUNC( vas_computer_get_host_spn );
 ZEND_VAS_NAMED_FUNC( vas_computer_get_account_control );
+#if HAVE_DECL_VAS_NAME_COMPARE
+ZEND_VAS_NAMED_FUNC( vas_name_compare );
+ZEND_VAS_NAMED_FUNC( vas_user_compare );
+/*
+ZEND_VAS_NAMED_FUNC( vas_group_compare );
+ZEND_VAS_NAMED_FUNC( vas_service_compare );
+ZEND_VAS_NAMED_FUNC( vas_computer_compare );
+*/
+#endif
 ZEND_VAS_NAMED_FUNC( vas_gss_initialize );
 ZEND_VAS_NAMED_FUNC( vas_gss_acquire_cred );
 ZEND_VAS_NAMED_FUNC( vas_gss_auth );
