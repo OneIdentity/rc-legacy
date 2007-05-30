@@ -150,11 +150,9 @@ ZEND_VAS_NAMED_FUNC( vas_computer_get_account_control );
 #if HAVE_DECL_VAS_NAME_COMPARE
 ZEND_VAS_NAMED_FUNC( vas_name_compare );
 ZEND_VAS_NAMED_FUNC( vas_user_compare );
-/*
 ZEND_VAS_NAMED_FUNC( vas_group_compare );
 ZEND_VAS_NAMED_FUNC( vas_service_compare );
 ZEND_VAS_NAMED_FUNC( vas_computer_compare );
-*/
 #endif
 ZEND_VAS_NAMED_FUNC( vas_gss_initialize );
 ZEND_VAS_NAMED_FUNC( vas_gss_acquire_cred );

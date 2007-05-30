@@ -1,4 +1,13 @@
-2007-14-08  Russell Bateman <russell.bateman@quest.com>
+2007-05-30  Russell Bateman <russell.bateman@quest.com>
+			* Added remainder of missing functionality, corrected some bugs,
+			synchronized documentation with VAS SDK sources, added notes to
+			README.
+2007-04-23  Russell Bateman <russell.bateman@quest.com>
+			* Solved PHP major version problem, added notes to README.
+2007-04-13  David Leonard <david.leonard@quest.com>
+			* Reworked configure.ac, Makefile.am to use phpize. Conflation of
+			files (NOTES, AUTHORS, etc.).
+2007-04-08  Russell Bateman <russell.bateman@quest.com>
 			* Commit first round of files.
 2007-03-08  Russell Bateman <russell.bateman@quest.com>
 			* Created project configure.ac, Makefile.am, etc.
