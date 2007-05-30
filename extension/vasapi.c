@@ -902,8 +902,7 @@ function_entry vas_functions[] =
     ZEND_VAS( vas_computer_get_domain )
 
     /* Deprecated aliases for backward compat */
-    ZEND_VAS_ALIAS( vas_auth_check_client_membership, 
-		    vas_auth_is_client_membership )
+    ZEND_VAS_ALIAS( vas_auth_check_client_membership, vas_auth_is_client_membership )
     ZEND_VAS_ALIAS( vas_user_get_domain, vas_user_get_realm )
     ZEND_VAS_ALIAS( vas_group_get_domain, vas_group_get_realm )
     ZEND_VAS_ALIAS( vas_service_get_domain, vas_service_get_realm )
@@ -950,7 +949,7 @@ zend_module_entry vas_module_entry =
 
 
 /*
- * Wrapped-implementation section
+ * Wrapped-implementation section--notes on "how to do it"
  *
  * Each function needs a definition and, for PHP-5, a filled-in arg_info
  * structure. In each of these functions, there are 5 or 6 arguments (depending
@@ -967,7 +966,7 @@ zend_module_entry vas_module_entry =
  *                   smack in the middle of the list that caused these bindings
  *                   not to compile for PHP-5.
  * (Returning values is discussed in:
- * http://devzone.zend.com/manual/view/page/zend.returning.html.)
+ *      http://devzone.zend.com/manual/view/page/zend.returning.html.)
  * this_ptr          Gains access to the object in which function is contained,
  *                   if used within an object. The VAS APIs aren't
  *                   object-oriented, so this isn't specially used, but some
@@ -981,6 +980,24 @@ zend_module_entry vas_module_entry =
  *                   implementations of PHP didn't support this argument, it
  *                   doesn't appear in INTERNAL_FUNCTION_PARAMETERS (defined in
  *                   zend.h).
+ *
+ * zend_parse_parameter()'s type string
+ *                  The purpose is apparently to "map" the arguments (one
+ *                  letter per argument to the function), but it doesn't appear
+ *                  to be used anywhere. On first blush, here's what the
+ *                  letters seem to refer to. Remember, the single output
+ *                  argument of most function bindings will not exist in the
+ *                  PHP interface since it will be the returned value.
+ *                  Therefore, it does not figure in the type string.
+ *
+ *                  r     - read-only pointer argument
+ *                  l     - integer, long or enum argument
+ *                  s     - input string argument
+ *                  z     - output argument (pointer to data of all types)
+ *                  z     - single, unknown argument , ... ) where only one
+ *                          more, optional argument is expected.
+ *                  |zzzz - shorthand for ", ...)"
+ *
  */
 ZEND_VAS_NAMED_FUNC( vas_err_internal )
 {
@@ -2623,19 +2640,23 @@ ZEND_VAS_NAMED_FUNC( vas_err_info_get_string )
 
     memset( err, sizeof( *err ), 0 );
 
-    if( zend_hash_find( Z_OBJPROP_P( zerr ), "code", sizeof( "code" ), ( void** )&z ) != FAILURE )
+    if( zend_hash_find( Z_OBJPROP_P( zerr ), "code", sizeof( "code" ),
+                ( void** )&z ) != FAILURE )
     {
         err->code = Z_LVAL_PP( z );
     }
-    if( zend_hash_find( Z_OBJPROP_P( zerr ), "type", sizeof( "type" ), ( void** )&z ) != FAILURE )
+    if( zend_hash_find( Z_OBJPROP_P( zerr ), "type", sizeof( "type" ),
+                ( void** )&z ) != FAILURE )
     {
         err->type = Z_LVAL_PP( z );
     }
-    /* This is a simplification so I don't have to track through nested structures.
-     * Hopefully that is OK.*/
+    /* Kerns: This is a simplification so I don't have to track through nested
+     * structures. Hopefully that is OK.
+     */
     err->cause = NULL;
 
-    if( zend_hash_find( Z_OBJPROP_P( zerr ), "message", sizeof( "message" ), ( void** )&z ) != FAILURE )
+    if( zend_hash_find( Z_OBJPROP_P( zerr ), "message", sizeof( "message" ),
+                ( void** )&z ) != FAILURE )
     {
         err->message = Z_STRVAL_PP( z );
     }
@@ -3578,14 +3599,7 @@ ZEND_VAS_NAMED_FUNC( vas_group_get_grinfo )
 
     SPE_CHECK_ARGS( 3 );
 
-    /* TODO: I still don't know what this "rzr" is that I stole from the
-     * function immediately preceeding. I believe that its purpose is to
-     * "map" the arguments (one letter per argument to the function), but
-     * that's just a hasty conclusion that I'll test once I've finished
-     * adding missing functionality to these bindings: then I'll go through
-     * and figure it out.
-     */
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr",
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrr",
                             &zctx, &zid, &zgroup) == FAILURE )
     {
         RETURN_NULL();
@@ -4526,7 +4540,7 @@ ZEND_VAS_NAMED_FUNC( vas_name_compare )
 
     SPE_CHECK_ARGS( 7 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzsllzz",
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrssll",
             &zctx, &zid, &szName_a, &szName_b, &hint, &flags ) == FAILURE )
     {
         RETURN_NULL();
@@ -4557,7 +4571,7 @@ ZEND_VAS_NAMED_FUNC( vas_user_compare )
 
     SPE_CHECK_ARGS( 7 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzsllzz",
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrr",
             &zctx, &zuser_a, &zuser_b ) == FAILURE )
     {
         RETURN_NULL();
@@ -4585,7 +4599,7 @@ ZEND_VAS_NAMED_FUNC( vas_group_compare )
 
     SPE_CHECK_ARGS( 7 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzsllzz",
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrr",
             &zctx, &zgroup_a, &zgroup_b ) == FAILURE )
     {
         RETURN_NULL();
@@ -4613,7 +4627,7 @@ ZEND_VAS_NAMED_FUNC( vas_service_compare )
 
     SPE_CHECK_ARGS( 7 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzsllzz",
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrr",
             &zctx, &zservice_a, &zservice_b ) == FAILURE )
     {
         RETURN_NULL();
@@ -4641,7 +4655,7 @@ ZEND_VAS_NAMED_FUNC( vas_computer_compare )
 
     SPE_CHECK_ARGS( 7 );
 
-    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzsllzz",
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rrr",
             &zctx, &zcomputer_a, &zcomputer_b ) == FAILURE )
     {
         RETURN_NULL();
