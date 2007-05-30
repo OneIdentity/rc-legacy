@@ -622,11 +622,9 @@ ZEND_VAS_ARG_INFO( vas_computer_get_account_control );
 #if HAVE_DECL_VAS_NAME_COMPARE
 ZEND_VAS_ARG_INFO( vas_name_compare );
 ZEND_VAS_ARG_INFO( vas_user_compare );
-/*
 ZEND_VAS_ARG_INFO( vas_group_compare );
 ZEND_VAS_ARG_INFO( vas_service_compare );
 ZEND_VAS_ARG_INFO( vas_computer_compare );
- */
 #endif
 ZEND_VAS_ARG_INFO( vas_gss_initialize );
 ZEND_VAS_ARG_INFO( vas_gss_acquire_cred );
@@ -821,11 +819,9 @@ function_entry vas_functions[] =
 #if HAVE_DECL_VAS_NAME_COMPARE
     ZEND_VAS( vas_name_compare )
     ZEND_VAS( vas_user_compare )
-/*
     ZEND_VAS( vas_group_compare )
     ZEND_VAS( vas_service_compare )
     ZEND_VAS( vas_computer_compare )
- */
 #endif
 
     ZEND_VAS( vas_gss_initialize )
@@ -3341,6 +3337,7 @@ ZEND_VAS_NAMED_FUNC( vas_group_init )
     }
 }
 
+
 ZEND_VAS_NAMED_FUNC( vas_group_has_member )
 {
     SPE_vas_ctx_t   *ctx;
@@ -3582,7 +3579,11 @@ ZEND_VAS_NAMED_FUNC( vas_group_get_grinfo )
     SPE_CHECK_ARGS( 3 );
 
     /* TODO: I still don't know what this "rzr" is that I stole from the
-     * function immediately preceeding.
+     * function immediately preceeding. I believe that its purpose is to
+     * "map" the arguments (one letter per argument to the function), but
+     * that's just a hasty conclusion that I'll test once I've finished
+     * adding missing functionality to these bindings: then I'll go through
+     * and figure it out.
      */
     if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzr",
                             &zctx, &zid, &zgroup) == FAILURE )
@@ -4569,6 +4570,90 @@ ZEND_VAS_NAMED_FUNC( vas_user_compare )
                             PHP_vas_user_t_RES_NAME, le_vas_user_t );
 
     err = vas_user_compare( ctx->ctx, user_a->raw, user_b->raw );
+
+    SPE_SET_VAS_ERR( err );
+
+    RETURN_LONG( err );
+}
+
+ZEND_VAS_NAMED_FUNC( vas_group_compare )
+{
+    SPE_vas_ctx_t   *ctx;
+    SPE_vas_group_t  *group_a, *group_b;
+    zval            *zctx, *zid, *zgroup_a, *zgroup_b;
+    vas_err_t       err;
+
+    SPE_CHECK_ARGS( 7 );
+
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzsllzz",
+            &zctx, &zgroup_a, &zgroup_b ) == FAILURE )
+    {
+        RETURN_NULL();
+    }
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                            PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( group_a, SPE_vas_group_t*, &zgroup_a, -1,
+                            PHP_vas_group_t_RES_NAME, le_vas_group_t );
+    ZEND_FETCH_RESOURCE( group_b, SPE_vas_group_t*, &zgroup_b, -1,
+                            PHP_vas_group_t_RES_NAME, le_vas_group_t );
+
+    err = vas_group_compare( ctx->ctx, group_a->raw, group_b->raw );
+
+    SPE_SET_VAS_ERR( err );
+
+    RETURN_LONG( err );
+}
+
+ZEND_VAS_NAMED_FUNC( vas_service_compare )
+{
+    SPE_vas_ctx_t       *ctx;
+    SPE_vas_service_t   *service_a, *service_b;
+    zval                *zctx, *zid, *zservice_a, *zservice_b;
+    vas_err_t           err;
+
+    SPE_CHECK_ARGS( 7 );
+
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzsllzz",
+            &zctx, &zservice_a, &zservice_b ) == FAILURE )
+    {
+        RETURN_NULL();
+    }
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                            PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( service_a, SPE_vas_service_t*, &zservice_a, -1,
+                            PHP_vas_service_t_RES_NAME, le_vas_service_t );
+    ZEND_FETCH_RESOURCE( service_b, SPE_vas_service_t*, &zservice_b, -1,
+                            PHP_vas_service_t_RES_NAME, le_vas_service_t );
+
+    err = vas_service_compare( ctx->ctx, service_a->raw, service_b->raw );
+
+    SPE_SET_VAS_ERR( err );
+
+    RETURN_LONG( err );
+}
+
+ZEND_VAS_NAMED_FUNC( vas_computer_compare )
+{
+    SPE_vas_ctx_t       *ctx;
+    SPE_vas_computer_t  *computer_a, *computer_b;
+    zval                *zctx, *zid, *zcomputer_a, *zcomputer_b;
+    vas_err_t           err;
+
+    SPE_CHECK_ARGS( 7 );
+
+    if( zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "rzsllzz",
+            &zctx, &zcomputer_a, &zcomputer_b ) == FAILURE )
+    {
+        RETURN_NULL();
+    }
+    ZEND_FETCH_RESOURCE( ctx, SPE_vas_ctx_t*, &zctx, -1,
+                            PHP_vas_ctx_t_RES_NAME, le_vas_ctx_t );
+    ZEND_FETCH_RESOURCE( computer_a, SPE_vas_computer_t*, &zcomputer_a, -1,
+                            PHP_vas_computer_t_RES_NAME, le_vas_computer_t );
+    ZEND_FETCH_RESOURCE( computer_b, SPE_vas_computer_t*, &zcomputer_b, -1,
+                            PHP_vas_computer_t_RES_NAME, le_vas_computer_t );
+
+    err = vas_computer_compare( ctx->ctx, computer_a->raw, computer_b->raw );
 
     SPE_SET_VAS_ERR( err );
 
