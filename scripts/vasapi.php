@@ -304,7 +304,7 @@ typedef struct vas_auth vas_auth_t;
  * performed by calling vas_attrs_find() and vas_attrs_find_continue().
  *
  * The vas_attrs_t type is opaque to the caller. The internal structure of the
- * vas_attrs_t type is not documented and may change at any time.  Developers
+ * vas_attrs_t type is not documented and may change at any time. Developers
  * must not write code that makes assumptions about the internal structure of a
  * vas_attrs_t.
  **/
@@ -321,7 +321,7 @@ typedef struct vas_attrs vas_attrs_t;
  * e.g. vas_user_get_dn() to return the distinguished name of the user object.
  *
  * The vas_user_t type is opaque to the caller. The internal structure of the
- * vas_user_t type is not documented and may change at any time.  Developers
+ * vas_user_t type is not documented and may change at any time. Developers
  * must not write code that makes assumptions about the internal structure of a
  * vas_user_t.
  *
@@ -340,7 +340,7 @@ typedef struct vas_user vas_user_t;
  * object.
  *
  * The vas_group_t type is opaque to the caller. The internal structure of the
- * vas_group_t type is not documented and may change at any time.  Developers
+ * vas_group_t type is not documented and may change at any time. Developers
  * must not write code that makes assumptions about the internal structure of a
  * vas_group_t.
  *
@@ -378,7 +378,7 @@ typedef struct vas_computer vas_computer_t;
  * A vas_service_t is created by calling vas_service_init(). It is only
  * possible to create a vas_service_t for a service account that already exists
  * in Active Directory. Attributes of the service account object may be
- * accessed by one or more function calls, e.g. vas_service_get_spns() to
+ * accessed by one or more function calls, e.g.: vas_service_get_spns() to
  * return the list of Service Principal Names (SPNs) associated with this
  * service account.
  *
@@ -433,7 +433,7 @@ function vas_ctx_alloc();
  *
  * @param ctx       A ::vas_ctx_t obtained from vas_ctx_alloc().
  *
- * @param option    The option to set.  The following options are defined:
+ * @param option    The option to set. The following options are defined:
  *                  - VAS_CTX_OPTION_DEFAULT_REALM - set the default realm
  *                    for this vas_ctx_t. The argument is a single char * realm
  *                    name string. Setting the default realm using
@@ -454,7 +454,7 @@ function vas_ctx_alloc();
  *                    required, domain and site may be NULL.
  *                  - VAS_CTX_OPTION_USE_SRVINFO_CACHE - Specify whether or
  *                    not to use the server information cache (maintained by
- *                    vasd) to locate domain controllers.  The argument is:
+ *                    vasd) to locate domain controllers. The argument is:
  *                    a single int where 1 turns on use of srvinfo cache (the
  *                    usual vas.conf default) and 0 turns off use of srvinfo
  *                    cache.
@@ -570,13 +570,13 @@ function vas_ctx_set_option( $ctx, $option, ... );
  * @param ctx       A ::vas_ctx_t obtained from vas_ctx_alloc().
  *
  * @param option    The option to get. See vas_ctx_set_option() for the meaning
- *                    of returned values in each of these cases. Just as for
- *                    vas_ctx_set_option(), the values for the following
- *                    options are returned as output arguments, pointers for
- *                    which the caller provides storage. The types are as
- *                    follows. Unless otherwise noted these take int *value
- *                    and the value returned is to be treated as Boolean (see
- *                    the sample code below).
+ *                  of returned values in each of these cases. Just as for
+ *                  vas_ctx_set_option(), the values for the following
+ *                  options are returned as output arguments, pointers for
+ *                  which the caller provides storage. The types are as
+ *                  follows. Unless otherwise noted these take int *value
+ *                  and the value returned is to be treated as Boolean (see
+ *                  the sample code below).
  *                  - VAS_CTX_OPTION_USE_SRVINFO_CACHE
  *                  - VAS_CTX_OPTION_USE_DNSSRV
  *                  - VAS_CTX_OPTION_USE_TCP_ONLY
@@ -724,9 +724,9 @@ function vas_id_get_keytab_name( $ctx, $id );
  * Used to obtain a string representation of the principal associated
  * with the specified identity.
  *
- * @param ctx    ::vas_ctx_t obtained from vas_ctx_alloc().
+ * @param ctx     ::vas_ctx_t obtained from vas_ctx_alloc().
  *
- * @param id     The ::vas_id_t to get the name information for
+ * @param id      The ::vas_id_t to get the name information for
  *
  * @param &princ  Return the Kerberos principal name.
  *
@@ -741,10 +741,7 @@ function vas_id_get_keytab_name( $ctx, $id );
  *          - VAS_ERR_NO_MEMORY       - Memory allocation failed
  *          - VAS_ERR_NOT_FOUND       - Distinguished name not found
  **/
-function vas_id_get_name( $ctx,
-                          $id,
-                          &$princ,
-                          &$dn );
+function vas_id_get_name( $ctx, $id, &$princ, &$dn );
 
 
 /** Obtain a ::vas_user_t for this ::vas_id_t
@@ -814,19 +811,19 @@ function vas_id_is_cred_established( $ctx, $id );
  * Calls to vas_id_establish_cred_password() may generate DNS, and
  * Kerberos network traffic
  *
- * @param ctx   ::vas_ctx_t obtained from vas_ctx_alloc().
+ * @param ctx       ::vas_ctx_t obtained from vas_ctx_alloc().
  *
- * @param id    The ::vas_id_t to establish credentials for.
+ * @param id        The ::vas_id_t to establish credentials for.
  *
  * @param credflags The following flags are recognized:
- *              - VAS_ID_FLAG_USE_MEMORY_CCACHE - Credential cache
- *                is kept in memory so that it will not outlive the
- *                process.
- *              - VAS_ID_FLAG_KEEP_COPY_OF_CRED - Keep a copy of the
- *                "clear text credential" so that it can be used
- *                later.
+ *                  - VAS_ID_FLAG_USE_MEMORY_CCACHE - Credential cache
+ *                  is kept in memory so that it will not outlive the
+ *                  process.
+ *                  - VAS_ID_FLAG_KEEP_COPY_OF_CRED - Keep a copy of the
+ *                  "clear text credential" so that it can be used
+ *                  later.
  *
- * @param password The clear-text password for the specified identity.
+ * @param password  The clear-text password for the specified identity.
  *
  * @return vas_err().
  *
@@ -837,10 +834,7 @@ function vas_id_is_cred_established( $ctx, $id );
  *          - VAS_ERR_INVALID_PARAM - An invalid parameter was passed
  *          - VAS_ERR_NO_MEMORY     - Memory allocation failed
  **/
-function vas_id_establish_cred_password( $ctx,
-                                         $id,
-                                         $credflags,
-                                         $password );
+function vas_id_establish_cred_password( $ctx, $id, $credflags, $password );
 
 
 /** Establish initial keytab credentials
@@ -853,44 +847,44 @@ function vas_id_establish_cred_password( $ctx,
  * Calls to vas_id_establish_cred_keytab() may generate DNS, and
  * Kerberos network traffic
  *
- * @param ctx    ::vas_ctx_t obtained from vas_ctx_alloc().
+ * @param ctx       ::vas_ctx_t obtained from vas_ctx_alloc().
  *
- * @param id     The ::vas_id_t to establish credentials for
+ * @param id        The ::vas_id_t to establish credentials for
  *
- * @param credflags  The following flags are recognized:
- *               - VAS_ID_FLAG_USE_MEMORY_CCACHE - Credential cache
- *                 is kept in memory so that it will not outlive the
- *                 process.
- *               - VAS_ID_FLAG_KEEP_COPY_OF_CRED - Keep a copy of the
- *                 "clear text credential" so that it can be used later.
- *                 This may be useful when a daemon needs to setuid() to
- *                 a non-privileged user that no longer has access
- *                 to the keytab.
- *               - VAS_ID_FLAG_DO_NOT_DERIVE_KEYTAB - If this flag is
- *                 used and keytab is NULL, the default_keytab setting from
- *                 vas.conf is used as the keytab name.
- *               - VAS_ID_FLAG_NO_INITIAL_TGT - Do not request an inital
- *                 TGT. A TGT is not necessary for server applications
- *                 that only need to call vas_id_extablish_cred_keytab()
- *                 before calling vas_auth().
+ * @param credflags The following flags are recognized:
+ *                  - VAS_ID_FLAG_USE_MEMORY_CCACHE - Credential cache
+ *                    is kept in memory so that it will not outlive the
+ *                    process.
+ *                  - VAS_ID_FLAG_KEEP_COPY_OF_CRED - Keep a copy of the
+ *                    "clear text credential" so that it can be used later.
+ *                    This may be useful when a daemon needs to setuid() to
+ *                    a non-privileged user that no longer has access
+ *                    to the keytab.
+ *                  - VAS_ID_FLAG_DO_NOT_DERIVE_KEYTAB - If this flag is
+ *                    used and keytab is NULL, the default_keytab setting from
+ *                    vas.conf is used as the keytab name.
+ *                  - VAS_ID_FLAG_NO_INITIAL_TGT - Do not request an inital
+ *                    TGT. A TGT is not necessary for server applications
+ *                    that only need to call vas_id_extablish_cred_keytab()
+ *                    before calling vas_auth().
  *
- * @param keytab The path to the keytab file. Pass in NULL to use a
- *               keytab filename that is derived by VAS from
- *               the identity name. The derivation of keytab filename
- *               matches the keytab created when using vastool to
- *               join the machine to the domain or when using vastool
- *               to create service principals in Active Directory
+ * @param keytab    The path to the keytab file. Pass in NULL to use a
+ *                  keytab filename that is derived by VAS from
+ *                  the identity name. The derivation of keytab filename
+ *                  matches the keytab created when using vastool to
+ *                  join the machine to the domain or when using vastool
+ *                  to create service principals in Active Directory
  *
- *               The derivation rules are fairly simple. The service
- *               is used with a .keytab extension along with the
- *               /etc/opt/quest/vas directory.
+ *                  The derivation rules are fairly simple. The service
+ *                  is used with a .keytab extension along with the
+ *                  /etc/opt/quest/vas directory.
  *
- *               "http/web.vintela.com" --> /etc/opt/quest/vas/http.keytab
- *               "host/"                --> /etc/opt/quest/vas/host.keytab
+ *                  "http/web.vintela.com" --> /etc/opt/quest/vas/http.keytab
+ *                  "host/"                --> /etc/opt/quest/vas/host.keytab
  *
- *               If the VAS_ID_FLAG_DO_NOT_DERIVE_KEYTAB is used then
- *               the default_keytab setting from vas.conf is used as
- *               the keytab filename.
+ *                  If the VAS_ID_FLAG_DO_NOT_DERIVE_KEYTAB is used then
+ *                  the default_keytab setting from vas.conf is used as
+ *                  the keytab filename.
  *
  * @return vas_err().
  *
@@ -902,10 +896,7 @@ function vas_id_establish_cred_password( $ctx,
  *                                    functions to obtain Kerberos error
  *                                    details
  */
-function vas_id_establish_cred_keytab( $ctx,
-                                       $id,
-                                       $credflags,
-                                       $keytab );
+function vas_id_establish_cred_keytab( $ctx, $id, $credflags, $keytab );
 
 
 /** Renew credentials
@@ -981,19 +972,20 @@ function vas_auth( $ctx, $client, $server );
  * need to allocate a client ::vas_id_t.
  *
  *
- * @param ctx    ::vas_ctx_t obtained from vas_ctx_alloc().
+ * @param ctx           ::vas_ctx_t obtained from vas_ctx_alloc().
  *
- * @param clientname  The client principal name. Similar to the
- *               string that would be passed to vas_id_alloc().
+ * @param clientname    The client principal name. Similar to the string that
+ *                      would be passed to vas_id_alloc().
  *
- * @param clientpasswd The clear-text client password string.
+ * @param clientpasswd  The clear-text client password string.
  *
- * @param server The ::vas_id_t of the "server" that is authenticating
- *               the client. The server ::vas_id_t must have been used in a
- *               previously successful call to vas_id_establish_cred_keytab().
+ * @param server        The ::vas_id_t of the "server" that is authenticating
+ *                      the client. The server ::vas_id_t must have been used
+ *                      in a previously successful call to
+ *                      vas_id_establish_cred_keytab().
  *
  * @return vas_auth_t   Returns a ::vas_auth_t that may be used in subsequent
- *               authorization calls.
+ *                      authorization calls.
  *
  *
  *
@@ -1007,10 +999,7 @@ function vas_auth( $ctx, $client, $server );
  *                                    or server ::vas_id_t
  *          - VAS_ERR_CRED_EXPIRED  - Client credentials are expired.
  **/
-function vas_auth_with_password( $ctx,
-                                 $clientname,
-                                 $clientpasswd,
-                                 $server);
+function vas_auth_with_password( $ctx, $clientname, $clientpasswd, $server);
 
 
 /** Used by server application to determine whether the authenticated client
@@ -1048,20 +1037,18 @@ function vas_auth_with_password( $ctx,
  *          - VAS_ERR_INVALID_PARAM - An invalid parameter was passed
  *          - VAS_ERR_NO_MEMORY     - Memory allocation failed
  */
-function vas_auth_check_client_membership( $ctx,
-                                           $id,
-                                           $auth,
-                                           $group );
+function vas_auth_check_client_membership( $ctx, $id, $auth, $group );
 
 
-/** Used by server application obtain the list of groups that the authenticated
- * client is a member of.
+/**
+ * Used by server application obtain the list of groups of which the
+ * authenticated client is a member.
  *
  * A ::vas_auth_t contains information (the Microsoft PAC) about the groups
- * that a user is a member of. After calling vas_auth() or
+ * of which a user is a member. After calling vas_auth() or
  * vas_auth_password() developers should call vas_auth_get_client_groups()
- * as the most efficient way of obtaining a list of the groups member a
- * user is a member of. If the ::vas_auth_t necessary for calling
+ * as the most efficient way of obtaining a list of the groups member of which
+ * a user is a member. If the ::vas_auth_t necessary for calling
  * this function can not be obtained, the much less efficient
  * vas_user_get_groups() may be used to get group membership.
  *
@@ -1074,8 +1061,8 @@ function vas_auth_check_client_membership( $ctx,
  * @param auth   The ::vas_auth_t obtained previously with a call to
  *               vas_auth() or vas_auth_password().
  *
- * @return vas_group_t[].
- *         Used to return the groups that the user is a member of.
+ * @return vas_group_t[]    Used to return the groups of which the user is a
+ *                          member.
  *
  * On return vas_err() is set as follows:
  *          - VAS_ERR_SUCCESS on success or one of the following error codes:
@@ -1196,13 +1183,7 @@ function vas_attrs_alloc( $ctx, $id );
  *          - VAS_ERR_LDAP          - LDAP error. Use ::vas_err_t functions
  *                                    to obtain LDAP error details
  **/
-function vas_attrs_find( $ctx,
-                         $attrs,
-                         $uri,
-                         $scope,
-                         $base,
-                         $filter,
-                         $anames );
+function vas_attrs_find( $ctx, $attrs, $uri, $scope, $base, $filter, $anames );
 
 
 /** Continues a previous vas_attrs_find()  Used to get the rest of the
@@ -1547,10 +1528,7 @@ function vas_vals_get_dn( $ctx, $attrs );
  *          - VAS_ERR_INVALID_PARAM - An invalid parameter was passed
  *          - VAS_ERR_NO_MEMORY     - Memory allocation failed
  **/
-function vas_name_to_principal( $ctx,
-                                $name,
-                                $hint,
-                                $flags );
+function vas_name_to_principal( $ctx, $name, $hint, $flags );
 
 
 /** Obtain the LDAP distinguished name for a simple user, group,
@@ -1600,14 +1578,59 @@ function vas_name_to_principal( $ctx,
  *          - VAS_ERR_LDAP          - LDAP error. Use ::vas_err_t functions
  *                                    to obtain LDAP error details
  **/
-function vas_name_to_dn( $ctx,
-                         $id,
-                         $name,
-                         $hint,
-                         $flags,
-                         &$nameout,
-                         &$domainout );
+function vas_name_to_dn( $ctx, $id, $name, $hint, $flags, &$nameout, &$domainout );
 
+
+/**
+ * Compare two names for equality.
+ *
+ * @param ctx     ::vas_ctx_t obtained from vas_ctx_alloc().
+ *
+ * @param id      The identity that will be used to authenticate.
+ *                to the LDAP server. The id MUST have established
+ *                credentials. Pass in NULL to perform anonymous
+ *                LDAP searches.
+ *
+ * @param name_a  First name to compare.
+ *
+ * @param name_b  Second name to compare.
+ *
+ * @param hint    Optional. The type of name being used. Recognized
+ *                hint values include:
+ *                - VAS_NAME_TYPE_UNKNOWN
+ *                - VAS_NAME_TYPE_USER
+ *                - VAS_NAME_TYPE_GROUP
+ *                - VAS_NAME_TYPE_SERVICE
+ *                - VAS_NAME_TYPE_HOST
+ *
+ * @param flags   Flags that modify the expansion behavior:
+ *                - VAS_NAME_FLAG_NO_CACHE
+ *                - VAS_NAME_FLAG_NO_LDAP
+ *                - VAS_NAME_FLAG_FOREST_SCOPE - If a domain/realm part is
+ *                                               not specified, the entire
+ *                                               forest is searched. By
+ *                                               default only the current
+ *                                               realm will be searched.
+ *
+ * @return VAS_ERR_SUCCESS if the names match and VAS_ERR_FAILURE if they do
+ *   not. In both cases the error code will not be attached to the ::vas_ctx_t
+ *   (ie. a call to vas_err_get_code() will not return this error code. If
+ *   an error occurs (for example because a name cannot be looked up), then
+ *   this call may also return one of the following errors, which
+ *   will be attached to the ::vas_ctx_t and
+ *   returnable from vas_err_get_code().
+ *
+ *
+ *          - VAS_ERR_NOT_FOUND     - No distinguished name found
+ *          - VAS_ERR_INVALID_PARAM - An invalid parameter was passed
+ *          - VAS_ERR_NO_MEMORY     - Memory allocation failed
+ *          - VAS_ERR_KRB5          - Kerberos error. Use ::vas_err_t functions
+ *                                    to obtain Kerberos error details
+ *          - VAS_ERR_LDAP          - LDAP error. Use ::vas_err_t functions
+ *                                    to obtain LDAP error details
+ *
+ **/
+function vas_name_compare( $ctx, $id, $name_a, $name_b, $hint, $flags );
 
 
 /****************************************************************************
@@ -1708,10 +1731,7 @@ function vas_info_site( $ctx );
  *          - VAS_ERR_LDAP            - LDAP error. Use ::vas_err_t functions
  *                                      to obtain LDAP error details
  **/
-function vas_info_domains( $ctx,
-                           $id,
-                           &$domains,
-                           &$domains_dn );
+function vas_info_domains( $ctx, $id, &$domains, &$domains_dn );
 
 
 /** Obtain names of Active Directory Domain Controllers in the specified domain.
@@ -1752,10 +1772,7 @@ function vas_info_domains( $ctx,
  *          - VAS_ERR_LDAP            - LDAP error. Use ::vas_err_t functions
  *                                      to obtain LDAP error details
  **/
-function vas_info_servers( $ctx,
-                           $domain,
-                           $site,
-                           $type );
+function vas_info_servers( $ctx, $domain, $site, $type );
 
 
 /****************************************************************************
@@ -1901,10 +1918,20 @@ function vas_err_get_cause_by_type( $ctx, $type );
  *          - VAS_ERR_INVALID_PARAM   - An invalid parameter was passed
  *          - VAS_ERR_FAILURE         - Unspecified failure
  **/
-function vas_user_init( $ctx,
-                        $id,
-                        $name,
-                        $flags );
+function vas_user_init( $ctx, $id, $name, $flags );
+
+
+/**
+ * Compare two ::vas_user_t objects for equality.
+ *
+ * @param ctx       A ::vas_ctx_t obtained from vas_ctx_alloc().
+ * @param user_a    First user to compare.
+ * @param user_b    Second user to compare.
+ *
+ * @return VAS_ERR_SUCCESS if users are equal, VAS_ERR_FAILURE otherwise.
+ */
+function vas_user_compare( $ctx, $user_a, $user_b );
+
 
 /**
  * Determine whether the given user account is a member of the given Active
@@ -1952,13 +1979,10 @@ function vas_user_init( $ctx,
  *
  * @see vas_group_has_member().
  **/
-function vas_user_is_member( $ctx,
-                             $id,
-                             $user,
-                             $group );
+function vas_user_is_member( $ctx, $id, $user, $group );
 
 /**
- * Get the Active Directory groups that a user is a member of.
+ * Get the Active Directory groups of which a user is a member.
  *
  * @param ctx       A ::vas_ctx_t obtained from vas_ctx_alloc().
  *
@@ -1967,7 +1991,8 @@ function vas_user_is_member( $ctx,
  *
  * @param user      A ::vas_user_t for the user account.
  *
- * @return vas_groups_t[]    Used to return the groups that the user is a member of.
+ * @return vas_groups_t[]   Used to return the groups of which the user is a
+ *                          member.
  *
  * On return vas_err() is set as follows:
  *          - VAS_ERR_SUCCESS on success or one of the following error codes:
@@ -1993,8 +2018,8 @@ function vas_user_get_groups( $ctx, $id, $user );
  * @param anames    Array of attribute names to retrieve.
  *
  * @return vas_attrs_t     The values for the
- *                  requested attributes can be obtained with the vas_vals_get*
- *                  family of functions.
+ *                  requested attributes can be obtained using this value with
+ *                  the vas_vals_get* family of functions.
  *
  * On return vas_err() is set as follows:
  *          - VAS_ERR_SUCCESS on success or on of the following error codes:
@@ -2003,10 +2028,7 @@ function vas_user_get_groups( $ctx, $id, $user );
  *          - VAS_ERR_FAILURE         - Unspecified failure
  *
  **/
-function vas_user_get_attrs( $ctx,
-                             $id,
-                             $user,
-                             $anames );
+function vas_user_get_attrs( $ctx, $id, $user, $anames );
 
 
 /**
@@ -2062,7 +2084,7 @@ function vas_user_get_domain( $ctx, $id, $user );
  *                  Pass NULL to perform anonymous searches.
  * @param user      A ::vas_user_t for the user account.
  *
- * @return string       Used to return the SAM account name of the user
+ * @return string   Used to return the SAM account name of the user
  *                  object.
  *
  * On return vas_err() is set as follows:
@@ -2106,7 +2128,7 @@ function vas_user_get_sid( $ctx, $id, $user );
  *
  * @param user    A ::vas_user_t for the user account.
  *
- * @return string     Used to return the upn of the user account.
+ * @return string Used to return the UPN of the user account.
  *
  * On return vas_err() is set as follows:
  *          - VAS_ERR_SUCCESS on success or one of the following error codes:
@@ -2282,10 +2304,20 @@ function vas_user_check_conflicts( $ctx, $user );
  *          - VAS_ERR_INVALID_PARAM   - An invalid parameter was passed
  *          - VAS_ERR_FAILURE         - Unspecified failure
  **/
-function vas_group_init( $ctx,
-                         $id,
-                         $name,
-                         $flags );
+function vas_group_init( $ctx, $id, $name, $flags );
+
+
+/**
+ * Compare two ::vas_group_t objects for equality.
+ *
+ * @param ctx       A ::vas_ctx_t obtained from vas_ctx_alloc().
+ * @param group_a   First group to compare.
+ * @param group_b   Second group to compare.
+ *
+ * @return VAS_ERR_SUCCESS if users are equal, VAS_ERR_FAILURE otherwise.
+ */
+vas_err_t vas_group_compare( $ctx, $a, $b );
+
 
 /**
  * Determine whether a group has the given user as a member.
@@ -2295,19 +2327,18 @@ function vas_group_init( $ctx,
  * call this as follows:
  *
  * @code
- * switch ( vas_group_has_member( ctx, id, group, user ) )
+ * switch ( vas_group_has_member( $ctx, $id, $group, $user ) )
  * {
- * case VAS_ERR_SUCCESS:
- *     // The user is a member
- *     ...
- * case VAS_ERR_NOT_FOUND:
- *     // The user is not a member
- *     ...
- *
- * default:
- *     // A different error has occurred
- *     err_str = vas_err_get_string( ctx, 1 );
- *     ...
+ *    case VAS_ERR_SUCCESS:
+ *        // The user is a member
+ *        ...
+ *    case VAS_ERR_NOT_FOUND:
+ *        // The user is not a member
+ *        ...
+ *    default:
+ *        // A different error has occurred
+ *        err_str = vas_err_get_string( ctx, 1 );
+ *        ...
  * }
  * @endcode
  *
@@ -2328,10 +2359,8 @@ function vas_group_init( $ctx,
  *          - VAS_ERR_FAILURE         - Unspecified failure
  *
  **/
-function vas_group_has_member( $ctx,
-                               $id,
-                               $group,
-                               $user );
+function vas_group_has_member( $ctx, $id, $group, $user );
+
 
 /**
  * Lookup arbitrary attributes for the given group.
@@ -2350,10 +2379,8 @@ function vas_group_has_member( $ctx,
  *          - VAS_ERR_FAILURE         - Unspecified failure
  *
  **/
-function vas_group_get_attrs( $ctx,
-                              $id,
-                              $group,
-                              $anames );
+function vas_group_get_attrs( $ctx, $id, $group, $anames );
+
 
 /**
  * Get the DN for a group.
@@ -2381,7 +2408,7 @@ function vas_group_get_dn( $ctx, $id, $group );
  * @param id        Identity of user used to perform Active Directory searches.
  *                  Pass NULL to perform anonymous searches.
  * @param group     A ::vas_group_t for the group.
- * @return string    Used to return the domain the group exists in.
+ * @return string   Used to return the domain the group exists in.
  *
  * On return vas_err() is set as follows:
  *          - VAS_ERR_SUCCESS on success or one of the following error codes:
@@ -2404,9 +2431,7 @@ function vas_group_get_domain( $ctx, $id, $group );
  *
  * @param group    A ::vas_group_t for the group.
  *
- * @return string      Used to return the sid of the group.
- *
- *
+ * @return string  Used to return the sid of the group.
  *
  * On return vas_err() is set as follows:
  *          - VAS_ERR_SUCCESS on success or one of the following error codes:
@@ -2415,6 +2440,44 @@ function vas_group_get_domain( $ctx, $id, $group );
  *          - VAS_ERR_FAILURE         - Unspecified failure
  **/
 function vas_group_get_sid( $ctx, $id, $group );
+
+
+/**
+ * Get the group entry for a Unix enabled group
+ *
+ * This function returns a struct group which contains the Unix group,
+ * gid and members of a group. If the group is not Unix enabled VAS_ERR_NOT_FOUND
+ * is returned. Memory for both the group structure and the string pointers
+ * in this structure is allocated in a contiguous buffer that must be freed
+ * by calling free() on the returned struct group pointer. This function
+ * does not search Active Directory directly, but uses the VAS cache mechanism
+ * to look up the information. The returned group struct contains the
+ * user information directly from Active Directory, which will not be validated
+ * for the local Unix system (for example, the GID is not validated to ensure
+ * that is within the valid range for the Unix system). This function does NOT
+ * call the system getgrnam() function.
+ *
+ * @param ctx      A ::vas_ctx_t obtained from vas_ctx_alloc().
+ *
+ * @param id       Currently unused, may be NULL.
+ *
+ * @param group    A ::vas_group_t for the group account.
+ *
+ * @param grp      pointer to struct group for returning information about a
+ *                 Unix-enabled group. Must be freed by calling free().
+ *                 If this function fails, the structure pointed at by grp
+ *                 is undefined and must not be freed.
+ *
+ * @return  struct group* grp     Returns a pointer to the Unix-emabled group
+ *                  information structure.
+ *
+ * On return vas_err() is set as follows:
+ *          - VAS_ERR_NOT_FOUND       - Group is not a Unix enabled group
+ *          - VAS_ERR_INVALID_PARAM   - An invalid parameter was passed
+ *          - VAS_ERR_NO_MEMORY       - Memory allocation failed
+ *          - VAS_ERR_FAILURE         - Unspecified failure
+ **/
+function vas_group_get_grinfo( $ctx, $id, $group );
 
 
 /****************************************************************************
@@ -2447,10 +2510,19 @@ function vas_group_get_sid( $ctx, $id, $group );
  *          - VAS_ERR_INVALID_PARAM   - An invalid parameter was passed
  *          - VAS_ERR_FAILURE         - Unspecified failure
  **/
-function vas_service_init( $ctx,
-                           $id,
-                           $name,
-                           $flags );
+function vas_service_init( $ctx, $id, $name, $flags );
+
+
+/**
+ * Compare two ::vas_service_t objects for equality.
+ *
+ * @param ctx           A ::vas_ctx_t obtained from vas_ctx_alloc().
+ * @param service_a     First service to compare.
+ * @param service_b     Second service to compare.
+ *
+ * @return VAS_ERR_SUCCESS if users are equal, VAS_ERR_FAILURE otherwise.
+ */
+function vas_service_compare( $ctx, $service_a, $service_b );
 
 
 /**
@@ -2475,10 +2547,7 @@ function vas_service_init( $ctx,
  *          - VAS_ERR_FAILURE         - Unspecified failure
  *
  **/
-function vas_service_get_attrs( $ctx,
-                                $id,
-                                $service,
-                                $anames );
+function vas_service_get_attrs( $ctx, $id, $service, $anames );
 
 
 /**
@@ -2491,7 +2560,7 @@ function vas_service_get_attrs( $ctx,
  *
  * @param service   A ::vas_service_t for the service account.
  *
- * @return string        Used to return the dn of the service account.
+ * @return string   Used to return the dn of the service account.
  *
  * On return vas_err() is set as follows:
  *          - VAS_ERR_SUCCESS on success or one of the following error codes:
@@ -2512,7 +2581,7 @@ function vas_service_get_dn( $ctx, $id, $service );
  *
  * @param service   A ::vas_service_t for the service account.
  *
- * @return string    Used to return the domain of the service account.
+ * @return string   Used to return the domain of the service account.
  *
  *
  *
@@ -2535,15 +2604,15 @@ function vas_service_get_domain( $ctx, $id, $service );
  * samAccountName\@realm. This name is always guaranteed to work for
  * obtaining ticket granting tickets for any service account.
  *
- * @param ctx           A ::vas_ctx_t obtained from vas_ctx_alloc().
+ * @param ctx       A ::vas_ctx_t obtained from vas_ctx_alloc().
  *
- * @param id            Identity of user used to perform Active Directory searches.
- *                      Pass NULL to perform anonymous searches.
+ * @param id        Identity of user used to perform Active Directory searches.
+ *                  Pass NULL to perform anonymous searches.
  *
- * @param service       A ::vas_service_t for the service account.
+ * @param service   A ::vas_service_t for the service account.
  *
- * @return string   Used to return the Kerberos client name
- *                      of the service account.
+ * @return string   Used to return the Kerberos client name of the service
+ *                  account.
  *
  * On return vas_err() is set as follows:
  *          - VAS_ERR_SUCCESS on success or one of the following error codes:
@@ -2564,7 +2633,7 @@ function vas_service_get_krb5_client_name( $ctx, $id, $service );
  *
  * @param service   A ::vas_service_t for the service account.
  *
- * @return string[]      Used to return an array of the SPNs of
+ * @return string[] Used to return an array of the SPNs of
  *                  the service account.
  *
  * On return vas_err() is set as follows:
@@ -2586,7 +2655,7 @@ function vas_service_get_spns( $ctx, $id, $service );
  *
  * @param service   A ::vas_service_t for the service account.
  *
- * @return string       Used to return the upn of the service account.
+ * @return string   Used to return the UPN of the service account.
  *
  * On return vas_err() is set as follows:
  *          - VAS_ERR_SUCCESS on success or one of the following error codes:
@@ -2627,10 +2696,19 @@ function vas_service_get_upn( $ctx, $id, $service );
  *          - VAS_ERR_INVALID_PARAM   - An invalid parameter was passed
  *          - VAS_ERR_FAILURE         - Unspecified failure
  */
-function vas_computer_init( $ctx,
-                            $id,
-                            $name,
-                            $flags );
+function vas_computer_init( $ctx, $id, $name, $flags );
+
+
+/**
+ * Compare two ::vas_computer_t objects for equality.
+ *
+ * @param ctx           A ::vas_ctx_t obtained from vas_ctx_alloc().
+ * @param computer_a    First computer to compare.
+ * @param computer_b    Second computer to compare.
+ *
+ * @return VAS_ERR_SUCCESS if users are equal, VAS_ERR_FAILURE otherwise.
+ */
+function vas_computer_compare( $ctx, $computer_a, $computer_b );
 
 /**
  * Determine whether the given computer object is a member of the given
@@ -2656,10 +2734,7 @@ function vas_computer_init( $ctx,
  *
  * @see vas_user_is_member().
  **/
-function vas_computer_is_member( $ctx,
-                                 $id,
-                                 $computer,
-                                 $group );
+function vas_computer_is_member( $ctx, $id, $computer, $group );
 
 
 /**
@@ -2674,8 +2749,8 @@ function vas_computer_is_member( $ctx,
  *
  * @param anames    An array of attribute names to retrieve.
  *
- * @return vas_attrs_t     The attribute values can be obtained
- *                  with the vas_vals_get* family of functions.
+ * @return vas_attrs_t     The attribute values can be obtained using this
+ *                  value with the vas_vals_get* family of functions.
  *
  * On return vas_err() is set as follows:
  *          - VAS_ERR_SUCCESS on success or one of the following error codes:
@@ -2684,10 +2759,7 @@ function vas_computer_is_member( $ctx,
  *          - VAS_ERR_FAILURE         - Unspecified failure
  *
  **/
-function vas_computer_get_attrs( $ctx,
-                                 $id,
-                                 $computer,
-                                 $anames );
+function vas_computer_get_attrs( $ctx, $id, $computer, $anames );
 
 /**
  * Get the DN for a computer object.
@@ -2699,7 +2771,7 @@ function vas_computer_get_attrs( $ctx,
  *
  * @param computer  A ::vas_computer_t for the computer object.
  *
- * @return string        Used to return the dn of the computer object.
+ * @return string   Used to return the dn of the computer object.
  *
  * On return vas_err() is set as follows:
  *          - VAS_ERR_SUCCESS on success or one of the following error codes:
@@ -2711,16 +2783,17 @@ function vas_computer_get_dn( $ctx, $id, $computer );
 
 
 /**
- * Get the DNS name for a computer object.
+ * Get the name for a computer object by which it is known to the Domain Name
+ * Service (DNS).
  *
- * @param ctx           A ::vas_ctx_t obtained from vas_ctx_alloc().
+ * @param ctx      A ::vas_ctx_t obtained from vas_ctx_alloc().
  *
- * @param id            Identity of user used to perform Active Directory searches.
- *                      Pass NULL to perform anonymous searches.
+ * @param id       Identity of user used to perform Active Directory searches.
+ *                 Pass NULL to perform anonymous searches.
  *
- * @param computer      A ::vas_computer_t for the computer object.
+ * @param computer A ::vas_computer_t for the computer object.
  *
- * @return string  Used to return the dns name of the computer object.
+ * @return string  Used to return the DNS name of the computer object.
  *
  * On return vas_err() is set as follows:
  *          - VAS_ERR_SUCCESS on success or one of the following error codes:
@@ -2741,7 +2814,7 @@ function vas_computer_get_dns_hostname( $ctx, $id, $computer );
  *
  * @param computer  A ::vas_computer_t for the computer object.
  *
- * @return string    Used to return the domain of the computer object.
+ * @return string   Used to return the domain of the computer object.
  *
  * On return vas_err() is set as follows:
  *          - VAS_ERR_SUCCESS on success or one of the following error codes:
@@ -2757,14 +2830,14 @@ function vas_computer_get_domain( $ctx, $id, $computer );
 /**
  * Get the SID for a computer object.
  *
- * @param ctx           A ::vas_ctx_t obtained from vas_ctx_alloc().
+ * @param ctx       A ::vas_ctx_t obtained from vas_ctx_alloc().
  *
- * @param id            Identity of user used to perform Active Directory searches.
- *                      Pass NULL to perform anonymous searches.
+ * @param id        Identity of user used to perform Active Directory searches.
+ *                  Pass NULL to perform anonymous searches.
  *
- * @param computer      A ::vas_computer_t for the computer object.
+ * @param computer  A ::vas_computer_t for the computer object.
  *
- * @return string           Used to return the sid of the computer object.
+ * @return string   Used to return the sid of the computer object.
  *
  * On return vas_err() is set as follows:
  *          - VAS_ERR_SUCCESS on success or one of the following error codes:
@@ -2778,14 +2851,14 @@ function vas_computer_get_sid( $ctx, $id, $computer );
 /**
  * Get the Service Principal Names (SPNs) for a computer object.
  *
- * @param ctx           A ::vas_ctx_t obtained from vas_ctx_alloc().
+ * @param ctx       A ::vas_ctx_t obtained from vas_ctx_alloc().
  *
- * @param id            Identity of user used to perform Active Directory searches.
- *                      Pass NULL to perform anonymous searches.
+ * @param id        Identity of user used to perform Active Directory searches.
+ *                  Pass NULL to perform anonymous searches.
  *
- * @param computer      A ::vas_computer_t for the computer object.
+ * @param computer  A ::vas_computer_t for the computer object.
  *
- * @return string[]          Used to return the SPNs of the computer object.
+ * @return string[] Used to return the SPNs of the computer object.
  *
  * On return vas_err() is set as follows:
  *          - VAS_ERR_SUCCESS on success or one of the following error codes:
@@ -2799,15 +2872,14 @@ function vas_computer_get_spns( $ctx, $id, $computer );
 /**
  * Get the SAM Account Name (NETBIOS name) for a computer object.
  *
- * @param ctx           A ::vas_ctx_t obtained from vas_ctx_alloc().
+ * @param ctx       A ::vas_ctx_t obtained from vas_ctx_alloc().
  *
- * @param id            Identity of user used to perform Active Directory searches.
- *                      Pass NULL to perform anonymous searches.
+ * @param id        Identity of user used to perform Active Directory searches.
+ *                  Pass NULL to perform anonymous searches.
  *
- * @param computer      A ::vas_computer_t for the computer object.
+ * @param computer  A ::vas_computer_t for the computer object.
  *
- * @return string       Used to return the SAM Account Name of the computer
- *                      object.
+ * @return string   Used to return the SAM Account Name of the computer object.
  *
  * On return vas_err() is set as follows:
  *          - VAS_ERR_SUCCESS on success or one of the following error codes:
@@ -2821,14 +2893,14 @@ function vas_computer_get_sam_account_name( $ctx, $id, $computer );
 /**
  * Get the User Principal Name (UPN) for a computer object.
  *
- * @param ctx           A ::vas_ctx_t obtained from vas_ctx_alloc().
+ * @param ctx       A ::vas_ctx_t obtained from vas_ctx_alloc().
  *
- * @param id            Identity of user used to perform Active Directory searches.
- *                      Pass NULL to perform anonymous searches.
+ * @param id        Identity of user used to perform Active Directory searches.
+ *                  Pass NULL to perform anonymous searches.
  *
- * @param computer      A ::vas_computer_t for the computer object.
+ * @param computer  A ::vas_computer_t for the computer object.
  *
- * @return string       Used to return the upn of the computer object.
+ * @return string   Used to return the UPN of the computer object.
  *
  * On return vas_err() is set as follows:
  *          - VAS_ERR_SUCCESS on success or one of the following error codes:
@@ -2848,15 +2920,15 @@ function vas_computer_get_upn( $ctx, $id, $computer );
  * This name is always guaranteed to work for obtaining ticket granting
  * tickets for any computer object.
  *
- * @param ctx           A ::vas_ctx_t obtained from vas_ctx_alloc().
+ * @param ctx       A ::vas_ctx_t obtained from vas_ctx_alloc().
  *
- * @param id            Identity of user used to perform Active Directory searches.
- *                      Pass NULL to perform anonymous searches.
+ * @param id        Identity of user used to perform Active Directory searches.
+ *                  Pass NULL to perform anonymous searches.
  *
- * @param computer      A ::vas_computer_t for the computer object.
+ * @param computer  A ::vas_computer_t for the computer object.
  *
- * @return string   Used to return the Kerberos client name
- *                      of the computer object.
+ * @return string   Used to return the Kerberos client name of the computer
+ *                  object.
  *
  * On return vas_err() is set as follows:
  *          - VAS_ERR_SUCCESS on success or one of the following error codes:
@@ -2881,15 +2953,15 @@ function vas_computer_get_krb5_client_name( $ctx, $id, $computer );
  * To retrieve the Service Principal Names using the servicePrincipalName
  * attribute, use the vas_computer_get_spns() function.
  *
- * @param ctx           A ::vas_ctx_t obtained from vas_ctx_alloc().
+ * @param ctx       A ::vas_ctx_t obtained from vas_ctx_alloc().
  *
- * @param id            Identity of user used to perform Active Directory searches.
- *                      Pass NULL to perform anonymous searches.
+ * @param id        Identity of user used to perform Active Directory searches.
+ *                  Pass NULL to perform anonymous searches.
  *
- * @param computer      A ::vas_computer_t for the computer object.
+ * @param computer  A ::vas_computer_t for the computer object.
  *
- * @return string      Used to return the Kerberos service name
- *                      of the computer object.
+ * @return string   Used to return the Kerberos service name of the computer
+ *                  object.
  *
  * On return vas_err() is set as follows:
  *          - VAS_ERR_SUCCESS on success or one of the following error codes:
