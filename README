@@ -40,7 +40,8 @@ need autoconf 2.59 and automake 1.9.
 
 Supported versions of PHP
 -------------------------
-PHP-VAS has been built with php4 and php5.
+PHP-VAS has been built with both php4 and php5, but most development and
+testing has proceeded on php4.
 
 
 Note on VAS SDK requirement
@@ -67,7 +68,7 @@ If your distribution contains the file 'configure', then simply run
     make check
     make package
 
-If you have checked out the sources from subversion, then generate the
+If you have checked out the sources from subversion, then first generate the
 configure script by first running
 
     sh bootstrap.sh
@@ -76,11 +77,16 @@ configure script by first running
 Debugging notes
 ---------------
 
-* Seg faults usually caused by symbol collisions with other modules.
+* Segmentation faults are usually caused by symbol collisions with other
+    modules.
 
 * Add this line to the PHP script so that errors are logged:
-      error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
+     error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
 
+* To ctag the bindings implementation in extension/vasapi.c:
+        cd extension ; ctags -R <path-to-PHP-headers>
+     For example:
+        cd extension ; ctags -R /usr/local/include/php
 
 Known issues
 ------------
