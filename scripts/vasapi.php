@@ -224,7 +224,7 @@ enum vas_name_type_t
     VAS_NAME_TYPE_GROUP   = 2, /* A gr_name */
     VAS_NAME_TYPE_SERVICE = 3, /* Kerberos SPN */
     VAS_NAME_TYPE_HOST    = 4, /* A DNS hostname */
-    VAS_NAME_TYPE_DN      = 5, /* An LDAP Distinguished Name */
+    VAS_NAME_TYPE_DN      = 5, /* An LDAP distinguished name */
     VAS_NAME_TYPE_SID     = 6  /* A Security Identifier */
 };
 
@@ -730,7 +730,7 @@ function vas_id_get_keytab_name( $ctx, $id );
  *
  * @param &princ  Return the Kerberos principal name.
  *
- * @param &dn     Returns the distinguished name.
+ * @param &dn     Returns the DN.
  *
  * @return vas_err().
  *
@@ -1151,9 +1151,8 @@ function vas_attrs_alloc( $ctx, $id );
  *
  * @param attrs    A ::vas_attrs_t obtained from call to vas_attrs_alloc().
  *
- * @param uri      The URI that identifies the server that will be bound to.
- *                 For more details on URI format see:
- *                 vas_ldap_init_and_bind().
+ * @param uri      The URI that identifies the server to which it will be bound.
+ *                 For more details on URI format see: vas_ldap_init_and_bind().
  *
  * @param scope    Optional LDAP search scope. May one of the following
  *                 strings: "base" for LDAP_SCOPE_BASE, "sub" for
@@ -1662,16 +1661,17 @@ function vas_name_compare( $ctx, $id, $name_a, $name_b, $hint, $flags );
 function vas_info_forest_root( $ctx, &$forest_root, &$forest_root_dn );
 
 
-/** Obtains the name of the Active Directory domain the computer is joined to.
- * This function may be used as a test to see if the computer is joined.
+/**
+ * Obtains the name of the Active Directory domain to which the computer is
+ * joined. This function may be used as a test to see if the computer is joined.
  *
  * @param ctx           A ::vas_ctx_t obtained from vas_ctx_alloc().
  *
- * @param &domain[]     Will be set to the domain that the computer is joined
- *                      to.
+ * @param &domain[]     Will be set to the domain to which the computer is
+ *                      joined.
  *
- * @param &domain_dn[]  Will be set to the domain distinguished name (DN) that
- *                      the computer is joined to.
+ * @param &domain_dn[]  Will be set to the domain DN to which the computer is
+ *                      joined.
  *
  * @return vas_err().
  *
@@ -1684,11 +1684,13 @@ function vas_info_forest_root( $ctx, &$forest_root, &$forest_root_dn );
 function vas_info_joined_domain( $ctx, &$domain, &$domain_dn );
 
 
-/** Obtains the name of the current Active Directory site the host belongs to.
+/**
+ * Obtains the name of the current Active Directory site to which the host
+ * belongs.
  *
  * @param ctx      A ::vas_ctx_t obtained from vas_ctx_alloc().
  *
- * @return string  Returns the site name that the Unix host belongs to.
+ * @return string  Returns the site name to which the Unix host belongs.
  *
  * On return vas_err() is set as follows:
  *          - VAS_ERR_SUCCESS on success or one of the following error codes:
@@ -1703,7 +1705,8 @@ function vas_info_joined_domain( $ctx, &$domain, &$domain_dn );
 function vas_info_site( $ctx );
 
 
-/** Obtain names of Active Directory Domain Controllers in the specified domain.
+/**
+ * Obtain names of Active Directory domain controllers in the specified domain.
  *
  * Calls to vas_info_domains() may generate DNS network traffic.
  *
@@ -1717,7 +1720,8 @@ function vas_info_site( $ctx );
  *
  * @param &domains[]     Will be allocated and filled with domain name strings.
  *
- * @param &domains_dn[]  Will be allocated and filled with DN strings.
+ * @param &domains_dn[]  Will be allocated and filled with distinguished name
+ *                      (DN) strings.
  *
  * @return vas_err().
  *
@@ -1734,22 +1738,22 @@ function vas_info_site( $ctx );
 function vas_info_domains( $ctx, $id, &$domains, &$domains_dn );
 
 
-/** Obtain names of Active Directory Domain Controllers in the specified domain.
+/** Obtain names of Active Directory domain controllers in the specified domain.
  *
  * Calls to vas_info_servers() may generate DNS network traffic.
  *
  * @param ctx     A ::vas_ctx_t obtained from vas_ctx_alloc().
  *
  * @param domain  The name of the domain you want to get servers for.
- *                Pass in NULL to get servers for the domain the
- *                computer is joined to. When obtaining global
+ *                Pass in NULL to get servers for the domain to which the
+ *                computer is joined. When obtaining global
  *                catalog servers, the domain parameter is ignored
  *                and the API automatically returns all Global
  *                catalogs in the specified site.
  *
- * @param site    The name of the site you want to get servers for.
- *                Pass in NULL to get servers for the site the computer
- *                is joined to. Pass in "*" to get servers for any
+ * @param site    The name of the site you want to get servers for. Pass NULL
+ *                to get servers for the site to which the computer
+ *                is joined. Pass in "*" to get servers for any
  *                site.
  *
  * @param type    The type of server you are looking for:
@@ -2032,7 +2036,7 @@ function vas_user_get_attrs( $ctx, $id, $user, $anames );
 
 
 /**
- * Get the DN for a user account.
+ * Get the distinguished name (DN) for a user account.
  *
  * @param ctx       A ::vas_ctx_t obtained from vas_ctx_alloc().
  *
@@ -2041,7 +2045,7 @@ function vas_user_get_attrs( $ctx, $id, $user, $anames );
  *
  * @param user      A ::vas_user_t for the user account.
  *
- * @return string  Used to return the dn of the user account.
+ * @return string  Used to return the DN of the user account.
  *
  * On return vas_err() is set as follows:
  *          - VAS_ERR_SUCCESS on success or one of the following error codes:
@@ -2053,7 +2057,7 @@ function vas_user_get_dn( $ctx, $id, $user );
 
 
 /**
- * Get the Active Directory domain the given user belongs to.
+ * Get the Active Directory domain to which the given user belongs.
  *
  * @param ctx      A ::vas_ctx_t obtained from vas_ctx_alloc().
  *
@@ -2383,14 +2387,14 @@ function vas_group_get_attrs( $ctx, $id, $group, $anames );
 
 
 /**
- * Get the DN for a group.
+ * Get the distinguished name (DN) for a group.
  *
  * @param ctx       A ::vas_ctx_t obtained from vas_ctx_alloc().
  * @param id        Identity of user used to perform Active Directory searches.
  *                  Pass NULL to perform anonymous searches.
  * @param group     A ::vas_group_t for the group.
  *
- * @return string  Used to return the dn of the group.
+ * @return string  Used to return the DN of the group.
  *
  * On return vas_err() is set as follows:
  *          - VAS_ERR_SUCCESS on success or one of the following error codes:
@@ -2551,7 +2555,7 @@ function vas_service_get_attrs( $ctx, $id, $service, $anames );
 
 
 /**
- * Get the DN for a service account.
+ * Get the distinguished name (DN) for a service account.
  *
  * @param ctx       A ::vas_ctx_t obtained from vas_ctx_alloc().
  *
@@ -2560,7 +2564,7 @@ function vas_service_get_attrs( $ctx, $id, $service, $anames );
  *
  * @param service   A ::vas_service_t for the service account.
  *
- * @return string   Used to return the dn of the service account.
+ * @return string   Used to return the DN of the service account.
  *
  * On return vas_err() is set as follows:
  *          - VAS_ERR_SUCCESS on success or one of the following error codes:
@@ -2572,7 +2576,7 @@ function vas_service_get_dn( $ctx, $id, $service );
 
 
 /**
- * Get the Active Directory domain that the given service belongs to.
+ * Get the Active Directory domain to which the given service belongs.
  *
  * @param ctx       A ::vas_ctx_t obtained from vas_ctx_alloc().
  *
@@ -2762,7 +2766,7 @@ function vas_computer_is_member( $ctx, $id, $computer, $group );
 function vas_computer_get_attrs( $ctx, $id, $computer, $anames );
 
 /**
- * Get the DN for a computer object.
+ * Get the distinguished name (DN) for a computer object.
  *
  * @param ctx       A ::vas_ctx_t obtained from vas_ctx_alloc().
  *
@@ -2771,7 +2775,7 @@ function vas_computer_get_attrs( $ctx, $id, $computer, $anames );
  *
  * @param computer  A ::vas_computer_t for the computer object.
  *
- * @return string   Used to return the dn of the computer object.
+ * @return string   Used to return the DN of the computer object.
  *
  * On return vas_err() is set as follows:
  *          - VAS_ERR_SUCCESS on success or one of the following error codes:
