@@ -5942,15 +5942,16 @@ PHP_RINIT_FUNCTION( vas )
     REGISTER_LONG_VAS_CONSTANT(GSS_C_ROUTINE_ERROR_OFFSET);
     REGISTER_LONG_VAS_CONSTANT(GSS_C_SUPPLEMENTARY_OFFSET);
 
-    /* Because the following aren't longs, they must be coerced to stop
-     * the compiler from moaning...
+    /* Because the following aren't longs, they cause a compiler warning.
+     * Whatever to do about this? We think for now that it's inadvisable
+     * to create a new macro that will simply silence the moaning thus:
+     #define REGISTER_GSS_LONG_VAS_CONSTANT(c) \
+        REGISTER_LONG_CONSTANT(#c, ( long ) (c), CONST_CS | CONST_PERSISTENT )
      */
-#define REGISTER_GSS_LONG_VAS_CONSTANT(c) \
-    REGISTER_LONG_CONSTANT(#c, ( long ) (c), CONST_CS | CONST_PERSISTENT )
-    REGISTER_GSS_LONG_VAS_CONSTANT(GSS_C_NO_CONTEXT);
-    REGISTER_GSS_LONG_VAS_CONSTANT(GSS_C_NO_CREDENTIAL);
+    REGISTER_LONG_VAS_CONSTANT(GSS_C_NO_CONTEXT);
+    REGISTER_LONG_VAS_CONSTANT(GSS_C_NO_CREDENTIAL);
 
-    REGISTER_STRING_CONSTANT( "GSS_C_NO_BUFFER", "", CONST_CS | CONST_PERSISTENT );
+    REGISTER_STRING_CONSTANT("GSS_C_NO_BUFFER", "", CONST_CS|CONST_PERSISTENT );
     REGISTER_LONG_VAS_CONSTANT(GSS_S_CALL_INACCESSIBLE_READ);
     REGISTER_LONG_VAS_CONSTANT(GSS_S_CALL_INACCESSIBLE_WRITE);
     REGISTER_LONG_VAS_CONSTANT(GSS_S_CALL_BAD_STRUCTURE);
