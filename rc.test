@@ -25,7 +25,6 @@ usage () { echo "$0 [-installed] [-runashost] [builddir]" >&2; exit 1; }
 : ${vastool:=/opt/quest/bin/vastool}
 : ${debug:=}        # eg -d2
 : ${prefix:=/opt/quest}
-: ${SUDO:=sudo}
 : ${builddir:=.}
 
 #-- process command-line options
@@ -69,17 +68,17 @@ outfile=${tmpdir}/outfile
 if $runashost; then
 #-- obtain host/ TGT so these tests can run automated
 krb5ccfile=${tmpdir}/cc
-${SUDO} rm -f ${krb5ccfile}
+${SUDO:-sudo} rm -f ${krb5ccfile}
 KRB5CCNAME=FILE:${krb5ccfile}
 export KRB5CCNAME
 $vastool -v
 verbose "Obtaining host/ key -> $KRB5CCNAME"
 set -x
 test -n "$debug" && 
-  ${SUDO} /bin/sh -c 'echo inside sudo KRB5CCNAME is $KRB5CCNAME'
-${SUDO} $vastool kinit host/ || fatal "Can't obtain host tgt"
-${SUDO} cat ${krb5ccfile} > ${krb5ccfile}.x || fatal "Can't get host ccache"
-${SUDO} rm -f ${krb5ccfile}
+  ${SUDO:-sudo} /bin/sh -c 'echo inside sudo KRB5CCNAME is $KRB5CCNAME'
+${SUDO:-sudo} $vastool kinit host/ || fatal "Can't obtain host tgt"
+${SUDO:-sudo} cat ${krb5ccfile} > ${krb5ccfile}.x || fatal "Can't get host ccache"
+${SUDO:-sudo} rm -f ${krb5ccfile}
 mv ${krb5ccfile}.x ${krb5ccfile}
 chmod 600 ${krb5ccfile}
 env | grep KRB5CCNAME
@@ -243,11 +242,11 @@ if $installed; then
     verbose "(using running vasidmapd service)"
 else
     desc "start vasidmapd"
-        ${SUDO} ${builddir}/vasidmapd -F -A $host -p $port $debug &
+        ${SUDO:-sudo} ${builddir}/vasidmapd -F -A $host -p $port $debug &
         pid=$!
-        trap "rm -rf ${tmpdir}; ${SUDO} kill $pid && wait 2>/dev/null" 0 
+        trap "rm -rf ${tmpdir}; ${SUDO:-sudo} kill $pid && wait 2>/dev/null" 0 
         sleep 1
-        ${SUDO} kill -0 $pid 2>/dev/null
+        ${SUDO:-sudo} kill -0 $pid 2>/dev/null
     required
 fi
 
