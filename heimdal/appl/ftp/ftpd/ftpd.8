@@ -459,6 +459,13 @@ alpha-numeric characters or any of the following:
 .Li \&,
 (comma).
 .El
+.Sh AUTHENTICATION
+This ftpd supports PAM authentication under the service name
+.Pa ftp .
+The PAM configuration file is usually
+.Pa /etc/pam.d/ftp
+or
+.Pa /etc/pam.conf .
 .Sh FILES
 .Bl -tag -width /etc/ftpwelcome -compact
 .It Pa /etc/ftpusers
