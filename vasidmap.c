@@ -189,6 +189,8 @@ int main( int argc, char *argv[] )
 	exit(1);
     }
 
+    (void)vas_log_init(3, 9, 0, 0, 0);
+
     /* Allocate a VAS context */
     if ((vaserr = vas_ctx_alloc(&vasctx))) {
 	switch (vaserr) {
