@@ -73,7 +73,7 @@ KRB5CCNAME=FILE:${krb5ccfile}
 export KRB5CCNAME
 $vastool -v
 verbose "Obtaining host/ key -> $KRB5CCNAME"
-set -x
+#set -x
 test -n "$debug" && 
   ${SUDO:-sudo} /bin/sh -c 'echo inside sudo KRB5CCNAME is $KRB5CCNAME'
 ${SUDO:-sudo} $vastool kinit host/ || fatal "Can't obtain host tgt"
@@ -90,21 +90,30 @@ $vastool klist || {
     KRB5CCNAME=FILE:$krb5ccfile; export KRB5CCNAME
     $vastool klist || fatal "cannot get VAS to see the host/ ccache"
 }
-set +x
+#set +x
+fi
+
+# work around for VAS bug 5480 on some platforms
+if $vastool nss getpwent | grep :VAS: >/dev/null; then
+    _getpwent () { $vastool nss getpwent; }
+    _getgrent () { $vastool nss getgrent; }
+else
+    _getpwent () { $vastool nss getpwnam testuser expired disabled; }
+    _getgrent () { $vastool nss getgrnam group00 group01 group02; }
 fi
 
 #-- used SID/GID/UIDs for testing
-uid=`$vastool nss getpwent | awk -F: '$2 == "VAS" {if (length($1) <= 8) {print $3; exit;}}'`
+uid=`_getpwent | awk -F: '$2 == "VAS" {if (length($1) <= 8) {print $3; exit;}}'`
 uname=`$vastool nss getpwuid $uid | awk -F: '{print $1; exit;}'` 
 usid=`$vastool attrs -b -u $uname objectSid | awk '{print $2; exit;}'`
-gid=`$vastool nss getgrent | awk -F: '$2 == "VAS" {if (length($1) <= 8) {print $3; exit;}}'`
+gid=`_getgrent | awk -F: '$2 == "VAS" {if (length($1) <= 8) {print $3; exit;}}'`
 gsid=`$vastool list -s groups | awk -F: '$3 == gid {print $5; exit;}' gid=$gid`
 gname=`$vastool list -s groups | awk -F: '$3 == gid {print $1; exit;}' gid=$gid`
 
-uid2=`$vastool nss getpwent | awk -F: '$2 == "VAS" && $3 != uid {if (length($1)<=8){print $3; exit;}}' uid=$uid`
+uid2=`_getpwent | awk -F: '$2 == "VAS" && $3 != uid {if (length($1)<=8){print $3; exit;}}' uid=$uid`
 uname2=`$vastool nss getpwuid $uid2 | awk -F: '{print $1; exit;}'` 
 usid2=`$vastool attrs -b -u $uname2 objectSid | awk '{print $2; exit;}'`
-gid2=`$vastool nss getgrent | awk -F: '$2 == "VAS" && $3 != gid {if (length($1)<=8){print $3; exit;}}' gid=$gid`
+gid2=`_getgrent | awk -F: '$2 == "VAS" && $3 != gid {if (length($1)<=8){print $3; exit;}}' gid=$gid`
 gsid2=`$vastool list -s groups | awk -F: '$3 == gid2 {print $5; exit;}' gid2=$gid2`
 gname2=`$vastool list -s groups | awk -F: '$3 == gid2 {print $1; exit;}' gid2=$gid2`
 
