@@ -94,17 +94,17 @@ set +x
 fi
 
 #-- used SID/GID/UIDs for testing
-uid=`$vastool list users | awk -F: '{print $3; exit;}'`
+uid=`$vastool nss getpwent | awk -F: '$2 == "VAS" {if (length($1) <= 8) {print $3; exit;}}'`
 uname=`$vastool nss getpwuid $uid | awk -F: '{print $1; exit;}'` 
 usid=`$vastool attrs -b -u $uname objectSid | awk '{print $2; exit;}'`
-gid=`$vastool list groups | awk -F: '{print $3; exit;}'`
+gid=`$vastool nss getgrent | awk -F: '$2 == "VAS" {if (length($1) <= 8) {print $3; exit;}}'`
 gsid=`$vastool list -s groups | awk -F: '$3 == gid {print $5; exit;}' gid=$gid`
 gname=`$vastool list -s groups | awk -F: '$3 == gid {print $1; exit;}' gid=$gid`
 
-uid2=`$vastool list users | awk -F: '$3 != uid {print $3; exit;}' uid=$uid`
+uid2=`$vastool nss getpwent | awk -F: '$2 == "VAS" && $3 != uid {if (length($1)<=8){print $3; exit;}}' uid=$uid`
 uname2=`$vastool nss getpwuid $uid2 | awk -F: '{print $1; exit;}'` 
 usid2=`$vastool attrs -b -u $uname2 objectSid | awk '{print $2; exit;}'`
-gid2=`$vastool list groups | awk -F: '$3 != gid {print $3; exit;}' gid=$gid`
+gid2=`$vastool nss getgrent | awk -F: '$2 == "VAS" && $3 != gid {if (length($1)<=8){print $3; exit;}}' gid=$gid`
 gsid2=`$vastool list -s groups | awk -F: '$3 == gid2 {print $5; exit;}' gid2=$gid2`
 gname2=`$vastool list -s groups | awk -F: '$3 == gid2 {print $1; exit;}' gid2=$gid2`
 
