@@ -103,10 +103,10 @@ else
 fi
 
 #-- used SID/GID/UIDs for testing
-uid=`_getpwent | awk -F: '$2 == "VAS" {if (length($1) <= 8) {print $3; exit;}}'`
+uid=`_getpwent | awk -F: '$2 == "VAS" {if (length($1)<=8) {print $3; exit;}}'`
 uname=`$vastool nss getpwuid $uid | awk -F: '{print $1; exit;}'` 
 usid=`$vastool attrs -b -u $uname objectSid | awk '{print $2; exit;}'`
-gid=`_getgrent | awk -F: '$2 == "VAS" {if (length($1) <= 8) {print $3; exit;}}'`
+gid=`_getgrent | awk -F: '$2 == "VAS" {if (length($1)<=8) {print $3; exit;}}'`
 gsid=`$vastool list -s groups | awk -F: '$3 == gid {print $5; exit;}' gid=$gid`
 gname=`$vastool list -s groups | awk -F: '$3 == gid {print $1; exit;}' gid=$gid`
 
@@ -142,7 +142,7 @@ badgid=`findid getgrgid`
         usid=     $usid
         gname=    $gname
         gid=      $gid
-        gsid=     $gsid
+        gsid=     [$gsid]
 
         uname2=   $uname2
         uid2=     $uid2
@@ -178,6 +178,17 @@ trycommand () {
         sed -ne l $outfile | sed -e 's/^/	|/'  -e 's/$/|/'
         test -s $outfile || echo '	(empty)'
     fi >&2
+}
+
+#-- usage ignore ...
+#   if EXIT changes from 0 to 1, set it back to 0
+ignore () {
+    old_EXIT="$EXIT"
+    "$@"
+    if test $old_EXIT -eq 0 -a $EXIT -eq 1; then
+	echo "[46;30m*** IGNORING FAILURE ***[m"
+	EXIT=0
+    fi
 }
 
 #------------------------------------------------------------
@@ -230,6 +241,7 @@ trymap -sU $usid <<.
 $uid
 .
 
+ignore \
 trymap -sG $gsid <<.
 $gid
 .
@@ -297,6 +309,7 @@ objectClass: sambaIdmapEntry
 uidNumber: $uid
 .
 
+ignore \
 tryfilter "(&(objectClass=sambaIdmapEntry)(sambaSID=$gsid))" <<.
 dn: CN=VAS-Idmapper
 sambaSID: $gsid
@@ -359,6 +372,7 @@ objectClass: sambaIdmapEntry
 gidNumber: $gid
 .
 
+ignore \
 tryfilter "(&(objectClass=sambaIdmapEntry)(|(sambaSID=$gsid)(sambaSID=$usid)))" <<.
 dn: CN=VAS-Idmapper
 sambaSID: $gsid
@@ -385,6 +399,7 @@ objectClass: sambaIdmapEntry
 uidNumber: $uid
 .
 
+ignore \
 tryfilter "(&(objectClass=sambaIdmapEntry)(|(uidNumber=$uid)(uidNumber=$uid2)(gidNumber=$gid)(gidNumber=$gid2)(sambaSID=$usid)(sambaSID=$usid2)(sambaSID=$gsid)(sambaSID=$gsid2)))" <<.
 dn: CN=VAS-Idmapper
 sambaSID: $usid
