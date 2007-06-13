@@ -238,12 +238,14 @@ SAMBAVERSION=`/opt/quest/sbin/smbd --version |
 is_lt () {
     a="$1" b="$2"
     while test -n "$a" -o -n "$b"; do
-	if test "${a%%.*}" -eq "${b%%.*}"; then
-	    case "$a" in *.*) a="${a#*.}";; *) a="";; esac
-	    case "$b" in *.*) b="${b#*.}";; *) b="";; esac
+	ah=`echo "$a" | sed -e 's/\..*//'`
+	bh=`echo "$b" | sed -e 's/\..*//'`
+	if test x"$ah" = x"$bh"; then
+	    a=`echo "$a" | sed -e 's/^[^.]*//;s/^\.//'`
+	    b=`echo "$b" | sed -e 's/^[^.]*//;s/^\.//'`
 	    continue
 	fi
-	test "${a%%.*}" -lt "${b%%.*}"
+	{ echo "$ah"; echo "$bh"; } | sort -n -c 2>/dev/null
 	return
     done
     return 1
