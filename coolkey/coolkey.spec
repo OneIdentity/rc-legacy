@@ -80,6 +80,9 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Tue Jun 26 2007 David Leonard <David.Leonard@quest.com> - 1.1.0p1
+- fix #245529 (C_Initialize+pthreads) and #245678 (make dist)
+
 * Wed Feb 14 2007 Bob Relyea <rrelyea@redhat.com> - 1.1.0
 - Clear any logout rests after a successful login.
 - Don't grab the CUID on cac's. Reseting the card causes it to

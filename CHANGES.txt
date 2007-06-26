@@ -1,0 +1,11 @@
+
+Coolkey - Quest Software changes
+
+1.1.0p1
+- import coolkey-1.1.0
+- fix Red Hat bug #245529 - coolkey hangs in C_Initialize() if 
+  pthreads library is not linked
+- fix Red Hat #245768 - "make dist" fails due to spelling mistake
+
+Quest Software provides binary packages of CoolKey for customers using
+our VAS Smartcard product.
