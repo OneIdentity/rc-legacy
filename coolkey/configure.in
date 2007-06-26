@@ -102,6 +102,7 @@ AC_PROG_LN_S
 if test $WINDOWS -ne 1; then
 AC_CHECK_LIB(z, uncompress, , AC_MSG_ERROR(could not locate libz compression library))
 AC_CHECK_LIB(dl, dlopen, , AC_MSG_ERROR(could not locate dynamic library services library))
+AC_CHECK_LIB(pthread, pthread_create, , AC_MSG_ERROR(could not locate pthread library))
 fi
 
 # add our compiled static libraries
