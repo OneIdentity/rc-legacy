@@ -18,7 +18,7 @@
 # END COPYRIGHT BLOCK
 
 Name: coolkey
-Version: 1.1.0
+Version: 1.1.0p1
 Release: 1
 Summary: CoolKey PKCS #11 module
 License: LGPL
