@@ -50,22 +50,22 @@ test -f pkginfo && rm pkginfo
 
 ## Servers
 pkginfo_create ${SCRIPTDIR}/pkginfo.servers.in pkginfo
-cp depend.servers "${OUTPUTDIR}/depend"
+#cp depend.servers "${OUTPUTDIR}/depend"
 
 pkgmk -o -r "${OUTPUTDIR}" -d /var/tmp -f "${SCRIPTDIR}/Prototype.servers"
 
 ## Clients
 pkginfo_create ${SCRIPTDIR}/pkginfo.clients.in pkginfo
-cp depend.clients "${OUTPUTDIR}/depend"
+#cp depend.clients "${OUTPUTDIR}/depend"
 
 pkgmk -o -r "${OUTPUTDIR}" -d /var/tmp -f "${SCRIPTDIR}/Prototype.clients"
 
 cd /var/tmp
-echo "QSFTkrbdapp-clients" | pkgtrans -os . ./QSFTkrbdapp-clients.$PKGVERSION.$ARCH.pkg
-echo "QSFTkrbdapp-servers" | pkgtrans -os . ./QSFTkrbdapp-servers.$PKGVERSION.$ARCH.pkg
+echo "QSFTkac" | pkgtrans -os . ./QSFTkac.$PKGVERSION.$ARCH.pkg
+echo "QSFTkas" | pkgtrans -os . ./QSFTkas.$PKGVERSION.$ARCH.pkg
 
 test -d "${PACKAGES_DEST}" || mkdir "${PACKAGES_DEST}"
-cp QSFTkrbdapp-*.${PKGVERSION}.${ARCH}.pkg ${PACKAGES_DEST}
+cp QSFTka*.${PKGVERSION}.${ARCH}.pkg ${PACKAGES_DEST}
 
 echo "Build complete, cleaning up..."
 cd "${SCRIPTDIR}"

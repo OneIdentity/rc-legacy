@@ -1,4 +1,4 @@
-PKG="QSFTkrbdapp-servers"
+PKG="QSFTkas"
 NAME="Kerberos-enabled servers: telnetd, rshd, ftpd"
 ARCH="@ARCH@"
 VERSION="@VERSION@"

@@ -1,4 +1,4 @@
-PKG="QSFTkrbdapp-clients"
+PKG="QSFTkac"
 NAME="Kerberos-enabled client applications: telnet, rsh, rcp, ftp"
 ARCH="@ARCH@"
 VERSION="@VERSION@"
