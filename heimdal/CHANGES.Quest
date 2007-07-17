@@ -1,3 +1,11 @@
+krbd-apps (0.7.2q7) UNRELEASED
+
+  * Renamed to Kerberized Apps.
+  * Fixed bug #304: FTP interoperation with non-VAS-enabled ftp servers.
+  * Documented the PAM service name in ftpd(8).
+
+ -- Ted Percival <ted.percival@quest.com>  Tue, 17 Jul 2007 13:13:14 +1000
+
 vas-apps (0.7.2q6)
 
   * Fixed bug #86: Delegated credentials disappear with multiple FTP sessions.
