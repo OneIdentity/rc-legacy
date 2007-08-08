@@ -10,7 +10,7 @@ AC_CONFIG_HEADER([config.h])
 
 # Checks for programs.
 AC_PROG_CC
-AC_PATH_PROG([KRB5CONFIG], [krb5-config], [:], [/opt/vintela/vas/bin:$PATH])
+AC_PATH_PROG([KRB5CONFIG], [krb5-config], [:], [/opt/quest/bin:/opt/vintela/vas/bin:$PATH])
 
 # Add in kerberos paths
 LIBS="$LIBS `$KRB5CONFIG --libs krb5`"
