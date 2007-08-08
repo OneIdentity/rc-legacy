@@ -1,0 +1,315 @@
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook V4.1//EN">
+
+<!-- 
+  Copyright (C) 2005 Vintela, Inc.
+  $Vintela: ktedit.sgml,v 1.2 2005/05/19 10:51:08 davidl Exp $ 
+  -->
+
+<refentry>
+    <refentryinfo>
+	<date>2005-04-21</date>
+    </refentryinfo>
+
+    <refmeta>
+	<refentrytitle><application>ktedit</application></refentrytitle>
+	<manvolnum>1</manvolnum>
+	<refmiscinfo>ktedit 1.0</refmiscinfo>
+    </refmeta>
+
+    <refnamediv>
+	<refname>
+	    <application>ktedit</application>
+	</refname>
+	<refpurpose>
+	    Kerberos keytab editor.
+	</refpurpose>
+    </refnamediv>
+
+    <refsynopsisdiv>
+      <!--<refsynopsisdivinfo>
+	<date>2005-04-21</date>
+      </refsynopsisdivinfo> -->
+      <cmdsynopsis>
+	<command>ktedit</command>
+	<arg><option>-d</option></arg>
+	<arg><option>-e</option></arg>
+	<arg><option>-k <replaceable class="parameter">keytab-file</replaceable></option></arg>
+	<group>
+	    <option>-f <replaceable class="parameter">command-file</replaceable></option>
+	    |
+	    <replaceable class="parameter">command</replaceable>
+	</group>
+      </cmdsynopsis>
+    </refsynopsisdiv>
+
+    <refsect1>
+	<refsect1info>
+	    <date>2005-04-21</date>
+	</refsect1info>
+	<title>DESCRIPTION</title>
+	<para>
+	  <command>ktedit</command> 
+	  makes simple manipulations to a Kerberos keytab file.
+	</para>
+    </refsect1>
+
+    <refsect1>
+	<title>OPTIONS</title>
+
+	<variablelist>
+
+	    <varlistentry>
+		<term>-d</term>
+		<listitem>
+		    <para>
+		      Increments the debugging level.
+		</listitem>
+	    </varlistentry>
+
+	    <varlistentry>
+		<term>-e</term>
+		<listitem>
+		    <para>
+		      Causes <command>ktedit</command> to 
+		      exit immediately on error. 
+		      Only useful with the <option>-f</option> option.
+		      The default behaviour of <command>ktedit</command>
+		      is to continue on
+		      if an error is found in the command input.
+		</listitem>
+	    </varlistentry>
+
+	    <varlistentry>
+		<term>-f <replaceable class="parameter">command-file</replaceable></term>
+		<listitem>
+		    <para>
+		      Specifies the file to be used to read commands from.
+		    </para>
+		</listitem>
+	    </varlistentry>
+
+	    <varlistentry>
+		<term>-k <replaceable class="parameter">keytab-file</replaceable></term>
+		<listitem>
+		    <para>
+		      Specifies <filename>keytab-file</filename> as the
+		      file to edit.
+		    </para>
+		</listitem>
+	    </varlistentry>
+
+	    <varlistentry>
+		<term><replaceable class="parameter">command</replaceable></term>
+		<listitem>
+		    <para>
+		      A command to immediately execute (see below).
+		    </para>
+		</listitem>
+	    </varlistentry>
+	</variablelist>
+
+    </refsect1>
+
+    <refsect1>
+	<title>USAGE</title>
+	<para>
+	    When <command>foo</command> is invoked on a terminal with neither
+	    the <option>-f</option> option nor a 
+	    <replaceable>command</replaceable> argument,
+	    it enters an interactive mode, which prompts the user
+	    with a <quote><computeroutput>ktedit&gt;</computeroutput></quote>
+	    prompt.
+	    Interactive mode is terminated by sending an end-of-file
+	    condition (usually achieved by typing 
+	    <keycombo><keycap>Control</keycap>-<keycap>D</keycap></keycombo>).
+	</para>
+
+	<caution><para>
+	    Changes to the keytab file are made immediately.
+	    No backup of the keytab file is made.
+	</para></caution>
+
+	<para>
+	    If no 
+	    <replaceable>keytab-file</replaceable>
+	    argument is specified, the default
+	    keytab as determined by the system is opened.
+	</para>
+
+	<para>
+	    Some of the commands understood by <command>ktedit</command>
+	    involve an <quote>entry-pattern</quote>. This consists of a
+	    Kerberos principal name optionally prefixed by a key version
+	    number and/or a encryption key type. 
+	    Specifically, an entry-pattern is of the form:
+	    <cmdsynopsis>
+	     <arg><replaceable>key-type</replaceable>:<arg><replaceable>kvno</replaceable>:</arg></arg><arg rep='repeat'><replaceable>element</replaceable>/</arg><arg>@<replaceable>realm</replaceable></arg>
+	     </cmdsynopsis>
+	</para>
+	<para>
+	    The <replaceable>element</replaceable> and 
+	    <replaceable>realm</replaceable> parts of an entry-pattern
+	    may contain shell glob characters 
+	    (such as <literal>*</literal> and <literal>?</literal>).
+	    An empty principal pattern matches only the empty principal.
+	    An omitted <replaceable>realm</replaceable> is replaced by
+	    the default domain, as determined by the system. 
+	    Elements match by position.
+	</para>
+	<para>
+	    If the <replaceable>key-type</replaceable> or 
+	    <replaceable>kvno</replaceable> are not specified, they
+	    are assumed wildcards.
+	    The <replaceable>key-type</replaceable> may be specified 
+	    as a string or an integer, or as <quote><literal>*</literal></quote>
+	    to indicate a wildcard.
+	</para>
+
+	<para>
+	    Arguments may be quoted with either double or single quotes.
+	    Single quoted arguments suppress backslash expansion.
+	    The hash character (<quote><literal>#</literal></quote>)
+	    indicates a line comment. Blank lines and lines consisting
+	    only of a comment are ignored.
+	</para>
+	<para>
+	    If the <option>-f</option> option is given,
+	    commands are read from the given file, one line at a time.
+	</para>
+    </refsect1>
+
+    <refsect1>
+	<title>COMMANDS</title>
+	<para>
+	    The commands understood by <command>ktedit</command> follow.
+	</para>
+
+	<variablelist>
+
+	    <varlistentry>
+		<term><command>copy</command> 
+		      <replaceable class="parameter">entry-pattern</replaceable>
+		      <replaceable class="parameter">new-principal</replaceable>
+		      </term>
+		<listitem>
+		    <para>
+		      Makes a copy of all entries that match
+		      <replaceable class="parameter">entry-pattern</replaceable>
+		      by creating a new copy of the entry but replacing the 
+		      principal part with 
+		      <replaceable class="parameter">new-principal</replaceable>.
+		    </para>
+		    <para>Synonyms: <command>cp</command></para>
+		</listitem>
+	    </varlistentry>
+
+	    <varlistentry>
+		<term><command>delete</command> 
+		      <replaceable class="parameter">entry-pattern</replaceable>
+		      </term>
+		<listitem>
+		    <para>
+		      Deletes all entries in the keytab that match
+		      <replaceable class="parameter">entry-pattern</replaceable>.
+		    </para>
+		    <para>Synonyms: <command>rm</command></para>
+		</listitem>
+	    </varlistentry>
+
+	    <varlistentry>
+		<term><command>dump</command></term>
+		<listitem>
+		    <para>
+		      Writes the contents of a keytab file to standard
+		      output in a form suitable for text manipulation
+		      and later consumption by <command>undump</command>.
+		    </para>
+		    <para>
+		      The output begins with a header line, starting with a 
+		      <quote><literal>#</literal></quote> character
+		      that provides a comment description of the keytab.
+		      Each following lines is a key entry in the form of
+		      a principal name. The elements of the line are, in
+		      order, the principal name, the key version number,
+		      the key type, and then the hex representation of the 
+		      key in square brackets, optionally containing 
+		      colons for readability.  The elements of the line 
+		      are separated by non-escaped whitespace. 
+		      (Only the principal name may contain escaped 
+		      whitespace).
+		    </para>
+		</listitem>
+	    </varlistentry>
+
+	    <varlistentry>
+		<term><command>help</command> <arg><replaceable class="parameter">command</replaceable></arg>
+		      </term>
+		<listitem>
+		    <para>
+		      Provides short help information about the command with
+		      name
+		      <replaceable class="parameter">command</replaceable>.
+		      If no <replaceable class="parameter">command</replaceable> is given, all commands are listed.
+		    </para>
+		    <para>Synonyms: <command>?</command></para>
+		</listitem>
+	    </varlistentry>
+
+	    <varlistentry>
+		<term><command>list</command> <arg><option>-l</option></arg> <arg><replaceable class="parameter">entry-pattern</replaceable></arg>
+		      </term>
+		<listitem>
+		    <para>
+		      Sends to standard output a list of all entries
+		      that match
+		      <replaceable class="parameter">entry-pattern</replaceable>. If no <replaceable class="parameter">entry-pattern</replaceable> is given, all entries are listed. If the <option>-l</option> option is provided, more information about each entry (including its key block) is printed.
+		    </para>
+		    <para>Synonyms: <command>ls</command></para>
+		</listitem>
+	    </varlistentry>
+
+	    <varlistentry>
+		<term><command>undump</command> <arg><option>-r</option></arg>
+		      </term>
+		<listitem>
+		    <para>
+		      Reads the text output of <command>dump</command> and
+		      writes the entries into the current keytab file.
+		      Blank lines and lines beginning with 
+		      <quote><literal>#</literal></quote> are ignored.
+		    </para>
+		    <para>
+		      The <arg><option>-r</option></arg> option causes
+		      all the previous entries in the keytab (if any)
+		      to be deleted before undumping; i.e. replacement.
+		    </para>
+		</listitem>
+	    </varlistentry>
+
+	    <varlistentry>
+		<term><command>version</command> 
+		      </term>
+		<listitem>
+		    <para>
+		      Prints the version of <command>ktedit</command>
+		      to standard output.
+		    </para>
+		</listitem>
+	    </varlistentry>
+
+	</variablelist>
+    </refsect1>
+
+    <refsect1>
+	<title>AUTHOR</title>
+	<para>
+	<author>
+		<firstname>David</firstname>&nbsp;
+		<surname>Leonard</surname>,&nbsp;
+		<affiliation><orgname>Vintela, Inc.</orgname></affiliation>
+	</author>
+	</para>
+    </refsect1>
+
+</refentry>
+

@@ -1,0 +1,6 @@
+# $Vintela: README.cvs,v 1.1 2005/04/21 03:00:48 davidl Exp $
+
+After checking out with CVS, bootstrap with the following:
+
+	$ autoreconf -i
+

@@ -1,0 +1,33 @@
+# $Vintela: ktedit.spec.in,v 1.2 2005/05/19 10:59:28 davidl Exp $
+Name: ktedit
+Version: !PACKAGE_VERSION!
+Release: 1
+Vendor: Vintela, Inc.
+Group: Applications/System
+Summary: Kerberos keytab editor
+Source: %{name}-%{version}.tar.gz
+BuildRoot: %{_tmppath}/%{name}-%{version}-root
+PreReq: vas-client-libs
+License: BSD
+
+%description
+A simple Kerberos keytab editor.  Allows keytab entries to 
+be listed, copied, deleted, dumped and undumped to and 
+from text form.
+
+%prep
+%setup
+
+%build
+%configure
+make
+
+%install
+mkdir -p $RPM_BUILD_ROOT%{_mandir}/man1
+mkdir -p $RPM_BUILD_ROOT%{_bindir}
+make install DESTDIR=$RPM_BUILD_ROOT
+
+%files
+%attr(0755,root,root) %{_bindir}/ktedit
+%attr(0644,root,root) %{_mandir}/man1/ktedit.1*
+%doc LICENCE
