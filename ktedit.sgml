@@ -1,8 +1,8 @@
 <!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook V4.1//EN">
 
 <!-- 
-  Copyright (C) 2005 Vintela, Inc.
-  $Vintela: ktedit.sgml,v 1.3 2005/05/20 04:57:31 davidl Exp $ 
+  (c) 2005, Quest Software, Inc. All rights reserved.
+  $Vintela: ktedit.sgml,v 1.5 2005/10/13 13:36:09 davidl Exp $ 
   -->
 
 <refentry>
@@ -34,10 +34,9 @@
 	<arg><option>-d</option></arg>
 	<arg><option>-e</option></arg>
 	<arg><option>-k <replaceable class="parameter">keytab-file</replaceable></option></arg>
-	<group>
-	    <option>-f <replaceable class="parameter">command-file</replaceable></option>
-	    |
-	    <replaceable class="parameter">command</replaceable>
+	<group choice="opt">
+	    <arg><option>-f <replaceable class="parameter">command-file</replaceable></option></arg>
+	    <arg><replaceable class="parameter">command</replaceable></arg>
 	</group>
       </cmdsynopsis>
     </refsynopsisdiv>
@@ -63,6 +62,7 @@
 		<listitem>
 		    <para>
 		      Increments the debugging level.
+		    </para>
 		</listitem>
 	    </varlistentry>
 
@@ -76,6 +76,7 @@
 		      The default behaviour of <command>ktedit</command>
 		      is to continue on
 		      if an error is found in the command input.
+		    </para>
 		</listitem>
 	    </varlistentry>
 
@@ -121,7 +122,10 @@
 	    prompt.
 	    Interactive mode is terminated by sending an end-of-file
 	    condition (usually achieved by typing 
-	    <keycombo><keycap>Control</keycap>-<keycap>D</keycap></keycombo>).
+	    <keycombo action='simul'>
+		<keycap>Control</keycap> 
+		<keycap>D</keycap>
+	    </keycombo>).
 	</para>
 
 	<caution><para>
@@ -187,10 +191,11 @@
 	<variablelist>
 
 	    <varlistentry>
-		<term><command>copy</command> 
-		      <replaceable class="parameter">entry-pattern</replaceable>
-		      <replaceable class="parameter">new-principal</replaceable>
-		      </term>
+		<term><cmdsynopsis>
+			<command>copy</command> 
+			<arg><replaceable class="parameter">entry-pattern</replaceable></arg>
+			<arg><replaceable class="parameter">new-principal</replaceable></arg>
+	      </cmdsynopsis></term>
 		<listitem>
 		    <para>
 		      Makes a copy of all entries that match
@@ -204,9 +209,10 @@
 	    </varlistentry>
 
 	    <varlistentry>
-		<term><command>delete</command> 
-		      <replaceable class="parameter">entry-pattern</replaceable>
-		      </term>
+		<term><cmdsynopsis>
+			<command>delete</command> 
+			<arg><replaceable class="parameter">entry-pattern</replaceable></arg>
+	      </cmdsynopsis></term>
 		<listitem>
 		    <para>
 		      Deletes all entries in the keytab that match
@@ -217,7 +223,9 @@
 	    </varlistentry>
 
 	    <varlistentry>
-		<term><command>dump</command></term>
+		<term><cmdsynopsis>
+			<command>dump</command>
+		</cmdsynopsis></term>
 		<listitem>
 		    <para>
 		      Writes the contents of a keytab file to standard
@@ -242,8 +250,9 @@
 	    </varlistentry>
 
 	    <varlistentry>
-		<term><command>help</command> <arg><replaceable class="parameter">command</replaceable></arg>
-		      </term>
+		<term><cmdsynopsis>
+			<command>help</command> <arg><replaceable class="parameter">command</replaceable></arg>
+		</cmdsynopsis></term>
 		<listitem>
 		    <para>
 		      Provides short help information about the command with
@@ -256,8 +265,11 @@
 	    </varlistentry>
 
 	    <varlistentry>
-		<term><command>list</command> <arg><option>-l</option></arg> <arg><replaceable class="parameter">entry-pattern</replaceable></arg>
-		      </term>
+		<term><cmdsynopsis>
+			<command>list</command> 
+			<arg><option>-l</option></arg> 
+			<arg><replaceable class="parameter">entry-pattern</replaceable></arg>
+		</cmdsynopsis></term>
 		<listitem>
 		    <para>
 		      Sends to standard output a list of all entries
@@ -269,8 +281,10 @@
 	    </varlistentry>
 
 	    <varlistentry>
-		<term><command>undump</command> <arg><option>-r</option></arg>
-		      </term>
+		<term><cmdsynopsis>
+			<command>undump</command> 
+			<arg><option>-r</option></arg>
+		</cmdsynopsis></term>
 		<listitem>
 		    <para>
 		      Reads the text output of <command>dump</command> and
@@ -279,7 +293,7 @@
 		      <quote><literal>#</literal></quote> are ignored.
 		    </para>
 		    <para>
-		      The <arg><option>-r</option></arg> option causes
+		      The <option>-r</option> option causes
 		      all the previous entries in the keytab (if any)
 		      to be deleted before undumping; i.e. replacement.
 		    </para>
@@ -287,8 +301,9 @@
 	    </varlistentry>
 
 	    <varlistentry>
-		<term><command>version</command> 
-		      </term>
+		<term><cmdsynopsis>
+			<command>version</command> 
+		</cmdsynopsis></term>
 		<listitem>
 		    <para>
 		      Prints the version of <command>ktedit</command>
@@ -304,9 +319,11 @@
 	<title>AUTHOR</title>
 	<para>
 	<author>
-		<firstname>David</firstname>&nbsp;
-		<surname>Leonard</surname>,&nbsp;
-		<affiliation><orgname>Vintela, Inc.</orgname></affiliation>
+	    <firstname>David</firstname>
+	    <surname>Leonard</surname>
+	    <affiliation>
+		<orgname>Quest Software, Inc.</orgname>
+	    </affiliation>
 	</author>
 	</para>
     </refsect1>

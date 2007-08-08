@@ -1,4 +1,5 @@
-/* $Vintela: main.c,v 1.5 2005/05/19 11:32:56 davidl Exp $ */
+/* (c) 2005, Quest Software, Inc. All rights reserved. */
+/* $Vintela: main.c,v 1.6 2005/10/13 11:32:27 davidl Exp $ */
 
 #if HAVE_CONFIG_H
 # include <config.h>

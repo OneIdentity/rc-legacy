@@ -1,4 +1,5 @@
-/* $Vintela: keytab.c,v 1.7 2005/05/20 04:47:03 davidl Exp $ */
+/* (c) 2005, Quest Software, Inc. All rights reserved. */
+/* $Vintela: keytab.c,v 1.9 2005/10/13 13:02:53 davidl Exp $ */
 
 #if HAVE_CONFIG_H
 # include <config.h>
@@ -37,6 +38,75 @@ char *strchr();
 
 #if !HAVE_TIMEGM
 time_t timegm(struct tm *tm);
+#endif
+
+#if HAVE_GETOPT_H
+# include <getopt.h>
+#endif
+
+#if HAVE_KRB5_C_STRING_TO_KEY
+  /* MIT API */
+# define krb5_keytype krb5_enctype
+# define GET_KEYBLOCK(entry)  (entry)->key
+# define GET_KEYTYPE(entry)   (entry)->key.enctype
+# define GET_KEYLENGTH(entry) (entry)->key.length
+# define GET_KEYDATA(entry)   (entry)->key.contents
+
+static krb5_error_code
+krb5_string_to_keytype(krb5_context ctx, char *str, krb5_keytype *enctype)
+{
+    char buf[512];
+    int i;
+
+    if (krb5_string_to_enctype((char *)(str), enctype) == 0)
+	return 0;
+    for (i = 0; i < 64; i++)
+	if (krb5_enctype_to_string(i, buf, sizeof buf) == 0 &&
+	    strcmp(buf, str) == 0) 
+	{
+	    *enctype = i;
+	    return 0;
+	}
+    return KRB5KDC_ERR_ETYPE_NOSUPP;
+}
+
+static krb5_error_code
+krb5_keytype_to_string(krb5_context ctx, krb5_keytype enctype,
+	char **strp)
+{
+    char buf[512];
+    krb5_error_code error;
+
+    error = krb5_enctype_to_string(enctype, buf, sizeof buf);
+    if (!error)
+	*strp = strdup(buf);
+    return error;
+}
+
+#elif HAVE_KRB5_KEYTYPE_TO_STRING
+  /* HEIMDAL API */
+# define GET_KEYBLOCK(entry)  (entry)->keyblock
+# define GET_KEYTYPE(entry)   (entry)->keyblock.keytype
+# define GET_KEYLENGTH(entry) (entry)->keyblock.keyvalue.length
+# define GET_KEYDATA(entry)   (entry)->keyblock.keyvalue.data
+#else
+# error unknown API
+#endif
+
+#if !HAVE_KRB5_XFREE
+static krb5_error_code 
+krb5_xfree(void *p) {
+    if (p) free(p);
+    return 0;
+}
+#endif
+
+#if !HAVE_KRB5_PRINCIPAL_MATCH
+# define krb5_principal_match(c,a,b) krb5_principal_compare(c,a,b) /* XXX */
+#endif
+
+#if !HAVE_KRB5_GET_ERR_TEXT && HAVE_ERROR_MESSAGE
+# define krb5_get_err_text(c,e) error_message(e)
 #endif
 
 /* A structure used to match entries in a keytab */
@@ -217,7 +287,7 @@ entry_matches(krb5_context ctx, krb5_keytab_entry *entry, entry_match *match)
 	    && match->kvno != entry->vno)
 	return 0;
     if (match->keytype != ANY_KEYTYPE 
-	    && match->keytype != entry->keyblock.keytype)
+	    && match->keytype != GET_KEYTYPE(entry))
 	return 0;
     if (!krb5_principal_match(ctx, entry->principal, match->principal))
 	return 0;
@@ -308,7 +378,7 @@ list(int argc, char **argv)
 	if (matchexpr && !entry_matches(ctx, &entry, &match))
 	    goto nomatch;
 
-        keytype = (krb5_keytype)entry.keyblock.keytype;
+        keytype = (krb5_keytype)GET_KEYTYPE(&entry);
 	if (!nflag) {
 	    error = krb5_keytype_to_string(ctx, keytype, &keytype_string);
 	    if (error) {
@@ -333,11 +403,11 @@ list(int argc, char **argv)
 		    keytype_string, timestamp_to_string(entry.timestamp, 0),
 		    principal_string ? principal_string : "<error>");
 	    printf("      ");
-	    for (i = 0; i < entry.keyblock.keyvalue.length &&
+	    for (i = 0; i < GET_KEYLENGTH(&entry) &&
 		    	i < 24; i++)
 		printf("%s%02x", i ? ":" : "", 
-			((unsigned char *)entry.keyblock.keyvalue.data)[i]);
-	    if (i < entry.keyblock.keyvalue.length) printf("...");
+			((unsigned char *)GET_KEYDATA(&entry))[i]);
+	    if (i < GET_KEYLENGTH(&entry)) printf("...");
 	    printf("\n");
 	} else {
 	    if (nflag)
@@ -481,8 +551,8 @@ copy(int argc, char **argv)
 	ne->next = new_entries;
 	new_entries = ne;
 
-	if ((error = krb5_copy_keyblock_contents(ctx, &entry.keyblock,
-		&ne->entry.keyblock)) != 0)
+	if ((error = krb5_copy_keyblock_contents(ctx, &GET_KEYBLOCK(&entry),
+		&GET_KEYBLOCK(&ne->entry))) != 0)
 	{
 	    kwarn(error, "krb5_copy_keyblock_contents");
 	    new_entries = ne->next;
@@ -516,7 +586,7 @@ copy(int argc, char **argv)
 	    kwarn(error, "krb5_kt_add_entry");
 	else
 	    counted++;
-	krb5_free_keyblock_contents(ctx, &ne->entry.keyblock);
+	krb5_free_keyblock_contents(ctx, &GET_KEYBLOCK(&ne->entry));
 	free(ne);
     }
     krb5_free_principal(ctx, principal);
@@ -562,7 +632,7 @@ dump(int argc, char **argv)
 	char *keytype_string = NULL;
 	char *principal_string = NULL;
 
-	krb5_keytype keytype = (krb5_keytype)entry.keyblock.keytype;
+	krb5_keytype keytype = (krb5_keytype)GET_KEYTYPE(&entry);
 
 	error = krb5_keytype_to_string(ctx, keytype, &keytype_string);
 	if (error) {
@@ -576,15 +646,18 @@ dump(int argc, char **argv)
 	    ret = 1;
 	}
 
-	printf("%s %d %s ", 
+	printf("%s %d ", 
 	    principal_string ? principal_string : "<error>",
-	    entry.vno,
-	    keytype_string);
+	    entry.vno);
+	if (strchr(keytype_string, ' '))
+	    printf("\"%s\" ", keytype_string);
+	else
+	    printf("%s ", keytype_string);
 
 	putchar('[');
-	for (i = 0; i < entry.keyblock.keyvalue.length; i++) {
+	for (i = 0; i < GET_KEYLENGTH(&entry); i++) {
 	    if (i && ((i & 7) == 0)) printf(":");
-	    printf("%02x", ((unsigned char *)entry.keyblock.keyvalue.data)[i]);
+	    printf("%02x", ((unsigned char *)GET_KEYDATA(&entry))[i]);
 	}
 	putchar(']');
 
@@ -711,6 +784,9 @@ nodelete:
 	*s++ = '\0';
 
 	/* Use scanf for the rest of the line, which is simpler */
+	scans = sscanf(line, " %u \"%256[^\"]\" [%[0-9a-fA-F: ]]",
+		    &kvno, keytypebuf, keybuf);
+	if (scans != 3)
 	scans = sscanf(line, " %u %256s [%[0-9a-fA-F: ]]",
 		    &kvno, keytypebuf, keybuf);
         if (scans != 3)
@@ -731,9 +807,10 @@ nodelete:
 	}
 */
 	if (!string_to_keytype(ctx, keytypebuf, 
-		    (krb5_keytype *)&entry.keyblock.keytype)) 
+		    (krb5_keytype *)&GET_KEYTYPE(&entry))) 
 	{
-	    fprintf(stderr, "%s: line %d: bad keytype\n", argv[0], lineno);
+	    fprintf(stderr, "%s: line %d: bad keytype \"%s\"\n", argv[0], 
+		    lineno, keytypebuf);
 	    ret = 1;
 	    continue;
 	}
@@ -771,8 +848,8 @@ nodelete:
 	    continue;
 	}
 
-	entry.keyblock.keyvalue.length = keylen;
-	entry.keyblock.keyvalue.data = keydatabuf;
+	GET_KEYLENGTH(&entry) = keylen;
+	GET_KEYDATA(&entry) = keydatabuf;
 	entry.vno = kvno;
 
 	error = krb5_kt_add_entry(ctx, kt, &entry);
