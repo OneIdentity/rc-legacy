@@ -1,5 +1,5 @@
 /* (c) 2005, Quest Software, Inc. All rights reserved. */
-/* $Vintela: compat.c,v 1.2 2005/10/13 11:32:27 davidl Exp $ */
+
 #if HAVE_CONFIG_H
 # include <config.h>
 #endif

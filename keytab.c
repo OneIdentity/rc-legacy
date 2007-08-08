@@ -1,5 +1,4 @@
 /* (c) 2005, Quest Software, Inc. All rights reserved. */
-/* $Vintela: keytab.c,v 1.9 2005/10/13 13:02:53 davidl Exp $ */
 
 #if HAVE_CONFIG_H
 # include <config.h>

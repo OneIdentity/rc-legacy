@@ -1,4 +1,4 @@
-# $Vintela: Makefile.am,v 1.10 2005/05/20 04:53:39 davidl Exp $
+# (c) 2007 Quest Software, Inc. All rights reserved.
 bin_PROGRAMS=	ktedit
 ktedit_SOURCES= compat.c cmd.c error.c keytab.c ktedit.h main.c splitline.c
 

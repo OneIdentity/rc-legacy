@@ -1,8 +1,7 @@
-# $Vintela: README.cvs,v 1.2 2007/08/08 06:47:38 dleonard Exp $
 
-After checking out with CVS, bootstrap with the following:
+After checking out with subversion, bootstrap with the following:
 
-	$ autoreconf -i
+	$ ./autogen.sh
 
 To configure for building against MIT
 	$ sh configure KRB5CONFIG=/usr/kerberos/bin/krb5-config

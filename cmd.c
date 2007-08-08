@@ -1,5 +1,4 @@
 /* (c) 2005, Quest Software, Inc. All rights reserved. */
-/* $Vintela: cmd.c,v 1.5 2005/10/13 11:32:27 davidl Exp $ */
 
 #if HAVE_CONFIG_H
 # include <config.h>
