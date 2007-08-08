@@ -1,4 +1,4 @@
-/* $Vintela: keytab.c,v 1.6 2005/05/19 10:51:08 davidl Exp $ */
+/* $Vintela: keytab.c,v 1.7 2005/05/20 04:47:03 davidl Exp $ */
 
 #if HAVE_CONFIG_H
 # include <config.h>
@@ -303,11 +303,12 @@ list(int argc, char **argv)
     while ((error = krb5_kt_next_entry(ctx, kt, &entry, &cursor)) == 0) {
 	char *keytype_string = NULL;
 	char *principal_string = NULL;
+	krb5_keytype keytype;
 
 	if (matchexpr && !entry_matches(ctx, &entry, &match))
 	    goto nomatch;
 
-	krb5_keytype keytype = (krb5_keytype)entry.keyblock.keytype;
+        keytype = (krb5_keytype)entry.keyblock.keytype;
 	if (!nflag) {
 	    error = krb5_keytype_to_string(ctx, keytype, &keytype_string);
 	    if (error) {
@@ -682,7 +683,6 @@ nodelete:
     lineno = 0;
     entry_count = 0;
     while ((line = fgets(buffer, sizeof buffer, stdin)) != NULL) {
-	lineno++;
 	krb5_keytab_entry entry;
 	char principalbuf[8192];
 	int kvno;
@@ -694,6 +694,7 @@ nodelete:
 	int scans;
 	char *s;
 
+	lineno++;
 	while (*line && isspace(*line))	line++; /* skip whitespace */
 	if (line[0] == '#' || line[0] == '\n') continue; /* ignore blank */
 

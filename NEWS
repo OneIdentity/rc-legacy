@@ -1,0 +1,8 @@
+
+1.2
+	- fix for older compilers
+1.1
+	- add dump/undump
+	- public release
+1.0
+	- internal release

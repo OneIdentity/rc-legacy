@@ -1,9 +1,9 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_REVISION([$Vintela: configure.ac,v 1.3 2005/05/19 10:51:08 davidl Exp $])
+AC_REVISION([$Vintela: configure.ac,v 1.4 2005/05/20 04:49:15 davidl Exp $])
 AC_COPYRIGHT([Copyright (c) 2005, Vintela, Inc. All rights reserved.])
-AC_INIT([ktedit], [1.1], [support@vintela.com])
+AC_INIT([ktedit], [1.2], [support@vintela.com])
 AM_INIT_AUTOMAKE([foreign])
 AC_CONFIG_SRCDIR([splitline.c])
 AC_CONFIG_HEADER([config.h])

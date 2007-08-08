@@ -1,15 +1,17 @@
-# $Vintela: Makefile.am,v 1.7 2005/05/19 11:00:11 davidl Exp $
+# $Vintela: Makefile.am,v 1.10 2005/05/20 04:53:39 davidl Exp $
 bin_PROGRAMS=	ktedit
 ktedit_SOURCES= compat.c cmd.c error.c keytab.c ktedit.h main.c splitline.c
 
 man_MANS= 	ktedit.1
 
 EXTRA_DIST=	ktedit.sgml ktedit.1 ktedit.spec ktedit.spec.in \
-		LICENCE ChangeLog
+		LICENCE ChangeLog NEWS
 
-ktedit.1: ktedit.sgml
+ktedit.1: ktedit.sgml Makefile
 	docbook2man -V pkgstring="$(PACKAGE_STRING)" $(srcdir)/ktedit.sgml
 
-ktedit.spec: ktedit.spec.in
+ktedit.spec: ktedit.spec.in Makefile
 	sed -e 's,!PACKAGE_VERSION!,$(PACKAGE_VERSION),g' \
 		< $(srcdir)/ktedit.spec.in >$@
+
+CLEANFILES=	ktedit.1 ktedit.spec manpage.links manpage.refs
