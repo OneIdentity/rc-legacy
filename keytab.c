@@ -43,7 +43,7 @@ time_t timegm(struct tm *tm);
 # include <getopt.h>
 #endif
 
-#if HAVE_KRB5_C_STRING_TO_KEY
+#if HAVE_DECL_KRB5_C_STRING_TO_KEY
   /* MIT API */
 # define krb5_keytype krb5_enctype
 # define GET_KEYBLOCK(entry)  (entry)->key
@@ -82,7 +82,7 @@ krb5_keytype_to_string(krb5_context ctx, krb5_keytype enctype,
     return error;
 }
 
-#elif HAVE_KRB5_KEYTYPE_TO_STRING
+#elif HAVE_DECL_KRB5_KEYTYPE_TO_STRING
   /* HEIMDAL API */
 # define GET_KEYBLOCK(entry)  (entry)->keyblock
 # define GET_KEYTYPE(entry)   (entry)->keyblock.keytype
@@ -92,7 +92,7 @@ krb5_keytype_to_string(krb5_context ctx, krb5_keytype enctype,
 # error unknown API
 #endif
 
-#if !HAVE_KRB5_XFREE
+#if !HAVE_DECL_KRB5_XFREE
 static krb5_error_code 
 krb5_xfree(void *p) {
     if (p) free(p);
@@ -100,11 +100,11 @@ krb5_xfree(void *p) {
 }
 #endif
 
-#if !HAVE_KRB5_PRINCIPAL_MATCH
+#if !HAVE_DECL_KRB5_PRINCIPAL_MATCH
 # define krb5_principal_match(c,a,b) krb5_principal_compare(c,a,b) /* XXX */
 #endif
 
-#if !HAVE_KRB5_GET_ERR_TEXT && HAVE_ERROR_MESSAGE
+#if !HAVE_DECL_KRB5_GET_ERR_TEXT && HAVE_DECL_ERROR_MESSAGE
 # define krb5_get_err_text(c,e) error_message(e)
 #endif
 
