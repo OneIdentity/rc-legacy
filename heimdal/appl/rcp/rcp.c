@@ -34,7 +34,10 @@
 #include "rcp_locl.h"
 #include <getarg.h>
 
-#define RSH_PROGRAM "rsh"
+const char const *rsh_programs[] = {
+    _PATH_RSH,
+    "rsh"
+};
 
 struct  passwd *pwd;
 uid_t	userid;
@@ -45,8 +48,7 @@ int     usebroken, usekrb4, usekrb5, forwardtkt;
 char    *port;
 int     eflag = 0;
 
-#define	CMDNEEDS	64
-char cmd[CMDNEEDS];		/* must hold "rcp -r -p -d\0" */
+char cmd[sizeof(_PATH_RCP " -r -p -d")];	/* must hold "/path/to/rcp -r -p -d\0" */
 
 int	 response (void);
 void	 rsource (char *, struct stat *);
@@ -138,7 +140,7 @@ main(int argc, char **argv)
 	remin = remout = -1;
 	/* Command to be executed on remote system using "rsh". */
 	snprintf(cmd, sizeof(cmd),
-		 "rcp%s%s%s", iamrecursive ? " -r" : "", 
+		 _PATH_RCP"%s%s%s", iamrecursive ? " -r" : "",
 		 pflag ? " -p" : "", targetshouldbedirectory ? " -d" : "");
 
 	signal(SIGPIPE, lostconn);
@@ -745,7 +747,7 @@ do_cmd(char *host, char *remuser, char *cmd, int *fdin, int *fdout)
 	/* For a child to execute the command on the remote host using rsh. */
 	if (fork() == 0) {
 		char *args[100];
-		unsigned int i;
+		unsigned int i, rsh_try;
 
 		/* Child. */
 		close(pin[1]);
@@ -756,7 +758,7 @@ do_cmd(char *host, char *remuser, char *cmd, int *fdin, int *fdout)
 		close(pout[1]);
 
 		i = 0;
-		args[i++] = RSH_PROGRAM;
+		args[i++] = rsh_programs[0]; /* temporary */
 		if (usekrb4)
 			args[i++] = "-4";
 		if (usekrb5)
@@ -783,8 +785,14 @@ do_cmd(char *host, char *remuser, char *cmd, int *fdin, int *fdout)
 		args[i++] = cmd;
 		args[i++] = NULL;
 
-		execvp(RSH_PROGRAM, args);
-		perror(RSH_PROGRAM);
+		for (rsh_try = 0;
+			rsh_try < sizeof(rsh_programs) / sizeof(rsh_programs[0]);
+			++rsh_try)
+		{
+		    args[0] = rsh_programs[rsh_try];
+		    execvp(args[0], args);
+		    perror(args[0]);
+		}
 		exit(1);
 	}
 	/* Parent.  Close the other side, and return the local side. */

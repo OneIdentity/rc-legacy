@@ -65,3 +65,5 @@
 #endif
 #undef _PATH_RSH
 #define	_PATH_RSH	BINDIR "/rsh"
+#undef  _PATH_RCP
+#define	_PATH_RCP	BINDIR "/rcp"
