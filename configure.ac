@@ -2,7 +2,7 @@
 
 AC_INIT([authtest],
 	[1.1.0.]esyscmd((svnversion . /trunk || echo 0)|tr : _|tr -d \\012),
-	[general@rc.vintela.com])
+	[david.leonard@quest.com])
 AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([authtest.h])
 AC_CONFIG_FILES([Makefile])
