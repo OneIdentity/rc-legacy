@@ -4,20 +4,41 @@
 pamtest \- PAM test tool
 .SH SYNOPSIS
 .B pamtest
-[\-s]
+[\-cos]
 .RI [\-n\  appname ]
-.RI [\-p\  user ]
+.RI [\-p\  privsep_user ]
+.RI [\-R\  rhost ]
+.RI [\-t\  ttyname ]
 .RI [\-u\  user ]
 .RI [\-r\  response... ]
 .SH DESCRIPTION
 The
 .B pamtest
 tool invokes all the stages of PAM authentication in order to
-test a PAM module.
+test a PAM module:
+.IR pam_start (3),
+.IR pam_authenticate (3),
+.IR pam_acct_mgmt (3),
+.IR pam_chauthtok (3),
+.IR pam_setcred (3),
+.IR pam_open_session (3),
+.IR pam_close_session (3),
+.IR pam_end (3).
 .PP
 The tool provides checking and verbose status information about the
 PAM calls made.
 .SS OPTIONS
+.TP
+\-c
+specifies that credentials should be obtained, that is call
+.IR pam_setcred (3)
+immediately before the session is openned.
+By default, credentials are not obtained.
+.TP
+\-o
+specifies that the session should be left open, that is
+.IR pam_close_session (3)
+is NOT to be called.
 .TP
 \-s
 specifies that
@@ -37,6 +58,17 @@ and
 .IR pam_chauthtok (3).
 This emulates what OpenSSH does for privilege separation.
 .TP
+.RI \-R\  hostname
+specifies the remote hostname.
+If not given, defaults to "localhost".
+If the hostname given is the empty string, then the rhost item is left unset.
+.TP
+.RI \-t\  ttyname
+specifies the tty name to use.
+If not specified, uses the current ttyname, as determined with
+.IR ttyname (3).
+If the name given is the empty string, then the the ttyname item is left unset.
+.TP
 .RI \-u\  user
 specifies the username to pass to
 .IR pam_start (3).
@@ -46,6 +78,14 @@ If the \-r option is specified, the following arguments are treated
 as responses to give to the PAM prompts.
 Once the response list is exhausted, responses are read from standard input.
 .SH "SEE ALSO"
-.IR pam_start (3)
+.IR pam_start (3),
+.IR pam_authenticate (3),
+.IR pam_acct_mgmt (3),
+.IR pam_chauthtok (3),
+.IR pam_setcred (3),
+.IR pam_open_session (3),
+.IR pam_close_session (3),
+.IR pam_end (3).
+.PP
 .SH AUTHORS
 David Leonard, Quest Software, Inc.

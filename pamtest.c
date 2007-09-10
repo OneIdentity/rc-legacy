@@ -19,6 +19,13 @@
 #include <security/pam_appl.h>
 #include "authtest.h"
 
+#define HAVE_SYSLOG_H
+#ifdef HAVE_SYSLOG_H
+# include <syslog.h>
+#endif
+
+int cflag = 0;	    /* -c: set credentials flag */
+int oflag = 0;	    /* -o: leave session open */
 int pflag = 0;	    /* -p: privsep uid */
 int privsep_uid = -1;
 int rflag = 0;	    /* -r: use responses instead of prompting */
@@ -140,16 +147,30 @@ mypam_log2(pam_handle_t *pamh, int result)
 #define GETITEM(pamh, item_type) do { \
     char *value = NULL; \
     int pam_err; \
-    fprintf(stderr, "%s item %s = ", col_SO, #item_type); \
+    fprintf(stderr, "%s[pam_getitem(pamh, %s) = ", col_SO, #item_type); \
     pam_err = pam_get_item(pamh, item_type, (ITEM_TYPE)&value); \
     if (pam_err == PAM_SUCCESS) { \
        if (value) \
-           fprintf(stderr, "'%s'%s\n", value, col_SE); \
+           fprintf(stderr, "'%s'", value); \
        else \
-           fprintf(stderr, "(null)%s\n", col_SE); \
+           fprintf(stderr, "(null)"); \
     } else \
-       fprintf(stderr, "error: %s%s\n", mypam_strerror(pamh, pam_err), \
-               col_SE); \
+       fprintf(stderr, "error: %s", mypam_strerror(pamh, pam_err)); \
+    fprintf(stderr, "]%s\n", col_SE); \
+} while (0)
+
+#define SETITEM(pamh, item_type, valuestr) do { \
+    int pam_err; \
+    char *value = valuestr; \
+    fprintf(stderr, "%s[pam_setitem(pamh, %s, ", col_SO, #item_type); \
+    if (value) \
+        fprintf(stderr, "'%s')", value); \
+    else \
+        fprintf(stderr, "(null)"); \
+    pam_err = pam_set_item(pamh, item_type, (ITEM_TYPE)value); \
+    if (pam_err != PAM_SUCCESS) \
+       fprintf(stderr, "error: %s", mypam_strerror(pamh, pam_err)); \
+    fprintf(stderr, "]%s\n", col_SE); \
 } while (0)
 
 /*------------------------------------------------------------
@@ -228,35 +249,57 @@ main(int argc, char *argv[])
 {
     int ch;
     int error = 0;
+    static const char *DEFAULT = "_DEFAULT";
     const char *svcname = "pamtest";
     const char *user = NULL;
+    const char *ttyn = DEFAULT;
+    const char *rhost = DEFAULT;
     pam_handle_t *pamh;
     struct pam_conv conv = { convfn,  NULL };
+    char *name = NULL;
+
+#ifdef HAVE_SYSLOG_H
+    openlog("pamtest", 0, LOG_USER);
+#endif
 
     authtest_init();
 
     /* Process command line args */
-    while ((ch = getopt(argc, argv, "n:p:rsu:")) != -1) 
+    while ((ch = getopt(argc, argv, "cn:op:rR:st:u:")) != -1) 
 	switch (ch) {
+	    case 'c': cflag = 1; break;
 	    case 'n': svcname = optarg; break;
+	    case 'o': oflag = 1; break;
 	    case 'p': privsep_uid = strtouid(optarg); 
 		      pflag = 1; break;
-	    case 's': sflag = 1; break;  /* skip authentication */
-	    case 'u': user = optarg; break;
 	    case 'r': rflag = 1; break;
+	    case 'R': rhost = optarg; break;
+	    case 's': sflag = 1; break;  /* skip authentication */
+	    case 't': ttyn = optarg; break;
+	    case 'u': user = optarg; break;
 	    default: error = 1;
 	}
     if (!rflag && argc != optind)
 	error = 1;
     if (error) {
 	fprintf(stderr, 
-		"usage: %s [-s] [-n svcname] [-p privsep_uid] [-u user] "
-		"[-r response ...]\n",
+		"usage: %s [-cso] [-n svcname] [-p privsep_uid] [-u user] "
+		"[-t tty] [-R rhost] [-r response ...]\n",
 		argv[0]);
 	exit(1);
     }
     if (rflag)
 	responses = argv + optind;
+
+    if (ttyn == DEFAULT)
+	ttyn = strdup(ttyname(0));
+    else if (!*ttyn)	    /* empty string means don't set */
+	ttyn = NULL;
+
+    if (rhost == DEFAULT)
+	rhost = "localhost";
+    else if (!*rhost)	    /* empty string means don't set */
+	rhost = NULL;
 
     /* We should be running privileged */
     if (geteuid() != 0)
@@ -288,6 +331,15 @@ main(int argc, char *argv[])
     else
 	CHECK(pamh, pam_authenticate(pamh, 0));
 
+    name = NULL;
+    CHECK(pamh, pam_get_item(pamh, PAM_USER, &name));
+    if (name == NULL) {
+	debug_err("PAM_USER is NULL?");
+	exit(1);
+    }
+    if (!user || strcmp(name, user) != 0)
+	debug("[user name is now '%s']", name);
+
     /* pam_acct_mgmt() */
     error = LOG(pamh, pam_acct_mgmt(pamh, 0));
 
@@ -303,6 +355,43 @@ end_privsep:
 
     /* (END PRIVILEGED) */
 
+    if (ttyn)
+	SETITEM(pamh, PAM_TTY, ttyn);
+    GETITEM(pamh, PAM_TTY);
+
+    if (rhost)
+    	SETITEM(pamh, PAM_RHOST, rhost);
+    GETITEM(pamh, PAM_RHOST);
+
+    GETITEM(pamh, PAM_USER);
+    GETITEM(pamh, PAM_SERVICE);
+
+
+    /* pam_set_cred() */
+    if (cflag) {
+	struct passwd *passwd;
+
+	CHECK(pamh, pam_get_item(pamh, PAM_USER, &name));
+	if (name == NULL) {
+	    debug_err("PAM_USER is NULL?");
+	    exit(1);
+	}
+
+	debug("[setting credentials for '%s']", name);
+
+	if ((passwd = getpwnam(name)) == NULL) {
+	    debug_err("getpwnam(%s) failed", name);
+	    perror(name);
+	    exit(1);
+	}
+	if (initgroups(name, passwd->pw_gid) != 0)
+	    perror("initgroups");
+	if (setuid(passwd->pw_uid) != 0)
+	    perror("setuid");
+
+	CHECK(pamh, pam_setcred(pamh, PAM_ESTABLISH_CRED));
+    }
+
     /* pam_open_session() */
     CHECK(pamh, pam_open_session(pamh, 0));
 
@@ -313,9 +402,14 @@ end_privsep:
     GETITEM(pamh, PAM_TTY);
     GETITEM(pamh, PAM_RHOST);
 
-    /* pam_close_session() */
-    CHECK(pamh, pam_close_session(pamh, 0));
-    CHECK(pamh, pam_end(pamh, PAM_SUCCESS));
+    if (!oflag) {
+	debug("[closing session]");
+	if (cflag)
+	    CHECK(pamh, pam_setcred(pamh, PAM_DELETE_CRED));
+	CHECK(pamh, pam_close_session(pamh, 0));
+	CHECK(pamh, pam_end(pamh, PAM_SUCCESS));
+    } else
+	debug("[-o: leaving session open]\n");
 
     exit(0);
 }
