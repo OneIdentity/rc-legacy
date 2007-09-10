@@ -23,6 +23,10 @@ void syslog(int, const char *, ...);
 # define LOG_DEBUG 7
 #endif
 
+#ifndef NULL
+# define NULL 0
+#endif
+
 #define BIT(v,F) ((((v) & PAM_##F) == PAM_##F) ? #F " " : "")
 
 char g_label[256];
