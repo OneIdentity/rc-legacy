@@ -310,6 +310,43 @@ match_kcmd_version(const void *data, const char *version)
     return FALSE;
 }
 
+/**
+ * Determine whether the given principal exists in the default keytab.
+ * Returns -1 on error, 0 if not found and 1 if found.
+ */
+static int
+is_principal_in_keytab(krb5_const_principal principal)
+{
+    krb5_error_code status;
+    krb5_keytab keytab = NULL;
+    krb5_keytab_entry kt_entry;
+    enum { RET_ERR = -1, RET_NOTFOUND = 0, RET_FOUND = 1 } rval = RET_ERR;
+
+    status = krb5_kt_default (context, &keytab);
+
+    if (status) {
+	syslog (LOG_WARNING, "krb5_kt_default: %s",
+			krb5_get_err_text(context, status));
+	goto end;
+    }
+
+    /* Keytab found */
+    status = krb5_kt_get_entry (context, keytab, principal, 0, 0, &kt_entry);
+
+    if (status == 0) {
+	rval = RET_FOUND;
+	krb5_kt_free_entry(context, &kt_entry);
+    } else if (status == KRB5_KT_NOTFOUND)
+	rval = RET_NOTFOUND;
+    else
+	rval = RET_ERR;
+
+end:
+    if (keytab)
+	krb5_kt_close (context, keytab);
+
+    return rval;
+}
 
 static int
 recv_krb5_auth (int s, u_char *buf,
@@ -342,8 +379,48 @@ recv_krb5_auth (int s, u_char *buf,
 				     KRB5_NT_SRV_HST,
 				     &server);
     if (status)
-	syslog_and_die ("krb5_sock_to_principal: %s",
+	syslog (LOG_WARNING, "krb5_sock_to_principal: %s",
 			krb5_get_err_text(context, status));
+
+    if (!is_principal_in_keytab(server)) {
+	/*  Try "HOSTNAME$" */
+#ifndef  HOST_NAME_MAX
+# define HOST_NAME_MAX 255
+#endif
+	char myhostname[HOST_NAME_MAX + 2]; /* name + '$' + '\0' */
+	char *const lastbyte = myhostname + HOST_NAME_MAX + 1;
+	char *walker;
+
+	krb5_free_principal(context, server);
+
+	if (gethostname(myhostname, sizeof(myhostname) - 1) == -1)
+	    syslog_and_die ("gethostname: %s", strerror(errno));
+
+	*lastbyte = '\0';
+
+	/* Walk the string uppercasing it and leaving 'walker' at the end */
+	walker = myhostname;
+	while (*walker) {
+	    *walker = (char) toupper(*walker);
+	    ++walker;
+	}
+
+	/* Append the $ (without overrunning) */
+	if (walker != lastbyte) {
+	    *walker++ = '$';
+	    *walker++ = '\0';
+	}
+
+	status = krb5_parse_name(context, myhostname, &server);
+	if (status)
+	    syslog_and_die ("krb5_parse_name(%s): %s",
+		    myhostname, krb5_get_err_text (context, status));
+
+	if (!is_principal_in_keytab(server))
+	    syslog (LOG_WARNING, "%s not found in keytab", myhostname);
+
+	/* It will be tried anyway as the last resort */
+    }
 
     status = krb5_recvauth_match_version(context,
 					 &auth_context,
