@@ -50,6 +50,7 @@ rshd, telnetd and ftpd.
 %define _localstatedir /var%{_prefix}
 %define _mandir %{_prefix}/man
 %define _infodir %{_prefix}/info
+%define _docdir %{_datadir}/doc
 
 %prep
 %setup -n krbd-apps-@[VERSION]
@@ -74,6 +75,7 @@ make install DESTDIR=$RPM_BUILD_ROOT
 %doc %{_mandir}/man1/ftp.1
 %doc %{_mandir}/man1/rsh.1
 %doc %{_mandir}/man1/telnet.1
+%doc %{_docdir}/*.Quest
 
 %files servers
 %defattr(0755,root,root)
@@ -86,3 +88,4 @@ make install DESTDIR=$RPM_BUILD_ROOT
 %doc %{_mandir}/man8/ftpd.8
 %doc %{_mandir}/man8/rshd.8
 %doc %{_mandir}/man8/telnetd.8
+%doc %{_docdir}/*.Quest
