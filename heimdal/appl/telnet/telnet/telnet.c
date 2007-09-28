@@ -2097,7 +2097,7 @@ my_telnet(char *user)
 		}
 	    }
 	    if (auth_has_failed) {
-		printf("\nAuthentication negotation has failed,\n");
+		printf("\nAuthentication negotiation has failed,\n");
 		printf("which is required for encryption.\n");
 		Exit(1);
 	    }
