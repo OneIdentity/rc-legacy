@@ -111,6 +111,13 @@ static	unsigned char	_auth_send_data[256];
 static	unsigned char	*auth_send_data;
 static	int	auth_send_cnt = 0;
 
+/* RFC 2941, but not defined in <arpa/telnet.h> */
+#define ENCRYPT_MASK            20
+#define ENCRYPT_OFF              0
+#define ENCRYPT_USING_TELOPT     4
+#define ENCRYPT_AFTER_EXCHANGE  16
+#define ENCRYPT_RESERVED        20
+
 /*
  * Authentication types supported.  Plese note that these are stored
  * in priority order, i.e. try the first one first.
@@ -151,6 +158,22 @@ Authenticator authenticators[] = {
       spx_printsub },
 #endif
 #ifdef	KRB5
+    { AUTHTYPE_KERBEROS_V5,
+      AUTH_WHO_CLIENT|AUTH_HOW_MUTUAL|ENCRYPT_USING_TELOPT,
+      kerberos5_init,
+      kerberos5_send_mutual,
+      kerberos5_is,
+      kerberos5_reply,
+      kerberos5_status,
+      kerberos5_printsub },
+    { AUTHTYPE_KERBEROS_V5,
+      AUTH_WHO_CLIENT|AUTH_HOW_ONE_WAY|ENCRYPT_USING_TELOPT,
+      kerberos5_init,
+      kerberos5_send_oneway,
+      kerberos5_is,
+      kerberos5_reply,
+      kerberos5_status,
+      kerberos5_printsub },
     { AUTHTYPE_KERBEROS_V5, AUTH_WHO_CLIENT|AUTH_HOW_MUTUAL,
       kerberos5_init,
       kerberos5_send_mutual,
