@@ -496,10 +496,7 @@ kerberos5_is(Authenticator *ap, unsigned char *data, int cnt)
 			RemoteHostName ? RemoteHostName : "<unknown>");
 
 #ifdef ENCRYPTION
-	    if(key_block->keytype == ETYPE_DES_CBC_MD5 ||
-	       key_block->keytype == ETYPE_DES_CBC_MD4 ||
-	       key_block->keytype == ETYPE_DES_CBC_CRC ||
-	       key_block->keytype == ETYPE_ARCFOUR_HMAC_MD5) {
+	    if(key_block->keytype != ETYPE_NULL) {
 		Session_Key skey;
 
 		skey.type = SK_DES;
