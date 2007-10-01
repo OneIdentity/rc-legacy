@@ -37,6 +37,7 @@ RCSID("$Id: rsh.c,v 1.78.2.1 2005/12/28 18:00:05 lha Exp $");
 enum auth_method auth_method;
 #if defined(KRB4) || defined(KRB5)
 int do_encrypt       = -1;
+int user_set_encflag =  0;
 #endif
 #ifdef KRB5
 int do_unique_tkfile = 0;
@@ -309,14 +310,6 @@ send_krb5_auth(int s,
     if (status) {
 	warnx ("%s: %s", hostname, krb5_get_err_text(context, status));
 	return 1;
-    }
-
-    if(do_encrypt == -1) {
-	krb5_appdefault_boolean(context, NULL, 
-				krb5_principal_get_realm(context, server), 
-				"encrypt", 
-				FALSE, 
-				&do_encrypt);
     }
 
     cksum_data.length = asprintf ((char **)&cksum_data.data,
@@ -927,6 +920,9 @@ main(int argc, char **argv)
 	return 0;
     }
 
+    if (do_encrypt != -1)
+	user_set_encflag = 1;
+
 #ifdef KRB5
     if(protocol_version_str != NULL) {
 	if(strcasecmp(protocol_version_str, "N") == 0)
@@ -1037,10 +1033,23 @@ main(int argc, char **argv)
     
     /*
      * Try all different authentication methods
+     *
+     * Auth Type  Stream      Default Port
+     *  krb5       encrypted   kshell
+     *  krb5       plain       kshell
+     *  (krb4 currently only does the default, not both as written here)
+     *    krb4     encrypted   ekshell
+     *    krb4     plain       kshell
+     *  none       plain       shell
+     *
+     *  Some might be disabled by the use of the -4, -5, -K, -x, -z.
+     *  Not considering whether -p has any effect because it might be some
+     *  arbitrary port number that the user wants to use.
      */
 
 #ifdef KRB5
     if (ret && use_v5) {
+	int more_tries = 1;
 	memset (&hints, 0, sizeof(hints));
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_protocol = IPPROTO_TCP;
@@ -1056,14 +1065,46 @@ main(int argc, char **argv)
 	    errx (1, "getaddrinfo: %s", gai_strerror(error));
 
 	auth_method = AUTH_KRB5;
-      again:
-	ret = doit (host, ai, user, local_user, cmd, cmd_len,
-		    send_krb5_auth);
-	if(ret != 0 && sendauth_version_error && 
-	   protocol_version == 2) {
-	    protocol_version = 1;
-	    goto again;
+
+	while (more_tries) {
+	    ret = doit (host, ai, user, local_user, cmd, cmd_len,
+			send_krb5_auth);
+
+	    if (ret == 0 || user_set_encflag) {
+		more_tries = 0;
+		break;
+	    }
+
+	    if (sendauth_version_error && protocol_version == 2) {
+		protocol_version = 1;
+		continue;
+	    }
+	    protocol_version = 2;
+
+	    /* User didn't specify whether to use encryption. Try:
+	     * - The default from the config file
+	     * - The inverse of the default
+	     */
+	    if (do_encrypt == -1) {
+		krb5_principal server;
+
+		status = krb5_sname_to_principal(context,
+						 host,
+						 "host",
+						 KRB5_NT_SRV_HST,
+						 &server);
+		krb5_appdefault_boolean(context, NULL,
+					krb5_principal_get_realm(context, server),
+					"encrypt",
+					TRUE,
+					&do_encrypt);
+		krb5_free_principal(context, server);
+	    } else {
+		do_encrypt = !do_encrypt;
+		more_tries = 0;
+	    }
 	}
+
 	freeaddrinfo(ai);
     }
 #endif
