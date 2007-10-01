@@ -1096,7 +1096,7 @@ main(int argc, char **argv)
 		krb5_appdefault_boolean(context, NULL,
 					krb5_principal_get_realm(context, server),
 					"encrypt",
-					TRUE,
+					FALSE,
 					&do_encrypt);
 		krb5_free_principal(context, server);
 	    } else {
