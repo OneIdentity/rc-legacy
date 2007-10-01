@@ -8,6 +8,11 @@ RSH
    rsh should only be used for executing single commands. For an interactive
    session, use telnet instead.
 
+   The rsh program must be installed setuid root (chmod u+s /opt/quest/bin/rsh)
+   to support old style "privileged port" authentication. We do not install it
+   setuid root by default because it is not necessary for Kerberos 5
+   authentication.
+
 TELNET
    Encrypted telnet to standard Heimdal/MIT telnet servers will fail if you have
    arcfour kerberos tickets (see `vastool klist -v`). As of 2006-05,
