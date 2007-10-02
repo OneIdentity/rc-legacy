@@ -1060,7 +1060,7 @@ main(int argc, char **argv)
      *  (krb4 currently only does the default, not both as written here)
      *    krb4     encrypted   ekshell
      *    krb4     plain       kshell
-     *  none       plain       shell
+     *  privport   plain       shell
      *
      *  Some might be disabled by the use of the -4, -5, -K, -x, -z.
      *  Not considering whether -p has any effect because it might be some
