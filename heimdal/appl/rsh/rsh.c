@@ -1079,6 +1079,7 @@ main(int argc, char **argv)
 		protocol_version = 1;
 		continue;
 	    }
+	    sendauth_version_error = 0;
 	    protocol_version = 2;
 
 	    /* User didn't specify whether to use encryption. Try:
