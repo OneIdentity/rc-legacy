@@ -1070,6 +1070,9 @@ main(int argc, char **argv)
 #ifdef KRB5
     if (ret && use_v5) {
 	int more_tries = 1;
+	/* So we can fiddle with the do_encrypt flag and reset it if krb5
+	 * fails */
+	const int original_do_encrypt = do_encrypt;
 	memset (&hints, 0, sizeof(hints));
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_protocol = IPPROTO_TCP;
@@ -1134,6 +1137,8 @@ main(int argc, char **argv)
 
 	if (ret)
 	    verbose("Kerberos5 auth failed");
+
+	do_encrypt = original_do_encrypt;
     }
 #endif
 #ifdef KRB4
@@ -1168,8 +1173,10 @@ main(int argc, char **argv)
 	    verbose("Kerberos4 auth failed");
     }
 #endif
-    if (ret && use_broken) {
+    if (ret && use_broken && do_encrypt != 1) {
 	verbose("Trying privport/broken auth");
+	/* Prevent the network routines aborting when do_encrypt == -1 */
+	do_encrypt = 0;
 
 	memset (&hints, 0, sizeof(hints));
 	hints.ai_socktype = SOCK_STREAM;
