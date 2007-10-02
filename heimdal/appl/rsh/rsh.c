@@ -76,6 +76,7 @@ static int do_errsock = 1;
 static char *protocol_version_str;
 static int protocol_version = 2;
 #endif
+static int do_verbose = 0;
 
 /*
  *
@@ -856,6 +857,7 @@ struct getargs args[] = {
     { "stderr", 'e', arg_negative_flag, &do_errsock,	"Don't open stderr"},
 #ifdef KRB5
 #endif
+    { "verbose",'v', arg_flag,		&do_verbose,	"Verbose output" },
     { "version", 0,  arg_flag,		&do_version,	NULL },
     { "help",	 0,  arg_flag,		&do_help,	NULL }
 };
@@ -868,6 +870,22 @@ usage (int ret)
 		    NULL,
 		    "[login@]host [command]");
     exit (ret);
+}
+
+/**
+ * Print a message, but only if verbose mode was enabled by the user.
+ */
+static void
+verbose(const char *msg, ...)
+{
+    va_list ap;
+
+    if (!do_verbose)
+	return;
+
+    va_start(ap, msg);
+    vwarnx(msg, ap);
+    va_end(ap);
 }
 
 /*
@@ -893,6 +911,7 @@ main(int argc, char **argv)
     int status;
 #endif
     uid_t uid;
+    int auto_disabled_broken = 0; /* 1 if broken auth was disabled automatically */
 
     priv_port1 = priv_port2 = IPPORT_RESERVED-1;
     priv_socket1 = rresvport(&priv_port1);
@@ -976,6 +995,7 @@ main(int argc, char **argv)
 	if (use_only_broken)
 	    errx (1, "unable to bind reserved port: is rsh setuid root?");
 	use_broken = 0;
+	auto_disabled_broken = 1;
     }
 
 #if defined(KRB4) || defined(KRB5)
@@ -1067,6 +1087,10 @@ main(int argc, char **argv)
 	auth_method = AUTH_KRB5;
 
 	while (more_tries) {
+	    verbose("Trying Kerberos5 auth with protocol version %d and "
+		    "encryption %s", protocol_version,
+		    do_encrypt ? "enabled" : "disabled");
+
 	    ret = doit (host, ai, user, local_user, cmd, cmd_len,
 			send_krb5_auth);
 
@@ -1107,10 +1131,15 @@ main(int argc, char **argv)
 	}
 
 	freeaddrinfo(ai);
+
+	if (ret)
+	    verbose("Kerberos5 auth failed");
     }
 #endif
 #ifdef KRB4
     if (ret && use_v4) {
+	verbose("Trying Kerberos4 auth");
+
 	memset (&hints, 0, sizeof(hints));
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_protocol = IPPROTO_TCP;
@@ -1134,9 +1163,14 @@ main(int argc, char **argv)
 	ret = doit (host, ai, user, local_user, cmd, cmd_len,
 		    send_krb4_auth);
 	freeaddrinfo(ai);
+
+	if (ret)
+	    verbose("Kerberos4 auth failed");
     }
 #endif
     if (ret && use_broken) {
+	verbose("Trying privport/broken auth");
+
 	memset (&hints, 0, sizeof(hints));
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_protocol = IPPROTO_TCP;
@@ -1158,7 +1192,18 @@ main(int argc, char **argv)
 			   do_errsock ? priv_socket2 : -1,
 			   cmd, cmd_len);
 	freeaddrinfo(ai);
+
+	if (ret)
+	    verbose("privport/broken auth failed");
     }
+#if defined(KRB5) || defined(KRB4)
+    else if (ret && auto_disabled_broken) {
+	verbose("Kerberos auth failed and privport/broken auth was "
+		"automatically disabled. Maybe %s needs to be setuid root "
+		"to enable privport auth.", getprogname());
+    }
+#endif
+
     free(cmd);
     return ret;
 }

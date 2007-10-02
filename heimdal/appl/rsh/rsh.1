@@ -40,7 +40,7 @@
 remote shell
 .Sh SYNOPSIS
 .Nm
-.Op Fl 45FGKdefnuxz
+.Op Fl 45FGKdefnuvxz
 .Op Fl U Pa string
 .Op Fl p Ar port
 .Op Fl l Ar username
@@ -204,6 +204,12 @@ any existing cache. Mutually exclusive to
 .Xc
 Name of the remote credentials cache. Mutually exclusive to
 .Fl u .
+.It Xo
+.Fl v ,
+.Fl -verbose
+.Xc
+Print verbose information about what rsh is doing. This is a Quest
+extension.
 .It Xo
 .Fl x ,
 .Fl -encrypt
