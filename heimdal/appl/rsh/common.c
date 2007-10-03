@@ -125,7 +125,10 @@ do_read (int fd, void *buf, size_t sz, void *ivec)
 	    return len;
 	} else
 #endif /* KRB5 */
-	    abort ();
+	{
+	    /* This _should_ never happen */
+	    errx(1, "Encryption not supported (auth_method=%d)", auth_method);
+	}
     } else
 	return read (fd, buf, sz);
 }
@@ -173,7 +176,10 @@ do_write (int fd, void *buf, size_t sz, void *ivec)
 	    return sz;
 	} else
 #endif /* KRB5 */
-	    abort();
+	{
+	    /* This _should_ never happen */
+	    errx(1, "Encryption not supported (auth_method=%d)", auth_method);
+	}
     } else
 	return write (fd, buf, sz);
 }
