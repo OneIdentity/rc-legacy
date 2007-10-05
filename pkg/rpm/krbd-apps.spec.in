@@ -50,7 +50,8 @@ rshd, telnetd and ftpd.
 %define _localstatedir /var%{_prefix}
 %define _mandir %{_prefix}/man
 %define _infodir %{_prefix}/info
-%define _docdir %{_datadir}/doc
+# Is there a variable that contains "krbd-apps"?
+%define _docdir %{_datadir}/doc/krbd-apps
 
 %prep
 %setup -n krbd-apps-@[VERSION]
