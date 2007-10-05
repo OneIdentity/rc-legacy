@@ -6,8 +6,6 @@ SCRIPTDIR=`dirname ${SCRIPTDIR}/$0`
 
 . ../build.config
 
-BUILDNO=1
-
 CC='/usr/local/bin/ccache /usr/bin/cc'
 CFLAGS="$CFLAGS +DAportable"
 export CC CFLAGS
