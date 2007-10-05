@@ -34,7 +34,7 @@
 #include "rcp_locl.h"
 #include <getarg.h>
 
-const char const *rsh_programs[] = {
+const char *const rsh_programs[] = {
     _PATH_RSH,
     "rsh"
 };
