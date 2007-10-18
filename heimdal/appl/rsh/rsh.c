@@ -746,6 +746,44 @@ doit_broken (int argc,
     }
 }
 
+/**
+ * Log a connection error.
+ * In verbose mode, the message is printed immediately.
+ * In non-verbose mode, the message is queued to be retrieved by
+ * print_connection_errors();
+ */
+static void connection_err(const char *msg, ...) {
+    va_list ap;
+
+    va_start(ap, msg);
+
+    if (do_verbose) {
+	/* Print immediately */
+	vwarnx(msg, ap);
+    } else {
+	/* Non-verbose. Queue the message */
+	char *fullmsg;
+
+	if (vasprintf(&fullmsg, msg, ap) != -1) {
+	    list_push(fullmsg);
+	    free(fullmsg);
+	}
+    }
+    va_end(ap);
+}
+
+/**
+ * Prints each message in the connection error list.
+ */
+static void print_connection_errors(void) {
+    char *str;
+
+    while ((str = list_pop())) {
+	fprintf(stderr, "%s\n", str);
+	free(str);
+    }
+}
+
 #if defined(KRB4) || defined(KRB5)
 static int
 doit (const char *hostname,
@@ -777,9 +815,9 @@ doit (const char *hostname,
 	    char addr[128];
 	    if(getnameinfo(a->ai_addr, a->ai_addrlen, 
 			   addr, sizeof(addr), NULL, 0, NI_NUMERICHOST) == 0)
-		warn ("connect(%s [%s])", hostname, addr);
+		connection_err ("connect(%s [%s])", hostname, addr);
 	    else
-		warn ("connect(%s)", hostname);
+		connection_err ("connect(%s)", hostname);
 	    close (s);
 	    continue;
 	}
@@ -1203,8 +1241,12 @@ main(int argc, char **argv)
 	if (ret)
 	    verbose("privport/broken auth failed");
     }
+
+    if (ret)
+	print_connection_errors();
+
 #if defined(KRB5) || defined(KRB4)
-    else if (ret && auto_disabled_broken) {
+    if (ret && auto_disabled_broken) {
 	verbose("Kerberos auth failed and privport/broken auth was "
 		"automatically disabled. Maybe %s needs to be setuid root "
 		"to enable privport auth.", getprogname());
