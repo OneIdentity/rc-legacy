@@ -361,7 +361,6 @@ recv_krb5_auth (int s, u_char *buf,
     krb5_ticket *ticket;
     krb5_error_code status;
     krb5_data cksum_data;
-    krb5_principal server;
 
     if (memcmp (buf, "\x00\x00\x00\x13", 4) != 0)
 	return -1;
@@ -373,65 +372,15 @@ recv_krb5_auth (int s, u_char *buf,
 	|| memcmp (buf, KRB5_SENDAUTH_VERSION, len) != 0)
 	syslog_and_die ("bad sendauth version: %.8s", buf);
     
-    status = krb5_sock_to_principal (context,
-				     s,
-				     "host",
-				     KRB5_NT_SRV_HST,
-				     &server);
-    if (status)
-	syslog (LOG_WARNING, "krb5_sock_to_principal: %s",
-			krb5_get_err_text(context, status));
-
-    if (!is_principal_in_keytab(server)) {
-	/*  Try "HOSTNAME$" */
-#ifndef  HOST_NAME_MAX
-# define HOST_NAME_MAX 255
-#endif
-	char myhostname[HOST_NAME_MAX + 2]; /* name + '$' + '\0' */
-	char *const lastbyte = myhostname + HOST_NAME_MAX + 1;
-	char *walker;
-
-	krb5_free_principal(context, server);
-
-	if (gethostname(myhostname, sizeof(myhostname) - 1) == -1)
-	    syslog_and_die ("gethostname: %s", strerror(errno));
-
-	*lastbyte = '\0';
-
-	/* Walk the string uppercasing it and leaving 'walker' at the end */
-	walker = myhostname;
-	while (*walker) {
-	    *walker = (char) toupper(*walker);
-	    ++walker;
-	}
-
-	/* Append the $ (without overrunning) */
-	if (walker != lastbyte) {
-	    *walker++ = '$';
-	    *walker++ = '\0';
-	}
-
-	status = krb5_parse_name(context, myhostname, &server);
-	if (status)
-	    syslog_and_die ("krb5_parse_name(%s): %s",
-		    myhostname, krb5_get_err_text (context, status));
-
-	if (!is_principal_in_keytab(server))
-	    syslog (LOG_WARNING, "%s not found in keytab", myhostname);
-
-	/* It will be tried anyway as the last resort */
-    }
-
     status = krb5_recvauth_match_version(context,
 					 &auth_context,
 					 &s,
 					 match_kcmd_version,
 					 NULL,
-					 server,
+					 NULL,
 					 KRB5_RECVAUTH_IGNORE_VERSION,
 					 NULL,
 					 &ticket);
-    krb5_free_principal (context, server);
     if (status)
 	syslog_and_die ("krb5_recvauth_match_version: %s",
 			krb5_get_err_text(context, status));

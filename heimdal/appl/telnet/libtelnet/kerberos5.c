@@ -347,7 +347,6 @@ kerberos5_is(Authenticator *ap, unsigned char *data, int cnt)
     krb5_data outbuf;
     krb5_keyblock *key_block;
     char *name;
-    krb5_principal server;
     int zero = 0;
 
     if (cnt-- < 1)
@@ -380,29 +379,14 @@ kerberos5_is(Authenticator *ap, unsigned char *data, int cnt)
 	    return;
 	}
 
-	ret = krb5_sock_to_principal (context,
-				      0,
-				      "host",
-				      KRB5_NT_SRV_HST,
-				      &server);
-	if (ret) {
-	    Data(ap, KRB_REJECT, "krb5_sock_to_principal failed", -1);
-	    auth_finished(ap, AUTH_REJECT);
-	    log_message("Kerberos V5: "
-			"krb5_sock_to_principal failed (%s)",
-			krb5_get_err_text(context, ret));
-	    return;
-	}
-
 	ret = krb5_rd_req(context,
 			  &auth_context,
 			  &auth, 
-			  server,
+			  NULL,
 			  NULL,
 			  NULL,
 			  &ticket);
 
-	krb5_free_principal (context, server);
 	if (ret) {
 	    char *errbuf;
 
