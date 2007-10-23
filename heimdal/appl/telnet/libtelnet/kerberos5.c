@@ -426,7 +426,8 @@ kerberos5_is(Authenticator *ap, unsigned char *data, int cnt)
 						     foo, 
 						     sizeof(foo));
 
-	    if (ret) {
+	    /* 0 means valid checksum, -17 means no checksum (also valid) */
+	    if (ret && ret != -17) {
 		char *errbuf;
 		asprintf(&errbuf, "Bad checksum: %s", 
 			 krb5_get_err_text(context, ret));

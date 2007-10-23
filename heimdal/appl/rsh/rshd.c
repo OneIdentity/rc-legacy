@@ -473,7 +473,8 @@ recv_krb5_auth (int s, u_char *buf,
 						cksum_data.data, 
 						cksum_data.length);
 
-    if (status)
+    /* 0 means valid checksum, -17 means no checksum (also valid) */
+    if (status && status != -17)
 	syslog_and_die ("krb5_verify_authenticator_checksum: %s",
 			krb5_get_err_text(context, status));
 
