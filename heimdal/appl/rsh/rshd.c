@@ -433,7 +433,7 @@ recv_krb5_auth (int s, u_char *buf,
 					 &ticket);
     krb5_free_principal (context, server);
     if (status)
-	syslog_and_die ("krb5_recvauth: %s",
+	syslog_and_die ("krb5_recvauth_match_version: %s",
 			krb5_get_err_text(context, status));
 
     *server_username = read_str (s, USERNAME_SZ, "remote username");
