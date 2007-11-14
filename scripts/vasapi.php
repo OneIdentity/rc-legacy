@@ -186,7 +186,8 @@ enum vas_ctx_opt_t
     VAS_CTX_OPTION_SRVINFO_DETECT_ONLY_UNTIL_FOUND   =  12,
     VAS_CTX_OPTION_DNS_FAILURE_TIMELIMIT             =  13,
     VAS_CTX_OPTION_DOMAIN_NAMING_CONTEXT             =  14,
-    VAS_CTX_OPTION_USE_SRVINFO_CONF                  =  15
+    VAS_CTX_OPTION_USE_SRVINFO_CONF                  =  15,
+    VAS_CTX_OPTION_SRVINFO_LAZY_DETECT               =  16
 };
 
 
