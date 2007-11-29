@@ -1365,10 +1365,17 @@ start_login(const char *host, int autologin, char *name)
     if (auth_level >= 0 && autologin == AUTH_VALID)
 	addarg(&argv, "-f");
 #endif
+
     if(user){
+#ifdef __hpux /* HPUX's login process dies horribly if you give it "--" */
+	if (user[0] != '-') /* prevent sploitz */
+	    addarg(&argv, strdup(user));
+#else /* !__hpux */
 	addarg(&argv, "--");
 	addarg(&argv, strdup(user));
+#endif
     }
+
     if (getenv("USER")) {
 	/*
 	 * Assume that login will set the USER variable
