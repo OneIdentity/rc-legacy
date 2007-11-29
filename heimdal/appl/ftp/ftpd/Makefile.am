@@ -29,6 +29,8 @@ ftpd_SOURCES =		\
 	$(krb4_sources) \
 	$(krb5_sources)
 
+ftpd_CPPFLAGS = $(AM_CPPFLAGS) -I$(top_srcdir)/include
+
 EXTRA_ftpd_SOURCES = krb4.c kauth.c gssapi.c gss_userok.c
 
 $(ftpd_OBJECTS): security.h

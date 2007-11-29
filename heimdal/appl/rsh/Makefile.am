@@ -19,6 +19,8 @@ rsh_SOURCES  = rsh.c common.c rsh_locl.h list.c list.h
 rshd_SOURCES = rshd.c common.c login_access.c rsh_locl.h login_locl.h \
 	       login_protos.h
 
+rshd_CPPFLAGS = $(AM_CPPFLAGS) -I$(top_srcdir)/include
+
 test_list_SOURCES = test-list.c list.c list.h
 
 EXTRA_DIST = $(man_MANS)
