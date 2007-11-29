@@ -6,140 +6,169 @@ SAMBACONF="/etc/opt/quest/samba/smb.conf"
 VASCONF="/etc/opt/quest/vas/vas.conf"
 PWDCHGSCRIPT="/opt/quest/sbin/vas-set-samba-password"
 
+bindir=/opt/quest/bin
+sbindir=/opt/quest/sbin
+
 DEBUG=0
+OPTFORCE=no
+STARTSVC=yes
+
+# Process command line arguments
+opterr=false
+while test $# -gt 0; do
+    case "$1" in
+	-f) OPTFORCE="force"; shift;;
+	-n) STARTSVC="no"; shift;;
+	-s) SAMBACONF="$2"; shift; shift;;
+	-d) DEBUG=1; shift;;
+	--) shift; break;;
+	-*) echo "Unknown option '$1'" >&2; shift; opterr=true;;
+	*)  break;;
+    esac
+done
+if test $# -ne 0; then	    # Expect no extra arguments
+    opterr=true
+fi
+if $opterr; then	    # Show usage on option error
+    echo "Usage: $0 [-f] [-n] [-s /path/smb.conf]" >&2
+    exit 1
+fi
+
+# Some helpful regular expressions used in the check_* functions:
 SP='[ 	]'
 LSP='\[ 	\]'
 META='[/*+.()]'
 METASUBST='s/'"$META"'/\\&/g'
 
 
-# parameters:
-#  1 parm name
-# return:
-#  0 all ok
-#  1 parm missing 
+# check_parm <param-name> <config-file>
+#   Checks if the parameter is defined in the config file, by searching
+#   for any line of the form
+#         param-name = ...
+#   Returns 0 only if a parameter definition is found
 check_parm () {
-
 	PREG=`echo "$1" | sed -e "s/$SP$SP*/$LSP$LSP*/g"`
-	CONFFILE=$2
-
-	grep -i "^$SP*$PREG$SP*=" ${CONFFILE} >/dev/null
-	if [ "$?" -ne "0" ]; then
-
-		#param missing
-		return 1
-	fi
-
-	return 0
+	grep -i "^$SP*$PREG$SP*=" "$2" >/dev/null
 }
 
 
-# parameters:
-#  $1 parm name
-#  $2 correct value
-# return:
-#  0 all ok
-#  1 parm missing 
-
+# check_and_fix <param-name> <correct-value> <config-file>
+#   Checks if the parameter is defined incorrectly in the config file, and
+#   if so, replaces it. If the parameter is not defined, no action is taken.
+#   Returns 0 if the parameter was defined and/or corrected.
+#   Returns 1 if the parameter was not defined in the config-file.
+#   Exits the script if there is an error correcting the config-file
 check_and_fix () {
-
 	PREG=`echo "$1" | sed -e "s/$SP$SP*/$LSP$LSP*/g"`
 	VALUE=`echo "$2" | sed -e "$METASUBST"`
 	CONFFILE=$3
 
-	grep -i "^$SP*$PREG$SP*=$SP*${VALUE}$SP*" ${CONFFILE} >/dev/null
-	if [ "$?" -ne "0" ]; then
-
-		#param wrong or missing
-		grep -i "^$SP*$PREG$SP*=" ${CONFFILE} > /dev/null
-		if [ "$?" -ne "0" ]; then
-
-			#param missing
-			return 1
-
-		else
-
-			# param wrong, fix it
-			echo "Correcting parameter '$1' to '$2'"
-
-			sed -e "/^$SP*${PREG}$SP*=/s/=.*/= ${VALUE}/" \
-                            < ${CONFFILE} > ${CONFFILE}.new || exit 1
-			mv ${CONFFILE}.new ${CONFFILE} || exit 1
-		fi
+	if grep -i "^$SP*$PREG$SP*=$SP*${VALUE}$SP*" "$3" >/dev/null; then
+		# parameter is defined, correctly
+		return 0
+	elif grep -i "^$SP*$PREG$SP*=" "$3" > /dev/null; then
+		# parameter is defined, incorrectly
+		oldvalue=`sed -n -e "s/^$SP*${PREG}$SP*=$SP*//p" < "$3"`
+		echo "Correcting parameter '$1' from '$oldvalue' to '$2'"
+		sed -e "/^$SP*${PREG}$SP*=/s/=.*/= ${VALUE}/" \
+                            < "$3" > "$3.new" || exit 1
+		mv "$3.new" "$3" || exit 1
+		return 0
+	else
+		# parameter was not defined at all
+		return 1
 	fi
-
-	return 0
 }
 
-#-- returns true if the old parameter name was in use, and was renamed
-#   usage: check_and_rename $old_name $new_name $conf_file
+# check_and_rename <old-param-name> <new-param-name> <config-file>
+#   Replaces definitions of old-param-name with new-param-name.
+#   Returns 0 if a renaming occurred.
+#   Exits the script if updating config-file fails.
 check_and_rename () {
-
 	PREG=`echo "$1" | sed -e "s/$SP$SP*/$LSP$LSP*/g"`
 	PNEW="$2"
 	CONFFILE="$3"
 
-	if grep -i "^$SP*$PREG$SP*=" ${CONFFILE} >/dev/null
-       	then
-	    # old param name is in use
-	    echo "Renaming parameter '$1' to '$2'"
-	    # stand fast ye and behold the mighty power of sed
-	    sed "/^$SP*$PREG$SP*=/{h;s/^/#/p;x;s/$PREG/$PNEW/;}" \
-                            < ${CONFFILE} > ${CONFFILE}.new || exit 1
-	    mv ${CONFFILE}.new ${CONFFILE} || exit 1
-	    return 0
+	if grep -i "^$SP*$PREG$SP*=" "$3" >/dev/null; then
+		echo "Renaming parameter '$1' to '$2'"
+		# behold, the mighty power of sed!
+		sed "/^$SP*$PREG$SP*=/{h;s/^/#/p;x;s/$PREG/$PNEW/;}" \
+			    < "$3" > "$3.new" || exit 1
+		mv "$3.new" "$3" || exit 1
+		return 0
+	else
+		return 1
 	fi
-
-	return 1
 }
 
-#-- figure out how to echo without newlines
+# echon <text>
+#   Emits text without a newline.
+#   The code below figure out the right way to do echon.
 echo1 () { echo -n "$*"; }
 echo2 () { echo "$*\\c"; }
 echo3 () { echo "$* +"; }
 if test "x`echo1 y`z" = "xyz"; then
-    echon() { echo1 "$*"; }
+	echon () { echo1 "$*"; }
 elif test "x`echo2 y`z" = "xyz"; then
-    echon () { echo2 "$*"; }
+	echon () { echo2 "$*"; }
 else
-    echon () { echo3 "$*"; }
+	echon () { echo3 "$*"; }
 fi
 
-#-- die with an error
+# die <text>
+#   Prints a message to standard error, and exits the script in error
 die () {
-    echo "ERROR: $*" >&2
-    exit 1;
+	echo "ERROR: $*" >&2
+	exit 1
 }
 
-#-- prompt user for information
-#   usage: query prompt varname [default]
+# query <prompt> <varname> [default-response]
+#   Prompts the user for a response, and sets $varname to that given.
+#   If a blank line response is given, then $varname is set to the 
+#   default-response (or the empty string).
 query () {
-    eval $2=
-    while eval "test ! -n \"\$$2\""; do
-#	if eval 'read xx?yy' <$0 2>/dev/null; then
-#	    eval "read \"$2?$1${3+ [$3]}: \"" || die "(end of file)"
-#	else
+	eval $2=
+	while eval "test ! -n \"\$$2\""; do
 	    echon "$1${3+ [$3]}: "
 	    eval "read $2" || die "(end of file)"
-#	fi
-	eval : "\${$2:=\$3}"
-    done
+	    eval : "\${$2:=\$3}"
+	done
 }
 
-#-- returns true if user selects yes
-#   usage: yesorno "question" [default]
+# yesorno <question> [default-response]
+#   Prompts the user for a yes-no question.
+#   Re-prompting will occur if the user enters a blank line and there
+#   is no default-response.
+#   Returns 0 for Yes, 1 for No.
 yesorno () {
-    echo "";
-    while :; do
-	query "$1" YESORNO $2
-	case "$YESORNO" in
-	    Y*|y*) echo; return 0;;
-	    N*|n*) echo; return 1;;
-	    *) echo "Please enter 'y' or 'n'" >&2;;
-	esac
-    done
+	echo "";
+	while :; do
+	    query "$1" YESORNO $2
+	    case "$YESORNO" in
+		Y*|y*) echo; return 0;;
+		N*|n*) echo; return 1;;
+		*) echo "Please enter 'y' or 'n'" >&2;;
+	    esac
+	done
 }
 
+# is_lt <version1> <version2>
+#   Returns true if dotted version string version1 is less than version2
+is_lt () {
+    a="$1" b="$2"
+    while test -n "$a" -o -n "$b"; do
+	ah=`echo "$a" | sed -e 's/\..*//'`
+	bh=`echo "$b" | sed -e 's/\..*//'`
+	if test x"$ah" = x"$bh"; then
+	    a=`echo "$a" | sed -e 's/^[^.]*//;s/^\.//'`
+	    b=`echo "$b" | sed -e 's/^[^.]*//;s/^\.//'`
+	    continue
+	fi
+	{ echo "$ah"; echo "$bh"; } | sort -n -c 2>/dev/null
+	return
+    done
+    return 1
+}
 
 ##########################
 #          MAIN          #
@@ -155,18 +184,15 @@ VRELEASE=`echo $VERSION | cut -d "." -f 3`
 VBUILD=`echo $VERSION | cut -d "." -f 4`
 
 if [ "$VMAJOR" != "3" ]; then
-    echo "ERROR: $0 works only with VAS version 3"
-    exit 1
-fi
-
-if [ "$1" = "-f" ]; then #force change password without prompting
-    OPTFORCE="force"
+	echo "ERROR: $0 works only with VAS version 3"
+	exit 1
 fi
 
 # First of all check if we are joined
 ${VASTOOL} -u host/ auth -S host/ > /dev/null 2>&1
 if [ "$?" != "0" ]; then
-    echo "ERROR: The machine does not appear to be joined to any domain."
+	echo "ERROR: The machine does not appear to be joined to any domain"
+	echo "or this script is not being run as root."
 	echo "Please verify the machine is correctly joined and then re-run"
 	echo "$0 to complete the installation"
 	echo "and configuration of both SAMBA and VAS."
@@ -217,39 +243,23 @@ TODAY=`date +"%Y%m%d"`
 
 #-- bug 254: this may need updating when porting
 case `uname -s` in
-    HP-UX)  initdir=/sbin/init.d;;
-    *)	    initdir=/etc/init.d;;
+	HP-UX)  initdir=/sbin/init.d;;
+	*)	initdir=/etc/init.d;;
 esac
 
-echo "Stopping Samba services..."
-$initdir/winbindd-quest stop  >/dev/null
-$initdir/smbd-quest stop      >/dev/null
-$initdir/vasidmapd stop       >/dev/null
-$initdir/nmbd-quest stop      >/dev/null
+if [ $STARTSVC = yes ]; then
+	echo "Stopping Samba services..."
+	for script in winbindd-quest smbd-quest vasidmapd nmbd-quest; do
+	    test -x $initdir/$script && $initdir/winbindd-quest stop >/dev/null
+	done
+fi
 
 ##########################
 # Verify/Modify smb.conf #
 ##########################
 
-SAMBAVERSION=`/opt/quest/sbin/smbd --version | 
+SAMBAVERSION=`$sbindir/smbd --version | 
     sed -e 's/^Version //;s/-Quest-/./;s/[^0-9.][^.]*//g'`
-
-#-- is_lt returns true iff dotted version $1 < $2
-is_lt () {
-    a="$1" b="$2"
-    while test -n "$a" -o -n "$b"; do
-	ah=`echo "$a" | sed -e 's/\..*//'`
-	bh=`echo "$b" | sed -e 's/\..*//'`
-	if test x"$ah" = x"$bh"; then
-	    a=`echo "$a" | sed -e 's/^[^.]*//;s/^\.//'`
-	    b=`echo "$b" | sed -e 's/^[^.]*//;s/^\.//'`
-	    continue
-	fi
-	{ echo "$ah"; echo "$bh"; } | sort -n -c 2>/dev/null
-	return
-    done
-    return 1
-}
 
 echo "Checking $SAMBACONF..."
 
@@ -306,8 +316,8 @@ check_and_fix "machine password timeout" "0" "${CONFMOD}" ||
        echo "  machine password timeout = 0" >> $NEWTEXT
 
 ## Do not enforce this, it is ok only in UPM mode, and potentially bad in non UPM.
-#check_and_fix "username map script" "/opt/quest/bin/vasidmap" "${CONFMOD}" ||
-#       echo "  username map script = /opt/quest/bin/vasidmap" >>$NEWTEXT
+#check_and_fix "username map script" "$bindir/vasidmap" "${CONFMOD}" ||
+#       echo "  username map script = $bindir/vasidmap" >>$NEWTEXT
 
 check_and_fix "winbind nested groups" "no" "${CONFMOD}" ||
        echo "  winbind nested groups = no" >> $NEWTEXT
@@ -381,7 +391,7 @@ rm -f $NEWTEXT
 
 #set a fake ldap password
 #(this will change with the new IDMAP subsystem in newer versions of Samba)
-/opt/quest/bin/smbpasswd -w secret > /dev/null 2>&1
+$bindir/smbpasswd -w secret > /dev/null 2>&1
 
 ##########################
 # Verify/Modify vas.conf #
@@ -403,8 +413,8 @@ case "$VERSION" in
         echo " password-change-interval = 0" >> $NEWTEXT
     ;;
   *)
-    check_and_fix "password-change-script" "${PWDCHGSCRIPT}" "${CONFMOD}" ||
-        echo " password-change-script = ${PWDCHGSCRIPT}" >> $NEWTEXT
+    check_and_fix "password-change-script" "${PWDCHGSCRIPT} -s ${SAMBACONF}" "${CONFMOD}" ||
+        echo " password-change-script = ${PWDCHGSCRIPT} -s ${SAMBACONF}" >> $NEWTEXT
     check_and_fix "password-change-interval" "30" "${CONFMOD}"
     have_pwchgscript=true
     ;;
@@ -429,7 +439,7 @@ fi
 rm -f $NEWTEXT
 
 
-if [ "$DEBUG" -ne "0" ]; then
+if [ $DEBUG -gt 0 ]; then
 	echo "Exit before changing the password during debug"
 	exit 0
 fi
@@ -455,8 +465,8 @@ fi
 #Set domain SID
 echo "Detecting domain SID..."
 DOMUSER=`${VASTOOL} list users | awk -F: '{print $1;exit}'`
-DOMSID=`/opt/quest/bin/vasidmap -u -n "$DOMUSER" | cut -d '-' -f 1-7`
-/opt/quest/bin/net setdomainsid "$DOMSID"
+DOMSID=`$bindir/vasidmap -u -n "$DOMUSER" | cut -d '-' -f 1-7`
+$bindir/net -s ${SAMBACONF} setdomainsid "$DOMSID"
 
 if [ "$PWDCHANGE" = "yes" ]; then
 
@@ -464,7 +474,7 @@ if [ "$PWDCHANGE" = "yes" ]; then
 
     if $have_pwchgscript; then
 	# Generate a new machine secret and set directly.
-	$VASTOOL -u host/ -q passwd -r -o | ${PWDCHGSCRIPT}
+	$VASTOOL -u host/ -q passwd -r -o | ${PWDCHGSCRIPT} -s ${SAMBACONF}
     else
 	# Generate a secret key from the hex form of current key material
 	SECRET='X!'`$VASTOOL ktutil list --keys | 
@@ -472,17 +482,22 @@ if [ "$PWDCHANGE" = "yes" ]; then
 	# Change the machine password using vastool
 	(echo "$SECRET"; echo "$SECRET") | ${VASTOOL} -s -u host/ passwd
 	# Set the new machine password in secrets.tdb
-	echo "$SECRET" | ${PWDCHGSCRIPT}
+	echo "$SECRET" | ${PWDCHGSCRIPT} -s ${SAMBACONF}
     fi
 
     # Test that the join worked ok
-    /opt/quest/bin/net ads testjoin ||
+    $bindir/net -s ${SAMBACONF} ads testjoin ||
 	echo "** net ads testjoin failed" >&2
 fi
 
 ### Finally restart samba services
-echo "Starting Samba services..."
-$initdir/vasidmapd start
-$initdir/nmbd-quest start
-$initdir/smbd-quest start
-$initdir/winbindd-quest start
+if [ "$STARTSVC" = yes ]; then
+    echo "Starting Samba services..."
+    for script in vasidmapd nmbd-quest smbd-quest winbindd-quest; do
+	if test -x $initdir/$script; then
+	    $initdir/$script start
+	fi
+    done
+fi
+
+exit 0
