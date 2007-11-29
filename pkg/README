@@ -1,0 +1,5 @@
+Notes on packaging these apps, particularly platform incompatibilities.
+
+AIX's utmp is not binary compatible between AIX 4 and AIX 5.
+Build on AIX 5.1 and it will be forward compatible with at least
+AIX 5.2 and 5.3. (bug #436)
