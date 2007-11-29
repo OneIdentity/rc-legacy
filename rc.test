@@ -20,6 +20,23 @@ veval () { "$verbose" && echo "[4m+ $*[m" >&2; "$@"; }
 verbose () { $verbose && echo ">>> $*"; }
 usage () { echo "$0 [-installed] [-runashost] [builddir]" >&2; exit 1; }
 
+#-- is_lt returns true iff dotted version $1 < $2
+is_lt () {
+    a="$1" b="$2"
+    while test -n "$a" -o -n "$b"; do
+        ah=`echo "$a" | sed -e 's/\..*//'`
+        bh=`echo "$b" | sed -e 's/\..*//'`
+        if test x"$ah" = x"$bh"; then
+            a=`echo "$a" | sed -e 's/^[^.]*//;s/^\.//'`
+            b=`echo "$b" | sed -e 's/^[^.]*//;s/^\.//'`
+            continue
+        fi
+        { echo "$ah"; echo "$bh"; } | sort -n -c 2>/dev/null
+        return
+    done
+    return 1
+}
+
 : ${host:=127.0.0.1}
 : ${port:=389}          # vastool -p option not working
 : ${vastool:=/opt/quest/bin/vastool}
@@ -72,6 +89,7 @@ ${SUDO:-sudo} rm -f ${krb5ccfile}
 KRB5CCNAME=FILE:${krb5ccfile}
 export KRB5CCNAME
 $vastool -v
+VAS_VERSION=`$vastool -v | sed -n 's/.*[Vv]ersion //;p;q'`
 verbose "Obtaining host/ key -> $KRB5CCNAME"
 #set -x
 test -n "$debug" && 
@@ -191,6 +209,19 @@ ignore () {
     fi
 }
 
+#-- usage ignoreif 'cmd' ...
+#   if 'cmd' evaluates to true then prefix the rest of the command with ignore
+#   otherwisw run as normal
+ignoreif () {
+    if eval "$1"; then
+	shift
+	ignore "$@"
+    else
+	shift
+	"$@"
+    fi
+}
+
 #------------------------------------------------------------
 # vasidmap tests
 
@@ -241,7 +272,7 @@ trymap -sU $usid <<.
 $uid
 .
 
-ignore \
+ignoreif 'is_lt $VAS_VERSION 3.2.0.88' \
 trymap -sG $gsid <<.
 $gid
 .
@@ -309,7 +340,7 @@ objectClass: sambaIdmapEntry
 uidNumber: $uid
 .
 
-ignore \
+ignoreif 'is_lt $VAS_VERSION 3.2.0.88' \
 tryfilter "(&(objectClass=sambaIdmapEntry)(sambaSID=$gsid))" <<.
 dn: CN=VAS-Idmapper
 sambaSID: $gsid
@@ -372,7 +403,7 @@ objectClass: sambaIdmapEntry
 gidNumber: $gid
 .
 
-ignore \
+ignoreif 'is_lt $VAS_VERSION 3.2.0.88' \
 tryfilter "(&(objectClass=sambaIdmapEntry)(|(sambaSID=$gsid)(sambaSID=$usid)))" <<.
 dn: CN=VAS-Idmapper
 sambaSID: $gsid
@@ -399,7 +430,7 @@ objectClass: sambaIdmapEntry
 uidNumber: $uid
 .
 
-ignore \
+ignoreif 'is_lt $VAS_VERSION 3.2.0.88' \
 tryfilter "(&(objectClass=sambaIdmapEntry)(|(uidNumber=$uid)(uidNumber=$uid2)(gidNumber=$gid)(gidNumber=$gid2)(sambaSID=$usid)(sambaSID=$usid2)(sambaSID=$gsid)(sambaSID=$gsid2)))" <<.
 dn: CN=VAS-Idmapper
 sambaSID: $usid
