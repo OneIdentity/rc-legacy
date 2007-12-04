@@ -244,14 +244,19 @@ TODAY=`date +"%Y%m%d"`
 #-- bug 254: this may need updating when porting
 case `uname -s` in
 	HP-UX)  initdir=/sbin/init.d;;
+	AIX)	initdir=SRC;;
 	*)	initdir=/etc/init.d;;
 esac
 
 if [ $STARTSVC = yes ]; then
-	echo "Stopping Samba services..."
+    echo "Stopping Samba services..."
+    if [ $initdir = SRC ]; then
+	stopsrc -s quest-samba
+    else
 	for script in winbindd-quest smbd-quest vasidmapd nmbd-quest; do
 	    test -x $initdir/$script && $initdir/winbindd-quest stop >/dev/null
 	done
+    fi
 fi
 
 ##########################
@@ -493,11 +498,15 @@ fi
 ### Finally restart samba services
 if [ "$STARTSVC" = yes ]; then
     echo "Starting Samba services..."
-    for script in vasidmapd nmbd-quest smbd-quest winbindd-quest; do
-	if test -x $initdir/$script; then
-	    $initdir/$script start
-	fi
-    done
+    if [ $initdir = SRC ]; then
+	startsrc -s quest-samba
+    else
+	for script in vasidmapd nmbd-quest smbd-quest winbindd-quest; do
+	    if test -x $initdir/$script; then
+		$initdir/$script start
+	    fi
+	done
+    fi
 fi
 
 exit 0
