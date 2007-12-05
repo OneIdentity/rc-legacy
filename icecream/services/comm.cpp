@@ -25,7 +25,9 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <errno.h>
@@ -39,6 +41,10 @@
 #include <minilzo.h>
 #include <stdio.h>
 #include <sys/utsname.h>
+
+#ifndef MSG_NOSIGNAL
+# define MSG_NOSIGNAL	0
+#endif
 
 #include "logging.h"
 #include "job.h"

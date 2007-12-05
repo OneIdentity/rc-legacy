@@ -35,6 +35,7 @@ AC_PROG_LIBTOOL
 
 AC_CHECK_HEADERS([unistd.h stdint.h sys/types.h sys/signal.h ifaddrs.h])
 AC_CHECK_HEADERS([ctype.h sys/resource.h sys/socket.h sys/select.h sys/vfs.h])
+AC_CHECK_HEADERS([sys/wait.h])
 AC_CHECK_HEADERS([netinet/in.h], [], [],
 [#if HAVE_SYS_TYPES_H
 # include <sys/types.h>
@@ -126,6 +127,7 @@ AC_CHECK_FUNCS([snprintf vsnprintf vasprintf asprintf getcwd getwd])
 AC_CHECK_FUNCS([getrusage strsignal gettimeofday])
 AC_CHECK_FUNCS([getaddrinfo getnameinfo inet_ntop inet_ntoa])
 AC_CHECK_FUNCS([strndup mmap strlcpy])
+AC_CHECK_FUNCS([putenv setenv getloadavg])
 
 AC_CHECK_DECLS([snprintf, vsnprintf, vasprintf, asprintf, strndup])
 

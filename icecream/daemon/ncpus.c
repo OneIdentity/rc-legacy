@@ -56,7 +56,11 @@ int dcc_ncpus(int *ncpus)
         *ncpus = psd.psd_proc_cnt;
         return 0;
     } else {
+#ifdef have_rs_log_error
         rs_log_error("pstat_getdynamic failed: %s", strerror(errno));
+#else
+        fprintf(stderr, "pstat_getdynamic failed: %s", strerror(errno));
+#endif
         *ncpus = 1;
         return EXIT_DISTCC_FAILED;
     }

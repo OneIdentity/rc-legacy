@@ -42,6 +42,10 @@
 #define IF_NAMESIZE IFNAMSIZ
 #endif
 
+#if __hpux__
+# define ifr_netmask ifr_addr
+#endif
+
 #ifdef SIOCGIFCONF
 
 #define old_siocgifconf 0

@@ -25,7 +25,9 @@
 #include "assert.h"
 #include "exitcode.h"
 #include "logging.h"
+#if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
 #include <algorithm>
 
 #ifdef __FreeBSD__
@@ -57,6 +59,8 @@
 #include <string>
 
 #include "comm.h"
+#include "wait4.h"
+#include "setenv.h"
 
 using namespace std;
 

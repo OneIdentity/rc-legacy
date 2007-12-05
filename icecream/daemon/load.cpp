@@ -24,6 +24,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+#include "getloadavg.h"
+
 #if defined( __FreeBSD__ ) || defined( MACOS )
 #define USE_SYSCTL
 #endif

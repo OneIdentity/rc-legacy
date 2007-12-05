@@ -29,13 +29,17 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
 #include <sys/signal.h>
 #include <unistd.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <time.h>
+#if HAVE_GETOPT_H
 #include <getopt.h>
+#endif
 #include <string>
 #include <list>
 #include <map>
@@ -47,6 +51,7 @@
 #include "logging.h"
 #include "job.h"
 #include "config.h"
+#include "daemon.h"
 
 #define DEBUG_SCHEDULER 0
 
@@ -1746,6 +1751,9 @@ main (int argc, char * argv[])
   string logfile;
 
   while ( true ) {
+#if !HAVE_GETOPT_LONG
+# define getopt_long(c,v,f,x,y) getopt(c,v,f)
+#else
     int option_index = 0;
     static const struct option long_options[] = {
       { "netname", 1, NULL, 'n' },
@@ -1756,16 +1764,19 @@ main (int argc, char * argv[])
       { "allow-run-as-user", 1, NULL, 'u' },
       { 0, 0, 0, 0 }
     };
+#endif
 
     const int c = getopt_long( argc, argv, "n:p:hl:vdr", long_options, &option_index );
     if ( c == -1 ) break; // eoo
 
     switch ( c ) {
+#if 0
     case 0:
       {
         ( void ) long_options[option_index].name;
       }
       break;
+#endif
     case 'd':
       detach = true;
       break;

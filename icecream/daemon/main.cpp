@@ -32,7 +32,9 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <netdb.h>
+#if HAVE_GETOPT_H
 #include <getopt.h>
+#endif
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -89,6 +91,7 @@
 #include <comm.h>
 #include "load.h"
 #include "environment.h"
+#include "daemon.h"
 
 const int PORT = 10245;
 
@@ -1327,6 +1330,7 @@ int main( int argc, char ** argv )
     bool runasuser = false;
 
     while ( true ) {
+#if HAVE_FUNC_GETOPT_LONG
         int option_index = 0;
         static const struct option long_options[] = {
             { "netname", 1, NULL, 'n' },
@@ -1343,11 +1347,16 @@ int main( int argc, char ** argv )
             { "cache-limit", 1, NULL, 0},
             { 0, 0, 0, 0 }
         };
+#else
+# define getopt_long(c,v,f,x,y) getopt(c,v,f)
+#endif
 
         const int c = getopt_long( argc, argv, "N:n:m:l:s:whvdrb:u:", long_options, &option_index );
         if ( c == -1 ) break; // eoo
 
         switch ( c ) {
+#if HAVE_FUNC_GETOPT_LONG
+	/* XXX these should be moved to single char options */
         case 0:
         {
             string optname = long_options[option_index].name;
@@ -1377,6 +1386,7 @@ int main( int argc, char ** argv )
 
         }
         break;
+#endif
         case 'd':
             detach = true;
             break;

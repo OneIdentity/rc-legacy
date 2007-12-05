@@ -34,6 +34,7 @@
 
 #include <comm.h>
 #include "client.h"
+#include "wait4.h"
 
 using namespace std;
 
