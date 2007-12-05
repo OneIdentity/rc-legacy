@@ -14,6 +14,7 @@ fake-install: $(destdir)$(prefix)/bin/icecc
 $(destdir)$(prefix)/bin/icecc: $(builddir)/client/icecc
 	rm -rf $(destdir)
 	cd $(builddir) && $(MAKE) DESTDIR=$(destdir) install
+fake-install-doc: $(builddir)/doc/icecc.1
 	cd $(builddir)/doc && for i in $(srcdir)/doc/man-*.docbook; do \
 		f=`echo $$i|sed -e 's,^.*/man-,,;s,.docbook$$,,'`;\
 		sect=`echo $$f|sed -e 's,.*\.,,'`; \
@@ -24,6 +25,8 @@ $(destdir)$(prefix)/bin/icecc: $(builddir)/client/icecc
 build: $(builddir)/client/icecc
 $(builddir)/client/icecc: $(builddir)/Makefile
 	cd $(builddir) && $(MAKE)
+build-doc: $(builddir)/doc/icecc.1
+$(builddir)/doc/icecc.1: $(builddir)/Makefile
 	mkdir -p $(builddir)/doc
 	cd $(builddir)/doc && for i in $(srcdir)/doc/man-*.docbook; do \
 	    docbook-to-man $$i \
@@ -38,7 +41,7 @@ $(builddir)/Makefile: $(srcdir)/configure
 
 #-- this nonsense is needed because icecream is mispackaged
 prep: $(OURSRC)
-	cd $(srcdir) && autoreconf --install
+	cd $(srcdir) && $(MAKE) -f Makefile.cvs
 	test -r $(srcdir)/configure 
 	touch $(srcdir)/configure
 
