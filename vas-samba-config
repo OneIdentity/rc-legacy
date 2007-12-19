@@ -11,14 +11,14 @@ sbindir=/opt/quest/sbin
 
 DEBUG=0
 OPTFORCE=no
-STARTSVC=yes
+RESTART_SAMBA=yes
 
 # Process command line arguments
 opterr=false
 while test $# -gt 0; do
     case "$1" in
 	-f) OPTFORCE="force"; shift;;
-	-n) STARTSVC="no"; shift;;
+	-n) RESTART_SAMBA="no"; shift;;
 	-s) SAMBACONF="$2"; shift; shift;;
 	-d) DEBUG=1; shift;;
 	--) shift; break;;
@@ -248,16 +248,26 @@ case `uname -s` in
 	*)	initdir=/etc/init.d;;
 esac
 
-if [ $STARTSVC = yes ]; then
-    echo "Stopping Samba services..."
+stopsvc () {
     if [ $initdir = SRC ]; then
-	stopsrc -s quest-samba
+	stopsrc -s $1
     else
-	for script in winbindd-quest smbd-quest vasidmapd nmbd-quest; do
-	    test -x $initdir/$script && $initdir/winbindd-quest stop >/dev/null
-	done
+	test -x $initdir/$1 && $initdir/$1 stop
     fi
-fi
+}
+
+startsvc () {
+    if [ $initdir = SRC ]; then
+	startsrc -s $1
+    else
+	test -x $initdir/$1 && $initdir/$1 start
+    fi
+}
+
+
+[ $RESTART_SAMBA = yes ] && stopsvc quest-samba
+stopsvc vasidmapd
+
 
 ##########################
 # Verify/Modify smb.conf #
@@ -496,17 +506,7 @@ if [ "$PWDCHANGE" = "yes" ]; then
 fi
 
 ### Finally restart samba services
-if [ "$STARTSVC" = yes ]; then
-    echo "Starting Samba services..."
-    if [ $initdir = SRC ]; then
-	startsrc -s quest-samba
-    else
-	for script in vasidmapd nmbd-quest smbd-quest winbindd-quest; do
-	    if test -x $initdir/$script; then
-		$initdir/$script start
-	    fi
-	done
-    fi
-fi
+startsvc vasidmapd
+[ $RESTART_SAMBA = yes ] && startsvc quest-samba
 
 exit 0
