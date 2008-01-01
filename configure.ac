@@ -1,7 +1,7 @@
 # (c) 2006 Quest Software, Inc. All rights reserved.
 
 AC_INIT([quest-vasidmap],
-	[0.9.11.]esyscmd((svnversion . /trunk||echo 0)|tr : _|tr -d \\012),
+	[0.10.0.]esyscmd((svnversion . /trunk||echo 0)|tr : _|tr -d \\012),
 	[support@quest.com])
 AM_INIT_AUTOMAKE()
 AC_CONFIG_SRCDIR([vasidmap.c])
