@@ -10,6 +10,7 @@ bindir=/opt/quest/bin
 sbindir=/opt/quest/sbin
 
 DEBUG=0
+VERSION=false
 OPTFORCE=no
 RESTART_SAMBA=yes
 
@@ -17,10 +18,11 @@ RESTART_SAMBA=yes
 opterr=false
 while test $# -gt 0; do
     case "$1" in
+	-d) DEBUG=1; shift;;
 	-f) OPTFORCE="force"; shift;;
 	-n) RESTART_SAMBA="no"; shift;;
 	-s) SAMBACONF="$2"; shift; shift;;
-	-d) DEBUG=1; shift;;
+	-V) VERSION=true; shift;;
 	--) shift; break;;
 	-*) echo "Unknown option '$1'" >&2; shift; opterr=true;;
 	*)  break;;
@@ -30,8 +32,13 @@ if test $# -ne 0; then	    # Expect no extra arguments
     opterr=true
 fi
 if $opterr; then	    # Show usage on option error
-    echo "Usage: $0 [-f] [-n] [-s /path/smb.conf]" >&2
+    echo "Usage: $0 [-d] [-f] [-n] [-V] [-s /path/smb.conf]" >&2
     exit 1
+fi
+
+if $VERSION; then
+    echo "@VERSION@"
+    exit 0
 fi
 
 # Some helpful regular expressions used in the check_* functions:
