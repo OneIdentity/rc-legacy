@@ -11,6 +11,7 @@ AC_CONFIG_HEADERS([config.h])
 AC_PREFIX_DEFAULT([/opt/quest])
 
 AC_PROG_CC
+AC_PROG_SED
 AC_C_CONST
 AC_HEADER_STDC
 AC_CHECK_HEADERS([grp.h unistd.h pwd.h sys/socket.h sys/un.h errno.h netinet/in.h err.h])

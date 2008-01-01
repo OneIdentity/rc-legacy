@@ -11,6 +11,12 @@ dist_bin_SCRIPTS=	vasidmap-config vas-samba-config
 dist_sbin_SCRIPTS=	vas-set-samba-password
 man_MANS =              vasidmapd.8 vasidmap.1
 
+subst = $(SED) -e 's,[@]VERSION[@],$(VERSION),g'
+
+vas-samba-config: vas-samba-config.in
+	$(subst) <$^ >$@
+	chmod +x $@
+
 vasidmap_LDADD  =   $(LIBOBJS)
 vasidmapd_LDADD =   $(LIBOBJS)
 
@@ -18,6 +24,7 @@ TESTS=			rc.test
 TESTS_ENVIRONMENT=	$(SHELL)
 
 EXTRA_DIST=	vasidmap.pp LICENCE rc.test $(man_MANS) pp
+EXTRA_DIST+=	vas-samba-config.in
 
 package: pp vasidmap.pp
 	test -n "$(DESTDIR)"
