@@ -94,7 +94,7 @@ verbose "Obtaining host/ key -> $KRB5CCNAME"
 #set -x
 test -n "$debug" && 
   ${SUDO:-sudo} /bin/sh -c 'echo inside sudo KRB5CCNAME is $KRB5CCNAME'
-${SUDO:-sudo} $vastool kinit host/ || fatal "Can't obtain host tgt"
+${SUDO:-sudo} env KRB5CCNAME="${KRB5CCNAME}" $vastool kinit host/ || fatal "Can't obtain host tgt"
 ${SUDO:-sudo} cat ${krb5ccfile} > ${krb5ccfile}.x || fatal "Can't get host ccache"
 ${SUDO:-sudo} rm -f ${krb5ccfile}
 mv ${krb5ccfile}.x ${krb5ccfile}
@@ -294,7 +294,7 @@ if $installed; then
     verbose "(using running vasidmapd service)"
 else
     desc "start vasidmapd"
-        ${SUDO:-sudo} ${builddir}/vasidmapd -F -A $host -p $port $debug &
+        ${SUDO:-sudo} env - ${builddir}/vasidmapd -F -A $host -p $port $debug &
         pid=$!
         trap "rm -rf ${tmpdir}; ${SUDO:-sudo} kill $pid && wait 2>/dev/null" 0 
         sleep 1
