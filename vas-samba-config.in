@@ -6,8 +6,10 @@ SAMBACONF="/etc/opt/quest/samba/smb.conf"
 VASCONF="/etc/opt/quest/vas/vas.conf"
 PWDCHGSCRIPT="/opt/quest/sbin/vas-set-samba-password"
 
-bindir=/opt/quest/bin
-sbindir=/opt/quest/sbin
+bindir="@bindir@"
+sbindir="@sbindir@"
+
+samba_prefix=/opt/quest
 
 DEBUG=0
 VERSION=false
@@ -22,6 +24,7 @@ while test $# -gt 0; do
 	-f) OPTFORCE="force"; shift;;
 	-n) RESTART_SAMBA="no"; shift;;
 	-s) SAMBACONF="$2"; shift; shift;;
+	-S) samba_prefix="$2"; shift; shift;;
 	-V) VERSION=true; shift;;
 	--) shift; break;;
 	-*) echo "Unknown option '$1'" >&2; shift; opterr=true;;
@@ -32,7 +35,7 @@ if test $# -ne 0; then	    # Expect no extra arguments
     opterr=true
 fi
 if $opterr; then	    # Show usage on option error
-    echo "Usage: $0 [-d] [-f] [-n] [-V] [-s /path/smb.conf]" >&2
+    echo "Usage: $0 [-d] [-f] [-n] [-V] [-s /path/smb.conf] [-S samba-prefix]" >&2
     exit 1
 fi
 
@@ -280,8 +283,11 @@ stopsvc vasidmapd
 # Verify/Modify smb.conf #
 ##########################
 
-SAMBAVERSION=`$sbindir/smbd --version | 
+echo "Checking version of $samba_prefix/sbin/smbd ..."
+
+SAMBAVERSION=`"$samba_prefix"/sbin/smbd --version | 
     sed -e 's/^Version //;s/-Quest-/./;s/[^0-9.][^.]*//g'`
+echo "   $SAMBAVERSION"
 
 echo "Checking $SAMBACONF..."
 
@@ -413,7 +419,7 @@ rm -f $NEWTEXT
 
 #set a fake ldap password
 #(this will change with the new IDMAP subsystem in newer versions of Samba)
-$bindir/smbpasswd -w secret > /dev/null 2>&1
+"$samba_prefix"/bin/smbpasswd -w secret > /dev/null 2>&1
 
 ##########################
 # Verify/Modify vas.conf #
@@ -488,7 +494,7 @@ fi
 echo "Detecting domain SID..."
 DOMUSER=`${VASTOOL} list users | awk -F: '{print $1;exit}'`
 DOMSID=`$bindir/vasidmap -u -n "$DOMUSER" | cut -d '-' -f 1-7`
-$bindir/net -s ${SAMBACONF} setdomainsid "$DOMSID"
+"$samba_prefix"/bin/net -s ${SAMBACONF} setdomainsid "$DOMSID"
 
 if [ "$PWDCHANGE" = "yes" ]; then
 
@@ -508,7 +514,7 @@ if [ "$PWDCHANGE" = "yes" ]; then
     fi
 
     # Test that the join worked ok
-    $bindir/net -s ${SAMBACONF} ads testjoin ||
+    "$samba_prefix"/bin/net -s ${SAMBACONF} ads testjoin ||
 	echo "** net ads testjoin failed" >&2
 fi
 

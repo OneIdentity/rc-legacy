@@ -11,7 +11,9 @@ dist_bin_SCRIPTS=	vasidmap-config vas-samba-config
 dist_sbin_SCRIPTS=	vas-set-samba-password
 man_MANS =              vasidmapd.8 vasidmap.1
 
-subst = $(SED) -e 's,[@]VERSION[@],$(VERSION),g'
+subst = $(SED) -e 's,[@]VERSION[@],$(VERSION),g' \
+	       -e 's,[@]bindir[@],$(bindir),g' \
+	       -e 's,[@]sbindir[@],$(sbindir),g'
 
 vas-samba-config: vas-samba-config.in
 	$(subst) <$^ >$@
