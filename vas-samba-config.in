@@ -494,6 +494,14 @@ fi
 echo "Detecting domain SID..."
 DOMUSER=`${VASTOOL} list users | awk -F: '{print $1;exit}'`
 DOMSID=`$bindir/vasidmap -u -n "$DOMUSER" | cut -d '-' -f 1-7`
+if test -z "$DOMSID"; then
+    cat <<-.
+	There was a problem obtaining the domain SID from VAS.
+	Please check that VAS is properly configured, and that
+	domain controllers are available.
+.
+    exit 1
+fi
 "$samba_prefix"/bin/net -s ${SAMBACONF} setdomainsid "$DOMSID"
 
 if [ "$PWDCHANGE" = "yes" ]; then
