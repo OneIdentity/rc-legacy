@@ -1,3 +1,11 @@
+0.10.0
+* Improve messages for support
+* Detect VAS connection problems
+* Handle cases where SUDO resets the environment
+* Add -V flag to get version
+* Add flags to support non-quest-samba
+* Improve the way that the service daemons start
+
 0.9.11
 * bug 240: support new idmap parameter names for Samba 3.0.25
 * bug 254: vas-samba-config properly starts/stops services on HP-UX
