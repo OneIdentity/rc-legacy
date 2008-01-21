@@ -12,7 +12,7 @@ sbindir="@sbindir@"
 samba_prefix=/opt/quest
 
 DEBUG=0
-VERSION=false
+OPTVERSION=false
 OPTFORCE=no
 RESTART_SAMBA=yes
 
@@ -25,7 +25,7 @@ while test $# -gt 0; do
 	-n) RESTART_SAMBA="no"; shift;;
 	-s) SAMBACONF="$2"; shift; shift;;
 	-S) samba_prefix="$2"; shift; shift;;
-	-V) VERSION=true; shift;;
+	-V) OPTVERSION=true; shift;;
 	--) shift; break;;
 	-*) echo "Unknown option '$1'" >&2; shift; opterr=true;;
 	*)  break;;
@@ -39,7 +39,8 @@ if $opterr; then	    # Show usage on option error
     exit 1
 fi
 
-if $VERSION; then
+# When run with -V just print the version and exit
+if $OPTVERSION; then
     echo "@VERSION@"
     exit 0
 fi
@@ -125,10 +126,16 @@ else
 	echon () { echo3 "$*"; }
 fi
 
-# die <text>
+# die [text]
 #   Prints a message to standard error, and exits the script in error
+#   If no argument is given, copies standard input to stderr
+
 die () {
-	echo "ERROR: $*" >&2
+	if test $# -eq 0; then
+	    cat >&2
+	else
+	    echo "ERROR: $*" >&2
+	fi
 	exit 1
 }
 
@@ -187,65 +194,56 @@ is_lt () {
 echo "Checking for VAS..."
 
 # Determine VAS Version
-VERSION=`${VASTOOL} -v |grep Version |cut -d " " -f 4`
-VMAJOR=`echo $VERSION | cut -d "." -f 1`
-VMINOR=`echo $VERSION | cut -d "." -f 2`
-VRELEASE=`echo $VERSION | cut -d "." -f 3`
-VBUILD=`echo $VERSION | cut -d "." -f 4`
+VERSION=`${VASTOOL} -v |sed -e 's/^[^0-9]*\([0-9][0-9.]*\).*/\1/;1q'`
+echo "  $VERSION"
+IFS=. read VMAJOR VMINOR VRELEASE VBUILD <<.
+$VERSION
+.
 
-if [ "$VMAJOR" != "3" ]; then
-	echo "ERROR: $0 works only with VAS version 3"
-	exit 1
+if [ $VMAJOR -lt 3 ]; then
+	die "Requires VAS version 3 or later (current VAS version is $VERSION)"
 fi
 
 # First of all check if we are joined
-${VASTOOL} -u host/ auth -S host/ > /dev/null 2>&1
-if [ "$?" != "0" ]; then
-	echo "ERROR: The machine does not appear to be joined to any domain"
-	echo "or this script is not being run as root."
-	echo "Please verify the machine is correctly joined and then re-run"
-	echo "$0 to complete the installation"
-	echo "and configuration of both SAMBA and VAS."
-	exit 1
-fi
+${VASTOOL} -u host/ auth -S host/ > /dev/null || die <<-.
+	ERROR: The machine does not appear to be joined to any domain
+	or this script is not being run as root.
+	Please verify the machine is correctly joined and then re-run
+	$0 to complete the installation
+	and configuration of both SAMBA and VAS.
+.
 
 #Gather configuration data
 # Find the REALM
 DOMAIN=`${VASTOOL} -u host/ info domain`
-if [ "$DOMAIN" = "" ]; then
-        echo "ERROR: Unable to determine the current domain (realm)."
-	echo "Is this machine properly joined to the domain?"
-	exit 1
-fi
+test -n "$DOMAIN" || die <<-.
+        ERROR: Unable to determine the current domain (realm).
+	Is this machine properly joined to the domain?
+.
 REALM=`echo ${DOMAIN} | tr '[a-z]' '[A-Z]'`
 
 # Find the pre-Windows 2000 Domain Name (Workgroup)
 DOMAINDN=`${VASTOOL} -u host/ info domain-dn`
-if [ "$DOMAINDN" = "" ]; then
-	echo "ERROR: Unable to determine current domain information."
-	echo "Is this machine properly joined to the domain?"
-	exit 1
-fi
+test -n "$DOMAINDN" || die <<-.
+	ERROR: Unable to determine current domain information.
+	Is this machine properly joined to the domain?
+.
 
-CONFPART=`${VASTOOL} -u host/ search -s base -b "" -q "(objectclass=*)" namingContexts | grep -i "^CN=Configuration"`
-if [ "$CONFPART" = "" ]; then
-        echo "ERROR: Unable to find domain configuration information."
-	echo "Is this machine properly joined to the domain?"
-	exit 1
-fi
+CONFPART=`${VASTOOL} -u host/ search -s base -b "" -q "(objectclass=*)" namingContexts | grep -i "^CN=Configuration"` || die <<-.
+        ERROR: Unable to find domain configuration information.
+	Is this machine properly joined to the domain?
+.
 
 WORKGROUP=`${VASTOOL} -u host/ search -U"DC://@${DOMAIN}" -b ${CONFPART} -q \(ncName=${DOMAINDN}\) nETBIOSName`
-if [ "$WORKGROUP" = "" ]; then
-        echo "ERROR: Unable to determine the domain's pre-Windows 2000 name."
-	echo "Is this machine properly joined to the domain?"
-	exit 1
-fi
+test -n "$WORKGROUP" || die <<-.
+        ERROR: Unable to determine the domain's pre-Windows 2000 name.
+	Is this machine properly joined to the domain?
+.
 
-if [ ! -f ${SAMBACONF} ]; then
-	echo "ERROR: ${SAMBACONF} is missing."
-	echo "Please verify that the quest-samba package is installed."
-	exit 1
-fi
+test -f ${SAMBACONF} || die <<-.
+	ERROR: ${SAMBACONF} is missing.
+	Please verify that the quest-samba package is installed.
+.
 
 TODAY=`date +"%Y%m%d"`
 
@@ -468,7 +466,7 @@ rm -f $NEWTEXT
 
 
 if [ $DEBUG -gt 0 ]; then
-	echo "Exit before changing the password during debug"
+	echo "Exit before changing the password during debug" >&2
 	exit 0
 fi
 
@@ -494,14 +492,13 @@ fi
 echo "Detecting domain SID..."
 DOMUSER=`${VASTOOL} list users | awk -F: '{print $1;exit}'`
 DOMSID=`$bindir/vasidmap -u -n "$DOMUSER" | cut -d '-' -f 1-7`
-if test -z "$DOMSID"; then
-    cat <<-.
+test -n "$DOMSID" || die <<-.
 	There was a problem obtaining the domain SID from VAS.
 	Please check that VAS is properly configured, and that
 	domain controllers are available.
 .
-    exit 1
-fi
+echo "  $DOMSID"
+
 "$samba_prefix"/bin/net -s ${SAMBACONF} setdomainsid "$DOMSID"
 
 if [ "$PWDCHANGE" = "yes" ]; then
@@ -522,6 +519,7 @@ if [ "$PWDCHANGE" = "yes" ]; then
     fi
 
     # Test that the join worked ok
+    echo "Testing SAMBA is joined to Active Directory..."
     "$samba_prefix"/bin/net -s ${SAMBACONF} ads testjoin ||
 	echo "** net ads testjoin failed" >&2
 fi
