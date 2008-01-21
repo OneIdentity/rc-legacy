@@ -196,9 +196,11 @@ echo "Checking for VAS..."
 # Determine VAS Version
 VERSION=`${VASTOOL} -v |sed -e 's/^[^0-9]*\([0-9][0-9.]*\).*/\1/;1q'`
 echo "  $VERSION"
+saveIFS="$IFS"
 IFS=. read VMAJOR VMINOR VRELEASE VBUILD <<.
 $VERSION
 .
+IFS="$saveIFS"
 
 if [ $VMAJOR -lt 3 ]; then
 	die "Requires VAS version 3 or later (current VAS version is $VERSION)"
