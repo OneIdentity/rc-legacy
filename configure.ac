@@ -1,7 +1,7 @@
 # (c) 2006 Quest Software, Inc. All rights reserved.
 
 AC_INIT([authtest],
-	[1.1.0.]esyscmd((svnversion . /trunk || echo 0)|tr : _|tr -d \\012),
+	[1.2.0.]esyscmd((svnversion . /trunk || echo 0)|tr : _|tr -d \\012),
 	[david.leonard@quest.com])
 AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([authtest.h])
