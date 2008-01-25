@@ -39,12 +39,14 @@ main(int argc, char **argv)
     authtest_init();
 
     error = 0;
-    while ((ch = getopt(argc, argv, "cf:t:")) != -1)
+    while ((ch = getopt(argc, argv, "cf:nt:")) != -1)
 	switch (ch) {
 	    case 'f':
 		req_flags |= names2flags(optarg); break;
 	    case 'c':
 		conf_req = 1; break;	/* need conf in wrap() */
+	    case 'n':
+		base64_whitespace = 0; break;
 	    case 't':
 		if (strcmp(optarg, "none") == 0)
 		    target_name_type = GSS_C_NO_OID;

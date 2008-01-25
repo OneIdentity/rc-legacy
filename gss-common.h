@@ -28,3 +28,5 @@ void writeb64_and_release(gss_buffer_t buf);
 /* Prints an OID (or its symbolic name) */
 const char *oid2str(gss_OID oid);
 
+/* Enables whitespace be used to print nice base64 output. Default is on */
+extern int base64_whitespace;
