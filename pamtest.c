@@ -193,6 +193,8 @@ convfn(int n, struct pam_message **m, struct pam_response **r, void *data)
 
     for (i = 0; i < n; i++) {
 	const char *msg = m[i]->msg;
+	struct pam_response *resp = &(*r)[i];
+	memset(resp, 0, sizeof *resp);
 	if (msg == NULL) {
 	    debug_err("  NULL pam_message field #%d", i);
 	    msg = "(null)";
@@ -206,7 +208,7 @@ convfn(int n, struct pam_message **m, struct pam_response **r, void *data)
 		} else
 		    s = getpass(m[i]->msg);
 		if (!s) { fprintf(stderr, "  eof from getpass()\n"); exit(1); }
-		r[i]->resp = strdup(s);
+		resp->resp = strdup(s);
 		break;
 	    case PAM_PROMPT_ECHO_ON:
 		debug_nonl("  {style=prompt_echo_on}");
@@ -218,9 +220,9 @@ convfn(int n, struct pam_message **m, struct pam_response **r, void *data)
 		    s = fgets(buf, sizeof buf, stdin);
 		if (!s) { debug_err("  eof from fgets()"); exit(1); }
 		l = strlen(s);
-		r[i]->resp = strdup(s);
+		resp->resp = strdup(s);
 		if (l > 0 && s[l-1] == '\n')
-		    r[i]->resp[l-1] = '\0';
+		    resp->resp[l-1] = '\0';
 		break;
 	    case PAM_ERROR_MSG:
 		debug_nonl("  {style=error_msg}");
