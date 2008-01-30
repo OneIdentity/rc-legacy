@@ -242,6 +242,24 @@ convfn(int n, struct pam_message **m, struct pam_response **r, void *data)
     return PAM_SUCCESS;
 }
 
+int expected_conv = 0;
+
+int
+convfn1(int n, struct pam_message **m, struct pam_response **r, void *data)
+{
+    if (expected_conv != 1)
+	debug_err("PAM is calling wrong conv function");
+    return convfn(n, m, r, data);
+}
+
+int
+convfn2(int n, struct pam_message **m, struct pam_response **r, void *data)
+{
+    if (expected_conv != 2)
+	debug_err("PAM is calling wrong conv function");
+    return convfn(n, m, r, data);
+}
+
 /*------------------------------------------------------------
  * main
  */
@@ -257,7 +275,8 @@ main(int argc, char *argv[])
     const char *ttyn = DEFAULT;
     const char *rhost = DEFAULT;
     pam_handle_t *pamh;
-    struct pam_conv conv = { convfn,  NULL };
+    struct pam_conv conv1 = { convfn1,  NULL };
+    struct pam_conv conv2 = { convfn2,  NULL };
     char *name = NULL;
 
 #ifdef HAVE_SYSLOG_H
@@ -312,7 +331,8 @@ main(int argc, char *argv[])
 
     /* pam_start() */
     pamh = NULL;
-    CHECK(pamh, pam_start(svcname, user, &conv, &pamh));
+    expected_conv = 1;
+    CHECK(pamh, pam_start(svcname, user, &conv1, &pamh));
 
     /* run as unprivileged if -p is given */
     if (pflag && privsep_fork(privsep_uid) == PRIVSEP_PARENT) {
@@ -346,9 +366,13 @@ main(int argc, char *argv[])
     error = LOG(pamh, pam_acct_mgmt(pamh, 0));
 
     /* pam_chauthtok */
-    if (error == PAM_NEW_AUTHTOK_REQD)
+    if (error == PAM_NEW_AUTHTOK_REQD) {
+	/* Try changing the conversation function */
+	expected_conv = 2;
+	CHECK(pamh, pam_set_item(pamh, PAM_CONV, &conv2));
+	/* Now try changing the password */
 	CHECK(pamh, pam_chauthtok(pamh, 0));
-    else if (error != PAM_SUCCESS)
+    } else if (error != PAM_SUCCESS)
 	exit(1);
 
     if (pflag)
