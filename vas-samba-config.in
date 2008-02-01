@@ -275,7 +275,7 @@ startsvc () {
 }
 
 
-[ $RESTART_SAMBA = yes ] && stopsvc quest-samba
+[ $RESTART_SAMBA = yes ] && stopsvc samba-quest
 stopsvc vasidmapd
 
 
@@ -528,6 +528,6 @@ fi
 
 ### Finally restart samba services
 startsvc vasidmapd
-[ $RESTART_SAMBA = yes ] && startsvc quest-samba
+[ $RESTART_SAMBA = yes ] && startsvc samba-quest
 
 exit 0
