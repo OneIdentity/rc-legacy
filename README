@@ -1,0 +1,12 @@
+
+Instructions for building vasidmap from source:
+
+    ./configure
+    make
+    make package
+
+If 'pp' doesn't understand your system and can't create a package, you can 
+try installing the software directly with
+
+    make install
+

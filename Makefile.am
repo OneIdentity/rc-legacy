@@ -27,10 +27,13 @@ TESTS_ENVIRONMENT=	$(SHELL)
 
 EXTRA_DIST=	vasidmap.pp LICENCE rc.test $(man_MANS) pp
 EXTRA_DIST+=	vas-samba-config.in
+EXTRA_DIST+=	README
 
 package: pp vasidmap.pp
-	test -n "$(DESTDIR)"
-	$(srcdir)/pp --destdir=$(DESTDIR) \
+	DESTDIR="$${TMPDIR-/tmp}/vasidmap.root"; \
+	rm -rf "$$DESTDIR"; \
+	$(MAKE) install DESTDIR="$$DESTDIR" && \
+	$(srcdir)/pp --destdir="$$DESTDIR" \
 	    --install-script=install-vasidmap \
 	    $(srcdir)/vasidmap.pp \
 	    version="$(VERSION)" \

@@ -1,3 +1,7 @@
+?.?.?
+* bug 479: 'package' target should choose its own DESTDIR
+* bug 474: correct 'samba-quest' group script name
+
 0.10.0
 * Improve messages for support
 * Detect VAS connection problems
