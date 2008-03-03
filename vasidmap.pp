@@ -16,6 +16,7 @@
     $bindir/vasidmap
     $sbindir/vasidmapd
     $sbindir/vas-set-samba-password
+    $libexecdir/vasidmap-krb5-config
     $mandir/man8/vasidmapd.8
     $mandir/man1/vasidmap.1
 

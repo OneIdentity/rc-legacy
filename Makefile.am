@@ -8,6 +8,7 @@ AM_CFLAGS =  $(VAS_CFLAGS)
 sbin_PROGRAMS=		vasidmapd
 bin_PROGRAMS=		vasidmap
 dist_bin_SCRIPTS=	vasidmap-config vas-samba-config
+dist_libexec_SCRIPTS=	vasidmap-krb5-config
 dist_sbin_SCRIPTS=	vas-set-samba-password
 man_MANS =              vasidmapd.8 vasidmap.1
 
@@ -39,4 +40,5 @@ package: pp vasidmap.pp
 	    version="$(VERSION)" \
 	    bindir=$(bindir) \
 	    sbindir=$(sbindir) \
-	    mandir=$(mandir)
+	    mandir=$(mandir) \
+	    libexecdir=$(libexecdir)

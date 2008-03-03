@@ -1,0 +1,339 @@
+#!/bin/sh
+# (c) 2008 Quest Software, Inc. All rights reserved.
+
+VASTOOL="/opt/quest/bin/vastool"
+VASCONF="/etc/opt/quest/vas/vas.conf"
+VASKEYTAB="/etc/opt/quest/vas/host.keytab"
+
+OS=`uname -s`
+case ${OS} in
+	HP-UX)  KRB5CONF=/etc/krb5.conf;;
+	Linux)	KRB5CONF=/etc/krb5.conf;;
+	SunOS)	KRB5CONF=/etc/krb5/krb5.conf;;
+	AIX)	KRB5CONF=/opt/pware/etc/krb5.conf;;
+	*)	KRB5CONF=/etc/krb5.conf;;
+esac
+
+DEBUG=0
+VERSION=false
+OPTFORCE=no
+
+# Process command line arguments
+opterr=false
+while test $# -gt 0; do
+    case "$1" in
+	-d) DEBUG=1; shift;;
+	-f) OPTFORCE="force"; shift;;
+	-s) KRB5CONF="$2"; shift; shift;;
+	-V) VERSION=true; shift;;
+	--) shift; break;;
+	-*) echo "Unknown option '$1'" >&2; shift; opterr=true;;
+	*)  break;;
+    esac
+done
+if test $# -ne 0; then	    # Expect no extra arguments
+    opterr=true
+fi
+if $opterr; then	    # Show usage on option error
+    echo "Usage: $0 [-d] [-f] [-V] [-s /path/krb5.conf]" >&2
+    exit 1
+fi
+
+if $VERSION; then
+    echo "VERSION"
+    exit 0
+fi
+
+# Some helpful regular expressions used in the check_* functions:
+SP='[ 	]'
+LSP='\[ 	\]'
+META='[/*+.()]'
+METASUBST='s/'"$META"'/\\&/g'
+
+
+# check_parm <param-name> <config-file>
+#   Checks if the parameter is defined in the config file, by searching
+#   for any line of the form
+#         param-name = ...
+#   Returns 0 only if a parameter definition is found
+check_parm () {
+	PREG=`echo "$1" | sed -e "s/$SP$SP*/$LSP$LSP*/g"`
+	grep -i "^$SP*$PREG$SP*=" "$2" >/dev/null
+}
+
+
+# check_and_fix <param-name> <correct-value> <config-file>
+#   Checks if the parameter is defined incorrectly in the config file, and
+#   if so, replaces it. If the parameter is not defined, no action is taken.
+#   Returns 0 if the parameter was defined and/or corrected.
+#   Returns 1 if the parameter was not defined in the config-file.
+#   Exits the script if there is an error correcting the config-file
+check_and_fix () {
+	PREG=`echo "$1" | sed -e "s/$SP$SP*/$LSP$LSP*/g"`
+	VALUE=`echo "$2" | sed -e "$METASUBST"`
+echo $PREG , $VALUE in check_and_fix
+	CONFFILE=$3
+
+	if grep -i "^$SP*$PREG$SP*=$SP*${VALUE}$SP*" "$3" >/dev/null; then
+		# parameter is defined, correctly
+		return 0
+	elif grep -i "^$SP*$PREG$SP*=" "$3" > /dev/null; then
+		# parameter is defined, incorrectly
+		oldvalue=`sed -n -e "s/^$SP*${PREG}$SP*=$SP*//p" < "$3"`
+		echo "Correcting parameter '$1' from '$oldvalue' to '$2'"
+		sed -e "/^$SP*${PREG}$SP*=/s/=.*/= ${VALUE}/" \
+                            < "$3" > "$3.new" || exit 1
+		mv "$3.new" "$3" || exit 1
+		return 0
+	else
+		# parameter was not defined at all
+		return 1
+	fi
+}
+
+# check_and_rename <old-param-name> <new-param-name> <config-file>
+#   Replaces definitions of old-param-name with new-param-name.
+#   Returns 0 if a renaming occurred.
+#   Exits the script if updating config-file fails.
+check_and_rename () {
+	PREG=`echo "$1" | sed -e "s/$SP$SP*/$LSP$LSP*/g"`
+	PNEW="$2"
+	CONFFILE="$3"
+
+	if grep -i "^$SP*$PREG$SP*=" "$3" >/dev/null; then
+		echo "Renaming parameter '$1' to '$2'"
+		# behold, the mighty power of sed!
+		sed "/^$SP*$PREG$SP*=/{h;s/^/#/p;x;s/$PREG/$PNEW/;}" \
+			    < "$3" > "$3.new" || exit 1
+		mv "$3.new" "$3" || exit 1
+		return 0
+	else
+		return 1
+	fi
+}
+
+# echon <text>
+#   Emits text without a newline.
+#   The code below figure out the right way to do echon.
+echo1 () { echo -n "$*"; }
+echo2 () { echo "$*\\c"; }
+echo3 () { echo "$* +"; }
+if test "x`echo1 y`z" = "xyz"; then
+	echon () { echo1 "$*"; }
+elif test "x`echo2 y`z" = "xyz"; then
+	echon () { echo2 "$*"; }
+else
+	echon () { echo3 "$*"; }
+fi
+
+# die <text>
+#   Prints a message to standard error, and exits the script in error
+die () {
+	echo "ERROR: $*" >&2
+	exit 1
+}
+
+# query <prompt> <varname> [default-response]
+#   Prompts the user for a response, and sets $varname to that given.
+#   If a blank line response is given, then $varname is set to the 
+#   default-response (or the empty string).
+query () {
+	eval $2=
+	while eval "test ! -n \"\$$2\""; do
+	    echon "$1${3+ [$3]}: "
+	    eval "read $2" || die "(end of file)"
+	    eval : "\${$2:=\$3}"
+	done
+}
+
+# yesorno <question> [default-response]
+#   Prompts the user for a yes-no question.
+#   Re-prompting will occur if the user enters a blank line and there
+#   is no default-response.
+#   Returns 0 for Yes, 1 for No.
+yesorno () {
+	echo "";
+	while :; do
+	    query "$1" YESORNO $2
+	    case "$YESORNO" in
+		Y*|y*) echo; return 0;;
+		N*|n*) echo; return 1;;
+		*) echo "Please enter 'y' or 'n'" >&2;;
+	    esac
+	done
+}
+
+# is_lt <version1> <version2>
+#   Returns true if dotted version string version1 is less than version2
+is_lt () {
+    a="$1" b="$2"
+    while test -n "$a" -o -n "$b"; do
+	ah=`echo "$a" | sed -e 's/\..*//'`
+	bh=`echo "$b" | sed -e 's/\..*//'`
+	if test x"$ah" = x"$bh"; then
+	    a=`echo "$a" | sed -e 's/^[^.]*//;s/^\.//'`
+	    b=`echo "$b" | sed -e 's/^[^.]*//;s/^\.//'`
+	    continue
+	fi
+	{ echo "$ah"; echo "$bh"; } | sort -n -c 2>/dev/null
+	return
+    done
+    return 1
+}
+
+##########################
+#          MAIN          #
+##########################
+
+echo "Checking for Kerberos 5..."
+
+if [ ! -f ${KRB5CONF} ]; then
+	echo "ERROR: ${KRB5CONF} is missing."
+	echo "Please verify that Kerberos 5 (krb5) package is installed."
+	exit 1
+fi
+
+echo "Checking for VAS..."
+
+# Determine VAS Version
+VERSION=`${VASTOOL} -v |grep Version |cut -d " " -f 4`
+VMAJOR=`echo $VERSION | cut -d "." -f 1`
+VMINOR=`echo $VERSION | cut -d "." -f 2`
+VRELEASE=`echo $VERSION | cut -d "." -f 3`
+VBUILD=`echo $VERSION | cut -d "." -f 4`
+
+if [ $VMAJOR -lt 3 ]; then
+	echo "ERROR: $0 works only with VAS version 3 or later (current VAS version is $VERSION)"
+	exit 1
+fi
+
+# First of all check if we are joined
+${VASTOOL} -u host/ auth -S host/ > /dev/null 2>&1
+if [ "$?" != "0" ]; then
+	echo "ERROR: The machine does not appear to be joined to any domain"
+	echo "or this script is not being run as root."
+	echo "Please verify the machine is correctly joined and then re-run"
+	echo "$0 to complete the configuration of Kerberos."
+	exit 1
+fi
+
+#Gather configuration data
+# Find the REALM
+DOMAIN=`${VASTOOL} -u host/ info domain`
+if [ "$DOMAIN" = "" ]; then
+        echo "ERROR: Unable to determine the current domain (realm)."
+	echo "Is this machine properly joined to the domain?"
+	exit 1
+fi
+REALM=`echo ${DOMAIN} | tr '[a-z]' '[A-Z]'`
+
+# Find the pre-Windows 2000 Domain Name (Workgroup)
+DOMAINDN=`${VASTOOL} -u host/ info domain-dn`
+if [ "$DOMAINDN" = "" ]; then
+	echo "ERROR: Unable to determine current domain information."
+	echo "Is this machine properly joined to the domain?"
+	exit 1
+fi
+
+TODAY=`date +"%Y%m%d"`
+
+
+##########################
+# Verify/Modify krb5.conf #
+##########################
+
+echo "Checking ${KRB5CONF}..."
+
+CONFMOD=${KRB5CONF}.mod
+NEWTEXT=/tmp/newtext$$.tmp
+NEWDOMAIN=/tmp/newdomain$$.tmp
+
+#Must do this before calling any check_* function
+cp ${KRB5CONF} ${CONFMOD}
+
+: >$NEWTEXT
+
+check_and_fix "default_realm" "${REALM}" "${CONFMOD}" ||
+       echo "  default_realm = ${REALM}" >> $NEWTEXT
+
+check_and_fix "default_keytab_name" "${VASKEYTAB}" "${CONFMOD}" ||
+       echo "  default_keytab_name = ${VASKEYTAB}" >> $NEWTEXT
+
+check_and_fix "forwardable" "true" "${CONFMOD}" ||
+       echo "  forwardable = true" >> $NEWTEXT
+
+: >$NEWDOMAIN
+
+check_and_fix ".${DOMAIN}" "${REALM}" "${CONFMOD}" ||
+       echo "  .${DOMAIN} = ${REALM}" >> $NEWDOMAIN
+
+check_and_fix "${DOMAIN}" "${REALM}" "${CONFMOD}" ||
+       echo "  ${DOMAIN} = ${REALM}" >> $NEWDOMAIN
+
+#-- insert realm information
+    ${VASTOOL} -u host/ info toconf $CONFMOD
+
+#-- insert the new text at the end of the [libdefaults] section 
+#   and new domain at the beginning of [domain_realm] section
+if [ -s $NEWTEXT -o -s $NEWDOMAIN ]; then
+    SAVEIFS="$IFS"
+    IFS=""
+    INLIBDEFAULTS=false
+    INUNDERLEFT=false
+    while read ILINE; do
+        if echo "$ILINE" | grep -i "^$SP*\[libdefaults\]" >/dev/null; then
+            if test -s $NEWTEXT; then
+                INLIBDEFAULTS=true
+            fi
+	elif $INLIBDEFAULTS && echo "$ILINE" | grep -i "^$SP*\[.*\]" >/dev/null; then
+            echo
+            echo ";--- begin options added by vas-setup-krb5 ($TODAY) ---"
+            cat $NEWTEXT
+            echo ";--- end options added by vas-setup-krb5 ($TODAY) ---"
+            echo
+	    INLIBDEFAULTS=false
+        fi
+#-- Some sample krb5 config files on Solaris contain "__<name>__ = {" in
+#   one line with a closing "}" on another line. All these lines need to
+#   be commented out in order to make it work
+        if echo "$ILINE" | grep  "^#" >/dev/null; then
+            echo "$ILINE"	
+        elif echo "$ILINE" | grep  "__" >/dev/null; then
+            echo "# $ILINE"	
+	    if echo "$ILINE" | grep "{" >/dev/null; then
+               INUNDERLEFT=true
+            fi
+        elif $INUNDERLEFT && echo "$ILINE" | grep "}" >/dev/null; then
+            echo "# $ILINE"	
+            INUNDERLEFT=false
+        else
+            echo "$ILINE"
+        fi
+        if echo "$ILINE" | grep -i "^$SP*\[domain_realm\]" >/dev/null; then
+            if test -s $NEWDOMAIN; then
+                echo
+                echo ";--- begin options added by vas-setup-krb5 ($TODAY) ---"
+                cat $NEWDOMAIN
+                echo ";--- end options added by vas-setup-krb5 ($TODAY) ---"
+                echo
+            fi
+        fi
+    done < ${CONFMOD} > ${CONFMOD}.new
+    IFS="$SAVEIFS"
+
+    mv ${KRB5CONF} ${KRB5CONF}.${TODAY}.$$
+    mv ${CONFMOD}.new ${KRB5CONF}
+    rm -f ${CONFMOD}
+    echo "$KRB5CONF: updated"
+elif cmp $CONFMOD $KRB5CONF >/dev/null; then
+    echo "$KRB5CONF: No changes required"
+    rm $CONFMOD
+else
+    echo "$KRB5CONF: updated"
+    mv ${KRB5CONF} ${KRB5CONF}.${TODAY}.$$
+    mv $CONFMOD $KRB5CONF
+fi
+rm -f $NEWTEXT
+rm -f $NEWDOMAIN
+
+exit 0
