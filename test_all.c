@@ -286,6 +286,90 @@ void testAuthGood( Test *pTest )
     if( password ) free( password );
 }
 
+void testAuthGoodChPwBAD( Test *pTest )
+{
+    db2int32 version = 1;
+    int rval = 0;
+    db2int32 msgLen = 0;
+    char *errMsg = NULL;
+    char *username = (char*)GetEntryFromFile( test_conf, "username" );
+    if( username )
+        username = (char *)strdup( username );
+    char *password = (char*)GetEntryFromFile( test_conf, "password" );
+    if( password )
+        password = (char *)strdup( password );
+    rval = fnsS.db2secValidatePassword( username?username:"bad", 
+                                       username?strlen(username):0, 
+                                       NULL, 
+                                       0, 
+                                       0, 
+                                       password?password:"bad", 
+                                       password?strlen(password):0, 
+                                       "1", 
+                                       1, 
+                                       NULL, 
+                                       0, 
+                                       0, 
+                                       NULL, 
+                                       &errMsg, 
+                                       &msgLen);
+    if( rval == DB2SEC_PLUGIN_BAD_NEWPASSWORD )
+        ct_test( pTest, rval == DB2SEC_PLUGIN_BAD_NEWPASSWORD );
+    else
+        fprintf( stderr, "AIX 5.1 fails to return bad on bad password change, so ignore, but if this isn't AIX 5.1, report this.\n" );
+    if( username ) free( username );
+    if( password ) free( password );
+}
+
+void testAuthGoodChPw( Test *pTest )
+{
+    db2int32 version = 1;
+    int rval = 0;
+    db2int32 msgLen = 0;
+    char *errMsg = NULL;
+    char *username = (char*)GetEntryFromFile( test_conf, "username" );
+    char *tmp_passwd = "Go0dPasSw0rd";
+    if( username )
+        username = (char *)strdup( username );
+    char *password = (char*)GetEntryFromFile( test_conf, "password" );
+    if( password )
+        password = (char *)strdup( password );
+    rval = fnsS.db2secValidatePassword( username?username:"bad", 
+                                       username?strlen(username):0, 
+                                       NULL, 
+                                       0, 
+                                       0, 
+                                       password?password:"bad", 
+                                       password?strlen(password):0, 
+                                       tmp_passwd, 
+                                       strlen( tmp_passwd), 
+                                       NULL, 
+                                       0, 
+                                       0, 
+                                       NULL, 
+                                       &errMsg, 
+                                       &msgLen);
+    ct_test( pTest, rval == DB2SEC_PLUGIN_OK );
+    rval = fnsS.db2secValidatePassword( username?username:"bad", 
+                                       username?strlen(username):0, 
+                                       NULL, 
+                                       0, 
+                                       0, 
+                                       tmp_passwd, 
+                                       strlen( tmp_passwd), 
+                                       password?password:"bad", 
+                                       password?strlen(password):0, 
+                                       NULL, 
+                                       0, 
+                                       0, 
+                                       NULL, 
+                                       &errMsg, 
+                                       &msgLen);
+    ct_test( pTest, rval == DB2SEC_PLUGIN_OK );
+    if( username ) free( username );
+    if( password ) free( password );
+}
+
 void testUserExists( Test *pTest )
 {
     db2int32 version = 1;
@@ -324,7 +408,7 @@ void testBadUserExists( Test *pTest )
                                        user?strlen(user):0,
                                        &errMsg,
                                        &msgLen );
-    ct_test( pTest, rval == DB2SEC_PLUGIN_BADUSER );
+    ct_test( pTest, rval == DB2SEC_PLUGIN_INVALIDUSERORGROUP );
     if( free_user ) free( user );                                  
 }
 
@@ -498,6 +582,27 @@ void testGroupExists( Test *pTest )
     db2int32 msgLen = 0;
     char *errMsg = NULL;
     char *group = (char*)GetEntryFromFile( test_conf, "user_in_group" );
+    if( group ) 
+    {
+        free_group = 1;
+        group = (char *)strdup( group );
+    }
+    rval = fnsG.db2secDoesGroupExist( group?group:"badgroup",
+                                      group?strlen(group):0,
+                                      &errMsg,
+                                      &msgLen );
+    ct_test( pTest, rval == DB2SEC_PLUGIN_OK );
+    if( free_group ) free( group );                                  
+}
+
+void testGroupUpperExists( Test *pTest )
+{
+    db2int32 version = 1;
+    int rval = 0;
+    int free_group = 0;
+    db2int32 msgLen = 0;
+    char *errMsg = NULL;
+    char *group = (char*)GetEntryFromFile( test_conf, "local_group_upper" );
     if( group ) 
     {
         free_group = 1;
@@ -962,6 +1067,8 @@ Test *GetServerTests()
     rc = ct_addTestFun( pTest, testAuthNoPW );
     rc = ct_addTestFun( pTest, testAuthNoPWBAD );
     rc = ct_addTestFun( pTest, testAuthGood );
+    rc = ct_addTestFun( pTest, testAuthGoodChPwBAD );
+    rc = ct_addTestFun( pTest, testAuthGoodChPw );
     rc = ct_addTestFun( pTest, testUserExists );
     rc = ct_addTestFun( pTest, testBadUserExists );
     rc = ct_addTestFun( pTest, testUserUpperExists );
@@ -989,6 +1096,7 @@ Test *GetGroupTests()
     Test* pTest = ct_create( "Sys-auth library Group", NULL );
     bool rc = ct_addTestFun( pTest, testGroupExists );
     rc = ct_addTestFun( pTest, testBadGroupExists);
+    rc = ct_addTestFun( pTest, testGroupUpperExists);
     rc = ct_addTestFun( pTest, testGroupMemberList );
     rc = ct_addTestFun( pTest, testGroupMember );
     rc = ct_addTestFun( pTest, testGroupNotMember );
@@ -1028,12 +1136,12 @@ int main(int argc, char **argv) {
         exit( EINVAL );
     }
 
-    /* Test for my personal test file, if found use it. */
-    if( access( "./test2.conf", R_OK ) == 0 )
-    {
-        strcpy( test_conf, "./test2.conf" );
-
-    }
+    /* Test for my personal test file, then the build test files, and if found use the first one found. */
+    if( access( "./test3.conf", R_OK ) == 0 )
+        strcpy( test_conf, "./test3.conf" );
+    else
+        if( access( "./test2.conf", R_OK ) == 0 )
+            strcpy( test_conf, "./test2.conf" );
 
     Suite* s = cs_create( "Sys-auth" );
     cs_setStream( s, stderr );

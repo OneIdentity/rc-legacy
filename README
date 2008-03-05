@@ -56,3 +56,8 @@ VAS 2.6 and earlier versions of 3 only create the 64-bit directory /opt/quest/li
 On Solaris 10, its $ISA macro is 64 instead of sparcv9, so a 64-bit application looks for pam_vas in
 /opt/quest/lib/security/64/pam_vas.so. Which doesnt' exist. To fix, run:
 ln -s /opt/quest/lib/security/sparcv9 /opt/quest/lib/security/64
+
+WARNING: With the password change functionality, it currently is a root based 
+set of the password, meaning the user could choose a password not normally 
+allowed since root usually by-passes password complexity checks. This only
+applies to local users where changing as root is handled differently. 

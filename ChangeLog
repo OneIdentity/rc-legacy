@@ -122,3 +122,35 @@ Now changelog will work off the version.
 * Made the versioning 4-digit.
 * Fixed a non-portable usage of grep in the install script.  
 * Increment to 1.1 due to DAS support.
+
+1.1.0.2 ( 2007_05_02 ):
+* Use a thread-safe errno.
+* Never return UNKNOWNERROR for user/group work.
+
+1.2.0.1 - 1.2.0.6 ( 2007_06_03 )
+* Support password changing. 
+* Handle local lamAuth file when doing tests if the pamAuth wasn't found.
+* Various fixes for an issue running db2cc on AIX, still an open issue. 
+  ( After some time the process starts getting error 3 back from getpwnam/
+    getpwuid calls that previously worked ( same info ). )
+  * Main fix: If a given uid/name is not found, running setauthdb( NULL, NULL )
+    and try again.  
+
+1.2.0.7 ( 2007_06_22 )
+* Now explicitly lowercase group names, this fixes running a grant without
+  specifying user or group.
+
+1.2.0.8 ( 2007_06_24 )
+* Correct the return code from the DoesAuthIDExist function.    
+
+1.2.0.9 ( 2007_07_13 )
+* Add group resolution when the user is in an LDAP LAM module.     
+
+2.0.0.1 ( 2008_03_04 )
+* Change the auth method to match the bit-ness of the OS. No more
+  pamAuth32/pamAuth64 except as an intermedeary step. 
+* Work on password change code, setuid stuff needs to be right
+  to trigger a proper change instead of set, but still have 
+  permission to change afterwords. 
+* Initial work to fix bug 460, detect if a user has an expired password.  
+* More tests around changing password ( now that it works ).

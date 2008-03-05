@@ -3,7 +3,7 @@
 set prompt "(%|#|\\$|>)( |\\t)*$"
 set main_box "sethe.vintela.com"
 set timeout 60
-set backup_server "sellswor@slcflsl01.prod.quest.corp"
+set backup_server "sellswor@10.5.33.31"
 set backup_dir "tmp"
 set version "@VERSION@"
 
@@ -37,7 +37,7 @@ proc finish { } {
 
 proc makeOn { hostname } {
     global spawn_id prompt main_box backup_server backup_dir
-    runOn $hostname "rm -rf DB2_make && mkdir DB2_make && cd DB2_make && scp $backup_server:$backup_dir/DB2_sys-auth.tar.gz . && gunzip DB2_sys-auth.tar.gz && mkdir DB2 && cd DB2 && tar -xvf ../DB2_sys-auth.tar && cd DB2_sys-auth && ./configure && make dist && make check && scp DB2_sys-auth_* $main_box\:binaries/. && cd && rm -rf DB2_make"
+    runOn $hostname "rm -rf DB2_make && mkdir DB2_make && cd DB2_make && scp $backup_server:$backup_dir/DB2_sys-auth.tar.gz . && gunzip DB2_sys-auth.tar.gz && mkdir DB2 && cd DB2 && tar -xvf ../DB2_sys-auth.tar && cd DB2_sys-auth && ./configure && make dist && rm -rf test3.conf && make check && scp DB2_sys-auth_* $main_box\:binaries/. && cd && rm -rf DB2_make"
 }
 
 proc eat { } {

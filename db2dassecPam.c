@@ -110,11 +110,13 @@ int main(int argc, char *argv[])
     int bytesRead = read(atol(argv[1]), cLine, MAXLINE); 
     if ( bytesRead != MAXLINE )
     {
-/*        fprintf( stderr, "%s: bytesRead: <%d>\n", __FUNCTION__, bytesRead );
-*/
+        fprintf( stderr, "%s: failed, bytesRead: <%d>\n", __FUNCTION__, bytesRead );
+
         rc = OTHER_ERROR;
         goto exit;
     }
+    else
+        fprintf( stderr, "%s: bytesRead: <%d>\n", __FUNCTION__, bytesRead );
                     
     cLine[ bytesRead ] = '\0' ;
                       

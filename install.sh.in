@@ -23,8 +23,8 @@ PLUGINPATH64="${INSTANCEHOME}/sqllib/security64/plugin"
 LIBFILE=sys-auth.so
 LIBFILE32=sys-auth32.so.@VERSION@
 LIBFILE64=sys-auth64.so.@VERSION@
-AUTHFILE32=sys-auth32
-AUTHFILE64=sys-auth64
+AUTHFILE=sys-auth
+CHPWFILE=sys-chpw
 
 if [ ! -f ${LIBFILE32} ]
 then
@@ -49,26 +49,23 @@ fi
 
 uname -a | awk '{print $1}' | grep AIX >/dev/null
 if [ "$2" = "LAM" -a $? -eq 0  ]; then 
-        AUTH32=lamAuth32
-        AUTH64=lamAuth64
+        AUTH=lamAuth
+        CHPW=lamChPw
 else
-        AUTH32=pamAuth32
-        AUTH64=pamAuth64
+        AUTH=pamAuth
+        CHPW=pamChPw
 fi
 
-if [ ! -x "${AUTH32}" ]
+if [ ! -x "${AUTH}" ]
 then
-	echo "Auth program ${AUTH32} not found."
+	echo "Auth program ${AUTH} not found."
 	exit 1
 fi
 
-if [ "$TYPE" = "64" ]
+if [ ! -x "${CHPW}" ]
 then
-    if [ ! -x "${AUTH64}" ]
-    then
-    	echo "Auth program ${AUTH64} not found."
-    	exit 1
-    fi
+	echo "Password change program ${CHPW} not found."
+	exit 1
 fi
 
 if [ ! -d ${PLUGINPATH32} -a ! -d ${PLUGINPATH64} ]
@@ -85,8 +82,9 @@ if [ -d ${PLUGINPATH32} ] ; then
     rm -f ${PLUGINPATH32}/server/${LIBFILE}
     rm -f ${PLUGINPATH32}/client/${LIBFILE}
     rm -f ${PLUGINPATH32}/group/${LIBFILE}
-    rm -f ${PLUGINPATH32}/${AUTHFILE32}
-# Clean up old files as well.
+    rm -f ${PLUGINPATH32}/${AUTHFILE}
+    rm -f ${PLUGINPATH32}/${CHPWFILE}
+# Clean up old files/links as well.
     rm -f ${PLUGINPATH32}/*/${LIBFILE32}
 
     echo "Now copy over the ${LIBFILE32} to ${PLUGINPATH32}/server&client&group/${LIBFILE}."
@@ -94,13 +92,17 @@ if [ -d ${PLUGINPATH32} ] ; then
     ln -s ${PLUGINPATH32}/${LIBFILE32} ${PLUGINPATH32}/server/${LIBFILE}
     ln -s ${PLUGINPATH32}/${LIBFILE32} ${PLUGINPATH32}/client/${LIBFILE}
     ln -s ${PLUGINPATH32}/${LIBFILE32} ${PLUGINPATH32}/group/${LIBFILE}
-    echo "Copy ${AUTH32} to ${PLUGINPATH32}/${AUTHFILE32}"
-    cp ${AUTH32} ${PLUGINPATH32}/${AUTHFILE32}
-    echo "And fix the ownerships/permissions. WARNING!!! ${PLUGINPATH32}/${AUTHFILE32} is setuid root becasue it has to be to do authentications. Just so you know."
+    echo "Copy ${AUTH} to ${PLUGINPATH32}/${AUTHFILE}"
+    cp ${AUTH} ${PLUGINPATH32}/${AUTHFILE}
+    echo "Copy ${CHPW} to ${PLUGINPATH32}/${CHPWFILE}"
+    cp ${CHPW} ${PLUGINPATH32}/${CHPWFILE}
+    echo "And fix the ownerships/permissions. WARNING!!! ${PLUGINPATH32}/${AUTHFILE} and ${PLUGINPATH32}/${CHPWFILE} are setuid root because they have to be to do authentications/password changes. Just so you know."
     chown ${1} ${PLUGINPATH32}/${LIBFILE32}
     chmod 0555 ${PLUGINPATH32}/${LIBFILE32}
-    chown root ${PLUGINPATH32}/${AUTHFILE32} 
-    chmod 4555 ${PLUGINPATH32}/${AUTHFILE32} 
+    chown root ${PLUGINPATH32}/${AUTHFILE} 
+    chmod 4555 ${PLUGINPATH32}/${AUTHFILE} 
+    chown root ${PLUGINPATH32}/${CHPWFILE} 
+    chmod 4555 ${PLUGINPATH32}/${CHPWFILE} 
 fi
 
 if [ "${TYPE}" = "64" ]
@@ -110,7 +112,8 @@ then
 	rm -f ${PLUGINPATH64}/server/${LIBFILE}
 	rm -f ${PLUGINPATH64}/client/${LIBFILE}
 	rm -f ${PLUGINPATH64}/group/${LIBFILE}
-	rm -f ${PLUGINPATH64}/${AUTHFILE64}
+	rm -f ${PLUGINPATH64}/${AUTHFILE}
+	rm -f ${PLUGINPATH64}/${CHPWFILE}
     # Clean up old files as well.
     rm -f ${PLUGINPATH64}/*/${LIBFILE64}
 	
@@ -119,13 +122,17 @@ then
     ln -s ${PLUGINPATH64}/${LIBFILE64} ${PLUGINPATH64}/server/${LIBFILE}
     ln -s ${PLUGINPATH64}/${LIBFILE64} ${PLUGINPATH64}/client/${LIBFILE}
     ln -s ${PLUGINPATH64}/${LIBFILE64} ${PLUGINPATH64}/group/${LIBFILE}
-    echo "Copy ${AUTH64} to ${PLUGINPATH64}/${AUTHFILE64}"
-	cp ${AUTH64} ${PLUGINPATH64}/${AUTHFILE64}
-    echo "And fix the ownerships/permissions. WARNING!!! ${PLUGINPATH64}/${AUTHFILE64} is setuid root becasue it has to be to do authentications. Just so you know."
+    echo "Copy ${AUTH} to ${PLUGINPATH64}/${AUTHFILE}"
+	cp ${AUTH} ${PLUGINPATH64}/${AUTHFILE}
+    echo "Copy ${CHPW} to ${PLUGINPATH64}/${CHPWFILE}"
+	cp ${CHPW} ${PLUGINPATH64}/${CHPWFILE}
+    echo "And fix the ownerships/permissions. WARNING!!! ${PLUGINPATH64}/${AUTHFILE} and ${PLUGINPATH64}/${CHPWFILE} are setuid root because they have to be to do authentications/password changes. Just so you know."
 	chown ${1} ${PLUGINPATH64}/${LIBFILE64}
 	chmod 0555 ${PLUGINPATH64}/${LIBFILE64}
-	chown root ${PLUGINPATH64}/${AUTHFILE64} 
-	chmod 4555 ${PLUGINPATH64}/${AUTHFILE64} 
+	chown root ${PLUGINPATH64}/${AUTHFILE} 
+	chmod 4555 ${PLUGINPATH64}/${AUTHFILE} 
+	chown root ${PLUGINPATH64}/${CHPWFILE} 
+	chmod 4555 ${PLUGINPATH64}/${CHPWFILE} 
 fi
 
 echo ""

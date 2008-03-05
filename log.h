@@ -66,6 +66,7 @@ void slog( int level, const char* msg, ... );
 char *GetEntryFromFile( const char*, const char* );
 
 #define func_start() slog( SLOG_DEBUG, "%s: starting", __FUNCTION__)
+#define func_start_all() slog( SLOG_ALL, "%s: starting", __FUNCTION__)
 
 #define test_mem() if( vas_db2_plugin_test_memory( __FUNCTION__ ) ) \
                        return DB2SEC_PLUGIN_NOMEM

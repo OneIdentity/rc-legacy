@@ -6,9 +6,9 @@
 * 
 * Company: Quest Software, Inc.
 * 
-* Purpose: Try a user/pw against PAM.
+* Purpose: Authenticate a username/password through PAM
 *
-* Notes:   Change to use the wanted serivce, uses OTHER right now.
+* Notes:   Change to use the wanted serivce, uses sys-auth<bits> right now.
 *          If you get a warning on line 71, probably means you need
 *          to set the OS correctly in the Makefile.
 *
@@ -50,6 +50,7 @@ static int conversation( int num_msg,
 
     /* malloc the replies, PAM owns this memory */
     *resp = malloc( num_msg * sizeof(struct pam_response) );
+    memset( *resp, 0, num_msg * sizeof(struct pam_response) );
 
     /* TODO: make this interactive */
     for( i = 0; i < num_msg; i++ )
@@ -70,6 +71,7 @@ int pam_auth_user( const char *name, const char *password ) {
 	struct pam_conv conv = { conversation, NULL };
 	int retval;
 	pam_handle_t *pamh = NULL;
+    int retval_b;
 
 	func_start();
 	/* Start pam, using the defined service. */
@@ -87,12 +89,26 @@ int pam_auth_user( const char *name, const char *password ) {
 	pw = NULL;
     slog( SLOG_DEBUG, "%s: received return value <%d> from authentication attempt for user <%s>", __FUNCTION__, retval, name );
 
+    retval_b = pam_acct_mgmt( pamh, 0 );
+
+    pam_end( pamh, retval_b );
+
+    if( ( retval == PAM_AUTH_ERR && retval_b == PAM_NEW_AUTHTOK_REQD ) || 
+        ( retval == PAM_SUCCESS && retval_b == PAM_NEW_AUTHTOK_REQD ) )
+        retval = 4;
+    else if( retval == PAM_SUCCESS )
+        retval = 0;
+    else if( retval == PAM_AUTH_ERR )
+        retval = 1;
+    else 
+        retval = 7;
+
 	return retval;
 }
 
 int main(int argc, char* argv[])
 {
-        int retval, result = 0;
+        int retval, retval_a, retval_m, result = 0;
         struct passwd *pwd = NULL;
         char password[128];
         char *cptr = NULL;

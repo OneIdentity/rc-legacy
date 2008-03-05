@@ -2,6 +2,7 @@ Simple setup:
 For this example:
 	On AIX 5.1 or 5.2
         instance owner name: db2inst1
+        DAS user name: dasusr1
         Package is in /tmp
         You are installing the LAM library
 	You understand the setuid'ing of the auth file.
@@ -11,6 +12,7 @@ As root:
     gzip -c -d DB2_AIX_51-52.tar.gz | tar -xvf -
     cd DB2_sys-auth
     ./install.sh db2inst1 LAM
+    ./install_das.sh dasusr1 LAM
     (This copies the files, and does a setuid on lamAuth64 so authentication can work.)
     su  - db2inst1
     db2stop
@@ -34,6 +36,6 @@ If you are on AIX 5.1, and want to use PAM, you will need to install the AIX PAM
 
 Both AIX 5.1 and 5.2 do not provide pam.conf, a sample aix.pam.conf is in this package.
 
-AIX pam_aix is 32-bit only, meaning if you are running a 64-bit instance, do not use PAM if you need to authenticate local users. 
+Not all systems include the 64-bit PAM libraries, in that case its usually easier to just use LAM authentication.
 
 More about this in README.
