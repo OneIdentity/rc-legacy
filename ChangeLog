@@ -154,3 +154,6 @@ Now changelog will work off the version.
   permission to change afterwords. 
 * Initial work to fix bug 460, detect if a user has an expired password.  
 * More tests around changing password ( now that it works ).
+
+2.0.0.2 ( 2008_03_07 )
+* Change password code looks solid on Linux Pam, tests in place.    

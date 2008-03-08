@@ -178,7 +178,7 @@ void testAuthBadPW( Test *pTest )
     int rval = 0;
     db2int32 msgLen = 0;
     char *errMsg = NULL;
-    rval = fnsS.db2secValidatePassword( "root", 5, NULL, 0, 0, "bad", 3, 
+    rval = fnsS.db2secValidatePassword( "root", 4, NULL, 0, 0, "bad", 3, 
 	    NULL, 0, NULL, 0, 0, NULL, &errMsg, &msgLen);
     ct_test( pTest, rval == DB2SEC_PLUGIN_BADPWD );
 }
@@ -189,7 +189,7 @@ void testAuthBadUser( Test *pTest )
     int rval = 0;
     db2int32 msgLen = 0;
     char *errMsg = NULL;
-    rval = fnsS.db2secValidatePassword( "%123", 3, NULL, 0, 0, "bad", 3, 
+    rval = fnsS.db2secValidatePassword( "%123", 4, NULL, 0, 0, "bad", 3, 
 	    NULL, 0, NULL, 0, 0, NULL, &errMsg, &msgLen);
     ct_test( pTest, rval == DB2SEC_PLUGIN_BADUSER );
 }
@@ -206,7 +206,7 @@ void testAuthNoPWBAD( Test *pTest )
     if( pwd )
         username = strdup( pwd->pw_name );
     rval = fnsS.db2secValidatePassword( username?username:"bad", 
-                                       username?strlen(username):0, 
+                                       username?strlen(username):3, 
                                        NULL, 
                                        0, 
                                        0, 
@@ -236,7 +236,7 @@ void testAuthNoPW( Test *pTest )
     if( pwd )
         username = strdup( pwd->pw_name );
     rval = fnsS.db2secValidatePassword( username?username:"bad", 
-                                       username?strlen(username):0, 
+                                       username?strlen(username):3, 
                                        NULL, 
                                        0, 
                                        0, 
@@ -267,12 +267,12 @@ void testAuthGood( Test *pTest )
     if( password )
         password = (char *)strdup( password );
     rval = fnsS.db2secValidatePassword( username?username:"bad", 
-                                       username?strlen(username):0, 
+                                       username?strlen(username):3, 
                                        NULL, 
                                        0, 
                                        0, 
                                        password?password:"bad", 
-                                       password?strlen(password):0, 
+                                       password?strlen(password):3, 
                                        NULL, 
                                        0, 
                                        NULL, 
@@ -286,7 +286,39 @@ void testAuthGood( Test *pTest )
     if( password ) free( password );
 }
 
-void testAuthGoodChPwBAD( Test *pTest )
+void testAuthGoodMustChange( Test *pTest )
+{
+    db2int32 version = 1;
+    int rval = 0;
+    db2int32 msgLen = 0;
+    char *errMsg = NULL;
+    char *username = (char*)GetEntryFromFile( test_conf, "user_must_change_pwd" );
+    if( username )
+        username = (char *)strdup( username );
+    char *password = (char*)GetEntryFromFile( test_conf, "password" );
+    if( password )
+        password = (char *)strdup( password );
+    rval = fnsS.db2secValidatePassword( username?username:"bad", 
+                                       username?strlen(username):3, 
+                                       NULL, 
+                                       0, 
+                                       0, 
+                                       password?password:"bad", 
+                                       password?strlen(password):3, 
+                                       NULL, 
+                                       0, 
+                                       NULL, 
+                                       0, 
+                                       0, 
+                                       NULL, 
+                                       &errMsg, 
+                                       &msgLen);
+    ct_test( pTest, rval == DB2SEC_PLUGIN_PWD_EXPIRED );
+    if( username ) free( username );
+    if( password ) free( password );
+}
+
+void testAuthGoodChPwBadOldPwd( Test *pTest )
 {
     db2int32 version = 1;
     int rval = 0;
@@ -295,16 +327,13 @@ void testAuthGoodChPwBAD( Test *pTest )
     char *username = (char*)GetEntryFromFile( test_conf, "username" );
     if( username )
         username = (char *)strdup( username );
-    char *password = (char*)GetEntryFromFile( test_conf, "password" );
-    if( password )
-        password = (char *)strdup( password );
     rval = fnsS.db2secValidatePassword( username?username:"bad", 
-                                       username?strlen(username):0, 
+                                       username?strlen(username):3, 
                                        NULL, 
                                        0, 
                                        0, 
-                                       password?password:"bad", 
-                                       password?strlen(password):0, 
+                                       "bad", 
+                                       3, 
                                        "1", 
                                        1, 
                                        NULL, 
@@ -313,10 +342,38 @@ void testAuthGoodChPwBAD( Test *pTest )
                                        NULL, 
                                        &errMsg, 
                                        &msgLen);
-    if( rval == DB2SEC_PLUGIN_BAD_NEWPASSWORD )
-        ct_test( pTest, rval == DB2SEC_PLUGIN_BAD_NEWPASSWORD );
-    else
-        fprintf( stderr, "AIX 5.1 fails to return bad on bad password change, so ignore, but if this isn't AIX 5.1, report this.\n" );
+    ct_test( pTest, rval == DB2SEC_PLUGIN_BADPWD );
+    if( username ) free( username );
+}
+
+void testAuthGoodChPwBadNewPwd( Test *pTest )
+{
+    db2int32 version = 1;
+    int rval = 0;
+    db2int32 msgLen = 0;
+    char *errMsg = NULL;
+    char *username = (char*)GetEntryFromFile( test_conf, "user_must_change_pwd" );
+    if( username )
+        username = (char *)strdup( username );
+    char *password = (char*)GetEntryFromFile( test_conf, "password" );
+    if( password )
+        password = (char *)strdup( password );
+    rval = fnsS.db2secValidatePassword( username?username:"bad", 
+                                       username?strlen(username):3, 
+                                       NULL, 
+                                       0, 
+                                       0, 
+                                       password?password:"bad", 
+                                       password?strlen(password):3, 
+                                       "1", 
+                                       1, 
+                                       NULL, 
+                                       0, 
+                                       0, 
+                                       NULL, 
+                                       &errMsg, 
+                                       &msgLen);
+    ct_test( pTest, rval == DB2SEC_PLUGIN_BAD_NEWPASSWORD );
     if( username ) free( username );
     if( password ) free( password );
 }
@@ -327,7 +384,7 @@ void testAuthGoodChPw( Test *pTest )
     int rval = 0;
     db2int32 msgLen = 0;
     char *errMsg = NULL;
-    char *username = (char*)GetEntryFromFile( test_conf, "username" );
+    char *username = (char*)GetEntryFromFile( test_conf, "user_must_change_pwd" );
     char *tmp_passwd = "Go0dPasSw0rd";
     if( username )
         username = (char *)strdup( username );
@@ -335,12 +392,12 @@ void testAuthGoodChPw( Test *pTest )
     if( password )
         password = (char *)strdup( password );
     rval = fnsS.db2secValidatePassword( username?username:"bad", 
-                                       username?strlen(username):0, 
+                                       username?strlen(username):3, 
                                        NULL, 
                                        0, 
                                        0, 
                                        password?password:"bad", 
-                                       password?strlen(password):0, 
+                                       password?strlen(password):3, 
                                        tmp_passwd, 
                                        strlen( tmp_passwd), 
                                        NULL, 
@@ -351,14 +408,14 @@ void testAuthGoodChPw( Test *pTest )
                                        &msgLen);
     ct_test( pTest, rval == DB2SEC_PLUGIN_OK );
     rval = fnsS.db2secValidatePassword( username?username:"bad", 
-                                       username?strlen(username):0, 
+                                       username?strlen(username):3, 
                                        NULL, 
                                        0, 
                                        0, 
                                        tmp_passwd, 
                                        strlen( tmp_passwd), 
-                                       password?password:"bad", 
-                                       password?strlen(password):0, 
+                                       NULL,
+                                       0,
                                        NULL, 
                                        0, 
                                        0, 
@@ -366,6 +423,71 @@ void testAuthGoodChPw( Test *pTest )
                                        &errMsg, 
                                        &msgLen);
     ct_test( pTest, rval == DB2SEC_PLUGIN_OK );
+    rval = fnsS.db2secValidatePassword( username?username:"bad", 
+                                       username?strlen(username):3, 
+                                       NULL, 
+                                       0, 
+                                       0, 
+                                       tmp_passwd, 
+                                       strlen( tmp_passwd), 
+                                       password?password:"bad", 
+                                       password?strlen(password):3, 
+                                       NULL, 
+                                       0, 
+                                       0, 
+                                       NULL, 
+                                       &errMsg, 
+                                       &msgLen);
+    ct_test( pTest, rval == DB2SEC_PLUGIN_OK );
+    rval = fnsS.db2secValidatePassword( username?username:"bad", 
+                                       username?strlen(username):3, 
+                                       NULL, 
+                                       0, 
+                                       0, 
+                                       password?password:"bad", 
+                                       password?strlen(password):3, 
+                                       NULL, 
+                                       0, 
+                                       NULL, 
+                                       0, 
+                                       0, 
+                                       NULL, 
+                                       &errMsg, 
+                                       &msgLen);
+    ct_test( pTest, rval == DB2SEC_PLUGIN_OK );
+    if( username ) free( username );
+    if( password ) free( password );
+}
+
+void testAuthGoodCantChange( Test *pTest )
+{
+    db2int32 version = 1;
+    int rval = 0;
+    db2int32 msgLen = 0;
+    char *errMsg = NULL;
+    char *username = (char*)GetEntryFromFile( test_conf, "username-cant-change-pwd" );
+    char *tmp_passwd = "Go0dPasSw0rd";
+    if( username )
+        username = (char *)strdup( username );
+    char *password = (char*)GetEntryFromFile( test_conf, "password" );
+    if( password )
+        password = (char *)strdup( password );
+    rval = fnsS.db2secValidatePassword( username?username:"bad", 
+                                       username?strlen(username):3, 
+                                       NULL, 
+                                       0, 
+                                       0, 
+                                       password?password:"bad", 
+                                       password?strlen(password):3, 
+                                       tmp_passwd, 
+                                       strlen( tmp_passwd), 
+                                       NULL, 
+                                       0, 
+                                       0, 
+                                       NULL, 
+                                       &errMsg, 
+                                       &msgLen);
+    ct_test( pTest, rval == DB2SEC_PLUGIN_BAD_NEWPASSWORD );
     if( username ) free( username );
     if( password ) free( password );
 }
@@ -384,7 +506,7 @@ void testUserExists( Test *pTest )
         user = (char *)strdup( user );
     }
     rval = fnsS.db2secDoesAuthIDExist( user?user:"baduser",
-                                       user?strlen(user):0,
+                                       user?strlen(user):7,
                                        &errMsg,
                                        &msgLen );
     ct_test( pTest, rval == DB2SEC_PLUGIN_OK );
@@ -405,7 +527,7 @@ void testBadUserExists( Test *pTest )
         user = (char *)strdup( user );
     }
     rval = fnsS.db2secDoesAuthIDExist( user?user:"baduser",
-                                       user?strlen(user):0,
+                                       user?strlen(user):7,
                                        &errMsg,
                                        &msgLen );
     ct_test( pTest, rval == DB2SEC_PLUGIN_INVALIDUSERORGROUP );
@@ -496,7 +618,7 @@ void testUserUpperExists( Test *pTest )
     char *user = "Root";
 
     rval = fnsS.db2secDoesAuthIDExist( user?user:"baduser",
-                                       user?strlen(user):0,
+                                       user?strlen(user):7,
                                        &errMsg,
                                        &msgLen );
     ct_test( pTest, rval == DB2SEC_PLUGIN_OK );
@@ -588,7 +710,7 @@ void testGroupExists( Test *pTest )
         group = (char *)strdup( group );
     }
     rval = fnsG.db2secDoesGroupExist( group?group:"badgroup",
-                                      group?strlen(group):0,
+                                      group?strlen(group):8,
                                       &errMsg,
                                       &msgLen );
     ct_test( pTest, rval == DB2SEC_PLUGIN_OK );
@@ -609,7 +731,7 @@ void testGroupUpperExists( Test *pTest )
         group = (char *)strdup( group );
     }
     rval = fnsG.db2secDoesGroupExist( group?group:"badgroup",
-                                      group?strlen(group):0,
+                                      group?strlen(group):8,
                                       &errMsg,
                                       &msgLen );
     ct_test( pTest, rval == DB2SEC_PLUGIN_OK );
@@ -630,11 +752,85 @@ void testBadGroupExists( Test *pTest )
         group = (char *)strdup( group );
     }
     rval = fnsG.db2secDoesGroupExist( group?group:"badgroup",
-                                      group?strlen(group):0,
+                                      group?strlen(group):8,
                                       &errMsg,
                                       &msgLen );
     ct_test( pTest, rval == DB2SEC_PLUGIN_INVALIDUSERORGROUP );
     if( free_group ) free( group );                                  
+}
+
+void testGroupMemberPGid( Test *pTest )
+{
+    db2int32 version = 1;
+    int rval = 0;
+    int in_group = 0;
+    db2int32 msgLen = 0;
+    char *errMsg = NULL;
+    char *groupList = NULL;
+    db2int32 numGroups = 0;
+    char *username = (char*)GetEntryFromFile( test_conf, "username" );
+    if( username )
+        username = (char *)strdup( username );
+    char *group = (char*)GetEntryFromFile( test_conf, "user_in_group_pgid" );
+    if( group ) 
+        group = (char *)strdup( group );
+    else
+        group = "bad";
+
+    rval = fnsG.db2secGetGroupsForUser( username?username:"bad", //authid
+                                        username?strlen(username):3, //authidlen
+                                        NULL, //userid
+                                        0, //useridlen
+                                        NULL, //usernamespace
+                                        0, //usernamespacelen
+                                        0, //usernamespacetype
+                                        NULL, //dbname
+                                        0, //dbnamlen
+                                        NULL, //token
+                                        0, //tokentype
+                                        0, //location
+                                        NULL, //authpluginname
+                                        0, //authpluginnamelen
+                                        (void **)&groupList,
+                                        &numGroups,
+                                        &errMsg, 
+                                        &msgLen);
+    ct_test( pTest, rval == DB2SEC_PLUGIN_OK );
+
+    /* See if we should print out the group list received. */
+    if( rval == DB2SEC_PLUGIN_OK &&
+        groupList &&
+        groupList[0] != '\0' )
+    {
+        char *ptr; 
+        int groupsize = 0;
+        groupsize = (int)groupList[0];
+        ptr = &groupList[1];
+        do 
+        {   
+            /*
+	     * Need to store off the next groups size first, 
+	     * before we overwrite with '\0'
+	     */
+            int oldsize = groupsize;
+            groupsize = (int)ptr[oldsize];
+            ptr[ oldsize ] = '\0';
+            if( strcmp( group, ptr ) == 0 )
+            {
+                in_group = 1;
+                break; 
+            }
+            ptr = &ptr[oldsize + 1];
+        } while ( groupsize != 0 );
+    }
+
+    if( username ) free( username );
+    if( group ) free( group );
+
+    fnsG.db2secFreeGroupListMemory( groupList,
+                                    &errMsg,
+                                    &msgLen );
+    ct_test( pTest, in_group == 1 );
 }
 
 void testGroupMember( Test *pTest )
@@ -655,7 +851,7 @@ void testGroupMember( Test *pTest )
     else
         group = "bad";
     rval = fnsG.db2secGetGroupsForUser( username?username:"bad", //authid
-                                        username?strlen(username):0, //authidlen
+                                        username?strlen(username):3, //authidlen
                                         NULL, //userid
                                         0, //useridlen
                                         NULL, //usernamespace
@@ -728,7 +924,7 @@ void testGroupNotMember( Test *pTest )
     else
         group = "bad";
     rval = fnsG.db2secGetGroupsForUser( username?username:"bad", //authid
-                                        username?strlen(username):0, //authidlen
+                                        username?strlen(username):3, //authidlen
                                         NULL, //userid
                                         0, //useridlen
                                         NULL, //usernamespace
@@ -796,7 +992,7 @@ void testGroupMemberList( Test *pTest )
         username = (char *)strdup( username );
     char *show_groups = NULL;
     rval = fnsG.db2secGetGroupsForUser( username?username:"bad", //authid
-                                        username?strlen(username):0, //authidlen
+                                        username?strlen(username):3, //authidlen
                                         NULL, //userid
                                         0, //useridlen
                                         NULL, //usernamespace
@@ -863,7 +1059,7 @@ void testGroupBadUser( Test *pTest )
         username = (char *)strdup( username );
     char *show_groups = NULL;
     rval = fnsG.db2secGetGroupsForUser( username?username:"bad", //authid
-                                        username?strlen(username):0, //authidlen
+                                        username?strlen(username):3, //authidlen
                                         NULL, //userid
                                         0, //useridlen
                                         NULL, //usernamespace
@@ -904,7 +1100,7 @@ void testGroupUserCase( Test *pTest )
     }
     char *show_groups = NULL;
     rval = fnsG.db2secGetGroupsForUser( username?username:"bad", //authid
-                                        username?strlen(username):0, //authidlen
+                                        username?strlen(username):3, //authidlen
                                         NULL, //userid
                                         0, //useridlen
                                         NULL, //usernamespace
@@ -1067,7 +1263,10 @@ Test *GetServerTests()
     rc = ct_addTestFun( pTest, testAuthNoPW );
     rc = ct_addTestFun( pTest, testAuthNoPWBAD );
     rc = ct_addTestFun( pTest, testAuthGood );
-    rc = ct_addTestFun( pTest, testAuthGoodChPwBAD );
+    rc = ct_addTestFun( pTest, testAuthGoodMustChange );
+    rc = ct_addTestFun( pTest, testAuthGoodCantChange );
+    rc = ct_addTestFun( pTest, testAuthGoodChPwBadOldPwd );
+    rc = ct_addTestFun( pTest, testAuthGoodChPwBadNewPwd );
     rc = ct_addTestFun( pTest, testAuthGoodChPw );
     rc = ct_addTestFun( pTest, testUserExists );
     rc = ct_addTestFun( pTest, testBadUserExists );
@@ -1099,6 +1298,7 @@ Test *GetGroupTests()
     rc = ct_addTestFun( pTest, testGroupUpperExists);
     rc = ct_addTestFun( pTest, testGroupMemberList );
     rc = ct_addTestFun( pTest, testGroupMember );
+    rc = ct_addTestFun( pTest, testGroupMemberPGid );
     rc = ct_addTestFun( pTest, testGroupNotMember );
     rc = ct_addTestFun( pTest, testGroupBadUser );
     rc = ct_addTestFun( pTest, testGroupUserCase );

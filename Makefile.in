@@ -31,9 +31,11 @@ LAM = lamChPw lamAuth db2dassecLam
 PAM32 = pamAuth32 pamChPw32 db2dassecPam32
 PAM64 = pamAuth64 pamChPw64 db2dassecPam64
 PAMAUTHS = pamAuth pamChPw db2dassecPam
-@DO32@@DO64@TESTS = test_all32 test_all64 check32 check64
-@NO32@@DO64@TESTS = test_all64 check64
-@DO32@@NO64@TESTS = test_all32 check32
+#@DO32@@DO64@TESTS = test_all32 test_all64 check32 check64
+#@NO32@@DO64@TESTS = test_all64 check64
+#@DO32@@NO64@TESTS = test_all32 check32
+@DOPAM64@TESTS = test_all64 check64
+@DOPAM32@TESTS = test_all32 check32
 TEST32 = ctest32.o csuite32.o test_all32.o log32.o vsyslog32.o
 TEST64 = ctest64.o csuite64.o test_all64.o log64.o vsyslog64.o
 
@@ -192,7 +194,7 @@ bin_dist: all $(TESTS)
 src_dist: all
 	@rm -rf DB2_sys-auth
 	@mkdir DB2_sys-auth
-	@cp configure config.h.in log.h log.c vsyslog.c vsyslog.h sys-auth.c upgrade.sh.in install.sh.in Makefile.in INSTALL README LICENSE pamChPw.c pamAuth.c lamAuth.c lamChPw.c NEWS AUTHORS TESTING ChangeLog pam.conf.aix ctest.c ctest.h csuite.c csuite.h test_all.c test.conf bool.h Troubleshooting db2dassecLam.c db2dassecPam.c DB2_sys-auth/ 
+	@cp configure config.h.in log.h log.c vsyslog.c vsyslog.h sys-auth.c upgrade.sh.in install.sh.in install_das.sh.in Makefile.in INSTALL README LICENSE pamChPw.c pamAuth.c lamAuth.c lamChPw.c NEWS AUTHORS TESTING ChangeLog pam.conf.aix ctest.c ctest.h csuite.c csuite.h test_all.c test.conf bool.h Troubleshooting.in db2dassecLam.c db2dassecPam.c test2.conf.in db2secPlugin.h DB2_sys-auth/  
 	@tar -cvf DB2_sys-auth_src.@VERSION@.tar DB2_sys-auth/*
 	@rm -rf DB2_sys-auth
 	@gzip DB2_sys-auth_src.@VERSION@.tar

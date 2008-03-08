@@ -238,7 +238,7 @@ int vas_db2_plugin_change_password(char *username, char *password_old, char *pas
 
         if( execl( prog_path, prog_file, username, NULL ) == -1 ) 
         {
-            slog( SLOG_NORMAL, "%s: execl failed with errno <%s>", 
+            slog( SLOG_NORMAL, "%s: execl failed with errno <%d>", 
 		    __FUNCTION__, errno ? errno : ECHILD );
             _exit( errno ? errno : ECHILD );
         }
@@ -442,7 +442,7 @@ int vas_db2_plugin_auth_user(char *username, char *password) {
 
         if( execl( prog_path, prog_file, username, NULL ) == -1 ) 
         {
-            slog( SLOG_NORMAL, "%s: execl failed with errno <%s>", 
+            slog( SLOG_NORMAL, "%s: execl failed with errno <%d>", 
 		    __FUNCTION__, errno ? errno : ECHILD );
             _exit( errno ? errno : ECHILD );
         }

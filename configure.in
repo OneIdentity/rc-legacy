@@ -33,17 +33,20 @@ case `uname -a | awk '{print $1}'` in
         case `uname -m` in
             x86_64)
                 PLATFORM="LINUX_X86_64"
+                USERNAME="lxx64"
                 CC64="$CC64 -m64"
                 DOPAM32='#'
                 DOPAM64=''
                 ;;
             i*86)
                 PLATFORM="LINUX_X86"
+                USERNAME="lxx86"
                 DO64=#
                 NO64=''
                 ;;
             s390x)
                 PLATFORM="LINUX_S390X"
+                USERNAME="lx390"
                 DO32=#
                 NO32=''
                 CC="$CC -m31"
@@ -56,6 +59,7 @@ case `uname -a | awk '{print $1}'` in
     SunOS)
         OS="SOLARIS"
         PLATFORM="SOLARIS_SPARC"
+        USERNAME="sol8s"
         CC="$CC -m32"
         AC_DEFINE(_TS_ERRNO,1,Thread_safe_errno_define)
 # The -m and elf parts are for the new gcc/ld setup on the 
@@ -79,9 +83,11 @@ case `uname -a | awk '{print $1}'` in
         case `uname -m` in
             ia64)
                 PLATFORM="HPUX_IA64"
+                USERNAME="hpia"
                 ;;
             *)
                 PLATFORM="HPUX_9000"
+                USERNAME="hppa"
                 ;;
         esac
         ;;
@@ -93,8 +99,10 @@ case `uname -a | awk '{print $1}'` in
         NOLAM=#
         if test "`uname -r`" -eq "3" ; then
             PLATFORM=AIX_53
+            USERNAME="aix53"
         else
             PLATFORM="AIX_51-52"
+            USERNAME="aix51"
         fi
         ;;
 esac        
@@ -103,6 +111,7 @@ CFLAGS="-D${OS} -fpic"
 
 AC_SUBST(OS)
 AC_SUBST(PLATFORM)
+AC_SUBST(USERNAME)
 AC_SUBST(DO32)
 AC_SUBST(NO32)
 AC_SUBST(DO64)
@@ -129,8 +138,9 @@ AC_HEADER_STDC
 AC_SUBST(VERSION)
 
 dnl read Makefile.in and write Makefile
-AC_OUTPUT(Makefile Troubleshooting install.sh install_das.sh upgrade.sh make_all.exp)
+#AC_OUTPUT(Makefile Troubleshooting install.sh install_das.sh upgrade.sh make_all.exp test2.conf)
+AC_OUTPUT(Makefile Troubleshooting install.sh install_das.sh upgrade.sh test2.conf)
     chmod +x install.sh
     chmod +x install_das.sh
     chmod +x upgrade.sh
-    chmod +x make_all.exp
+#    chmod +x make_all.exp

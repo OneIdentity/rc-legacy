@@ -101,7 +101,7 @@ int pam_auth_user( const char *name, const char *password ) {
     else if( retval == PAM_AUTH_ERR )
         retval = 1;
     else 
-        retval = 7;
+        retval = 5;
 
 	return retval;
 }
