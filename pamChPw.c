@@ -47,6 +47,8 @@ static const char* pw_old = NULL;
 
 static const char* pw_new = NULL;
 
+static int debug = 0;
+
 static int auth_conv( int num_msg,
 #if defined(SOLARIS) || defined(AIX) 
                       struct pam_message** msg,
@@ -92,11 +94,13 @@ static int chpw_conv( int num_msg,
     /* TODO: make this interactive */
     for( i = 0; i < num_msg; i++ )
     {
-//        fprintf( stderr, "msg: <%s> style:<%d> pw_old:<%s> pw_new:<%s> state:<%d>\n", msg[i]->msg, msg[i]->msg_style, pw_old, pw_new, state );
+        if( debug )
+            fprintf( stderr, "msg: <%s> style:<%d> pw_old:<%s> pw_new:<%s> state:<%d>\n", msg[i]->msg, msg[i]->msg_style, pw_old, pw_new, state );
         if( msg[i]->msg_style == PAM_PROMPT_ECHO_OFF )
         {
             
-//            fprintf( stderr, "returning: <%s>\n", state == 0 ? pw_old : pw_new );
+            if( debug )
+                fprintf( stderr, "returning: <%s>\n", state == 0 ? pw_old : pw_new );
             (*resp)[i].resp = (char*)strdup( state == 0 ? pw_old : pw_new );
             ++state;
         }
@@ -128,7 +132,8 @@ int pam_change_password( const char *name, const char *password_old, char *passw
 	/* The actual authentication. */
 //    pam_set_item( pamh, PAM_OLDAUTHTOK, pw_new);
 //    pam_set_item( pamh, PAM_AUTHTOK, pw_new);
-//    fprintf( stderr, "getuid()<%d> geteuid()<%d>\n", getuid(), geteuid() );
+    if( debug )
+        fprintf( stderr, "getuid()<%d> geteuid()<%d>\n", getuid(), geteuid() );
 	retval = pam_chauthtok(pamh, 0); 
 
     pam_end( pamh, retval );
@@ -137,6 +142,18 @@ int pam_change_password( const char *name, const char *password_old, char *passw
 	pw_old = NULL;
 	pw_new = NULL;
     slog( SLOG_DEBUG, "%s: received return value <%d> from chauthtok attempt for user <%s>", __FUNCTION__, retval, name );
+    if( debug )
+        fprintf( stderr , "%s: received return value <%d> from chauthtok attempt for user <%s>\n", __FUNCTION__, retval, name );
+
+    /* On HP, if it failed and the machine doesn't have pam requisite patch, 
+     * pam_unix will return user unknown, so default back to this, we know the
+     * user exists because it got past the auth. */
+    if( retval == PAM_USER_UNKNOWN )
+    {
+        retval = PAM_AUTHTOK_ERR;
+        if( debug )
+            fprintf( stderr , "%s: changing retval to <%d>\n", __FUNCTION__, retval );
+    }
 
 	return retval;
 }
@@ -173,7 +190,6 @@ int pam_auth_user( const char *name, const char *password ) {
         ( retval == PAM_SUCCESS && retval_b == PAM_NEW_AUTHTOK_REQD ) )
         retval = PAM_NEW_AUTHTOK_REQD;
 
-
 	return retval;
 }
 
@@ -197,6 +213,9 @@ int main(int argc, char* argv[])
 		argv[0]);
         exit ( EINVAL );
     }
+
+    if( getenv( "SETHS_DEBUG" ) )
+        debug = 1;
 
     /* Check for user */
     if( ( pwd = getpwnam( argv[1] ) ) == NULL ) {
