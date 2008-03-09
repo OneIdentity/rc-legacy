@@ -157,3 +157,5 @@ Now changelog will work off the version.
 
 2.0.0.2 ( 2008_03_07 )
 * Change password code looks solid on Linux Pam, tests in place.    
+* Fixed an issue where when password was expired, using LAM it was re-set to
+  the same old password.

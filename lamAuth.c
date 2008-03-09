@@ -27,6 +27,8 @@
 #include "config.h"
 #include "log.h"
 
+static int debug = 0;
+
 int lam_auth_user( char *username, char *password ) {
     int reenter = 0;
     int retval = 0;
@@ -34,15 +36,25 @@ int lam_auth_user( char *username, char *password ) {
 
     func_start();
     do {
-	retval = authenticate( username, password, &reenter, &authmsg );
-	slog( SLOG_EXTEND, "%s: authenticate returned <%d> for user <%s>", 
-	    __FUNCTION__, retval, username );
+    	retval = authenticate( username, password, &reenter, &authmsg );
+	    slog( SLOG_EXTEND, "%s: authenticate returned <%d> for user <%s>", 
+	          __FUNCTION__, retval, username );
+        if( debug )
+            fprintf( stderr, "%s: authenticate returned <%d><%s> reenter:<%d> for user <%s>\n",
+                     __FUNCTION__, retval, authmsg?authmsg:"<NULL>",reenter,username );
+        if( reenter && strstr( authmsg?authmsg:"","expire" ) != NULL )
+        {
+            reenter = 0;
+            retval = 4;
+        }
     } while (reenter);
     
     if( retval == 0 )
-	return 0;
+	    return 0;
+    else if( retval == 4 )
+    	return 4;	
     else
-	return 1;	
+        return 1;
 }
  
 int main(int argc, char* argv[])
@@ -62,6 +74,9 @@ int main(int argc, char* argv[])
 		argv[0]);
         exit ( 1 );
     }
+
+    if( getenv( "SETHS_DEBUG" ) )
+        debug = 1;
 
     /* Check for user */
     if( ( pwd = getpwnam( argv[1] ) ) == NULL ) {
