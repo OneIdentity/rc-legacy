@@ -7,8 +7,6 @@ The groups command has been modified to use a getgrent loop, so it can locate an
 
 On the AIX builds it uses getgrset, becasue getgrent doesn't return groups outside of files.
 
-The authentication is provided through the pam_auth_user and lam_auth_user code examples on the rc.vintela.com website, under the labs section. (Ok, not yet, but they will be there eventually.)
-
 This type of authentication is problematic for local users. 
 On AIX (and most shadowed systems) only root has the rights to read /etc/system/passwd(/etc/shadow or something else on others), which is where the password hashes are stored.
 
@@ -41,23 +39,10 @@ An entry of debug-level = <1-4> will increase/decrese the debug level.
 3 is debug, shouldn't be needed. 
 4 is everything I could think of. 
 
-WARNING: AIX's pam_vas library on 5.2 is 32-bit only. If you have a 64-bit instance, and want to run PAM, you can only do so against VAS/Others of 64-bit, and add similiar to:
-sys-auth64 auth sufficient /opt/vas/lib/security/pam_vas64.so get_tgt create_homedir
-to /etc/pam.conf.
-
-This will hit VAS's 64-bit PAM library.
-
-The pamAuth.c have been changed to use sys-auth32/64 as the service name.
-
-On Linux, a new /etc/pam.d/sys-auth32 file should be made, otherwise it will use the default other, which on most linux distros is denied by default. 
+On Linux, a new /etc/pam.d/sys-auth file should be made, otherwise it will use the default other, which on most linux distros is denied by default. 
 
 Solaris 10 issue:
 VAS 2.6 and earlier versions of 3 only create the 64-bit directory /opt/quest/lib/security/sparcv9 for pam_vas.so to exist in. 
 On Solaris 10, its $ISA macro is 64 instead of sparcv9, so a 64-bit application looks for pam_vas in
 /opt/quest/lib/security/64/pam_vas.so. Which doesnt' exist. To fix, run:
 ln -s /opt/quest/lib/security/sparcv9 /opt/quest/lib/security/64
-
-WARNING: With the password change functionality, it currently is a root based 
-set of the password, meaning the user could choose a password not normally 
-allowed since root usually by-passes password complexity checks. This only
-applies to local users where changing as root is handled differently. 

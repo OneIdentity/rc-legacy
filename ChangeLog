@@ -159,3 +159,12 @@ Now changelog will work off the version.
 * Change password code looks solid on Linux Pam, tests in place.    
 * Fixed an issue where when password was expired, using LAM it was re-set to
   the same old password.
+
+2.0.0.3 ( 2008_03_08 )
+* Hopefully done. Lots of focus on PAM interaction, expired password and such. 
+* Passwords are not as easy on AIX 5.1, removing that OS for now. If needed 
+  please let me know through Quest Support or the RC forums. 
+* The authenticating service name has changed to sys-auth, since the auth method
+  now matches the OS. Meanign on 64-bit Linux, its automatically 64-bit, most 
+  everywhere else is 32-bit. So any sys-auth32/sys-auth64 pam entries need to
+  be changed to sys-auth.
