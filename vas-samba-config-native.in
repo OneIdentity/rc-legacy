@@ -1,0 +1,564 @@
+#!/bin/sh
+# (c) 2008 Quest Software, Inc. All rights reserved.
+
+OS=`uname -s`
+
+if [ "$OS" = "AIX" ]; then
+	SMBVER=`echo \`/opt/pware/samba/*/sbin/smbd --version\` | awk '{print $2}'`
+fi
+
+VASTOOL="/opt/quest/bin/vastool"
+VASCONF="/etc/opt/quest/vas/vas.conf"
+PWDCHGSCRIPT="/opt/quest/libexec/vas-set-samba-password-native"
+
+bindir="@bindir@"
+sbindir="@sbindir@"
+
+case ${OS} in
+	HP-UX)  SAMBACONF=/etc/opt/samba/smb.conf
+		SAMBASVC=samba
+		samba_prefix=/opt/samba
+		;;
+	Linux)  SAMBACONF=/etc/samba/smb.conf
+		SAMBASVC=samba
+		samba_prefix=/usr
+		;;
+	SunOS)  SAMBACONF=/opt/csw/etc/samba/smb.conf
+		SAMBASVC=samba-csw
+		samba_prefix=/opt/csw
+		;;
+	AIX)    SAMBACONF=/opt/pware/samba/${SMBVER}/lib/smb.conf
+		SAMBASVC=samba
+		samba_prefix=/opt/pware//${SMBVER}
+		;;
+        *)      SAMBACONF=/etc/samba/smb.conf
+		SAMBASVC=samba
+		samba_prefix=/usr
+		;;
+esac
+
+DEBUG=0
+OPTVERSION=false
+OPTFORCE=no
+RESTART_SAMBA=yes
+
+# Process command line arguments
+opterr=false
+while test $# -gt 0; do
+    case "$1" in
+	-d) DEBUG=1; shift;;
+	-f) OPTFORCE="force"; shift;;
+	-n) RESTART_SAMBA="no"; shift;;
+	-s) SAMBACONF="$2"; shift; shift;;
+	-S) samba_prefix="$2"; shift; shift;;
+	-V) OPTVERSION=true; shift;;
+	--) shift; break;;
+	-*) echo "Unknown option '$1'" >&2; shift; opterr=true;;
+	*)  break;;
+    esac
+done
+if test $# -ne 0; then	    # Expect no extra arguments
+    opterr=true
+fi
+if $opterr; then	    # Show usage on option error
+    echo "Usage: $0 [-d] [-f] [-n] [-V] [-s /path/smb.conf] [-S samba-prefix]" >&2
+    exit 1
+fi
+
+# When run with -V just print the version and exit
+if $OPTVERSION; then
+    echo "@VERSION@"
+    exit 0
+fi
+
+# Some helpful regular expressions used in the check_* functions:
+SP='[ 	]'
+LSP='\[ 	\]'
+META='[/*+.()]'
+METASUBST='s/'"$META"'/\\&/g'
+
+
+# check_parm <param-name> <config-file>
+#   Checks if the parameter is defined in the config file, by searching
+#   for any line of the form
+#         param-name = ...
+#   Returns 0 only if a parameter definition is found
+check_parm () {
+	PREG=`echo "$1" | sed -e "s/$SP$SP*/$LSP$LSP*/g"`
+	grep -i "^$SP*$PREG$SP*=" "$2" >/dev/null
+}
+
+
+# check_and_fix <param-name> <correct-value> <config-file>
+#   Checks if the parameter is defined incorrectly in the config file, and
+#   if so, replaces it. If the parameter is not defined, no action is taken.
+#   Returns 0 if the parameter was defined and/or corrected.
+#   Returns 1 if the parameter was not defined in the config-file.
+#   Exits the script if there is an error correcting the config-file
+check_and_fix () {
+	PREG=`echo "$1" | sed -e "s/$SP$SP*/$LSP$LSP*/g"`
+	VALUE=`echo "$2" | sed -e "$METASUBST"`
+	CONFFILE=$3
+
+	if grep -i "^$SP*$PREG$SP*=$SP*${VALUE}$SP*" "$3" >/dev/null; then
+		# parameter is defined, correctly
+		return 0
+	elif grep -i "^$SP*$PREG$SP*=" "$3" > /dev/null; then
+		# parameter is defined, incorrectly
+		oldvalue=`sed -n -e "s/^$SP*${PREG}$SP*=$SP*//p" < "$3"`
+		echo "Correcting parameter '$1' from '$oldvalue' to '$2'"
+		sed -e "/^$SP*${PREG}$SP*=/s/=.*/= ${VALUE}/" \
+                            < "$3" > "$3.new" || exit 1
+		mv "$3.new" "$3" || exit 1
+		return 0
+	else
+		# parameter was not defined at all
+		return 1
+	fi
+}
+
+# check_and_rename <old-param-name> <new-param-name> <config-file>
+#   Replaces definitions of old-param-name with new-param-name.
+#   Returns 0 if a renaming occurred.
+#   Exits the script if updating config-file fails.
+check_and_rename () {
+	PREG=`echo "$1" | sed -e "s/$SP$SP*/$LSP$LSP*/g"`
+	PNEW="$2"
+	CONFFILE="$3"
+
+	if grep -i "^$SP*$PREG$SP*=" "$3" >/dev/null; then
+		echo "Renaming parameter '$1' to '$2'"
+		# behold, the mighty power of sed!
+		sed "/^$SP*$PREG$SP*=/{h;s/^/#/p;x;s/$PREG/$PNEW/;}" \
+			    < "$3" > "$3.new" || exit 1
+		mv "$3.new" "$3" || exit 1
+		return 0
+	else
+		return 1
+	fi
+}
+
+# echon <text>
+#   Emits text without a newline.
+#   The code below figure out the right way to do echon.
+echo1 () { echo -n "$*"; }
+echo2 () { echo "$*\\c"; }
+echo3 () { echo "$* +"; }
+if test "x`echo1 y`z" = "xyz"; then
+	echon () { echo1 "$*"; }
+elif test "x`echo2 y`z" = "xyz"; then
+	echon () { echo2 "$*"; }
+else
+	echon () { echo3 "$*"; }
+fi
+
+# die [text]
+#   Prints a message to standard error, and exits the script in error
+#   If no argument is given, copies standard input to stderr
+
+die () {
+	if test $# -eq 0; then
+	    cat >&2
+	else
+	    echo "ERROR: $*" >&2
+	fi
+	exit 1
+}
+
+# query <prompt> <varname> [default-response]
+#   Prompts the user for a response, and sets $varname to that given.
+#   If a blank line response is given, then $varname is set to the 
+#   default-response (or the empty string).
+query () {
+	eval $2=
+	while eval "test ! -n \"\$$2\""; do
+	    echon "$1${3+ [$3]}: "
+	    eval "read $2" || die "(end of file)"
+	    eval : "\${$2:=\$3}"
+	done
+}
+
+# yesorno <question> [default-response]
+#   Prompts the user for a yes-no question.
+#   Re-prompting will occur if the user enters a blank line and there
+#   is no default-response.
+#   Returns 0 for Yes, 1 for No.
+yesorno () {
+	echo "";
+	while :; do
+	    query "$1" YESORNO $2
+	    case "$YESORNO" in
+		Y*|y*) echo; return 0;;
+		N*|n*) echo; return 1;;
+		*) echo "Please enter 'y' or 'n'" >&2;;
+	    esac
+	done
+}
+
+# is_lt <version1> <version2>
+#   Returns true if dotted version string version1 is less than version2
+is_lt () {
+    a="$1" b="$2"
+    while test -n "$a" -o -n "$b"; do
+	ah=`echo "$a" | sed -e 's/\..*//'`
+	bh=`echo "$b" | sed -e 's/\..*//'`
+	if test x"$ah" = x"$bh"; then
+	    a=`echo "$a" | sed -e 's/^[^.]*//;s/^\.//'`
+	    b=`echo "$b" | sed -e 's/^[^.]*//;s/^\.//'`
+	    continue
+	fi
+	{ echo "$ah"; echo "$bh"; } | sort -n -c 2>/dev/null
+	return
+    done
+    return 1
+}
+
+##########################
+#          MAIN          #
+##########################
+
+echo "Checking for VAS..."
+
+# Determine VAS Version
+VERSION=`${VASTOOL} -v |sed -e 's/^[^0-9]*\([0-9][0-9.]*\).*/\1/;1q'`
+echo "  $VERSION"
+saveIFS="$IFS"
+IFS=. read VMAJOR VMINOR VRELEASE VBUILD <<.
+$VERSION
+.
+IFS="$saveIFS"
+
+if [ $VMAJOR -lt 3 ]; then
+	die "Requires VAS version 3 or later (current VAS version is $VERSION)"
+fi
+
+# First of all check if we are joined
+${VASTOOL} -u host/ auth -S host/ > /dev/null || die <<-.
+	ERROR: The machine does not appear to be joined to any domain
+	or this script is not being run as root.
+	Please verify the machine is correctly joined and then re-run
+	$0 to complete the installation
+	and configuration of both SAMBA and VAS.
+.
+
+#Gather configuration data
+# Find the REALM
+DOMAIN=`${VASTOOL} -u host/ info domain`
+test -n "$DOMAIN" || die <<-.
+        ERROR: Unable to determine the current domain (realm).
+	Is this machine properly joined to the domain?
+.
+REALM=`echo ${DOMAIN} | tr '[a-z]' '[A-Z]'`
+
+# Find the pre-Windows 2000 Domain Name (Workgroup)
+DOMAINDN=`${VASTOOL} -u host/ info domain-dn`
+test -n "$DOMAINDN" || die <<-.
+	ERROR: Unable to determine current domain information.
+	Is this machine properly joined to the domain?
+.
+
+CONFPART=`${VASTOOL} -u host/ search -s base -b "" -q "(objectclass=*)" namingContexts | grep -i "^CN=Configuration"` || die <<-.
+        ERROR: Unable to find domain configuration information.
+	Is this machine properly joined to the domain?
+.
+
+WORKGROUP=`${VASTOOL} -u host/ search -U"DC://@${DOMAIN}" -b ${CONFPART} -q \(ncName=${DOMAINDN}\) nETBIOSName`
+test -n "$WORKGROUP" || die <<-.
+        ERROR: Unable to determine the domain's pre-Windows 2000 name.
+	Is this machine properly joined to the domain?
+.
+
+test -f ${SAMBACONF} || die <<-.
+	ERROR: ${SAMBACONF} is missing.
+	Please verify that the samba package is installed.
+.
+
+TODAY=`date +"%Y%m%d"`
+
+### Make sure samba services are stopped while checking and updating configuration
+
+#-- bug 254: this may need updating when porting
+case `uname -s` in
+	HP-UX)  initdir=/sbin/init.d;;
+	AIX)	initdir=SRC;;
+	*)	initdir=/etc/init.d;;
+esac
+
+stopsvc () {
+    if [ $initdir = SRC ]; then
+	stopsrc -s $1
+    else
+	test -x $initdir/$1 && $initdir/$1 stop
+    fi
+}
+
+startsvc () {
+    if [ $initdir = SRC ]; then
+	startsrc -s $1
+    else
+	test -x $initdir/$1 && $initdir/$1 start
+    fi
+}
+
+
+[ $RESTART_SAMBA = yes ] && stopsvc $SAMBASVC
+stopsvc vasidmapd
+
+
+##########################
+# Verify/Modify smb.conf #
+##########################
+
+echo "Checking version of $samba_prefix/sbin/smbd ..."
+
+if [ "$OS" = "HP_UX" ]; then
+    SAMBAVERSION=`"$samba_prefix"/bin/smbd -V | 
+        sed -e 's/^Version //;s/[^0-9.][^.]*//g'`
+else
+    SAMBAVERSION=`"$samba_prefix"/sbin/smbd --version | 
+        sed -e 's/^Version //;s/[^0-9.][^.]*//g'`
+fi
+echo "   $SAMBAVERSION"
+
+echo "Checking $SAMBACONF..."
+
+CONFMOD=${SAMBACONF}.mod
+NEWTEXT=/tmp/newtext$$.tmp
+
+#Must do this before calling any check_* function
+cp ${SAMBACONF} ${CONFMOD}
+: >$NEWTEXT
+
+if [ "$OPTFORCE" = "force" ]; then
+    PAMOPT="yes"
+elif check_parm "obey pam restrictions" ${CONFMOD}; then
+    : obey pam restrictions is already in place
+else
+    cat <<-.
+
+	  Samba can use PAM for user access control. This works
+	  by calling the PAM account and session stacks whenever
+	  a Samba share is mounted. This is a recommended option.
+.
+    if yesorno "Enable 'obey pam restrictions' option?" yes; then
+        PAMOPT="yes"
+    else
+        PAMOPT="no"
+    fi
+fi
+
+
+check_and_fix "workgroup" "${WORKGROUP}" "${CONFMOD}" ||
+       echo "  workgroup = ${WORKGROUP}" >> $NEWTEXT
+
+check_and_fix "realm" "${REALM}" "${CONFMOD}" ||
+       echo "  realm = ${REALM}" >> $NEWTEXT
+
+check_and_fix "security" "ads" "${CONFMOD}" ||
+       echo "  security = ads" >> $NEWTEXT
+
+if check_parm "use spnego" "${CONFMOD}"; then
+    check_and_fix "use spnego" "yes" "${CONFMOD}" ||
+           echo "  use spnego = yes" >> $NEWTEXT
+fi
+
+check_and_fix "domain master" "no" "${CONFMOD}" ||
+       echo "  domain master = no" >> $NEWTEXT
+
+check_and_fix "domain logons" "no" "${CONFMOD}" ||
+       echo "  domain logons = no" >> $NEWTEXT
+
+check_and_fix "use kerberos keytab" "yes" "${CONFMOD}" ||
+       echo "  use kerberos keytab = yes" >> $NEWTEXT
+
+check_and_fix "machine password timeout" "0" "${CONFMOD}" ||
+       echo "  machine password timeout = 0" >> $NEWTEXT
+
+## Do not enforce this, it is ok only in UPM mode, and potentially bad in non UPM.
+#check_and_fix "username map script" "$bindir/vasidmap" "${CONFMOD}" ||
+#       echo "  username map script = $bindir/vasidmap" >>$NEWTEXT
+
+check_and_fix "winbind nested groups" "no" "${CONFMOD}" ||
+       echo "  winbind nested groups = no" >> $NEWTEXT
+
+## check_and_fix "ldap admin dn" "CN=VasIdmapAdmin" "${CONFMOD}" ||
+#        echo "  ldap admin dn = CN=VasIdmapAdmin" >> $NEWTEXT
+
+## check_and_fix "idmap backend" "ldap:ldap://localhost" "${CONFMOD}" ||
+#       echo "  idmap backend = ldap:ldap://localhost" >> $NEWTEXT
+
+## check_parm "idmap uid" "${CONFMOD}" ||
+#    echo "  idmap uid = 1-2147483647" >> $NEWTEXT  # FIXME is this portable?
+
+## check_parm "idmap gid" "${CONFMOD}" ||
+#    echo "  idmap gid = 1-2147483647" >> $NEWTEXT  # FIXME is this portable?
+
+## if is_lt $SAMBAVERSION 3.0.25; then
+#  check_parm "idmap expire time" "${CONFMOD}" ||
+#    echo "  idmap expire time = 300   # Expire the tdb cache every 5 minutes" \
+#        >> $NEWTEXT
+# else
+#  #-- check for old param names
+#  check_and_rename "idmap expire time"   "idmap cache time" \
+#	"${CONFMOD}"
+#  check_and_rename "idmap negative time" "idmap negative cache time" \
+#	"${CONFMOD}"
+#  check_parm "idmap cache time" "${CONFMOD}" ||
+#    echo "  idmap cache time = 300   # Expire the tdb cache every 5 minutes" \
+#        >> $NEWTEXT
+# fi
+
+if [ "$PAMOPT" = "yes" ]; then
+    check_and_fix "obey pam restrictions" "yes" "${CONFMOD}" ||
+           echo "  obey pam restrictions = yes" >> $NEWTEXT
+fi
+
+
+#-- insert the new text at the end of the [global] section
+if test -s $NEWTEXT; then
+    SAVEIFS="$IFS"
+    IFS=""
+    INGLOBAL=false
+    while read ILINE; do
+        if echo "$ILINE" | grep -i "^$SP*\[global\]" >/dev/null; then
+            INGLOBAL=true
+        elif $INGLOBAL && echo "$ILINE" | grep -i "^$SP*\[.*\]" >/dev/null; then
+            echo
+            echo "  ;--- begin options added by vas-samba-config ($TODAY) ---"
+            cat $NEWTEXT
+            echo "  ;--- end options added by vas-samba-config ($TODAY) ---"
+            echo
+            echo "$ILINE"
+            cat
+            break
+        fi
+        echo "$ILINE"
+    done < ${CONFMOD} > ${CONFMOD}.new
+    IFS="$SAVEIFS"
+    mv ${SAMBACONF} ${SAMBACONF}.${TODAY}.$$
+    mv ${CONFMOD}.new ${SAMBACONF}
+    rm -f ${CONFMOD}
+    echo "$SAMBACONF: updated"
+elif cmp $CONFMOD $SAMBACONF >/dev/null; then
+    echo "$SAMBACONF: No changes required"
+else
+    echo "$SAMBACONF: updated"
+    mv ${SAMBACONF} ${SAMBACONF}.${TODAY}.$$
+    mv $CONFMOD $SAMBACONF
+fi
+rm -f $NEWTEXT
+
+#set a fake ldap password
+#(this will change with the new IDMAP subsystem in newer versions of Samba)
+# "$samba_prefix"/bin/smbpasswd -w secret > /dev/null 2>&1
+
+##########################
+# Verify/Modify vas.conf #
+##########################
+
+echo "Checking $VASCONF..."
+
+CONFMOD=${VASCONF}.mod
+
+#Must do this before calling any check_* function
+cp ${VASCONF} ${CONFMOD}
+NEWTEXT=/tmp/newtext$$.tmp
+
+have_pwchgscript=false
+case "$VERSION" in
+  3.0.*|3.1.1.39|3.1.1.4[0123456])
+    # VAS 3.0.x and 3.1.1.39 thru .46 need the make password permanent
+    check_and_fix "password-change-interval" "0" "${CONFMOD}" ||
+        echo " password-change-interval = 0" >> $NEWTEXT
+    ;;
+  *)
+    check_and_fix "password-change-script" "${PWDCHGSCRIPT} -s ${SAMBACONF}" "${CONFMOD}" ||
+        echo " password-change-script = ${PWDCHGSCRIPT} -s ${SAMBACONF}" >> $NEWTEXT
+    check_and_fix "password-change-interval" "30" "${CONFMOD}"
+    have_pwchgscript=true
+    ;;
+esac
+
+#-- insert the new text at the end of the [vasd] section
+if test -s $NEWTEXT; then
+    echo "" >> ${CONFMOD}
+    echo "[vasd]" >> ${CONFMOD}
+    cat $NEWTEXT >> ${CONFMOD}
+    mv ${VASCONF} ${VASCONF}.${TODAY}.$$
+    mv ${CONFMOD} ${VASCONF}
+    rm -f ${CONFMOD}
+    echo "$VASCONF: updated"
+elif cmp $CONFMOD $VASCONF >/dev/null; then
+    echo "$VASCONF: No changes required"
+else
+    echo "$VASCONF: updated"
+    mv ${VASCONF} ${VASCONF}.${TODAY}.$$
+    mv $CONFMOD $VASCONF
+fi
+rm -f $NEWTEXT
+
+
+if [ $DEBUG -gt 0 ]; then
+	echo "Exit before changing the password during debug" >&2
+	exit 0
+fi
+
+if [ "$OPTFORCE" = "force" ]; then
+    PWDCHANGE="yes"
+else
+    cat <<-.
+
+	  Samba can support NTLM (non-Kerberos) authentication for users,
+	  but this requires that the local host password be renewed (set to
+	  a new random string) during installation. Renewing the host
+	  password is a normal operation that is performed periodically
+	  by vasd.
+.
+    if yesorno "Reset the local host key now for NTLM support?" yes; then
+        PWDCHANGE="yes"
+    else
+        PWDCHANGE="no"
+    fi
+fi
+
+#Set domain SID
+echo "Detecting domain SID..."
+DOMUSER=`${VASTOOL} list users | awk -F: '{print $1;exit}'`
+DOMSID=`$bindir/vasidmap -u -n "$DOMUSER" | cut -d '-' -f 1-7`
+test -n "$DOMSID" || die <<-.
+	There was a problem obtaining the domain SID from VAS.
+	Please check that VAS is properly configured, and that
+	domain controllers are available.
+.
+echo "  $DOMSID"
+
+"$samba_prefix"/bin/net -s ${SAMBACONF} setdomainsid "$DOMSID"
+
+if [ "$PWDCHANGE" = "yes" ]; then
+
+    echo "Renewing the computer account password..."
+
+    if $have_pwchgscript; then
+	# Generate a new machine secret and set directly.
+	$VASTOOL -u host/ -q passwd -r -o | ${PWDCHGSCRIPT} -s ${SAMBACONF}
+    else
+	# Generate a secret key from the hex form of current key material
+	SECRET='X!'`$VASTOOL ktutil list --keys | 
+	    awk 'NR==4{print substr($4,0,16);exit}'`
+	# Change the machine password using vastool
+	(echo "$SECRET"; echo "$SECRET") | ${VASTOOL} -s -u host/ passwd
+	# Set the new machine password in secrets.tdb
+	echo "$SECRET" | ${PWDCHGSCRIPT} -s ${SAMBACONF}
+    fi
+
+    # Test that the join worked ok
+    echo "Testing SAMBA is joined to Active Directory..."
+    "$samba_prefix"/bin/net -s ${SAMBACONF} ads testjoin ||
+	echo "** net ads testjoin failed" >&2
+fi
+
+### Finally restart samba services
+startsvc vasidmapd
+[ $RESTART_SAMBA = yes ] && startsvc $SAMBASVC
+
+exit 0

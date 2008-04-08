@@ -7,8 +7,8 @@ AM_CFLAGS =  $(VAS_CFLAGS)
 
 sbin_PROGRAMS=		vasidmapd
 bin_PROGRAMS=		vasidmap
-dist_bin_SCRIPTS=	vasidmap-config vas-samba-config
-dist_libexec_SCRIPTS=	vasidmap-krb5-config
+dist_bin_SCRIPTS=	vasidmap-config vas-samba-config vas-samba-config-native
+dist_libexec_SCRIPTS=	vasidmap-krb5-config vas-set-samba-password-native
 dist_sbin_SCRIPTS=	vas-set-samba-password
 man_MANS =              vasidmapd.8 vasidmap.1
 
@@ -20,6 +20,10 @@ vas-samba-config: vas-samba-config.in
 	$(subst) <$^ >$@
 	chmod +x $@
 
+vas-samba-config-native: vas-samba-config-native.in
+	$(subst) <$^ >$@
+	chmod +x $@
+
 vasidmap_LDADD  =   $(LIBOBJS)
 vasidmapd_LDADD =   $(LIBOBJS)
 
@@ -27,7 +31,7 @@ TESTS=			rc.test
 TESTS_ENVIRONMENT=	$(SHELL)
 
 EXTRA_DIST=	vasidmap.pp LICENCE rc.test $(man_MANS) pp
-EXTRA_DIST+=	vas-samba-config.in
+EXTRA_DIST+=	vas-samba-config.in vas-samba-config-native.in
 EXTRA_DIST+=	README
 
 package: pp vasidmap.pp
