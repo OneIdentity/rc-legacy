@@ -399,7 +399,7 @@ void testAuthGoodChPw( Test *pTest )
                                        password?password:"bad", 
                                        password?strlen(password):3, 
                                        tmp_passwd, 
-                                       strlen( tmp_passwd), 
+                                       strlen(tmp_passwd), 
                                        NULL, 
                                        0, 
                                        0, 

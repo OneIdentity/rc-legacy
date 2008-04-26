@@ -1,9 +1,9 @@
 #!/bin/sh
 VERSION=2.0.0.`tr -d '\012' < build-number.txt`
-#SERVERLIST="vasx86.vintela.com vasx8664.vintela.com vassol8.vintela.com vashpux.vintela.com vashpuxia64.vintela.com 10.4.23.115 vasaix51.vintela.com vasaix53.vintela.com"
-SERVERLIST="vasx86.vintela.com vasx8664.vintela.com vassol8.vintela.com vashpux.vintela.com vashpuxia64.vintela.com 10.4.23.115 vasaix53.vintela.com"
+SERVERLIST="vasx86.vintela.com vasx8664.vintela.com vassol8.vintela.com vashpux.vintela.com vashpuxia64.vintela.com 10.4.23.115 vasaix51.vintela.com vasaix53.vintela.com"
+#SERVERLIST="vasx86.vintela.com vasx8664.vintela.com vassol8.vintela.com vashpux.vintela.com vashpuxia64.vintela.com 10.4.23.115 vasaix53.vintela.com"
 #SERVERLIST="vasx86.vintela.com vasx8664.vintela.com vassol8.vintela.com vashpuxia64.vintela.com vashpux.vintela.com 10.4.23.115"
-#SERVERLIST="vasaix53.vintela.com"
+#SERVERLIST="vasaix51.vintela.com"
 
 server_test()
 {
@@ -77,6 +77,8 @@ loop ()
     echo "<$1> Begin"
     rm -rf ./failed
     for server in $SERVERLIST ; do
+        echo "" >> out.$server
+        echo "$1" >> out.$server
         $1 $server >> out.$server 2>&1 &
     done
 
@@ -86,6 +88,8 @@ loop ()
     echo "<$1> End"
     echo
 }
+
+rm -rf out.*
 
 loop server_test
 
@@ -98,7 +102,6 @@ make distclean 2>/dev/null 1>&2
 
 make src_dist  2>/dev/null 1>&2
 
-rm -rf out.*
 echo "<setup> End"
 echo
 

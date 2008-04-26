@@ -65,9 +65,8 @@ int lam_change_password( char *username, char *password_old, char *password_new 
 
         if( debug )
         {
-            fprintf( stderr, "%s: authenticate returned <%d>, reenter <%d> for user <%s> and msg <%s>\n", 
+            fprintf( stderr, "%s: chpass returned <%d>, reenter <%d> for user <%s> and msg <%s>\n\n", 
                   __FUNCTION__, retval, reenter, username, authmsg?authmsg:"<empty>" );
-            fprintf( stderr, "%s:\n", __FUNCTION__ );
         }
     }
     if( retval == 0 )
@@ -85,6 +84,9 @@ int lam_auth_user( char *username, char *password ) {
     retval = authenticate( username, password, &reenter, &authmsg );
     slog( SLOG_EXTEND, "%s: authenticate returned <%d> for user <%s>",
           __FUNCTION__, retval, username );
+    if( debug )
+        fprintf( stderr, "%s: authenticate returned <%d> for user <%s>\n",
+                 __FUNCTION__, retval, username );
     
     if( retval == 0 )
 	return 0;
@@ -166,10 +168,13 @@ int main(int argc, char* argv[])
         exit( retval );
 
     /* Run the auth_user function. */
-    if( setuid( pwd->pw_uid ) == 0 )
+    /* As root, since local users need root access to change a password.
+     * No unwanted changes since the above auth will verify they know the 
+     * right stuff to do this. */
+//    if( setuid( pwd->pw_uid ) == 0 )
         retval = lam_change_password( argv[1], password_old, password_new );
-    else
-        retval = 1;
+//    else
+//        retval = 1;
 
 #if 0
     slog( SLOG_EXTEND, "%s: received return value <%d> from authentication "

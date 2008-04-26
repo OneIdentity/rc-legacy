@@ -168,3 +168,7 @@ Now changelog will work off the version.
   now matches the OS. Meanign on 64-bit Linux, its automatically 64-bit, most 
   everywhere else is 32-bit. So any sys-auth32/sys-auth64 pam entries need to
   be changed to sys-auth.
+
+2.0.0.4 ( 2008_04_25 )
+* Clean up the LAM code for passwords, works now for local and VAS users.
+* Include the AIX 5.1 machine again in the packaging.

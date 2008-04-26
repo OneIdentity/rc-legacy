@@ -22,7 +22,6 @@
  WCCommentEmpty =          # Comment    
 
  username = db2_test
-# password = g1044729hje
  password = Abcd1234
  user_in_group_pgid = db2_gr1
  user_in_group = db2_gr2

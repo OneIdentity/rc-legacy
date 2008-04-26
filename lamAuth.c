@@ -50,7 +50,18 @@ int lam_auth_user( char *username, char *password ) {
     } while (reenter);
     
     if( retval == 0 )
-	    return 0;
+    {
+        retval = passwdexpired( username, &authmsg );
+        if( retval == 0 )
+    	    return 0;
+        else
+        {
+            if( debug )
+                fprintf( stderr, "%s: passwdexpired returned <%d><%s> for user <%s>\n",
+                                 __FUNCTION__, retval, authmsg?authmsg:"<NULL>",username );
+            return 4;
+        }
+    }
     else if( retval == 4 )
     	return 4;	
     else

@@ -88,6 +88,7 @@ case `uname -a | awk '{print $1}'` in
             *)
                 PLATFORM="HPUX_9000"
                 USERNAME="hppa"
+                CC=/usr/local/pa20_32/bin/gcc
                 ;;
         esac
         ;;
@@ -102,12 +103,17 @@ case `uname -a | awk '{print $1}'` in
             USERNAME="aix53"
         else
             PLATFORM="AIX_51-52"
-            USERNAME="aix51"
+            OS2="AIX51"
+            USERNAME="aix5"
         fi
         ;;
 esac        
 
-CFLAGS="-D${OS} -fpic"
+if test -z "$OS2" ; then
+    CFLAGS="-D${OS} -fpic"
+else
+    CFLAGS="-D${OS} -D${OS2} -fpic"
+fi
 
 AC_SUBST(OS)
 AC_SUBST(PLATFORM)

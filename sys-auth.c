@@ -203,7 +203,12 @@ int vas_db2_plugin_change_password(char *username, char *password_old, char *pas
                 strcpy( prog_path, "." );
             }
             
+            /* On AIX 5.1 lets test out LAM there. */
+#ifdef AIX51
+            strcat( prog_path, "/lamChPw" );
+#else
             strcat( prog_path, "/pamChPw" );
+#endif
             
             if( access( prog_path, X_OK ) != 0 )
             {
@@ -407,7 +412,12 @@ int vas_db2_plugin_auth_user(char *username, char *password) {
                 strcpy( prog_path, "." );
             }
             
+            /* On AIX 5.1 lets test out LAM there. */
+#ifdef AIX51
+            strcat( prog_path, "/lamAuth" );
+#else
             strcat( prog_path, "/pamAuth" );
+#endif
             
             if( access( prog_path, X_OK ) != 0 )
             {
