@@ -32,9 +32,9 @@
 #define MAXLINE 610
 
 #if defined(__64BIT__)
-#define EXAMPLE_PAM_SERVICE_NAME "sys-auth64"
+#define EXAMPLE_PAM_SERVICE_NAME "sys-auth"
 #else
-#define EXAMPLE_PAM_SERVICE_NAME "sys-auth32"
+#define EXAMPLE_PAM_SERVICE_NAME "sys-auth"
 #endif
 
 static const char* pw = NULL;
