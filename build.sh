@@ -125,3 +125,6 @@ loop server_build_test_clean
 
 make distclean
 rm -rf out.*
+cd binaries/
+tar cvf DB2_sys-auth.$VERSION.tar *
+cd ../

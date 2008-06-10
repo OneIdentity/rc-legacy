@@ -5,3 +5,4 @@ Please let me know through Quest Support or the RC forums if any of these are ne
 1) Fix upgrade script for s390x ( no 32-bit directory ).
 2) Handle better the different DAS locations. ( 8.2 vs 9.1? )
    ( I know someone has run across this, don't have the systems to track down all the possibilities, need to know what I would be fixing ).  
+3) On AIX ( LAM ), support loginsuccess/loginfailed. I think they are cool, but dont' have time to just do them, but if desired, I can see about it.   

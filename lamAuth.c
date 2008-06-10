@@ -23,6 +23,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <usersec.h>
+#include <login.h>
 
 #include "config.h"
 #include "log.h"
@@ -51,15 +52,24 @@ int lam_auth_user( char *username, char *password ) {
     
     if( retval == 0 )
     {
-        retval = passwdexpired( username, &authmsg );
+        retval = loginrestrictions( username, S_LOGIN, NULL, &authmsg );
+        if( debug )
+            fprintf( stderr, "%s: loginrestrictions returned <%d><%s> for user <%s>\n",
+                             __FUNCTION__, retval, authmsg?authmsg:"<NULL>",username );
         if( retval == 0 )
-    	    return 0;
-        else
         {
+            retval = passwdexpired( username, &authmsg );
             if( debug )
                 fprintf( stderr, "%s: passwdexpired returned <%d><%s> for user <%s>\n",
                                  __FUNCTION__, retval, authmsg?authmsg:"<NULL>",username );
-            return 4;
+            if( retval == 0 )
+        	    return 0;
+            else
+                return 4;
+        }
+        else
+        {
+            return 1;
         }
     }
     else if( retval == 4 )

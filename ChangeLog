@@ -172,3 +172,8 @@ Now changelog will work off the version.
 2.0.0.4 ( 2008_04_25 )
 * Clean up the LAM code for passwords, works now for local and VAS users.
 * Include the AIX 5.1 machine again in the packaging.
+
+2.0.0.5 ( 2008_04_28 )
+* On AIX ( LAM ), deny users who are locked out. ( apparently authenticate()
+  just tells you the password is good, and is unrelated to the account actually
+  being allowed to log into the system, so using loginrestrictions() as well ).
