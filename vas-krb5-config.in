@@ -1,0 +1,129 @@
+#!/bin/sh
+# (c) 2008 Quest Software, Inc. All rights reserved.
+#
+# Configures 'native' Kerberos configuration files "krb5.conf" so 
+# they interoperate with VAS.
+#
+
+. "@pkgdatadir@/vasidmap-common.sh"
+
+# Default options
+DEBUG=false
+case `uname -s` in
+	HP-UX)  KRB5CONF=/etc/krb5.conf;;
+	Linux)	KRB5CONF=/etc/krb5.conf;;
+	SunOS)	KRB5CONF=/etc/krb5/krb5.conf;;
+	AIX)	KRB5CONF=/opt/pware/etc/krb5.conf;;
+	*)	KRB5CONF=/etc/krb5.conf;;
+esac
+
+# Process command line arguments
+opterr=false
+while test $# -gt 0; do
+    case "$1" in
+	-d) DEBUG=true; shift;;
+	-q) QUIET=true; shift; shift;;
+	-s) KRB5CONF="$2"; shift; shift;;
+	-V) echo "@VERSION@"; exit 0;;
+	--) shift; break;;
+	-*) echo "Unknown option '$1'" >&2; shift; opterr=true;;
+	*)  break;;
+    esac
+done
+if test $# -ne 0; then	    # Expect no extra arguments
+    opterr=true
+fi
+if $opterr; then	    # Show usage on option error
+    echo "Usage: $0 [-dqV] [-s /path/krb5.conf]" >&2
+    exit 1
+fi
+
+##########################
+# VAS and KRB5 checks
+
+verbose_echo "Checking for Kerberos 5..."
+
+# check that krb5.conf exists
+test -f "$KRB5CONF" || die_cat <<-.
+	ERROR: $KRB5CONF is missing.
+	Please verify that this is the right configuration file and
+	that your Kerberos 5 (krb5) packages are installed.
+	If this is the right file, please create it with 
+	    touch $KRB5CONF
+	and then re-run this script.
+.
+
+# check for VAS >= 3.0
+verbose_echo "Checking VAS..."
+detect_vas || die "Cannot detect VAS version. Is VAS installed?"
+is_lt $VAS_VERSION 3 && die_cat <<-.
+	ERROR: $0 works only with VAS version 3.0 and later. Not $VAS_VERSION.
+.
+
+# check that we are joined
+$VASTOOL -u host/ auth -S host/ > /dev/null 2>&1 || die_cat <<-.
+	ERROR: Either this host is not joined to any domain
+	or this script is not being run as root.
+
+	Please verify that this host is correctly joined and then re-run
+	this script to complete the configuration of Kerberos.
+.
+
+#Gather configuration data
+# Find the AD domain and derive the Kerberos Realm
+DOMAIN=`$VASTOOL -u host/ info domain`
+debug_echo "DOMAIN $DOMAIN"
+test -n "$DOMAIN" || die_cat <<-.
+	ERROR: Unable to determine the current domain (realm).
+	Is this machine properly joined to the domain?
+.
+REALM=`echo "$DOMAIN" | tr '[a-z]' '[A-Z]'`
+debug_echo "REALM $REALM"
+
+
+##########################
+# determine what changes to make to krb5.conf
+
+TODAY=`date +"%Y%m%d"`
+
+verbose_echo "Checking $KRB5CONF..."
+
+
+# fix_put <section> <param> <value>
+fix_put () {
+    ini_put "$1" "$2" "$3" < $FIXFILE > $FIXFILE.new && 
+	mv $FIXFILE.new $FIXFILE
+}
+FIXFILE=/tmp/fix$$.tmp
+cp "$KRB5CONF" $FIXFILE
+
+#-- Some sample krb5 config files on Solaris contain "__<name>__ = {" in
+#   one line with a closing "}" on another line. All these lines need to
+#   be commented out in order to make it work
+sed -e '/^__.*= {/,/^}/s/^/#/' < $FIXFILE > $FIXFILE.new &&
+mv $FIXFILE.new $FIXFILE
+
+# Correct the parameters that we know should be corrected
+fix_put libdefaults default_realm	"$REALM"
+fix_put libdefaults default_keytab_name "$VAS_KEYTAB"
+fix_put libdefaults forwardable         true
+
+fix_put domain_realm ".$DOMAIN" "$REALM"
+fix_put domain_realm "$DOMAIN"  "$REALM"
+
+#-- insert realm information
+$VASTOOL -u host/ info toconf $FIXFILE
+
+if cmp "$FIXFILE" "$KRB5CONF" > /dev/null; then
+    verbose_echo "  no changes needed to $KRB5CONF"
+else
+    echo "# updated by $0 ($TODAY)" >> $FIXFILE
+    backup=$KRB5CONF.$TODAY.$$
+    cp $KRB5CONF $backup
+    cat $FIXFILE > $KRB5CONF
+    verbose_echo "  updated $KRB5CONF, saved backup at $backup"
+fi
+
+rm $FIXFILE
+
+exit 0

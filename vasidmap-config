@@ -1,7 +1,0 @@
-#!/bin/sh
-
-echo "vasidmap-config is deprecated" >&2
-echo "please use vas-samba-config in future" >&2
-
-# backward compatible behavior
-/opt/quest/bin/vas-samba-config -f

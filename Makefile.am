@@ -1,48 +1,67 @@
 # (c) Quest Software, Inc. All rights reserved.
 
-AUTOMAKE_OPTIONS=       foreign
+AUTOMAKE_OPTIONS =	foreign
 
-AM_LDFLAGS = $(VAS_LIBS)
-AM_CFLAGS =  $(VAS_CFLAGS)
+AM_LDFLAGS =		$(VAS_LIBS)
+AM_CFLAGS =		$(VAS_CFLAGS)
 
-sbin_PROGRAMS=		vasidmapd
-bin_PROGRAMS=		vasidmap
-dist_bin_SCRIPTS=	vasidmap-config vas-samba-config vas-samba-config-native
-dist_libexec_SCRIPTS=	vasidmap-krb5-config vas-set-samba-password-native
-dist_sbin_SCRIPTS=	vas-set-samba-password
-man_MANS =              vasidmapd.8 vasidmap.1
+sbin_PROGRAMS =		vasidmapd
+vasidmapd_LDADD =	$(LIBOBJS)
+man_MANS =		vasidmapd.8
 
+bin_PROGRAMS =		vasidmap
+vasidmap_LDADD =	$(LIBOBJS)
+man_MANS +=		vasidmap.1
+
+sbin_SCRIPTS =		vas-samba-config
+man_MANS +=		vas-samba-config.1
+
+sbin_SCRIPTS +=		vas-krb5-config 
+man_MANS +=		vas-krb5-config.1
+
+libexec_SCRIPTS =	vas-set-samba-password
+man_MANS +=		vas-set-samba-password.8
+
+dist_pkgdata_DATA =	vasidmap-common.sh
+
+TESTS=			rc.test t-vasidmap-common
+TESTS_ENVIRONMENT=	srcdir=$(srcdir) $(SHELL)
+
+EXTRA_DIST =		LICENCE README 
+EXTRA_DIST +=		pp vasidmap.pp 
+EXTRA_DIST +=		$(man_MANS)
+EXTRA_DIST +=		vas-samba-config.in 
+EXTRA_DIST +=		vas-krb5-config.in
+EXTRA_DIST +=		vas-set-samba-password.in
+EXTRA_DIST +=		$(TESTS)
+
+# Rules for generating the shell scripts
+SUFFIXES = .in
 subst = $(SED) -e 's,[@]VERSION[@],$(VERSION),g' \
 	       -e 's,[@]bindir[@],$(bindir),g' \
-	       -e 's,[@]sbindir[@],$(sbindir),g'
-
-vas-samba-config: vas-samba-config.in
-	$(subst) <$^ >$@
+	       -e 's,[@]libdir[@],$(libdir),g' \
+	       -e 's,[@]libexecdir[@],$(libexecdir),g' \
+	       -e 's,[@]mandir[@],$(mandir),g' \
+	       -e 's,[@]pkgdatadir[@],$(pkgdatadir),g' \
+	       -e 's,[@]sbindir[@],$(sbindir),g' \
+	       -e 's,[@]sysconfdir[@],$(sysconfdir),g' 
+.in:
+	$(subst) <$< >$@
 	chmod +x $@
 
-vas-samba-config-native: vas-samba-config-native.in
-	$(subst) <$^ >$@
-	chmod +x $@
-
-vasidmap_LDADD  =   $(LIBOBJS)
-vasidmapd_LDADD =   $(LIBOBJS)
-
-TESTS=			rc.test
-TESTS_ENVIRONMENT=	$(SHELL)
-
-EXTRA_DIST=	vasidmap.pp LICENCE rc.test $(man_MANS) pp
-EXTRA_DIST+=	vas-samba-config.in vas-samba-config-native.in
-EXTRA_DIST+=	README
-
+# Rule for building a package
 package: pp vasidmap.pp
 	DESTDIR="$${TMPDIR-/tmp}/vasidmap.root"; \
 	rm -rf "$$DESTDIR"; \
 	$(MAKE) install DESTDIR="$$DESTDIR" && \
 	$(srcdir)/pp --destdir="$$DESTDIR" \
-	    --install-script=install-vasidmap \
+	    --install-script="inst.sh" \
 	    $(srcdir)/vasidmap.pp \
 	    version="$(VERSION)" \
 	    bindir=$(bindir) \
-	    sbindir=$(sbindir) \
+	    libdir=$(bindir) \
+	    libexecdir=$(libexecdir) \
 	    mandir=$(mandir) \
-	    libexecdir=$(libexecdir)
+	    pkgdatadir=$(pkgdatadir) \
+	    sbindir=$(sbindir) \
+	    sysconfdir=$(sysconfdir)

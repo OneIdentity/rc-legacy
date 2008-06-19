@@ -1,0 +1,40 @@
+.\" (c) 2006, Quest Software, Inc. All rights reserved.
+.TH VAS-KRB5-CONFIG 1
+.SH NAME
+vas-krb5-config \- Configures system Kerberos files to interoperate with VAS
+.SH SYNOPSIS
+.B vas-krb5-config
+[\-d]
+[\-q]
+[\-V]
+.RI [\-s\  /path/krb5.conf ]
+.SH DESCRIPTION
+The
+.B vas-krb5-config
+script modifies the system's Kerberos configuration (krb5.conf)
+in such a way that the system Kerberos facilities will interoperate with
+VAS.
+.SS OPTIONS
+.TP
+.RI \-d
+Enables detailed information to be sent to standard error as
+.B vas-krb5-config
+does its work.
+.TP
+.RI \-q
+Quiet mode. Suppresses informational messages usually sent to standard output.
+.TP
+.RI \-V
+If specified, this option causes
+.B vas-krb5-config
+to write its version information to standard output and exit immediately.
+.TP
+.RI \-s\  /path/krb5.cong
+Specifies the location of the Kerberos configuration file.
+Normally, this file's location is automatically detected.
+.SH "SEE ALSO"
+vastool(1),
+vas.conf(5),
+.I http://rc.quest.com/topics/samba/
+.SH AUTHORS
+Quest Software, Inc.

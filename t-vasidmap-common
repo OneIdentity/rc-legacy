@@ -1,0 +1,70 @@
+#!/bin/sh
+#
+# Tests the functions in vasidmap-common.sh
+#
+
+_passed=true
+fail () { echo "$0: FAIL $*" >&2; _passed=false; }
+assert () { debug_echo "testing: $*"; "$@" || fail "$*"; }
+nassert () { debug_echo "testing: ! $*"; "$@" && fail "! $*"; }
+
+# Load the vasidmap-common.sh file
+. "${srcdir:-.}/vasidmap-common.sh" || 
+   { echo "cannot load ${srcdir:-.}/vasidmap-common.sh" >&2; exit 1; }
+
+# Keep the noise from the functions down
+QUIET=true
+
+# make a temporary area for test files that will be removed on completion
+TMP=/tmp/test-$$
+mkdir $TMP
+if test x"$DEBUG" = x"true"; then
+    trap "echo not deleting $TMP" 0
+else
+    trap "rm -rf $TMP" 0
+fi
+
+# construct a mock file for the check_* functions to operate on
+cat >> $TMP/f <<.
+[global]
+foo = foo bar baz 1
+foo bar = foo bar baz 2
+no foo bar = foo bar baz 3
+meta = a+b
+.
+
+#-- check_parm 
+assert check_parm foo $TMP/f
+assert check_parm "foo bar" $TMP/f
+nassert check_parm baz $TMP/f
+nassert check_parm "no foo" $TMP/f
+nassert check_parm "" $TMP/f
+#nassert check_parm ".*" $TMP/f		# metachars in parm name??
+
+#-- check_and_fix
+assert check_and_fix "foo" "foo bar baz 1" $TMP/f
+nassert check_and_fix "nonexist" "ignored" $TMP/f
+assert check_and_fix "foo" "new value" $TMP/f
+assert grep '^[ 	]*foo[ 	]*=[ 	]*new value$' $TMP/f >/dev/null
+assert check_and_fix "meta" "a+b" $TMP/f
+assert grep '^[ 	]*meta = a[+]b$' $TMP/f > /dev/null
+
+#-- check_and_rename
+assert check_and_rename "foo" "foo2" $TMP/f
+assert grep '^[ 	]*foo2[ 	]*=[ 	]*new value$' $TMP/f >/dev/null
+nassert check_and_rename "nonexist" "nonexist2" $TMP/f
+
+#-- is_lt
+nassert is_lt	1.2.3	1.2.3	# =
+assert is_lt	1.2.3	1.2.4
+nassert is_lt	1.2.4	1.2.3
+assert is_lt	1.2.3	1.3.3
+nassert is_lt	1.3.3	1.2.3
+assert is_lt	1.2.3	2.2.3
+nassert is_lt	2.2.3	1.2.3
+assert is_lt	1.02.03	02.2.03
+
+
+
+# ADD OTHER TESTS ABOVE THIS LINE
+$_passed && echo "$0: all tests passed"
