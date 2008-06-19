@@ -4,66 +4,56 @@
 vas-samba-config \- configure Samba 
 .SH SYNOPSIS
 .B vas-samba-config
-*** TBD ***
-[\-D]
-[\-F]
-.RI [\-A\  ip-addr ]
-.RI [\-d\  debug-level ]
-.RI [\-p\  port ]
-.RI [\-s\  spn ]
+[\-dfnqV]
+.RI [\-s\  smb.conf ]
+.RI [\-S\  samba-prefix ]
 .SH DESCRIPTION
 The
-.B vasidmapd
-daemon implements a small LDAP server which services requests from
-SAMBA to map between SIDs, UIDs and GIDs.
-.PP
-The easiest way to configure SAMBA to use this module is to run the
 .B vas-samba-config
-script which comes with the daemon.
+script configures Samba and VAS for authentication and SID identity
+alignment with
+.BR vasidmapd .
 .SS OPTIONS
 .TP
-.RI \-D
-If specified, this parameter causes
-.B vasidmapd
-to operate as a daemon.
-That is, it detaches itself and runs in the background.
-This is the recommended, and default behaviour.
+.RI \-d
+Debug.
+Information useful for development is displayed while the script runs.
 .TP
-.RI \-F
-If specified, this parameter causes the main
-.B vasidmapd
-process to not daemonize.
-Child processes are still created to handle incoming connections,
-but the main process does not exit.
-This operation mode is suitable for running
-.B vasidmapd
-under process supervisors.
+.RI \-f
+Force.
+The script will assume the default answers to questions without prompting.
 .TP
-.RI \-A\  ip-addr
-If specified, changes the IP address that
-.B vasidmapd
-binds and listens to.
-The listen address defaults to the loopback address 127.0.0.1.
+.RI \-n
+No-restart servers.
+Normally,
+.B vas-samba-config
+will cause the Samba server to be restarted after it is reconfigured.
+Specifying this flag will prevent this behaviour.
 .TP
-.RI \-d\  debug-level
-This parameter sets the debug level as an integer.
-The default is level 0 and indicates no debugging.
-Debug messages are sent to standard error.
+.RI \-q
+Quiet.
+Suppresses informational messages.
 .TP
-.RI \-p\  port
-This parameter sets the TCP port number on which
-.B vasidmapd
-listens for requests.
-The
-.I port
-parameter is a single integer, and defaults to 389.
+.RI \-s\  smb.conf
+Specifies the location of the smb.conf file to configure.
+If not supplied,
+.B vas-samba-config
+uses the default configuration file from the discovered
+.B smbd
+binary.
 .TP
-.RI \-s\  spn
-This parameter sets the principal name that the
-.B vasidmapd
-service authenticates as.
-It defaults to
-.IR host/ .
+.RI \-S\  samba-prefix
+The path prefix used to locate the
+.B smbd
+server executable, namely
+.IR samba-prefix /smbd.
+If not specified, then
+.B vas-samba-config
+searches in likely places.
+.TP
+.RI \-V
+Version.
+The script prints its version number and immediately exits.
 .SH "SEE ALSO"
 vastool(1),
 smb.conf(5),
