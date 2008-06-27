@@ -35,6 +35,9 @@ EXTRA_DIST +=		vas-krb5-config.in
 EXTRA_DIST +=		vas-set-samba-password.in
 EXTRA_DIST +=		$(TESTS)
 
+CLEANFILES = vas-krb5-config vas-set-samba-password vas-samba-config
+
+
 # Rules for generating the shell scripts
 SUFFIXES = .in
 subst = $(SED) -e 's,[@]VERSION[@],$(VERSION),g' \
