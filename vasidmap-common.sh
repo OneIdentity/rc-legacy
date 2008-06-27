@@ -21,20 +21,24 @@ VAS_CONF=/etc/opt/quest/vas/vas.conf
 VAS_KEYTAB=/etc/opt/quest/vas/host.keytab
 
 # regular expressions strings used in the check_* functions:
-SP='[ 	]'			# single space
-LSP='\[ 	\]'		# escaped SP regex
-META='[][/*+.()]'			# regex metachar
+TAB='	'			# single tab \x09
+SP='[ $TAB]'			# white space
+LSP='\[ $TAB\]'			# escaped SP regex
+META='[][/*+.()]'		# regex metachar
 METASUBST='s/'"$META"'/[\\&]/g'	# sed script to escape metachars
+
+AWK=awk
+test -x /bin/nawk && AWK=/bin/nawk
 
 # ini_get <section> <param-name> [<filename>]
 #   Extracts the first definition or a parameter from the given section
 #   Returns true if the value was found and printed; false otherwise
 ini_get () {
     PREG=`echo "$2" | sed -e "s/$SP$SP*/$LSP$LSP*/g"`
-    awk "/^$SP*\\[/ { in_section = 0; }
+    $AWK "/^$SP*\\[/ { in_section = 0; }
 	 /^$SP*\\[$1\\]/ { in_section=1; }
          /^$SP*$PREG$SP*=$SP*/ && in_section { 
-	    sub(/^[^=]*$SP*=$SP*/, \"\"); print; found=1; }
+	    sub( /^[^=]*$SP*=$SP*/ , \"\"); print; found=1; }
 	 END { exit(found ? 0 : 1) } " $3
 }
 
@@ -45,7 +49,7 @@ ini_get () {
 ini_put () {
     PREG=`echo "$2" | sed -e "s/$SP$SP*/$LSP$LSP*/g"`
     VALUE=`echo "$3" | sed -e "$METASUBST"`
-    awk "/^$SP*\\[/ { 
+    $AWK "/^$SP*\\[/ { 
 	    if (in_section && !found) 
 		{ print \"  $2 = \" newvalue; found = 1; changed = 1; }
 	    in_section = 0; }
@@ -56,7 +60,7 @@ ini_put () {
 	 /^$SP*$PREG$SP*=$SP*$VALUE$SP*\$/ && in_section { found = 1; }
          /^$SP*$PREG$SP*=$SP*/ && in_section && !found { 
 	    oldline = \$0;
-	    sub(/=.*/, \"= \" newvalue); 
+	    sub(/[=].*/, \"= \" newvalue); 
 	    found = 1; 
 	    changed = (oldline != \$0);
 	 }
@@ -79,7 +83,7 @@ ini_put () {
 #   Note: the resulting file stream is written to stdout
 ini_del () {
     PREG=`echo "$2" | sed -e "s/$SP$SP*/$LSP$LSP*/g"`
-    awk "/^$SP*\\[/ { in_section = 0; }
+    $AWK "/^$SP*\\[/ { in_section = 0; }
 	 /^$SP*\\[$1\\]/ { in_section=1; }
          /^$SP*$PREG$SP*=$SP*/ && in_section { found = 1; }
 	 { if (found) {changed=1; found=0;} else print; }
