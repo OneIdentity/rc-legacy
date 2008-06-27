@@ -1,4 +1,8 @@
-?.?.?
+1.0.0
+* better support for non-Quest Samba servers
+* added vas-krb5-config script
+* moved vas-samba-config into /opt/quest/sbin (not bin)
+* moved vas-set-samba-password into /opt/quest/libexec (not sbin)
 * bug 479: 'package' target should choose its own DESTDIR
 * bug 474: correct 'samba-quest' group script name
 
