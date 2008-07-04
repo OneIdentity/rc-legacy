@@ -273,7 +273,8 @@ search_for_smbd () {
 
     # Either the search list of smbds is given to us, or we have
     # to construct our own 'best guess'
-    case `detect_opsys` in
+    detect_opsys
+    case $OPSYS in
 	HP-UX)
 	    search=/opt/samba/sbin/smbd
 	    ;;
