@@ -1,3 +1,4 @@
+# (c) 2008 Quest Software, Inc. All rights reserved.
 # Common shell functions for vasidmap scripts
 
 # check_parm
