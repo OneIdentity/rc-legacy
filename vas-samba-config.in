@@ -45,7 +45,7 @@ else
 fi
 
 debug_echo "using smbd at $smbd"
-test -n "$smbd" || die "Cannot find a working smbd. Please use -S option"
+test -n "$smbd" || die "Cannot find a working smbd. Please use '-S prefix' option."
 detect_samba_settings "$smbd" "$samba_configfile" || die_cat <<-.
 	Cannot obtain settings from samba server $smbd
 	or from configuration file $samba_configfile
@@ -196,6 +196,14 @@ else
  check_parm "idmap cache time" "$CONFMOD" ||
   check_and_fix_add "idmap cache time" "300"	     "$CONFMOD" $NEWTEXT
 fi
+
+check_parm "netbios name" "$CONFMOD" && cat <<-.
+
+	*** WARNING: netbios name parameter found ***
+	   The 'netbios name' parameter in $SAMBA_CONFIGFILE
+	   may cause problems with Kerberos authentication.
+
+.
 
 
 #-- insert the new text at the end of the [global] section
