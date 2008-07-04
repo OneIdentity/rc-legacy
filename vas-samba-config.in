@@ -125,11 +125,6 @@ startsvc () {
 }
 
 
-# stop the samba and vasidmap services
-verbose_echo "Stopping services..."
-$RESTART_SAMBA && stopsvc $SAMBASVC
-stopsvc vasidmapd
-
 
 ##########################
 # Modify smb.conf 
@@ -352,7 +347,12 @@ if [ "$PWDCHANGE" = "yes" ]; then
 	die "Samba not joined: 'net ads testjoin' failed"
 fi
 
-### Finally restart samba services
+# stop the samba and vasidmap services
+verbose_echo "Stopping services..."
+$RESTART_SAMBA && stopsvc $SAMBASVC
+stopsvc vasidmapd
+
+# and restart samba services
 verbose_echo "Restarting services...."
 startsvc vasidmapd
 $RESTART_SAMBA && startsvc $SAMBASVC
