@@ -45,7 +45,8 @@ else
 fi
 
 debug_echo "using smbd at $smbd"
-test -n "$smbd" || die "Cannot find a working smbd. Please use '-S prefix' option."
+test -n "$smbd" || 
+    die "Cannot find a working smbd. Please use the '-S prefix' option."
 detect_samba_settings "$smbd" "$samba_configfile" || die_cat <<-.
 	Cannot obtain settings from samba server $smbd
 	or from configuration file $samba_configfile
@@ -124,14 +125,12 @@ startsvc () {
     fi
 }
 
-
-
 ##########################
 # Modify smb.conf 
 
 verbose_echo "Checking $SAMBA_CONFIGFILE..."
 
-CONFMOD="$SAMBA_CONFIGFILE.mod"
+CONFMOD=/tmp/confmod$$.tmp
 NEWTEXT=/tmp/newtext$$.tmp
 
 #Must do this before calling any check_* function
@@ -222,30 +221,27 @@ if test -s $NEWTEXT; then
         echo "$ILINE"
     done < "$CONFMOD" > "$CONFMOD.new"
     IFS="$SAVEIFS"
-    mv "$SAMBA_CONFIGFILE" "$SAMBA_CONFIGFILE.$TODAY.$$"
-    mv "$CONFMOD.new" "$SAMBA_CONFIGFILE"
-    rm -f "$CONFMOD"
-    verbose_echo "  $SAMBA_CONFIGFILE: updated"
+    mv "$CONFMOD.new" "$CONFMOD"
+    update_conf=true
 elif cmp "$CONFMOD" "$SAMBA_CONFIGFILE" >/dev/null; then
-    verbose_echo "  $SAMBA_CONFIGFILE: no changes required"
+    update_conf=false
+    rm -f "$CONFMOD"
 else
-    verbose_echo "  $SAMBA_CONFIGFILE: updated"
-    mv "$SAMBA_CONFIGFILE" "$SAMBA_CONFIGFILE.$TODAY.$$"
-    mv "$CONFMOD" "$SAMBA_CONFIGFILE"
+    update_conf=true
 fi
+$update_conf && verbose_echo "$SAMBA_CONFIGFILE: update pending"
 rm -f $NEWTEXT
-
 
 ##########################
 # Modify vas.conf
 
 verbose_echo "Checking $VAS_CONF..."
 
-FIXFILE=/tmp/fix$$
-cp $VAS_CONF $FIXFILE
+NEW_VAS_CONF=/tmp/fix$$
+cp $VAS_CONF $NEW_VAS_CONF
 fix_put () {
-    ini_put "$1" "$2" "$3" $FIXFILE > $FIXFILE.new &&
-	mv $FIXFILE.new $FIXFILE
+    ini_put "$1" "$2" "$3" $NEW_VAS_CONF > $NEW_VAS_CONF.new &&
+	mv $NEW_VAS_CONF.new $NEW_VAS_CONF
 }
 
 case "$VAS_VERSION" in
@@ -262,17 +258,36 @@ case "$VAS_VERSION" in
     ;;
 esac
 
-if cmp $VAS_CONF $FIXFILE > /dev/null; then
-    verbose_echo "  no changes to $VAS_CONF"
+if cmp $VAS_CONF $NEW_VAS_CONF > /dev/null; then
+    update_vas=false
+    rm -f $NEW_VAS_CONF
 else
-    backup=$VAS_CONF.$TODAY.$$
-    cp $VAS_CONF $backup
-    verbose_echo "  made backup $backup"
-    cat $FIXFILE > $VAS_CONF
-    verbose_echo "  updated $VAS_CONF"
+    update_vas=true
 fi
+$update_vas && verbose_echo "$VAS_CONF: update pending"
 
-rm -f $FIXFILE
+##########################
+# Configure kerberos
+if test x"$smbd" = x"/opt/quest/sbin/smbd"; then
+    verbose_echo "Detected Quest samba, so not configuring krb5.conf"
+    KRB5CHANGE=no
+elif $FORCE; then
+    KRB5CHANGE=yes
+else
+    cat <<-.
+
+	  If Samba was compiled to use system Kerberos support, then
+	  the system Kerberos configuration files should be updated
+	  to use Active Directory's Kerberos servers as discovered
+	  by VAS, and to use VAS's host keytab. 
+
+	  This change will affect other Kerberos-enabled applications.
+.
+    yesorno "Update system Kerberos configuration to use VAS keyfiles?" yes \
+	&& KRB5CHANGE="yes" || KRB5CHANGE="no"
+fi
+test $KRB5CHANGE = yes && 
+    verbose_echo "(krb5.conf update will occur at the end of this script)"
 
 ##########################
 # Reset machine secret
@@ -286,11 +301,14 @@ else
 	  but this requires that the local host password be renewed (set to
 	  a new random string) during installation. Renewing the host
 	  password is a normal operation that is performed periodically
-	  by vasd.
+	  by vasd. The local host key can be reset at the end of these
+	  questions.
 .
-    yesorno "Reset the local host key now for NTLM support?" yes \
+    yesorno "Reset the local host key for NTLM support?" yes \
         && PWDCHANGE="yes" || PWDCHANGE="no"
 fi
+test $PWDCHANGE = yes && 
+    verbose_echo "(Host key reset will occur at the end of this script)"
 
 # Set domain SID
 verbose_echo "Detecting domain SID..."
@@ -324,10 +342,49 @@ cat <<-. >"$PWDCHGCONF"
 	METHOD=$PWDCHG_METHOD
 .
 
+if test "$KRB5CHANGE" = "yes"; then
+    verbose_echo "Configuring system Kerberos (vas-krb5-config) ..."
+    @sbindir@/vas-krb5-config -x 2 \
+	`$DEBUG && echo ' -d'` \
+	`$QUIET && echo ' -q'`
+    ec=$?
+    case $ec in
+	0) : ;;
+	2) KRB5CHANGE="not needed";;
+	*) die "Problem configuring krb5.conf";;
+    esac
+fi
+
+# stop the samba and vasidmap services
+verbose_echo "Stopping services..."
+$RESTART_SAMBA && stopsvc $SAMBASVC
+stopsvc vasidmapd
+
+# update smb.conf 
+if $update_conf; then
+    mv "$SAMBA_CONFIGFILE" "$SAMBA_CONFIGFILE.$TODAY.$$"
+    cat "$CONFMOD" > "$SAMBA_CONFIGFILE"
+    rm -f "$CONFMOD"
+    verbose_echo "$SAMBA_CONFIGFILE: updated"
+else
+    verbose_echo "$SAMBA_CONFIGFILE: no change required"
+fi
+
+# update vas.conf
+if $update_vas; then
+    backup=$VAS_CONF.$TODAY.$$
+    cp $VAS_CONF $backup
+    verbose_echo "$VAS_CONF: backup $backup"
+    cat $NEW_VAS_CONF > $VAS_CONF
+    verbose_echo "$VAS_CONF: updated"
+    rm -f $NEW_VAS_CONF
+else
+    verbose_echo "$VAS_CONF: no changes required"
+fi
+
+# reset the host key
 if [ "$PWDCHANGE" = "yes" ]; then
-
     verbose_echo "Renewing the computer account password..."
-
     if $vastool_generates_random_password; then
 	# Generate a new machine secret and set directly.
 	$VASTOOL -u host/ -q passwd -r -o | $PWDCHGSCRIPT 
@@ -340,21 +397,33 @@ if [ "$PWDCHANGE" = "yes" ]; then
 	# Set the new machine password in secrets.tdb
 	echo "$SECRET" | $PWDCHGSCRIPT -s "$SAMBA_CONFIGFILE"
     fi
-
-    # Test that the join worked ok
-    verbose_echo "Testing SAMBA is joined to Active Directory..."
+    # Test that the password change worked ok
+    verbose_echo "Testing Samba is joined to Active Directory..."
+    verbose_echo "+ $SAMBA_BINDIR/net -s $SAMBA_CONFIGFILE ads testjoin"
     $SAMBA_BINDIR/net -s "$SAMBA_CONFIGFILE" ads testjoin ||
 	die "Samba not joined: 'net ads testjoin' failed"
 fi
-
-# stop the samba and vasidmap services
-verbose_echo "Stopping services..."
-$RESTART_SAMBA && stopsvc $SAMBASVC
-stopsvc vasidmapd
 
 # and restart samba services
 verbose_echo "Restarting services...."
 startsvc vasidmapd
 $RESTART_SAMBA && startsvc $SAMBASVC
+
+cat <<-.
+
+	Summary:
+
+	  Samba server:          $smbd
+	  Samba config:          $SAMBA_CONFIGFILE
+	  VAS config:            $VAS_CONF
+
+	  smb.conf updated:      `$update_conf && echo yes || echo not needed`
+	  vas.conf updated:      `$update_vas && echo yes || echo not needed`
+	  krb5.conf updated:     $KRB5CHANGE
+	  Host key reset         $PWDCHANGE
+	  vasidmapd (re)started: yes
+	  Samba (re)started:     `$RESTART_SAMBA && echo yes || echo no`
+
+.
 
 exit 0
