@@ -512,7 +512,7 @@ sgetpwnam(char *name)
 
 static int login_attempts;	/* number of failed login attempts */
 static int askpasswd;		/* had user command, ask for passwd */
-static char curname[10];	/* current USER name */
+static char *user_name = NULL;	/* current USER name */
 #ifdef OTP
 OtpContext otp_ctx;
 #endif
@@ -612,8 +612,11 @@ user(char *name)
 			return;
 		}
 	}
-	if (logging)
-	    strlcpy(curname, name, sizeof(curname));
+	if (logging) {
+	    if (user_name)
+		free(user_name);
+	    user_name = strdup(name);
+	}
 	if(sec_complete) {
 	    if(sec_userok(name) == 0)
 		do_login(232, name);
@@ -940,6 +943,10 @@ end_login(void)
 	logged_in = 0;
 	guest = 0;
 	dochroot = 0;
+	if (user_name) {
+	    free(user_name);
+	    user_name = NULL;
+	}
 }
 
 #ifdef KRB5
@@ -1063,7 +1070,7 @@ pass(char *passwd)
 				    "FTP LOGIN FAILED FROM %s(%s), %s",
 				       remotehost,
 				       data_addr,
-				       curname);
+				       user_name);
 			pw = NULL;
 			if (login_attempts++ >= 5) {
 				syslog(LOG_NOTICE,
