@@ -5,6 +5,7 @@
 * moved vas-set-samba-password into /opt/quest/libexec (not sbin)
 * bug 479: 'package' target should choose its own DESTDIR
 * bug 474: correct 'samba-quest' group script name
+* bug 536: improvements in vas-samba-config
 
 0.10.0
 * Improve messages for support
