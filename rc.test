@@ -473,6 +473,18 @@ objectClass: sambaIdmapEntry
 gidNumber: $gid2
 .
 
+if $installed; then
+    desc "bug 560: vas-set-samba-password is executable"
+    test -x /opt/quest/libexec/vas-set-samba-password
+    result
+
+    desc "bug 560: vas-set-samba-password owned by root"
+    owner=`/bin/ls -l /opt/quest/libexec/vas-set-samba-password | 
+	   awk '{print $3}'`
+    test x"root" = x"$owner"
+    result
+fi
+
 exit $EXIT
 
 # TODO add some extra tests from http://www.occam.com/tools/ad_auth.html
