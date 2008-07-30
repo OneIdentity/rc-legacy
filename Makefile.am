@@ -52,9 +52,10 @@ subst = $(SED) -e 's,[@]VERSION[@],$(VERSION),g' \
 	$(subst) <$< >$@
 	chmod +x $@
 
+PP_DESTDIR=$${TMPDIR-/tmp}/vasidmap.root
 # Rule for building a package
 package: pp vasidmap.pp
-	DESTDIR="$${TMPDIR-/tmp}/vasidmap.root"; \
+	DESTDIR="$(PP_DESTDIR)"; \
 	rm -rf "$$DESTDIR"; \
 	$(MAKE) install DESTDIR="$$DESTDIR" && \
 	$(srcdir)/pp --destdir="$$DESTDIR" \
@@ -67,4 +68,5 @@ package: pp vasidmap.pp
 	    mandir=$(mandir) \
 	    pkgdatadir=$(pkgdatadir) \
 	    sbindir=$(sbindir) \
-	    sysconfdir=$(sysconfdir)
+	    sysconfdir=$(sysconfdir) \
+	&& rm -rf "$$DESTDIR"
