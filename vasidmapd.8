@@ -47,7 +47,7 @@ The listen address defaults to the loopback address 127.0.0.1.
 .RI \-d\  debug-level
 This parameter sets the debug level as an integer.
 The default is level 0 and indicates no debugging.
-Debug messages are sent to standard error.
+Debug messages are sent to the syslog using facility daemon, level debug.
 .TP
 .RI \-p\  port
 This parameter sets the TCP port number on which
