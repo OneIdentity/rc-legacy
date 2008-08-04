@@ -141,9 +141,9 @@ The following can be used to enable Kerberised rsh in
 .Xr inetd.conf 5 ,
 while disabling non-Kerberised connections:
 .Bd -literal
-shell   stream  tcp  nowait  root  /usr/libexec/rshd  rshd -v
-kshell  stream  tcp  nowait  root  /usr/libexec/rshd  rshd -k
-ekshell stream  tcp  nowait  root  /usr/libexec/rshd  rshd -kx
+shell   stream  tcp  nowait  root  /opt/quest/libexec/rshd  rshd -v
+kshell  stream  tcp  nowait  root  /opt/quest/libexec/rshd  rshd -k
+ekshell stream  tcp  nowait  root  /opt/quest/libexec/rshd  rshd -kx
 .Ed
 .\".Sh DIAGNOSTICS
 .Sh SEE ALSO
