@@ -73,21 +73,16 @@ case `uname -a | awk '{print $1}'` in
         OS=HPUX
         DLFLAG='-ldld'
         AC_DEFINE(_POSIX_C_SOURCE,199506,Enables_Thread_Safe_errno)
-        if test -f "/usr/local/pa20_64/bin/gcc" ; then
-#        if test -f /usr/lib/hpux64/libpam.so ; then
-            CC64="/usr/local/pa20_64/bin/$CC64"
-        else
-            DO64=#
-            NO64=''
-        fi
         case `uname -m` in
             ia64)
                 PLATFORM="HPUX_IA64"
                 USERNAME="hpia"
+                CC64="$CC64 -mlp64"
                 ;;
             *)
                 PLATFORM="HPUX_9000"
                 USERNAME="hppa"
+                CC64="/usr/local/pa20_64/bin/$CC64"
                 CC=/usr/local/pa20_32/bin/gcc
                 ;;
         esac

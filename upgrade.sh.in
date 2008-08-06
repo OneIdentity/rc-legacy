@@ -13,6 +13,13 @@ fi
 
 if [ ! -f ~/sqllib/security32/plugin/group/sys-auth.so ] ; then
     echo "Previous plugin not found, please use the install script."
+    exit 1
+fi
+
+if [ ! -f ~/sqllib/security32/plugin/group/sys-auth ] ; then
+    echo "sys-auth is a new authentication binary, and requires root to install."
+    echo "sys-auth not found, please use the install script."
+    exit 1
 fi
 
 db2gcf -s

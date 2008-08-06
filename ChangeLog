@@ -177,3 +177,10 @@ Now changelog will work off the version.
 * On AIX ( LAM ), deny users who are locked out. ( apparently authenticate()
   just tells you the password is good, and is unrelated to the account actually
   being allowed to log into the system, so using loginrestrictions() as well ).
+
+2.0.0.6 ( 2008_07_28 )
+* Change the configure slightly for the new HP IA64 machine setup to the 64-bit
+  library is built. 
+
+2.0.0.7 ( 2008_08_08 )
+* Modify the root detection and base shell used in the install script.    

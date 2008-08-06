@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/ksh
 # (c) 2007 Quest Software, Inc. All rights reserved.
 
 # Uncomment for debug info.
@@ -10,11 +10,9 @@ then
 	exit 1
 fi
 
-whoami | grep root >/dev/null
-if [ $? -ne 0 ]
-then
-	echo "Must be root to run this!"
-	exit 1
+if [ "`id | sed 's/uid=\([0-9]*\).*/\1/'`" -ne 0 ] ; then
+    echo "Must be root to run."
+    exit 1
 fi
 
 INSTANCEHOME="`eval echo ~${1}`"
@@ -155,7 +153,7 @@ echo ""
 echo ""
 echo "If the instance partitioned the install script will needs to be run on each machine that hosts a partition."
 echo ""
-echo "If on Linux or AIX 5.3, might need to make a specific sys-auth32/sys-auth64 PAM service entry in pam.conf or /etc/pam.d/"
-echo "For Linux: cp /etc/pam.d/sshd /etc/pam.d/sys-auth64 might do it."
+echo "If on Linux or AIX 5.3, might need to make a specific sys-auth PAM service entry in pam.conf or /etc/pam.d/"
+echo "For Linux: cp /etc/pam.d/sshd /etc/pam.d/sys-auth might do it."
 echo "If you need help with this step, or any part of the process, contact Quest Support"
 echo ""
