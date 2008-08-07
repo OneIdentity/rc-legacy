@@ -5,7 +5,7 @@
 VAS=/opt/quest/bin/vastool
 AUTH="-u administrator@build.vas -w test123"
 
-$VAS $AUTH kinit
+$VAS $AUTH kinit 2>&1
 if [ $? -ne 0 ] ; then
     echo "Unable to auth using <$AUTH>, trying with [realms] setting..."
     sudo $VAS configure extra-realm build.vas build.build.vas

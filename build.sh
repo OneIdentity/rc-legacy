@@ -3,7 +3,7 @@ VERSION=2.0.0.`tr -d '\012' < build-number.txt`
 SERVERLIST="vasx86.vintela.com vasx8664.vintela.com vassol8.vintela.com vashpux.vintela.com vashpuxia64.vintela.com 10.4.23.115 vasaix51.vintela.com vasaix53.vintela.com"
 #SERVERLIST="vasx86.vintela.com vasx8664.vintela.com vassol8.vintela.com vashpux.vintela.com vashpuxia64.vintela.com 10.4.23.115 vasaix53.vintela.com"
 #SERVERLIST="vasx86.vintela.com vasx8664.vintela.com vassol8.vintela.com vashpuxia64.vintela.com vashpux.vintela.com 10.4.23.115"
-SERVERLIST="vashpuxia64.vintela.com"
+#SERVERLIST="vashpuxia64.vintela.com"
 
 server_test()
 {

@@ -26,7 +26,7 @@
  user_in_group_pgid = db2_gr1
  user_in_group = db2_gr2
  user_not_in_group = db2_gr3
- local_group_upper = DAEMON
+ local_group_upper = BIN
  bad_group = badgroup 
  bad_user = nnnnnnnn
  show_groups = true
