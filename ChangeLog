@@ -182,5 +182,13 @@ Now changelog will work off the version.
 * Change the configure slightly for the new HP IA64 machine setup to the 64-bit
   library is built. 
 
-2.0.0.7 ( 2008_08_08 )
+2.0.0.7 ( 2008_08_06 )
 * Modify the root detection and base shell used in the install script.    
+
+2.0.0.8 ( 2008_08_07 )
+* Modify the install_das script for the new non-bitness auth helper.
+
+2.0.0.9 ( 2008_08_15 )
+* Modified the dist package to include properly named PAM files. (without bit)
+* Fixed a bad bug where if there was not authenticaiton file it returned
+  automatic success. 

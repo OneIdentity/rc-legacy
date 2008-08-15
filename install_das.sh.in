@@ -45,15 +45,16 @@ then
 	exit 1
 fi
 
-if [ -f $DASSEC2 ] ; then
-    DASSECBITS=32    
-else
-    # Find out the bit-ness of the DAS files.
-    DASSECBITS=`file "$DASSEC" | sed 's/.*\([36][24]\)-bit.*/\1/'`
-fi
+# Bitness doesn't really matter does it...
+#if [ -f $DASSEC2 ] ; then
+#    DASSECBITS=32    
+#else
+#    # Find out the bit-ness of the DAS files.
+#    DASSECBITS=`file "$DASSEC" | sed 's/.*\([36][24]\)-bit.*/\1/'`
+#fi
 
-DASSECLOC2="${DASSECLOC}64"
-DASSECLOC="${DASSECLOC}${DASSECBITS}"
+DASSECLOC2="${DASSECLOC}"
+#DASSECLOC="${DASSECLOC}${DASSECBITS}"
 
 if [ ! -f "${DASSECLOC}" ] ; then
     echo "Unable to find file ${DASSECLOC}, are you running from the same directory as this script?"
@@ -105,7 +106,7 @@ echo ""
 echo ""
 echo "To allow the instance to use it, restart the instance"
 echo ""
-echo "If on Linux or AIX 5.3, might need to make a specific sys-auth32/sys-auth64 PAM service entry in pam.conf or /etc/pam.d/"
-echo "For Linux: cp /etc/pam.d/sshd /etc/pam.d/sys-auth64 might do it."
+echo "If on Linux or AIX 5.3, might need to make a specific sys-auth PAM service entry in pam.conf or /etc/pam.d/"
+echo "For Linux: cp /etc/pam.d/sshd /etc/pam.d/sys-auth might do it."
 echo "If you need help with this step, or any part of the process, contact Quest Support"
 echo ""

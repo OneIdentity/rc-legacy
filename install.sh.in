@@ -50,8 +50,8 @@ if [ "$2" = "LAM" -a $? -eq 0  ]; then
         AUTH=lamAuth
         CHPW=lamChPw
 else
-        AUTH=pamAuth
-        CHPW=pamChPw
+    AUTH=pamAuth
+    CHPW=pamChPw
 fi
 
 if [ ! -x "${AUTH}" ]

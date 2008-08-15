@@ -228,12 +228,12 @@ int vas_db2_plugin_change_password(char *username, char *password_old, char *pas
                 {
                     slog( SLOG_NORMAL, "%s: FAILED finding auth program <%s> "
                             "in current directory", __FUNCTION__, prog_path );
-                    return( FAILURE );
+                    return( DB2SEC_PLUGIN_UNKNOWNERROR );
                 }
 #else
                 slog( SLOG_NORMAL, "%s: FAILED finding auth program <%s> "
 		       "in current directory", __FUNCTION__, prog_path );
-                return( FAILURE );
+                return( DB2SEC_PLUGIN_UNKNOWNERROR );
 #endif
             }
         }
@@ -437,12 +437,12 @@ int vas_db2_plugin_auth_user(char *username, char *password) {
                 {
                     slog( SLOG_NORMAL, "%s: FAILED finding auth program <%s> "
                             "in current directory", __FUNCTION__, prog_path );
-                    return( FAILURE );
+                    return( DB2SEC_PLUGIN_UNKNOWNERROR );
                 }
 #else
                 slog( SLOG_NORMAL, "%s: FAILED finding auth program <%s> "
 		       "in current directory", __FUNCTION__, prog_path );
-                return( FAILURE );
+                return( DB2SEC_PLUGIN_UNKNOWNERROR );
 #endif
             }
         }

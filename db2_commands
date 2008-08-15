@@ -29,6 +29,12 @@ db2 terminate
 # List DBs you are connected to.
 db2 list active databases
 
+
+# steps that did fail
+db2 active database <db>
+db2 list applications
+db2stop force
+
 # Start the instance.
 db2start
 

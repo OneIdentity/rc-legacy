@@ -195,8 +195,8 @@ bin_dist: all $(TESTPROGS)
 	@chmod +x upgrade.sh install.sh install_das.sh
 @DOLAM@	@cp sys-auth32.so.@VERSION@ sys-auth64.so.@VERSION@ upgrade.sh install.sh install_das.sh INSTALL README LICENSE $(PAMAUTHS) $(LAMAUTHS) NEWS AUTHORS TESTING ChangeLog pam.conf.aix test_all32 test.conf Troubleshooting DB2_sys-auth/ 
 @NOLAM@@DO32@@DO64@	@cp sys-auth32.so.@VERSION@ sys-auth64.so.@VERSION@ upgrade.sh install.sh install_das.sh INSTALL LICENSE README $(PAMAUTHS) NEWS AUTHORS TESTING ChangeLog pam.conf.aix $(TESTPROGS) test.conf Troubleshooting DB2_sys-auth/
-@NOLAM@@NO64@	@cp sys-auth32.so.@VERSION@ upgrade.sh install.sh install_das.sh INSTALL README LICENSE $(PAM32) NEWS AUTHORS TESTING ChangeLog pam.conf.aix test_all32 test.conf Troubleshooting DB2_sys-auth/
-@NOLAM@@NO32@	@cp sys-auth64.so.@VERSION@ upgrade.sh install.sh install_das.sh INSTALL README LICENSE $(PAM64) NEWS AUTHORS TESTING ChangeLog pam.conf.aix test_all64 test.conf Troubleshooting DB2_sys-auth/
+@NOLAM@@NO64@	@cp sys-auth32.so.@VERSION@ upgrade.sh install.sh install_das.sh INSTALL README LICENSE $(PAMAUTHS) NEWS AUTHORS TESTING ChangeLog pam.conf.aix test_all32 test.conf Troubleshooting DB2_sys-auth/
+@NOLAM@@NO32@	@cp sys-auth64.so.@VERSION@ upgrade.sh install.sh install_das.sh INSTALL README LICENSE $(PAMAUTHS) NEWS AUTHORS TESTING ChangeLog pam.conf.aix test_all64 test.conf Troubleshooting DB2_sys-auth/
 	@tar -cvf DB2_sys-auth_@PLATFORM@.@VERSION@.tar DB2_sys-auth/*
 	@rm -rf DB2_sys-auth
 	@gzip DB2_sys-auth_@PLATFORM@.@VERSION@.tar
