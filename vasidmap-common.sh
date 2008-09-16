@@ -259,7 +259,7 @@ is_lt () {
 query () {
 	eval $2=
 	while eval "test ! -n \"\$$2\""; do
-	    echon "$1${3+ [$3]}: "
+	    echon "$1${3+ [$3]}: " >&2
 	    eval "read $2" || die "(end of file)"
 	    eval : "\${$2:=\$3}"
 	done
