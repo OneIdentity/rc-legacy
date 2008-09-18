@@ -308,12 +308,16 @@ search_for_smbd () {
 #   Extra arguments are passed directly to vastool (eg, -u host/).
 vas_workgroup () {
     #typeset rootDNC
+    forestDNC=`$VASTOOL "$@" info forest-root-dn 2>/dev/null ||
+	       $VASTOOL "$@" search -q -s base -b '' \
+		"(rootDomainNamingContext=*)" \
+		rootDomainNamingContext` &&
     rootDNC=`$VASTOOL "$@" info domain-dn 2>/dev/null || 
              $VASTOOL "$@" search -q -s base -b '' \
 		"(rootDomainNamingContext=*)" \
 		rootDomainNamingContext` &&
     $VASTOOL "$@" \
-	search -q -b "CN=Partitions,CN=Configuration,$rootDNC" -s sub \
+	search -q -b "CN=Partitions,CN=Configuration,$forestDNC" -s sub \
 	"nCName=$rootDNC" \
 	nETBIOSName
 }
