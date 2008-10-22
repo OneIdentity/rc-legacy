@@ -42,6 +42,10 @@ if test -n "$samba_prefix"; then
     smbd=$samba_prefix/sbin/smbd
 else
     smbd=`search_for_smbd`
+    case $smbd in
+	*/sbin/smbd) samba_prefix=`echo $smbd | sed -e 's,/sbin/smbd$,,'`;;
+	*)           samba_prefix=/usr;;
+    esac
 fi
 
 debug_echo "using smbd at $smbd"
@@ -53,6 +57,10 @@ detect_samba_settings "$smbd" "$samba_configfile" || die_cat <<-.
 	Please check these files or specify different configuration
 	with the -s and -S options to this script.
 .
+
+have_winbind=false
+test -x "$samba_prefix/sbin/winbindd" && have_winbind=true
+debug_echo "have_winbind = $have_winbind"
 
 ##########################
 #          MAIN          #
@@ -173,7 +181,6 @@ check_and_fix_add "domain master" "no"		    "$CONFMOD" $NEWTEXT
 check_and_fix_add "domain logons" "no"		    "$CONFMOD" $NEWTEXT
 check_and_fix_add "use kerberos keytab" "yes"	    "$CONFMOD" $NEWTEXT
 check_and_fix_add "machine password timeout" "0"    "$CONFMOD" $NEWTEXT
-check_and_fix_add "winbind nested groups" "no"	    "$CONFMOD" $NEWTEXT
 test "$PAMOPT" = "yes" &&
     check_and_fix_add "obey pam restrictions" "yes" "$CONFMOD" $NEWTEXT
 
@@ -181,21 +188,24 @@ test "$PAMOPT" = "yes" &&
 #	Warning: username map script is OK only in VAS Unix Personality Mode
 #.
 
-# Attach vasidmap as an idmap backend
-check_and_fix_add "ldap admin dn" "CN=VasIdmapAdmin" "$CONFMOD" $NEWTEXT
-check_and_fix_add "idmap backend" "ldap:ldap://localhost" "$CONFMOD" $NEWTEXT
-check_parm "idmap uid" "$CONFMOD" ||
- check_and_fix_add "idmap uid" "1-2147483647"	     "$CONFMOD" $NEWTEXT
-check_parm "idmap gid" "$CONFMOD" ||
- check_and_fix_add "idmap gid" "1-2147483647"	     "$CONFMOD" $NEWTEXT
+if $have_winbind; then
+    check_and_fix_add "winbind nested groups" "no"	    "$CONFMOD" $NEWTEXT
+    # Attach vasidmap as an idmap backend for winbind
+    check_and_fix_add "ldap admin dn" "CN=VasIdmapAdmin" "$CONFMOD" $NEWTEXT
+    check_and_fix_add "idmap backend" "ldap:ldap://localhost" "$CONFMOD" $NEWTEXT
+    check_parm "idmap uid" "$CONFMOD" ||
+     check_and_fix_add "idmap uid" "1-2147483647"	     "$CONFMOD" $NEWTEXT
+    check_parm "idmap gid" "$CONFMOD" ||
+     check_and_fix_add "idmap gid" "1-2147483647"	     "$CONFMOD" $NEWTEXT
 
-if is_lt $SAMBA_VERSION 3.0.25; then
- check_and_fix_add "idmap expire time" "300"	     "$CONFMOD" $NEWTEXT
-else
- check_and_rename "idmap expire time" "idmap cache time" "$CONFMOD"
- check_and_rename "idmap negative time" "idmap negative cache time" "$CONFMOD"
- check_parm "idmap cache time" "$CONFMOD" ||
-  check_and_fix_add "idmap cache time" "300"	     "$CONFMOD" $NEWTEXT
+    if is_lt $SAMBA_VERSION 3.0.25; then
+     check_and_fix_add "idmap expire time" "300"	     "$CONFMOD" $NEWTEXT
+    else
+     check_and_rename "idmap expire time" "idmap cache time" "$CONFMOD"
+     check_and_rename "idmap negative time" "idmap negative cache time" "$CONFMOD"
+     check_parm "idmap cache time" "$CONFMOD" ||
+      check_and_fix_add "idmap cache time" "300"	     "$CONFMOD" $NEWTEXT
+    fi
 fi
 
 check_parm "netbios name" "$CONFMOD" && cat <<-.
@@ -328,6 +338,20 @@ test -n "$DOMSID" || die_cat <<-.
 .
 verbose_echo "  $DOMSID"
 
+#-- update krb5.conf
+if test "$KRB5CHANGE" = "yes"; then
+    verbose_echo "Configuring system Kerberos (vas-krb5-config) ..."
+    @sbindir@/vas-krb5-config -x 2 \
+	`$DEBUG && echo ' -d'` \
+	`$QUIET && echo ' -q'`
+    ec=$?
+    case $ec in
+	0) : ;;
+	2) KRB5CHANGE="not needed";;
+	*) die "Problem configuring krb5.conf";;
+    esac
+fi
+
 $SAMBA_BINDIR/net -s "$SAMBA_CONFIGFILE" setdomainsid "$DOMSID"
 
 # Configure the change password script
@@ -348,19 +372,6 @@ cat <<-. >"$PWDCHGCONF"
 	SAMBA_CONFIGFILE='$SAMBA_CONFIGFILE'
 	METHOD=$PWDCHG_METHOD
 .
-
-if test "$KRB5CHANGE" = "yes"; then
-    verbose_echo "Configuring system Kerberos (vas-krb5-config) ..."
-    @sbindir@/vas-krb5-config -x 2 \
-	`$DEBUG && echo ' -d'` \
-	`$QUIET && echo ' -q'`
-    ec=$?
-    case $ec in
-	0) : ;;
-	2) KRB5CHANGE="not needed";;
-	*) die "Problem configuring krb5.conf";;
-    esac
-fi
 
 # stop the samba and vasidmap services
 verbose_echo "Stopping services..."
@@ -413,8 +424,26 @@ fi
 
 # and restart samba services
 verbose_echo "Restarting services...."
-startsvc vasidmapd
+$have_winbind && startsvc vasidmapd
 $RESTART_SAMBA && startsvc $SAMBASVC
+
+verbose_echo "Checking SID translation..."
+sid_translation_failed=true
+if $have_winbind; then
+    USERSID=`@bindir@/vasidmap -u -n "$DOMUSER"`
+    WBSID=`$samba_prefix/bin/wbinfo -n "$DOMUSER" | awk '{print $1}'`
+    test x"$USERSID" = x"$WBSID" && sid_translation_failed=false
+else
+    cat <<-.
+
+	* NOTE: Winbind not found
+
+	  While AD authentication will be available to Samba, access
+	  control entries and file ownership will appear to be local
+	  users instead of domain users. To correct this, please install
+	  winbind and re-run this script.
+.
+fi
 
 cat <<-.
 
@@ -423,14 +452,18 @@ cat <<-.
 	  Samba server:          $smbd
 	  Samba config:          $SAMBA_CONFIGFILE
 	  VAS config:            $VAS_CONF
+	  Winbind present:       `$have_winbind && echo yes || echo no`
 
 	  smb.conf updated:      `$update_conf && echo yes || echo not needed`
 	  vas.conf updated:      `$update_vas && echo yes || echo not needed`
 	  krb5.conf updated:     $KRB5CHANGE
 	  Host key reset         $PWDCHANGE
-	  vasidmapd (re)started: yes
+	  vasidmapd (re)started: `$have_winbind && echo yes || echo not needed`
 	  Samba (re)started:     `$RESTART_SAMBA && echo yes || echo no`
 
 .
+
+$have_winbind && $sid_translation_failed && 
+    die "SID translation failed. Please check winbindd and vasidmapd"
 
 exit 0
