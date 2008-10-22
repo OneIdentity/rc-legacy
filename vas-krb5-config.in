@@ -103,6 +103,18 @@ fix_put () {
 FIXFILE=/tmp/fix$$.tmp
 cp "$KRB5CONF" $FIXFILE
 
+if grep '^\[domain_realms\]' $FIXFILE > /dev/null; then
+    grep '^\[domain_realm\]' $FIXFILE > /dev/null &&
+	die_cat<<-.
+
+	ERROR: $KRB5CONF contains both a [domain_realms] section
+	and a [domain_realm] section. Please correct this.
+.
+    echo "WARNING: Correcting [domain_realms] to [domain_realm]"
+    sed -e 's/^\[domain_realms\]/[domain_realm]/' < $FIXFILE > $FIXFILE.new &&
+	mv $FIXFILE.new $FIXFILE
+fi
+
 #-- Some sample krb5 config files on Solaris contain "__<name>__ = {" in
 #   one line with a closing "}" on another line. All these lines need to
 #   be commented out in order to make it work
@@ -118,7 +130,20 @@ fix_put domain_realm ".$DOMAIN" "$REALM"
 fix_put domain_realm "$DOMAIN"  "$REALM"
 
 #-- insert realm information
+# workaround: VAS 3.4's 'vastool info toconf' used to write a [domain_realms]
+# section. We try to detect that here and correct it.
 $VASTOOL -u host/ info toconf $FIXFILE
+
+cp $FIXFILE $FIXFILE.new
+$VASTOOL -u host/ info toconf $FIXFILE.new || exit 1
+if grep '^\[domain_realms\]' $FIXFILE.new > /dev/null; then
+    #-- retry, but using [domain_realms] so that info toconf merges entries
+    sed -e 's/^\[domain_realm\]/[domain_realms]/' < $FIXFILE > $FIXFILE.new &&
+    $VASTOOL -u host/ info toconf $FIXFILE.new || exit 1
+    sed -e 's/^\[domain_realms\]/[domain_realm]/' < $FIXFILE.new > $FIXFILE
+else
+    mv $FIXFILE.new $FIXFILE
+fi
 
 if cmp "$FIXFILE" "$KRB5CONF" > /dev/null; then
     verbose_echo "  no changes needed to $KRB5CONF"
