@@ -99,6 +99,8 @@ TODAY=`date +"%Y%m%d"`
 # Samba service control
 
 #-- bug 254: this may need updating when porting
+# These are really just wild guesses; sometimes there are
+# separate init scripts for smbd, nmbd, winbindd.
 detect_opsys
 case $OPSYS in
 	HP-UX)  initdir=/sbin/init.d   SAMBASVC=samba ;;
@@ -106,6 +108,11 @@ case $OPSYS in
 	AIX)    initdir=SRC            SAMBASVC=samba ;;
         *)      initdir=/etc/init.d    SAMBASVC=samba ;;  # Linux!
 esac
+
+# If we're using Quest Samba, use the samba-quest service group
+if test x"$smbd" = x"/opt/quest/sbin/smbd"; then
+    SAMBASVC=samba-quest
+fi
 
 #-- stops a service
 stopsvc () {
