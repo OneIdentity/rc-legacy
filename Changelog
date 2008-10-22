@@ -1,3 +1,7 @@
+* vas-samba-config runs quest-samba init scripts correctly
+* bug 171: corrected vas-set-samba-password file ownership
+* documentation corrections
+
 1.0.0
 * better support for non-Quest Samba servers
 * added vas-krb5-config script
