@@ -1,3 +1,5 @@
+* vas-krb5-config warns about symlinks
+* bug 596: vas-samba-config copes with missing winbind 
 * vas-samba-config runs quest-samba init scripts correctly
 * bug 171: corrected vas-set-samba-password file ownership
 * documentation corrections
