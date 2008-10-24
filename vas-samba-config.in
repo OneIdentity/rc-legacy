@@ -329,9 +329,7 @@ test $PWDCHANGE = yes &&
 
 # Set domain SID
 verbose_echo "Detecting domain SID..."
-DOMUSER=`$VASTOOL list users | awk -F: '{print $1;exit}'`
-DOMSID=`@bindir@/vasidmap -u -n "$DOMUSER" | cut -d '-' -f 1-7`
-test -n "$DOMSID" || die_cat <<-.
+DOMSID=`vas_domainsid -u host/` || die_cat <<-.
 	There was a problem obtaining the domain SID from VAS.
 	Please check that VAS is properly configured, and that
 	domain controllers are available.
@@ -427,21 +425,17 @@ verbose_echo "Restarting services...."
 $have_winbind && startsvc vasidmapd
 $RESTART_SAMBA && startsvc $SAMBASVC
 
-verbose_echo "Checking SID translation..."
-sid_translation_failed=true
 if $have_winbind; then
-    USERSID=`@bindir@/vasidmap -u -n "$DOMUSER"`
-    WBSID=`$samba_prefix/bin/wbinfo -n "$DOMUSER" | awk '{print $1}'`
-    test x"$USERSID" = x"$WBSID" && sid_translation_failed=false
+    : # yay, SID translation will work
 else
     cat <<-.
 
 	* NOTE: Winbind not found
 
-	  While AD authentication will be available to Samba, access
-	  control entries and file ownership will appear to be local
+	  AD authentication will still be available to Samba, but access
+	  control entries and file ownership will appear to be for local
 	  users instead of domain users. To correct this, please install
-	  winbind and re-run this script.
+	  and start winbind and then re-run this script.
 .
 fi
 
@@ -452,18 +446,16 @@ cat <<-.
 	  Samba server:          $smbd
 	  Samba config:          $SAMBA_CONFIGFILE
 	  VAS config:            $VAS_CONF
-	  Winbind present:       `$have_winbind && echo yes || echo no`
+	  winbind present:       `$have_winbind && echo yes || echo no`
 
 	  smb.conf updated:      `$update_conf && echo yes || echo not needed`
 	  vas.conf updated:      `$update_vas && echo yes || echo not needed`
 	  krb5.conf updated:     $KRB5CHANGE
 	  Host key reset         $PWDCHANGE
+
 	  vasidmapd (re)started: `$have_winbind && echo yes || echo not needed`
-	  Samba (re)started:     `$RESTART_SAMBA && echo yes || echo no`
+	  samba (re)started:     `$RESTART_SAMBA && echo yes || echo no`
 
 .
-
-$have_winbind && $sid_translation_failed && 
-    die "SID translation failed. Please check winbindd and vasidmapd"
 
 exit 0

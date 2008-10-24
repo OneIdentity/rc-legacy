@@ -322,6 +322,18 @@ vas_workgroup () {
 	nETBIOSName
 }
 
+# vas_domainsid [vastool-options]
+#   Returns the domain SID for the currently joined domain.
+#   If not joined to a domain, then returns the domain SID for the root.
+vas_domainsid () {
+    rootDNC=`$VASTOOL "$@" info domain-dn 2>/dev/null || 
+             $VASTOOL "$@" search -q -s base -b '' \
+		"(rootDomainNamingContext=*)" \
+		rootDomainNamingContext` &&
+    $VASTOOL "$@" \
+	attrs -q -b -d "$rootDNC" objectSid
+}
+
 # yesorno <question> [default-response]
 #   Prompts the user for a yes-no question.
 #   Re-prompting will occur if the user enters a blank line and there
