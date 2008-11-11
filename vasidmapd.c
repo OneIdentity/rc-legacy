@@ -950,7 +950,7 @@ int main (int argc, char *argv[])
 #endif
 
         /* Process command line arguments */
-        while ((ch = getopt(argc, argv, "A:d:DFp:s:")) != -1) {
+        while ((ch = getopt(argc, argv, "A:d:DFp:s:V")) != -1) {
             switch (ch) {
                 case 'A': bindaddr = optarg; break;
                 case 'd': debug = atoi(optarg); break;
@@ -958,6 +958,11 @@ int main (int argc, char *argv[])
                 case 'D': daemonize = 1; break;
                 case 'F': daemonize = 0; break;
                 case 's': service_name = optarg; break;
+		case 'V':
+		    printf("vasidmapd %s VAS %s\n",
+			    PACKAGE_VERSION,
+			    vas_library_version(0,0,0));
+		    exit(0);
                 default: error = 1;
             }
         }

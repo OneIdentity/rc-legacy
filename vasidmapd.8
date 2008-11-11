@@ -6,6 +6,7 @@ vasidmapd \- SID-UID and SID-GID mapper for Active Directory
 .B vasidmapd
 [\-D]
 [\-F]
+[\-V]
 .RI [\-A\  ip-addr ]
 .RI [\-d\  debug-level ]
 .RI [\-p\  port ]
@@ -37,6 +38,9 @@ but the main process does not exit.
 This operation mode is suitable for running
 .B vasidmapd
 under process supervisors.
+.TP
+.RI \-V
+Causes the daemon to print its version number and exit immediately.
 .TP
 .RI \-A\  ip-addr
 If specified, changes the IP address that
