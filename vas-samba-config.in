@@ -12,6 +12,23 @@ QUIET=false
 FORCE=false	    # -f option
 RESTART_SAMBA=true  # -n option
 
+# Prints usage info to stdout
+usage () {
+    cat <<ZOMG
+Usage: $0 [-dfhnqV] [-s <config-file>] [-S <samba-prefix>]
+  -d    Enable extra debug output
+  -f    Force defaults instead of prompting interactively
+  -h    Print this help
+  -n    Don't restart Samba after modifying its configuration
+  -q    Quiet mode (fewer informational messages)
+  -s <file>
+        Location of the Samba configuration file (smb.conf)
+  -S <prefix>
+        Samba installation prefix (eg. /usr or /opt/quest)
+  -V    Print version number
+ZOMG
+}
+
 # Process command line arguments
 opterr=false
 samba_prefix=
@@ -20,6 +37,7 @@ while test $# -gt 0; do
     case "$1" in
 	-d) DEBUG=true; shift;;
 	-f) FORCE=true; shift;;
+	-h) usage; exit 0;;
 	-n) RESTART_SAMBA=false; shift;;
 	-q) QUIET=true; shift;;
 	-s) samba_configfile="$2"; shift; shift;;
@@ -34,7 +52,7 @@ if test $# -ne 0; then	    # Expect no extra arguments
     opterr=true
 fi
 if $opterr; then	    # Show usage on option error
-    echo "Usage: $0 [-dfnqV] [-s /path/smb.conf] [-S samba-prefix]" >&2
+    usage >&2
     exit 1
 fi
 
