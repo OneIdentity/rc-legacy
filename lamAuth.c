@@ -77,6 +77,15 @@ int lam_auth_user( char *username, char *password ) {
     else
         return 1;
 }
+
+void _lower( char *name ) {
+    char * cptr = NULL;
+    int count = 0;
+    while( name[count] != '\0' ) {
+        name[count] = tolower(name[count]);
+        ++count;
+    }
+}
  
 int main(int argc, char* argv[])
 {
@@ -84,6 +93,7 @@ int main(int argc, char* argv[])
     struct passwd *pwd = NULL;
     char password[128];
     char *cptr = NULL;
+    char userBuffer[MAX_LINE_LENGTH];
 
     func_start();
 
@@ -99,12 +109,17 @@ int main(int argc, char* argv[])
     if( getenv( "SETHS_DEBUG" ) )
         debug = 1;
 
+    memset(userBuffer, '\0', MAX_LINE_LENGTH);
+
+    strcpy( userBuffer, argv[1] );
+
     /* Check for user */
-    if( ( pwd = getpwnam( argv[1] ) ) == NULL ) {
-        fprintf( stderr, "ERROR: Unable to find user name %s!\n", argv[1] );
-        slog( SLOG_EXTEND, "%s: unable to find user <%s>", __FUNCTION__, 
-		argv[1] );
-        exit( ENOENT );
+    if( ( pwd = getpwnam( userBuffer ) ) == NULL ) {
+        _lower( userBuffer );
+        if( ( pwd = getpwnam( userBuffer ) ) == NULL ) {
+            slog( SLOG_EXTEND, "%s: unable to find user <%s>", __FUNCTION__, argv[1] );
+            exit( 3 );
+        }
     }
 
     /* Read password from stdin */
@@ -112,7 +127,7 @@ int main(int argc, char* argv[])
     {
         slog( SLOG_EXTEND, 
 	    "%s: error reading password from std_in for user <%s>, errno <%d>",
-	    __FUNCTION__, argv[1], errno );
+	    __FUNCTION__, userBuffer, errno );
         exit( EIO );
     }
 
@@ -122,7 +137,7 @@ int main(int argc, char* argv[])
     }
 
     /* Run the auth_user function. */
-    retval = lam_auth_user( argv[1], password );
+    retval = lam_auth_user( userBuffer, password );
 
 #if 0
     slog( SLOG_EXTEND, "%s: received return value <%d> from authentication "

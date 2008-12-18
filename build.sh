@@ -1,9 +1,12 @@
 #!/bin/sh
-VERSION=2.0.0.`tr -d '\012' < build-number.txt`
+VERSION=3.0.0.`tr -d '\012' < build-number.txt`
 SERVERLIST="vasx86.vintela.com vasx8664.vintela.com vassol8.vintela.com vashpux.vintela.com vashpuxia64.vintela.com 10.4.23.115 vasaix51.vintela.com vasaix53.vintela.com"
 #SERVERLIST="vasx86.vintela.com vasx8664.vintela.com vassol8.vintela.com vashpux.vintela.com vashpuxia64.vintela.com 10.4.23.115 vasaix53.vintela.com"
 #SERVERLIST="vasx86.vintela.com vasx8664.vintela.com vassol8.vintela.com vashpuxia64.vintela.com vashpux.vintela.com 10.4.23.115"
 #SERVERLIST="vashpuxia64.vintela.com"
+#SERVERLIST="vasx86.vintela.com vasx8664.vintela.com vasia64.vintela.com vassles8ppc.vintela.com vassles9ppc.vintela.com vass390.vintela.com vass390x.vintela.com vassol6.vintela.com vassol7.vintela.com vassol8.vintela.com vassol8x86.vintela.com vassolx8664.vintela.com vashpux.vintela.com vashpux11i.vintela.com vashpuxia64.vintela.com vasaix43.vintela.com vasaix51.vintela.com vasaix53.vintela.com vasirix.vintela.com vastru64.vintela.com"
+
+#SERVERLIST="vasx86.vintela.com vasx8664.vintela.com vassol8.vintela.com vashpuxia64.vintela.com 10.4.23.115 vasaix51.vintela.com vasaix53.vintela.com"
 
 server_test()
 {
@@ -34,7 +37,7 @@ server_clean()
     
 server_build()
 {
-    ssh $1 "export PATH=/opt/hp-gcc/bin:/opt/quest/bin:/usr/local/pa20_32/bin:/usr/local/bin:/usr/contrib/bin:/usr/local:\$PATH; rm -rf DB2_sys-auth/ ; gunzip DB2_sys-auth_src.$VERSION.tar.gz && tar xf DB2_sys-auth_src.$VERSION.tar && cd DB2_sys-auth/ && ./configure && make bin_dist && mv DB2_sys-auth_*.$VERSION.tar.gz ../"
+    ssh $1 "export PATH=/opt/ccache/bin:/opt/hp-gcc/bin:/opt/quest/bin:/usr/local/pa20_32/bin:/usr/local/bin:/usr/contrib/bin:/usr/local:\$PATH; rm -rf DB2_sys-auth/ ; gunzip DB2_sys-auth_src.$VERSION.tar.gz && tar xf DB2_sys-auth_src.$VERSION.tar && cd DB2_sys-auth/ && ./configure && make bin_dist && mv DB2_sys-auth_*.$VERSION.tar.gz ../"
     if [ $? -ne 0 ] ; then
         echo "Server: <$server> failed on run."
         echo $server >> ./failed
@@ -66,7 +69,8 @@ server_gather()
 check_failed ()
 {
     if [ -f ./failed ] ; then
-        echo "$1 call failed on <`cat ./failed`>"
+        echo "$1 call failed on:"
+        cat ./failed
         rm -rf ./failed
         exit 1
     fi    

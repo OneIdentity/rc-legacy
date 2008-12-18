@@ -1,6 +1,6 @@
 # (c) 2007 Quest Software, Inc. All rights reserved
-AC_INIT(sys-auth, [2.0.0.]esyscmd(tr -d '\012' <build-number.txt))
-VERSION="2.0.0.`cat ./build-number.txt`"
+AC_INIT(sys-auth, [3.0.0.]esyscmd(tr -d '\012' <build-number.txt))
+VERSION="3.0.0.`cat ./build-number.txt`"
 AC_CONFIG_HEADER(config.h)
 
 dnl Find and test the C compiler
@@ -139,9 +139,8 @@ AC_HEADER_STDC
 AC_SUBST(VERSION)
 
 dnl read Makefile.in and write Makefile
-#AC_OUTPUT(Makefile Troubleshooting install.sh install_das.sh upgrade.sh make_all.exp test2.conf)
-AC_OUTPUT(Makefile Troubleshooting install.sh install_das.sh upgrade.sh test2.conf)
+#AC_OUTPUT(Makefile Troubleshooting install.sh install_das.sh make_all.exp test2.conf)
+AC_OUTPUT(Makefile Troubleshooting install.sh install_das.sh test2.conf)
     chmod +x install.sh
     chmod +x install_das.sh
-    chmod +x upgrade.sh
 #    chmod +x make_all.exp

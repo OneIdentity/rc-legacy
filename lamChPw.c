@@ -93,6 +93,15 @@ int lam_auth_user( char *username, char *password ) {
     else
 	return 1;	
 }
+
+void _lower( char *name ) {
+    char * cptr = NULL;
+    int count = 0;
+    while( name[count] != '\0' ) {
+        name[count] = tolower(name[count]);
+        ++count;
+    }
+}
  
 int main(int argc, char* argv[])
 {
@@ -103,6 +112,7 @@ int main(int argc, char* argv[])
     char password_old[MAX_LEN];
     char password_new[MAX_LEN];
     char *cptr = NULL;
+    char userBuffer[MAX_LINE_LENGTH];
 
     func_start();
 
@@ -118,13 +128,19 @@ int main(int argc, char* argv[])
     if( getenv( "SETHS_DEBUG" ) )
         debug = 1;
 
+    memset(userBuffer, '\0', MAX_LINE_LENGTH);
+
+    strcpy( userBuffer, argv[1] );
+
     /* Check for user */
-    if( ( pwd = getpwnam( argv[1] ) ) == NULL ) {
-        fprintf( stderr, "ERROR: Unable to find user name %s!\n", argv[1] );
-        slog( SLOG_EXTEND, "%s: unable to find user <%s>", __FUNCTION__, 
-		argv[1] );
-        exit( ENOENT );
+    if( ( pwd = getpwnam( userBuffer ) ) == NULL ) {
+        _lower( userBuffer );
+        if( ( pwd = getpwnam( userBuffer ) ) == NULL ) {
+            slog( SLOG_EXTEND, "%s: unable to find user <%s>", __FUNCTION__, argv[1] );
+            exit( 3 );
+        }
     }
+
 
     /* Read passwords from stdin */
     /* They will be <oldpassword>\0<newpassword>\0 */

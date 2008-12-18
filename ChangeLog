@@ -192,3 +192,27 @@ Now changelog will work off the version.
 * Modified the dist package to include properly named PAM files. (without bit)
 * Fixed a bad bug where if there was not authenticaiton file it returned
   automatic success. 
+
+3.0.0.1 ( 2008_10_12 )
+* New binary, sys-nss. sys-auth now forks and calls it for any NSS related query
+  so any issues ( memory, loaded libraries, setauth, etc ) with the DB2 agent 
+  process doesn't interfere with the ability of the plugin to query for NSS
+  information.
+  
+3.0.0.2 ( 2008_10_21 )
+* Auth/ChPw should now handle upper cased names.
+
+3.0.0.3 ( 2008_11_16 )
+* Better handling of when the user's group memberships exceed the DB2 buffer 
+  limit. ( Could segfault previous, should properly truncate now ). NOTE: if a 
+  user is member of more groups then fits in the DB2 provided buffer, they could
+  be missing needed group memberships. 
+* Removed the upgrade script, it can't handle moving between 2.X and 3.X due to 
+  new binaries, force a re-install each time.
+
+3.0.0.4 ( 2008_12_17 )
+* Debug for waitpid failures, trying to track down a heavy use issue where 
+  who_am_i returns failure when it worked, due to waitpid failing. 
+
+3.0.0.5 ( 2008_12_17 )
+* Ok, something else can reap the out-call children, so handle that.   

@@ -286,6 +286,42 @@ void testAuthGood( Test *pTest )
     if( password ) free( password );
 }
 
+void testAuthGoodUpper( Test *pTest )
+{
+    db2int32 version = 1;
+    int rval = 0;
+    db2int32 msgLen = 0;
+    char *errMsg = NULL;
+    char *username = (char*)GetEntryFromFile( test_conf, "username" );
+    if( username )
+    {
+        username = (char *)strdup( username );
+        username[0] = toupper( username[0] );
+    }
+
+    char *password = (char*)GetEntryFromFile( test_conf, "password" );
+    if( password )
+        password = (char *)strdup( password );
+    rval = fnsS.db2secValidatePassword( username?username:"bad", 
+                                       username?strlen(username):3, 
+                                       NULL, 
+                                       0, 
+                                       0, 
+                                       password?password:"bad", 
+                                       password?strlen(password):3, 
+                                       NULL, 
+                                       0, 
+                                       NULL, 
+                                       0, 
+                                       0, 
+                                       NULL, 
+                                       &errMsg, 
+                                       &msgLen);
+    ct_test( pTest, rval == DB2SEC_PLUGIN_OK );
+    if( username ) free( username );
+    if( password ) free( password );
+}
+
 void testAuthGoodMustChange( Test *pTest )
 {
     db2int32 version = 1;
@@ -654,9 +690,9 @@ void testGetLoginContextEffictive( Test *pTest )
                                               NULL, /* token */
                                               &errMsg,
                                               &msgLen );
-    ct_test( pTest, ( rval == DB2SEC_PLUGIN_OK ) && 
-	    ( strcmp( authID, pwd->pw_name ) == 0 ) && 
-	    ( strcmp( userid, pwd->pw_name ) == 0 ) );
+    ct_test( pTest, ( rval == DB2SEC_PLUGIN_OK ) );
+    ct_test( pTest, strcmp( authID, pwd->pw_name ) == 0 );
+	ct_test( pTest, strcmp( userid, pwd->pw_name ) == 0 );
 
 }
 
@@ -671,7 +707,7 @@ void testGetLoginContextReal( Test *pTest )
     db2int32 useridLength = 0;
     int rval = 0;
 
-    if( ( pwd = getpwuid(geteuid()) ) == NULL )
+    if( ( pwd = getpwuid(getuid()) ) == NULL )
     {
         ct_test( pTest, /* FAILED to get euid */ 0 );
         return;
@@ -690,9 +726,9 @@ void testGetLoginContextReal( Test *pTest )
                                               NULL, /* token */
                                               &errMsg,
                                               &msgLen );
-    ct_test( pTest, ( rval == DB2SEC_PLUGIN_OK ) && 
-	    ( strcmp( authID, pwd->pw_name ) == 0 ) && 
-	    ( strcmp( userid, pwd->pw_name ) == 0 ) );
+    ct_test( pTest, ( rval == DB2SEC_PLUGIN_OK ) );
+	ct_test( pTest, strcmp( authID, pwd->pw_name ) == 0 );
+	ct_test( pTest, strcmp( userid, pwd->pw_name ) == 0 );
 
 }
 
@@ -738,7 +774,7 @@ void testGroupUpperExists( Test *pTest )
     if( free_group ) free( group );                                  
 }
 
-void testBadGroupExists( Test *pTest )
+void testGroupExistsBad( Test *pTest )
 {
     db2int32 version = 1;
     int rval = 0;
@@ -979,7 +1015,7 @@ void testGroupNotMember( Test *pTest )
     ct_test( pTest, in_group == 0 );
 }
 
-void testGroupMemberList( Test *pTest )
+void testGroupsForUser( Test *pTest )
 {
     db2int32 version = 1;
     int rval = 0;
@@ -1046,7 +1082,81 @@ void testGroupMemberList( Test *pTest )
                                     &msgLen );
 }
 
-void testGroupBadUser( Test *pTest )
+void testGroupLimits( Test *pTest )
+{
+    db2int32 version = 1;
+    int rval = 0;
+    db2int32 msgLen = 0;
+    char *errMsg = NULL;
+    char *groupList = NULL;
+    db2int32 numGroups = 0;
+    char *username = (char*)GetEntryFromFile( test_conf, "username" );
+    if( username )
+        username = (char *)strdup( username );
+    char *show_groups = NULL;
+    char cmd[1024];
+    int is_in_group_1 = 0,
+        is_in_group_150 = 0;
+
+    snprintf( cmd, 1024, "cp /etc/group /etc/group.save && echo | awk 'BEGIN {for (i=1; i<=150; ++i) print \"group_\" i \":x:\" i+10000 \":%s\" }' >> /etc/group", username );
+    system( cmd );
+    
+    rval = fnsG.db2secGetGroupsForUser( username?username:"bad", //authid
+                                        username?strlen(username):3, //authidlen
+                                        NULL, //userid
+                                        0, //useridlen
+                                        NULL, //usernamespace
+                                        0, //usernamespacelen
+                                        0, //usernamespacetype
+                                        NULL, //dbname
+                                        0, //dbnamlen
+                                        NULL, //token
+                                        0, //tokentype
+                                        0, //location
+                                        NULL, //authpluginname
+                                        0, //authpluginnamelen
+                                        (void **)&groupList,
+                                        &numGroups,
+                                        &errMsg, 
+                                        &msgLen);
+    ct_test( pTest, rval == DB2SEC_PLUGIN_OK );
+    system( "mv /etc/group.save /etc/group && chmod 644 /etc/group" );
+
+    /* See if we should print out the group list received. */
+    if( rval == DB2SEC_PLUGIN_OK &&
+        groupList &&
+        groupList[0] != '\0' )
+    {
+        char *ptr; 
+        int groupsize = 0;
+        groupsize = (int)groupList[0];
+        ptr = &groupList[1];
+        do 
+        {   
+	    /* Need to store off the next groups size first, 
+	     * before we overwrite with '\0'
+	     */
+            int oldsize = groupsize;
+            groupsize = (int)ptr[oldsize];
+            ptr[ oldsize ] = '\0';
+            if( strcmp( "group_1", ptr ) == 0 )
+                is_in_group_1 = 1;
+            if( strcmp( "group_150", ptr ) == 0 )
+                is_in_group_150 = 1;
+            ptr = &ptr[oldsize + 1];
+        } while ( groupsize != 0 );
+    }
+
+    if( username ) free( username );
+
+    ct_test( pTest, is_in_group_1 == 1 );
+    ct_test( pTest, is_in_group_150 == 0 );
+    fnsG.db2secFreeGroupListMemory( groupList,
+                                    &errMsg,
+                                    &msgLen );
+}
+
+void testGroupsForUserBadUser( Test *pTest )
 {
     db2int32 version = 1;
     int rval = 0;
@@ -1084,7 +1194,7 @@ void testGroupBadUser( Test *pTest )
     if( username ) free( username );
 }
 
-void testGroupUserCase( Test *pTest )
+void testGroupsForUserUpper( Test *pTest )
 {
     db2int32 version = 1;
     int rval = 0;
@@ -1263,6 +1373,7 @@ Test *GetServerTests()
     rc = ct_addTestFun( pTest, testAuthNoPW );
     rc = ct_addTestFun( pTest, testAuthNoPWBAD );
     rc = ct_addTestFun( pTest, testAuthGood );
+    rc = ct_addTestFun( pTest, testAuthGoodUpper );
     rc = ct_addTestFun( pTest, testAuthGoodMustChange );
     rc = ct_addTestFun( pTest, testAuthGoodCantChange );
     rc = ct_addTestFun( pTest, testAuthGoodChPwBadOldPwd );
@@ -1294,14 +1405,15 @@ Test *GetGroupTests()
 {
     Test* pTest = ct_create( "Sys-auth library Group", NULL );
     bool rc = ct_addTestFun( pTest, testGroupExists );
-    rc = ct_addTestFun( pTest, testBadGroupExists);
+    rc = ct_addTestFun( pTest, testGroupExistsBad);
     rc = ct_addTestFun( pTest, testGroupUpperExists);
-    rc = ct_addTestFun( pTest, testGroupMemberList );
+    rc = ct_addTestFun( pTest, testGroupsForUser);
+    rc = ct_addTestFun( pTest, testGroupsForUserBadUser );
+    rc = ct_addTestFun( pTest, testGroupsForUserUpper );
     rc = ct_addTestFun( pTest, testGroupMember );
     rc = ct_addTestFun( pTest, testGroupMemberPGid );
     rc = ct_addTestFun( pTest, testGroupNotMember );
-    rc = ct_addTestFun( pTest, testGroupBadUser );
-    rc = ct_addTestFun( pTest, testGroupUserCase );
+    rc = ct_addTestFun( pTest, testGroupLimits );
     assert( rc );
     return pTest;
 }

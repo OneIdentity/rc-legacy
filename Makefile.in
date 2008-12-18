@@ -42,12 +42,13 @@ PAMAUTHS = pamAuth pamChPw db2dassecPam
 TEST32 = ctest32.o csuite32.o test_all32.o log32.o vsyslog32.o
 TEST64 = ctest64.o csuite64.o test_all64.o log64.o vsyslog64.o
 
+
 @DO32@@DO64@@DOLAM@all : $(PROG32).so.@VERSION@ $(PROG64).so.@VERSION@ PAMAUTH LAMAUTH
 @DO32@@DO64@@NOLAM@all : $(PROG32).so.@VERSION@ $(PROG64).so.@VERSION@ PAMAUTH
 @DO32@@NO64@all: $(PROG32).so.@VERSION@ PAMAUTH
 @NO32@@DO64@all: $(PROG64).so.@VERSION@ PAMAUTH
 
-@DOPAM32@PAMAUTH: $(PAM32)
+@DOPAM32@PAMAUTH: $(PAM32) sys-nss
 @DOPAM32@	sudo rm -f $(PAMAUTHS)
 @DOPAM32@	cp -fp pamAuth32 pamAuth
 @DOPAM32@	cp -fp pamChPw32 pamChPw
@@ -55,7 +56,7 @@ TEST64 = ctest64.o csuite64.o test_all64.o log64.o vsyslog64.o
 @DOPAM32@	sudo chown root $(PAMAUTHS)
 @DOPAM32@	sudo chmod 4755 $(PAMAUTHS)
     
-@DOPAM64@PAMAUTH: $(PAM64)
+@DOPAM64@PAMAUTH: $(PAM64) sys-nss
 @DOPAM64@	sudo rm -f $(PAMAUTHS)
 @DOPAM64@	cp -p pamAuth64 pamAuth
 @DOPAM64@	cp -p pamChPw64 pamChPw
@@ -76,10 +77,18 @@ LAMAUTH: $(LAM)
 check: all $(TESTS)
 
 check32: test_all32
-	./test_all32 "./sys-auth32.so.@VERSION@"
+	sudo ./test_all32 "./sys-auth32.so.@VERSION@"
 
 check64: test_all64
-	./test_all64 "./sys-auth64.so.@VERSION@"
+	sudo ./test_all64 "./sys-auth64.so.@VERSION@"
+
+sys-nss: sys-nss.o
+@DOPAM32@	$(CC) -o sys-nss sys-nss.o $(DLFLAG)
+@DOPAM64@	$(CC64) -o sys-nss sys-nss.o $(DLFLAG)
+
+sys-nss.o: sys-nss.c
+@DOPAM32@	$(CC) -c $(CFLAGS) $(INCLUDES) -o sys-nss.o sys-nss.c -g
+@DOPAM64@	$(CC64) -c $(CFLAGS) $(INCLUDES) -o sys-nss.o sys-nss.c -g
 
 test_all64: $(TEST64) $(PROG64).so.@VERSION@
 	$(CC64) -o test_all64 $(TEST64) $(DLFLAG)
@@ -106,10 +115,10 @@ csuite32.o: ctest.h ctest.c bool.h csuite.c csuite.h
 	$(CC) $(CFLAGS) -c csuite.c -o csuite32.o -g
 
 clean:
-	@sudo rm -f *.o *.so.@VERSION@ $(LAM) $(LAMAUTHS) $(PAM32) $(PAM64) test/*.o $(TESTS) $(PAMAUTHS)
+	@sudo rm -f *.o *.so.@VERSION@ $(LAM) $(LAMAUTHS) $(PAM32) $(PAM64) test/*.o $(TESTS) $(PAMAUTHS) sys-nss
 
 distclean: clean
-	@sudo rm -rf config.h config.log config.status Makefile upgrade.sh install.sh install DB2* Troubleshooting autom4te.cache install_das.sh out.*
+	@sudo rm -rf config.h config.log config.status Makefile install.sh install DB2* Troubleshooting autom4te.cache install_das.sh out.*
 
 $(PROG32).so.@VERSION@: $(PROG32).o log32.o
 	$(CC) $(LDFLAGS) -o $(PROG32).so.@VERSION@ $(PROG32).o vsyslog32.o log32.o
@@ -192,11 +201,11 @@ vsyslog64.o: vsyslog.c vsyslog.h
 bin_dist: all $(TESTPROGS)
 	@rm -rf DB2_sys-auth
 	@mkdir DB2_sys-auth
-	@chmod +x upgrade.sh install.sh install_das.sh
-@DOLAM@	@cp sys-auth32.so.@VERSION@ sys-auth64.so.@VERSION@ upgrade.sh install.sh install_das.sh INSTALL README LICENSE $(PAMAUTHS) $(LAMAUTHS) NEWS AUTHORS TESTING ChangeLog pam.conf.aix test_all32 test.conf Troubleshooting DB2_sys-auth/ 
-@NOLAM@@DO32@@DO64@	@cp sys-auth32.so.@VERSION@ sys-auth64.so.@VERSION@ upgrade.sh install.sh install_das.sh INSTALL LICENSE README $(PAMAUTHS) NEWS AUTHORS TESTING ChangeLog pam.conf.aix $(TESTPROGS) test.conf Troubleshooting DB2_sys-auth/
-@NOLAM@@NO64@	@cp sys-auth32.so.@VERSION@ upgrade.sh install.sh install_das.sh INSTALL README LICENSE $(PAMAUTHS) NEWS AUTHORS TESTING ChangeLog pam.conf.aix test_all32 test.conf Troubleshooting DB2_sys-auth/
-@NOLAM@@NO32@	@cp sys-auth64.so.@VERSION@ upgrade.sh install.sh install_das.sh INSTALL README LICENSE $(PAMAUTHS) NEWS AUTHORS TESTING ChangeLog pam.conf.aix test_all64 test.conf Troubleshooting DB2_sys-auth/
+	@chmod +x install.sh install_das.sh
+@DOLAM@	@cp sys-auth32.so.@VERSION@ sys-auth64.so.@VERSION@ sys-nss install.sh install_das.sh INSTALL README LICENSE $(PAMAUTHS) $(LAMAUTHS) NEWS AUTHORS TESTING ChangeLog pam.conf.aix test_all32 test.conf Troubleshooting DB2_sys-auth/ 
+@NOLAM@@DO32@@DO64@	@cp sys-auth32.so.@VERSION@ sys-auth64.so.@VERSION@ sys-nss install.sh install_das.sh INSTALL LICENSE README $(PAMAUTHS) NEWS AUTHORS TESTING ChangeLog pam.conf.aix $(TESTPROGS) test.conf Troubleshooting DB2_sys-auth/
+@NOLAM@@NO64@	@cp sys-auth32.so.@VERSION@ install.sh sys-nss install_das.sh INSTALL README LICENSE $(PAMAUTHS) NEWS AUTHORS TESTING ChangeLog pam.conf.aix test_all32 test.conf Troubleshooting DB2_sys-auth/
+@NOLAM@@NO32@	@cp sys-auth64.so.@VERSION@ install.sh sys-nss install_das.sh INSTALL README LICENSE $(PAMAUTHS) NEWS AUTHORS TESTING ChangeLog pam.conf.aix test_all64 test.conf Troubleshooting DB2_sys-auth/
 	@tar -cvf DB2_sys-auth_@PLATFORM@.@VERSION@.tar DB2_sys-auth/*
 	@rm -rf DB2_sys-auth
 	@gzip DB2_sys-auth_@PLATFORM@.@VERSION@.tar
@@ -205,7 +214,7 @@ bin_dist: all $(TESTPROGS)
 src_dist: all
 	@rm -rf DB2_sys-auth
 	@mkdir DB2_sys-auth
-	@cp configure config.h.in log.h log.c vsyslog.c vsyslog.h sys-auth.c upgrade.sh.in install.sh.in install_das.sh.in Makefile.in INSTALL README LICENSE pamChPw.c pamAuth.c lamAuth.c lamChPw.c NEWS AUTHORS TESTING ChangeLog pam.conf.aix ctest.c ctest.h csuite.c csuite.h test_all.c test.conf bool.h Troubleshooting.in db2dassecLam.c db2dassecPam.c test2.conf.in db2secPlugin.h build-number.txt DB2_sys-auth/  
+	@cp configure config.h.in log.h log.c vsyslog.c vsyslog.h sys-auth.c sys-nss.c install.sh.in install_das.sh.in Makefile.in INSTALL README LICENSE pamChPw.c pamAuth.c lamAuth.c lamChPw.c NEWS AUTHORS TESTING ChangeLog pam.conf.aix ctest.c ctest.h csuite.c csuite.h test_all.c test.conf bool.h Troubleshooting.in db2dassecLam.c db2dassecPam.c test2.conf.in db2secPlugin.h build-number.txt DB2_sys-auth/  
 	@tar -cvf DB2_sys-auth_src.@VERSION@.tar DB2_sys-auth/*
 	@rm -rf DB2_sys-auth
 	@gzip DB2_sys-auth_src.@VERSION@.tar

@@ -23,6 +23,7 @@ LIBFILE32=sys-auth32.so.@VERSION@
 LIBFILE64=sys-auth64.so.@VERSION@
 AUTHFILE=sys-auth
 CHPWFILE=sys-chpw
+NSSFILE=sys-nss
 
 if [ ! -f ${LIBFILE32} ]
 then
@@ -81,6 +82,7 @@ if [ -d ${PLUGINPATH32} ] ; then
     rm -f ${PLUGINPATH32}/client/${LIBFILE}
     rm -f ${PLUGINPATH32}/group/${LIBFILE}
     rm -f ${PLUGINPATH32}/${AUTHFILE}
+    rm -f ${PLUGINPATH32}/${NSSFILE}
     rm -f ${PLUGINPATH32}/${CHPWFILE}
 # Clean up old files/links as well.
     rm -f ${PLUGINPATH32}/*/${LIBFILE32}
@@ -92,6 +94,8 @@ if [ -d ${PLUGINPATH32} ] ; then
     ln -s ${PLUGINPATH32}/${LIBFILE32} ${PLUGINPATH32}/group/${LIBFILE}
     echo "Copy ${AUTH} to ${PLUGINPATH32}/${AUTHFILE}"
     cp ${AUTH} ${PLUGINPATH32}/${AUTHFILE}
+    echo "Copy ${NSSFILE} to ${PLUGINPATH32}/${NSSFILE}"
+    cp ${NSSFILE} ${PLUGINPATH32}/${NSSFILE}
     echo "Copy ${CHPW} to ${PLUGINPATH32}/${CHPWFILE}"
     cp ${CHPW} ${PLUGINPATH32}/${CHPWFILE}
     echo "And fix the ownerships/permissions. WARNING!!! ${PLUGINPATH32}/${AUTHFILE} and ${PLUGINPATH32}/${CHPWFILE} are setuid root because they have to be to do authentications/password changes. Just so you know."
@@ -101,6 +105,8 @@ if [ -d ${PLUGINPATH32} ] ; then
     chmod 4555 ${PLUGINPATH32}/${AUTHFILE} 
     chown root ${PLUGINPATH32}/${CHPWFILE} 
     chmod 4555 ${PLUGINPATH32}/${CHPWFILE} 
+    chown root ${PLUGINPATH32}/${NSSFILE} 
+    chmod 4555 ${PLUGINPATH32}/${NSSFILE} 
 fi
 
 if [ "${TYPE}" = "64" ]
@@ -111,6 +117,7 @@ then
 	rm -f ${PLUGINPATH64}/client/${LIBFILE}
 	rm -f ${PLUGINPATH64}/group/${LIBFILE}
 	rm -f ${PLUGINPATH64}/${AUTHFILE}
+	rm -f ${PLUGINPATH64}/${NSSFILE}
 	rm -f ${PLUGINPATH64}/${CHPWFILE}
     # Clean up old files as well.
     rm -f ${PLUGINPATH64}/*/${LIBFILE64}
@@ -122,6 +129,8 @@ then
     ln -s ${PLUGINPATH64}/${LIBFILE64} ${PLUGINPATH64}/group/${LIBFILE}
     echo "Copy ${AUTH} to ${PLUGINPATH64}/${AUTHFILE}"
 	cp ${AUTH} ${PLUGINPATH64}/${AUTHFILE}
+    echo "Copy ${NSSFILE} to ${PLUGINPATH64}/${NSSFILE}"
+	cp ${NSSFILE} ${PLUGINPATH64}/${NSSFILE}
     echo "Copy ${CHPW} to ${PLUGINPATH64}/${CHPWFILE}"
 	cp ${CHPW} ${PLUGINPATH64}/${CHPWFILE}
     echo "And fix the ownerships/permissions. WARNING!!! ${PLUGINPATH64}/${AUTHFILE} and ${PLUGINPATH64}/${CHPWFILE} are setuid root because they have to be to do authentications/password changes. Just so you know."
@@ -131,6 +140,8 @@ then
 	chmod 4555 ${PLUGINPATH64}/${AUTHFILE} 
 	chown root ${PLUGINPATH64}/${CHPWFILE} 
 	chmod 4555 ${PLUGINPATH64}/${CHPWFILE} 
+	chown root ${PLUGINPATH64}/${NSSFILE} 
+	chmod 4555 ${PLUGINPATH64}/${NSSFILE} 
 fi
 
 echo ""

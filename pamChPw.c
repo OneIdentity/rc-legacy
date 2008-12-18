@@ -193,6 +193,15 @@ int pam_auth_user( const char *name, const char *password ) {
 	return retval;
 }
 
+void _lower( char *name ) {
+    char * cptr = NULL;
+    int count = 0;
+    while( name[count] != '\0' ) {
+        name[count] = tolower(name[count]);
+        ++count;
+    }
+}
+
 int main(int argc, char* argv[])
 {
     int retval = 0;
@@ -202,6 +211,7 @@ int main(int argc, char* argv[])
     char password_old[MAX_LEN];
     char password_new[MAX_LEN];
     char *cptr = NULL;
+    char userBuffer[MAX_LINE_LENGTH];
 
     func_start();
 
@@ -217,22 +227,28 @@ int main(int argc, char* argv[])
     if( getenv( "SETHS_DEBUG" ) )
         debug = 1;
 
+    memset(userBuffer, '\0', MAX_LINE_LENGTH);
+
+    strcpy( userBuffer, argv[1] );
+
     /* Check for user */
-    if( ( pwd = getpwnam( argv[1] ) ) == NULL ) {
-        fprintf( stderr, "ERROR: Unable to find user name %s!\n", argv[1] );
-        slog( SLOG_EXTEND, "%s: unable to find user <%s>", __FUNCTION__, 
-		argv[1] );
-        exit( ENOENT );
+    if( ( pwd = getpwnam( userBuffer ) ) == NULL ) {
+        _lower( userBuffer );
+        if( ( pwd = getpwnam( userBuffer ) ) == NULL ) {
+            slog( SLOG_EXTEND, "%s: unable to find user <%s>", __FUNCTION__, argv[1] );
+            exit( 3 );
+        }
     }
+
 
     /* Read passwords from stdin */
     /* They will be <oldpassword>\0<newpassword>\0 */
     if( ( rval = read(STDIN_FILENO, password_in, MAX_LEN) ) <= 0 )
     {
-        fprintf( stderr, "error reading old password from std_in for user <%s>, errno <%d>\n", argv[1], errno );
+        fprintf( stderr, "error reading old password from std_in for user <%s>, errno <%d>\n", userBuffer, errno );
         slog( SLOG_EXTEND, 
 	    "%s: error reading old password from std_in for user <%s>, errno <%d>",
-	    __FUNCTION__, argv[1], errno );
+	    __FUNCTION__, userBuffer, errno );
         exit( EIO );
     }
 
@@ -261,14 +277,14 @@ int main(int argc, char* argv[])
     }
 
     /* First auth the user ( verify the old password ) */
-    retval = pam_auth_user( argv[1], password_old );
+    retval = pam_auth_user( userBuffer, password_old );
 
     if( retval && retval != PAM_NEW_AUTHTOK_REQD )
         goto FINISHED;
 
     /* Run the auth_user function. */
 //    if( setuid( pwd->pw_uid ) == 0 )
-    retval = pam_change_password( argv[1], password_old, password_new );
+    retval = pam_change_password( userBuffer, password_old, password_new );
  //   else
 //        retval = PAM_USER_UNKNOWN;
 
