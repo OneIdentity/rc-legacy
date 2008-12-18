@@ -1,9 +1,9 @@
 #!/bin/sh
 VERSION=3.0.0.`tr -d '\012' < build-number.txt`
-SERVERLIST="vasx86.vintela.com vasx8664.vintela.com vassol8.vintela.com vashpux.vintela.com vashpuxia64.vintela.com 10.4.23.115 vasaix51.vintela.com vasaix53.vintela.com"
+SERVERLIST="vassles9ppc.vintela.com vasx86.vintela.com vasx8664.vintela.com vassol8.vintela.com vashpux.vintela.com vashpuxia64.vintela.com 10.4.23.115 vasaix51.vintela.com vasaix53.vintela.com"
 #SERVERLIST="vasx86.vintela.com vasx8664.vintela.com vassol8.vintela.com vashpux.vintela.com vashpuxia64.vintela.com 10.4.23.115 vasaix53.vintela.com"
 #SERVERLIST="vasx86.vintela.com vasx8664.vintela.com vassol8.vintela.com vashpuxia64.vintela.com vashpux.vintela.com 10.4.23.115"
-#SERVERLIST="vashpuxia64.vintela.com"
+#SERVERLIST="vassles9ppc.vintela.com"
 #SERVERLIST="vasx86.vintela.com vasx8664.vintela.com vasia64.vintela.com vassles8ppc.vintela.com vassles9ppc.vintela.com vass390.vintela.com vass390x.vintela.com vassol6.vintela.com vassol7.vintela.com vassol8.vintela.com vassol8x86.vintela.com vassolx8664.vintela.com vashpux.vintela.com vashpux11i.vintela.com vashpuxia64.vintela.com vasaix43.vintela.com vasaix51.vintela.com vasaix53.vintela.com vasirix.vintela.com vastru64.vintela.com"
 
 #SERVERLIST="vasx86.vintela.com vasx8664.vintela.com vassol8.vintela.com vashpuxia64.vintela.com 10.4.23.115 vasaix51.vintela.com vasaix53.vintela.com"

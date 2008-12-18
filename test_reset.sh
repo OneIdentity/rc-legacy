@@ -2,6 +2,10 @@
 
 # Sets up users for password based tests. 
 
+echo "Do not run me"
+echo "This will re-make users"
+exit 1
+
 VAS=/opt/quest/bin/vastool
 AUTH="-u administrator@build.vas -w test123"
 
@@ -20,7 +24,7 @@ fi
 ( echo Abcd1234 ; echo Abcd1234 ) | $VAS $AUTH -s passwd db2_test@build.vas &
 $VAS $AUTH group db2_gr2@build.vas add db2_test@build.vas 2>/dev/null &
 
-for username in lxx64 lxx86 lx390 sol8s hpia hppa aix53 aix51 aix5; do
+for username in lxx64 lxx86 lx390 sol8s hpia hppa aix53 aix51 aix5 lxppc; do
     ( echo Abcd1234 ; echo Abcd1234 ) | $VAS $AUTH -s passwd -x ${username}_pwd@build.vas &
 done
 

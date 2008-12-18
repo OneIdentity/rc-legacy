@@ -38,6 +38,13 @@ case `uname -a | awk '{print $1}'` in
                 DOPAM32='#'
                 DOPAM64=''
                 ;;
+            ppc64)
+                PLATFORM="LINUX_PPC64"
+                USERNAME="lxppc"
+                CC64="$CC64 -m64"
+#                DOPAM32=''
+#                DOPAM64=''
+                ;;
             i*86)
                 PLATFORM="LINUX_X86"
                 USERNAME="lxx86"
