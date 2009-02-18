@@ -1,12 +1,11 @@
-#!/bin/ksh
+#!/bin/sh
 # (c) 2007 Quest Software, Inc. All rights reserved.
 
 # Uncomment for debug info.
 # set -x
 
-if [ -z "$1" ] || [ -n "$3" ]
-then
-	echo "Usage: $0 <Instance owner, i.e. db2inst1> [LAM]"
+if [ -z "$1" ] || [ -n "$3" ] ; then
+	echo "Usage: $0 <Instance owner, i.e. db2inst1> [PAM]"
 	exit 1
 fi
 
@@ -25,59 +24,49 @@ AUTHFILE=sys-auth
 CHPWFILE=sys-chpw
 NSSFILE=sys-nss
 
-if [ ! -f ${LIBFILE32} ]
-then
+if [ ! -f ${LIBFILE32} ] ; then
 	echo "Library ${LIBFILE32} not found!"
 	exit 1
 fi
 
-if [ -f ${LIBFILE64} ]
-then
-    echo "64-bit library found, installing both 32 and 64 libraries/auth programs."
+if [ -f ${LIBFILE64} ] ; then
     TYPE=64
 else 
-    echo "64-bit library not found, installing only 32 library and auth program."
     TYPE=32
 fi
 
-if [ "$2" != "LAM" ] && [ -n "$2" ]
-then
-	echo "Second argument can only be LAM."
+if [ "$2" != "PAM" ] && [ -n "$2" ] ; then
+	echo "Second argument can only be PAM."
 	exit 1
 fi
 
-uname -a | awk '{print $1}' | grep AIX >/dev/null
-if [ "$2" = "LAM" -a $? -eq 0  ]; then 
-        AUTH=lamAuth
-        CHPW=lamChPw
+if [ "`uname -s`" = "AIX" -a ! "$2" = "PAM" ]; then 
+    AUTH=lamAuth
+    CHPW=lamChPw
+    USED=LAM
 else
     AUTH=pamAuth
     CHPW=pamChPw
+    USED=PAM
 fi
 
-if [ ! -x "${AUTH}" ]
-then
+if [ ! -x "${AUTH}" ] ; then
 	echo "Auth program ${AUTH} not found."
 	exit 1
 fi
 
-if [ ! -x "${CHPW}" ]
-then
+if [ ! -x "${CHPW}" ] ; then
 	echo "Password change program ${CHPW} not found."
 	exit 1
 fi
 
-if [ ! -d ${PLUGINPATH32} -a ! -d ${PLUGINPATH64} ]
-then
+if [ ! -d ${PLUGINPATH32} -a ! -d ${PLUGINPATH64} ] ;  then
         echo "Directory $PLUGINPATH32 or $PLUGINPATH64 not found!"
         echo "Do you have the right name for an instance owner?"
         exit 1
 fi
 
 if [ -d ${PLUGINPATH32} ] ; then
-    echo "Everything checks out, installing the 32-bit files."
-
-    echo "First the cleanup, delete the old versions if they exist."
     rm -f ${PLUGINPATH32}/server/${LIBFILE}
     rm -f ${PLUGINPATH32}/client/${LIBFILE}
     rm -f ${PLUGINPATH32}/group/${LIBFILE}
@@ -87,18 +76,15 @@ if [ -d ${PLUGINPATH32} ] ; then
 # Clean up old files/links as well.
     rm -f ${PLUGINPATH32}/*/${LIBFILE32}
 
-    echo "Now copy over the ${LIBFILE32} to ${PLUGINPATH32}/server&client&group/${LIBFILE}."
     cp ${LIBFILE32} ${PLUGINPATH32}/${LIBFILE32}
-    ln -s ${PLUGINPATH32}/${LIBFILE32} ${PLUGINPATH32}/server/${LIBFILE}
+    if [ -d ${PLUGINPATH32}/server ] ; then
+        ln -s ${PLUGINPATH32}/${LIBFILE32} ${PLUGINPATH32}/server/${LIBFILE}
+    fi    
     ln -s ${PLUGINPATH32}/${LIBFILE32} ${PLUGINPATH32}/client/${LIBFILE}
     ln -s ${PLUGINPATH32}/${LIBFILE32} ${PLUGINPATH32}/group/${LIBFILE}
-    echo "Copy ${AUTH} to ${PLUGINPATH32}/${AUTHFILE}"
     cp ${AUTH} ${PLUGINPATH32}/${AUTHFILE}
-    echo "Copy ${NSSFILE} to ${PLUGINPATH32}/${NSSFILE}"
     cp ${NSSFILE} ${PLUGINPATH32}/${NSSFILE}
-    echo "Copy ${CHPW} to ${PLUGINPATH32}/${CHPWFILE}"
     cp ${CHPW} ${PLUGINPATH32}/${CHPWFILE}
-    echo "And fix the ownerships/permissions. WARNING!!! ${PLUGINPATH32}/${AUTHFILE} and ${PLUGINPATH32}/${CHPWFILE} are setuid root because they have to be to do authentications/password changes. Just so you know."
     chown ${1} ${PLUGINPATH32}/${LIBFILE32}
     chmod 0555 ${PLUGINPATH32}/${LIBFILE32}
     chown root ${PLUGINPATH32}/${AUTHFILE} 
@@ -107,12 +93,10 @@ if [ -d ${PLUGINPATH32} ] ; then
     chmod 4555 ${PLUGINPATH32}/${CHPWFILE} 
     chown root ${PLUGINPATH32}/${NSSFILE} 
     chmod 4555 ${PLUGINPATH32}/${NSSFILE} 
+    ITYPE=32
 fi
 
-if [ "${TYPE}" = "64" ]
-then
-    echo "Now the 64-bit files."
-    echo "First the cleanup, delete the old versions if they exist."
+if [ "${TYPE}" = "64" ] ; then
 	rm -f ${PLUGINPATH64}/server/${LIBFILE}
 	rm -f ${PLUGINPATH64}/client/${LIBFILE}
 	rm -f ${PLUGINPATH64}/group/${LIBFILE}
@@ -122,18 +106,13 @@ then
     # Clean up old files as well.
     rm -f ${PLUGINPATH64}/*/${LIBFILE64}
 	
-    echo "Now copy over the ${LIBFILE64} to ${PLUGINPATH64}/server&client&group/${LIBFILE}."
 	cp ${LIBFILE64} ${PLUGINPATH64}/${LIBFILE64}
     ln -s ${PLUGINPATH64}/${LIBFILE64} ${PLUGINPATH64}/server/${LIBFILE}
     ln -s ${PLUGINPATH64}/${LIBFILE64} ${PLUGINPATH64}/client/${LIBFILE}
     ln -s ${PLUGINPATH64}/${LIBFILE64} ${PLUGINPATH64}/group/${LIBFILE}
-    echo "Copy ${AUTH} to ${PLUGINPATH64}/${AUTHFILE}"
 	cp ${AUTH} ${PLUGINPATH64}/${AUTHFILE}
-    echo "Copy ${NSSFILE} to ${PLUGINPATH64}/${NSSFILE}"
 	cp ${NSSFILE} ${PLUGINPATH64}/${NSSFILE}
-    echo "Copy ${CHPW} to ${PLUGINPATH64}/${CHPWFILE}"
 	cp ${CHPW} ${PLUGINPATH64}/${CHPWFILE}
-    echo "And fix the ownerships/permissions. WARNING!!! ${PLUGINPATH64}/${AUTHFILE} and ${PLUGINPATH64}/${CHPWFILE} are setuid root because they have to be to do authentications/password changes. Just so you know."
 	chown ${1} ${PLUGINPATH64}/${LIBFILE64}
 	chmod 0555 ${PLUGINPATH64}/${LIBFILE64}
 	chown root ${PLUGINPATH64}/${AUTHFILE} 
@@ -142,29 +121,34 @@ then
 	chmod 4555 ${PLUGINPATH64}/${CHPWFILE} 
 	chown root ${PLUGINPATH64}/${NSSFILE} 
 	chmod 4555 ${PLUGINPATH64}/${NSSFILE} 
+    if [ -z "$ITYPE" ] ; then
+        ITYPE=64
+    else
+        ITYPE="32/64"
+    fi
 fi
 
+if [ -d /etc/pam.d -a ! -f /etc/pam.d/sys-auth ] ; then
+    if [ -f /etc/pam.d/sshd ] ; then
+        cp /etc/pam.d/sshd /etc/pam.d/sys-auth
+    elif [ -f /etc/pam.d/login ] ; then
+        cp /etc/pam.d/login /etc/pam.d/sys-auth
+    else    
+        echo "Unable to guess at a pam config to use, please set up /etc/pam.d/sys-auth as needed"
+    fi
+    if [ -f /etc/pam.d/sys-auth ] ; then
+        chmod 644 /etc/pam.d/sys-auth
+    fi    
+fi    
+
 echo ""
+echo "The <$ITYPE>-bit $USED Quest DB2 Systen Auth plugin is now installed."
 echo ""
-echo ""
-echo "The plug-in is now installed."
-echo ""
-echo ""
-echo ""
-echo "To make the instance use it, 3 more steps. "
-echo "As the instance owner or user with admin, run the 3 following commands:"
+echo "As the instance owner, run the 3 following commands:"
 echo ""
 echo "db2 update dbm cfg using SRVCON_PW_PLUGIN sys-auth"
 echo "db2 update dbm cfg using GROUP_PLUGIN sys-auth"
 echo "db2 update dbm cfg using CLNT_PW_PLUGIN sys-auth"
 echo ""
-echo "Then restart the instance."
-echo ""
-echo ""
-echo ""
-echo "If the instance partitioned the install script will needs to be run on each machine that hosts a partition."
-echo ""
-echo "If on Linux or AIX 5.3, might need to make a specific sys-auth PAM service entry in pam.conf or /etc/pam.d/"
-echo "For Linux: cp /etc/pam.d/sshd /etc/pam.d/sys-auth might do it."
-echo "If you need help with this step, or any part of the process, contact Quest Support"
+echo "Then restart the instance to start using the Quest DB2 System Auth plugin."
 echo ""

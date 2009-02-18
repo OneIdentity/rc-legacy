@@ -22,6 +22,9 @@ if [ "$2" != "LAM" ] && [ -n "$2" ] ; then
 	exit 1
 fi
 
+uname -a | awk '{print $1}' | grep AIX >/dev/null
+if [ $? -eq 0 -a "$2" = "LAM" ]; then
+
 # Figure out what program to use.
 if [ "$2" = "LAM" ] ; then 
     if [ "`uname -s`" = "AIX" ] ; then

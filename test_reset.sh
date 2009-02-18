@@ -2,10 +2,6 @@
 
 # Sets up users for password based tests. 
 
-echo "Do not run me"
-echo "This will re-make users"
-exit 1
-
 VAS=/opt/quest/bin/vastool
 AUTH="-u administrator@build.vas -w test123"
 

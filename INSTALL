@@ -1,22 +1,8 @@
-Simple setup:
-For this example:
-	On AIX 5.3
-        instance owner name: db2inst1
-        DAS user name: dasusr1
-        Package is in /tmp
-        You are installing the PAM library
-        pam.conf is set up as per KB 28653:
-            https://support.quest.com/SUPPORT/index?page=solution&id=SOL28653
-            ( The other three pam sections need the same OTHER modification )
-	You understand the setuid'ing of the auth file.
-
-As root:
+Setup example (requires root, assumes correct package for OS is in /tmp):
     cd /tmp
-    gzip -c -d DB2_sys-auth_AIX_53.2.0.0.<version>.tar.gz | tar -xvf -
+    gzip -c -d DB2_sys-auth_<OS>.3.0.0.<version>.tar.gz | tar -xvf -
     cd DB2_sys-auth
     ./install.sh db2inst1
-    ./install_das.sh dasusr1
-    (This copies the files, and does a setuid on lamAuth64 so authentication can work.)
     su  - db2inst1
     db2stop
     db2 update dbm cfg using SRVCON_PW_PLUGIN sys-auth
@@ -24,17 +10,44 @@ As root:
     db2 update dbm cfg using CLNT_PW_PLUGIN sys-auth
     db2start
 
+    NOTE: This assumes the default instance owner/das user names of db2inst1/dasusr1,
+          change as needed for the actual instance owner/das user names. 
+
 
 Making:
-    As the instance owner, download and untar/gzip the src package. 
-    Run:
+    As the instance owner, download and untar/gzip the src package, then run:
         ./configure
         make
-    Note: This will require the DB2 SDK installed.     
+
+    Note: This will require the DB2 SDK installed.
+
 
 Testing:
-    Read TESTING.
+    Read TESTING
 
-If you are on AIX 5.1, and want to use PAM, you will need to install the AIX PAM libraries, namely pam_aix.
 
-Both AIX 5.1 and 5.2 do not provide pam.conf, a sample aix.pam.conf is in this package.
+OS NOTES:
+    AIX 5.3:
+        If using PAM ( ./install.sh <instance owner> PAM )
+        make sure that pam.conf is set up as per KB 28653:
+        https://support.quest.com/SUPPORT/index?page=solution&id=SOL28653
+        ( The other three pam sections need the same OTHER modification )
+        Alternatively, a clean pam.conf can be obtained from:
+        ftp://ftp.vintela.com/vas/support/aix53.pam.conf.gz
+        NOTE: This pam.conf has no VAS entries, '/opt/quest/bin/vastool configure pam' 
+              will need to be run after this pam.conf is put in place for VAS to
+              continue to work.
+
+    AIX 5.1/5.2:
+        These OSes do not provide pam.conf, a sample aix.pam.conf is in this package.
+
+    AIX 5.1:
+        The pam_aix libraries will need to be installed to use PAM on this OS.
+
+
+Known issues:
+    The most common issue is pam configuration. The Quest System Auth plugin 
+    uses the PAM service name sys-auth. That should be configured, or have a
+    OTHER/other setup that works. If after installation of the plugin VAS users
+    fail to auth, this is likely the issue. Quest Support can assist with
+    getting PAM set up correctly if needed. 
