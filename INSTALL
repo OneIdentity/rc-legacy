@@ -10,8 +10,10 @@ Setup example (requires root, assumes correct package for OS is in /tmp):
     db2 update dbm cfg using CLNT_PW_PLUGIN sys-auth
     db2start
 
-    NOTE: This assumes the default instance owner/das user names of db2inst1/dasusr1,
-          change as needed for the actual instance owner/das user names. 
+    NOTE: This assumes the default instance owner name of db2inst1,
+          change as needed for the actual instance owner name. 
+
+    NOTE: This needs to be installed in each instance of a partitioned DB.       
 
 
 Making:
@@ -19,8 +21,9 @@ Making:
         ./configure
         make
 
-    Note: This will require the DB2 SDK installed.
-
+    Note: This will require the DB2 SDK installed, and if the location from IBM
+          changes, then the Makefile shoudl be changed as needed to read the
+          include files. 
 
 Testing:
     Read TESTING

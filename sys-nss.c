@@ -149,10 +149,10 @@ int pwnam( const char *username, gid_t *pgid )
     int rval = 3;
     memset(userBuffer, '\0', MAX_LINE_LENGTH);
     strcpy( userBuffer, username );
+    _lower( userBuffer );
     if( ( rval = _pwnam( userBuffer, pgid ) ) != 0 )
     {
-        _lower( userBuffer );
-        rval = _pwnam( userBuffer, pgid );
+        rval = _pwnam( username, pgid );
     }
     return rval;
 }
@@ -222,13 +222,15 @@ int _get_groups( const char* username, char *groups, int *numgroups ) {
 
     strcpy( userBuffer, username );
 
+    _lower( userBuffer );
     if( ( rval = _pwnam( userBuffer, &pgid) ) != 0 )
     {
-        _lower( userBuffer );
-        if( ( rval = _pwnam( userBuffer, &pgid ) ) != 0 )
+        if( ( rval = _pwnam( username, &pgid ) ) != 0 )
         {
             return ENOENT;
         }
+        else
+            _upper( userBuffer );
     }
 #ifdef AIX
     /* Since we are on AIX, we can use getgrset. Get that, tokenize the

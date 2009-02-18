@@ -142,7 +142,7 @@ if [ -d /etc/pam.d -a ! -f /etc/pam.d/sys-auth ] ; then
 fi    
 
 echo ""
-echo "The <$ITYPE>-bit $USED Quest DB2 Systen Auth plugin is now installed."
+echo "The <$ITYPE>-bit $USED Quest DB2 System Auth plugin is now installed."
 echo ""
 echo "As the instance owner, run the 3 following commands:"
 echo ""
