@@ -1,0 +1,97 @@
+
+INSTRUCTIONS
+
+  These instructions assume you are using the host 
+  "slc4rsvgh1.prod.quest.corp" as a server, which is
+  joined to the PROD.QUEST.CORP realm.
+
+  After compiling the Java stand-alone client and server, you 
+  can run them with either Sun's built-in GSSAPI or with
+  Quest Software's VSJ (Vintela Single Sign-on for Java).
+
+  The client assumes you have a valid credential cache with a TGT,
+  while the server assumes you have read access to a keytab with
+  valid entries.
+
+---------
+Compiling
+---------
+
+  If you have maven installed, run "mvn install". 
+
+  Otherwise, manually compile the sources with:
+      $ mkdir -p target/classes
+      $ javac -d target/classes src/main/java/*.java
+
+---------------------------
+Using SUN's GSSAPI provider
+---------------------------
+
+  Sun's GSSAPI provider comes built-in with most JREs, so this needs no other
+  configuration except for the editing of the jaas-krb5.conf file.
+  In it you will need to modify the principal and keyTab parameters 
+  to match your server.
+
+  Run the server with:
+    $ java -cp target/classes \
+        -Djava.security.auth.login.config=jaas-krb5.conf \
+        -Djavax.security.auth.useSubjectCredsOnly=false \
+        Server
+
+  and run the client in another window with:
+    $ java -cp target/classes \
+        -Djava.security.auth.login.config=jaas-krb5.conf \
+        -Djavax.security.auth.useSubjectCredsOnly=false \
+        Client host/slc4rsvgh1.prod.quest.corp
+
+  You will probably need to edit jaas-krb5.conf to change principal name 
+  used by the server.
+
+KNOWN PROBLEMS
+
+  There appears to be a problem with host.keytabs written by VAS
+  that contain removed entries. Java 1.5 and Java 6's kerberos libraries
+  do not appear to understand the removed entries and will randomly
+  report that they cannot find the service principal in the default keytab.
+  Workarounds: 
+    - unjoin, delete the keytab and re-join the server
+    - use the ktedit tool to dump and undump the keytab to a local file, 
+      and then use the keyTab= parameter in jaas-krb5.conf to specify its 
+      location.
+
+DEBUGGING
+
+  Add debug=true to either or both clauses in jaas-krb5.conf
+
+---------------------------
+Using VSJ's GSSAPI provider
+---------------------------
+
+  Obtain the VSJ standard edition JAR and a license JAR. This example
+  assumes they are named:
+
+        vsj-standard-3.3.jar
+        vsj-license-no-expiry.jar
+
+  Review the file vsj.security which overrides a particular part of 
+  $JAVA_HOME/lib/security/java.security. It is replacing the entry
+  that is Sun's GSS provider.
+
+  Run the server with:
+    $ java \
+        -cp vsj-standard-3.3.jar:vsj-license-no-expiry.jar:target/classes \
+        -Djava.security.properties=./vsj.security \
+        -Djcsi.kerberos.principal=host/slc4rsvgh1.prod.quest.corp \
+        -Djcsi.kerberos.keytab=./host.keytab \
+        Server
+
+  And run the client in another window with:
+    $ java \
+        -cp vsj-standard-3.3.jar:vsj-license-no-expiry.jar:target/classes \
+        -Djava.security.properties=./vsj.security \
+        Client host/slc4rsvgh1.prod.quest.corp
+
+DEBUGGING
+
+  Insert -Djcsi.kerberos.debug=true
+
