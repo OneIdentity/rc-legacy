@@ -369,7 +369,7 @@ int get_groups( const char *username )
         return rval;
     }
 
-    fprintf( stdout, "%c%s", (unsigned char)ngroups, groups );
+    fprintf( stdout, "%c%s%c", (unsigned char)ngroups, groups, '\0' );
     fflush( stdout );
 
     return rval;

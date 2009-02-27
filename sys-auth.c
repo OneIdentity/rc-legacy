@@ -30,7 +30,6 @@
 #include <errno.h>
 #include <sys/wait.h>
 #include <dlfcn.h>
-#include <signal.h>
 #include <stdarg.h>
 #include <syslog.h>
 
@@ -96,25 +95,11 @@ void vas_db2_plugin_lower( char *username ) {
     }
 }
 
-sig_atomic_t vas_db2_plugin_sigt = 0;
-
-sig_atomic_t vas_db2_plugin_sigp = 0;
-
-void vas_db2_plugin_sig_handle( int signo ) {
-    if( signo == SIGCHLD )
-        vas_db2_plugin_sigt = 1;
-    if( signo == SIGPIPE )
-        vas_db2_plugin_sigp = 1;
-    return;
-}
-
 int vas_db2_plugin_change_password(char *username, char *password_old, char *password_new )
 {
     int   retval   = 0;
     int   status   = 0;
     pid_t pid      = 0;
-    struct sigaction sigact;
-    struct sigaction osigact;
     int stdin_fds[] = { -1, -1 };
     char prog_path[MAX_C_BUFF];
     char prog_file[MAX_C_BUFF];
@@ -122,14 +107,6 @@ int vas_db2_plugin_change_password(char *username, char *password_old, char *pas
     struct passwd *pwd = NULL;
     
     func_start();
-
-    memset(&sigact, 0, sizeof(sigact));
-    memset(&osigact, 0, sizeof(osigact));
-
-    sigact.sa_handler = vas_db2_plugin_sig_handle;
-
-    sigaction(SIGCHLD, &sigact, &osigact);
-    sigaction(SIGPIPE, &sigact, &osigact);
 
     errno = 0;
 
@@ -147,6 +124,7 @@ int vas_db2_plugin_change_password(char *username, char *password_old, char *pas
 		getpid() );
         
         close( stdin_fds[1] );
+        stdin_fds[1] = -1;
         if( dup2( stdin_fds[0], STDIN_FILENO ) != STDIN_FILENO )
         {
             slog( SLOG_NORMAL, "%s: dup2 failed, errno %d", __FUNCTION__, 
@@ -156,6 +134,7 @@ int vas_db2_plugin_change_password(char *username, char *password_old, char *pas
             goto EXIT;
         }
         close( stdin_fds[0] );
+        stdin_fds[0] = -1;
 
 
         if( ( cptr = getenv( "DB2INSTANCE" ) ) == NULL ) 
@@ -259,20 +238,19 @@ int vas_db2_plugin_change_password(char *username, char *password_old, char *pas
         FILE *stream;
 
         close( stdin_fds[0] );
+        stdin_fds[0] = -1;
         slog( SLOG_ALL, "%s: sending passwords to child process", __FUNCTION__ );
         stream = fdopen (stdin_fds[1], "w");
         fprintf( stream, "%s%c%s%c", password_old, '\0', password_new, '\0' );
-        fflush( stream );
+        fclose( stream );
+        stdin_fds[1] = -1;
         slog( SLOG_ALL, "%s: passwords sent", __FUNCTION__ );
         slog( SLOG_DEBUG, "%s: parent process <%d> waiting for child process "
 		"<%d>", __FUNCTION__, getpid(), (int)pid );
         while( ( retval = waitpid( pid, &status, 0 ) ) == -1 )  
         {
             if( errno == EINTR ) { 
-                if( vas_db2_plugin_sigt == 1 )
-                    continue;
-                if( vas_db2_plugin_sigp == 1 )
-                    break;
+                continue;
             } else if ( errno == ECHILD )
             {
                 /* Something else reaped our child? I guess we have to assume succcess */
@@ -282,12 +260,8 @@ int vas_db2_plugin_change_password(char *username, char *password_old, char *pas
                 slog( SLOG_DEBUG, "%s: waitpid failed, errno <%d>", __FUNCTION__, errno );
             break;
         }
-        close( stdin_fds[1] );
-        fclose( stream );
         slog( SLOG_DEBUG, "%s: child process returned with value <%d>", 
 		__FUNCTION__, retval );
-        sigaction(SIGCHLD, &osigact, NULL);
-        sigaction(SIGPIPE, &osigact, NULL);
     }
 
     if( retval == -1 )
@@ -327,23 +301,14 @@ int vas_db2_plugin_auth_user(char *username, char *password) {
     int   retval   = 0;
     int   status   = 0;
     pid_t pid      = 0;
-    struct sigaction sigact;
-    struct sigaction osigact;
     int stdin_fds[] = { -1, -1 };
     char prog_path[MAX_C_BUFF];
     char prog_file[MAX_C_BUFF];
     char *cptr = NULL;
     struct passwd *pwd = NULL;
+    int     rnum = rand();
     
     func_start();
-
-    memset(&sigact, 0, sizeof(sigact));
-    memset(&osigact, 0, sizeof(osigact));
-
-    sigact.sa_handler = vas_db2_plugin_sig_handle;
-
-    sigaction(SIGCHLD, &sigact, &osigact);
-    sigaction(SIGPIPE, &sigact, &osigact);
 
     errno = 0;
 
@@ -351,7 +316,7 @@ int vas_db2_plugin_auth_user(char *username, char *password) {
     if ( pipe( stdin_fds ) != 0 ) { 
         retval = errno;
         if( !retval ) retval = 1;
-        slog( SLOG_NORMAL, "%s: Pipe failed!", __FUNCTION__ );
+        slog( SLOG_CRIT, "%s: Pipe failed, errno <%d>", __FUNCTION__, errno );
         goto EXIT;
     }
         
@@ -361,16 +326,17 @@ int vas_db2_plugin_auth_user(char *username, char *password) {
 		getpid() );
         
         close( stdin_fds[1] );
+        stdin_fds[1] = -1;
         if( dup2( stdin_fds[0], STDIN_FILENO ) != STDIN_FILENO )
         {
-            slog( SLOG_NORMAL, "%s: dup2 failed, errno %d", __FUNCTION__, 
+            slog( SLOG_CRIT, "%s: dup2 failed, errno <%d>", __FUNCTION__, 
 		    errno );
             retval = errno;
             if( !retval ) retval = 1;
             goto EXIT;
         }
         close( stdin_fds[0] );
-
+        stdin_fds[0] = -1;
 
         if( ( cptr = getenv( "DB2INSTANCE" ) ) == NULL ) 
         {
@@ -458,36 +424,42 @@ int vas_db2_plugin_auth_user(char *username, char *password) {
 
         if( execl( prog_path, prog_file, username, NULL ) == -1 ) 
         {
-            slog( SLOG_NORMAL, "%s: execl failed with errno <%d>", 
+            slog( SLOG_CRIT, "%s: execl failed with errno <%d>", 
 		    __FUNCTION__, errno ? errno : ECHILD );
             _exit( errno ? errno : ECHILD );
         }
     } 
     else if ( pid < 0 ) /* Fork failed */
     {        
-	slog( SLOG_NORMAL, "%s: Fork Failed!", __FUNCTION__ );
+	slog( SLOG_CRIT, "%s: Fork Failed, errno <%d>", __FUNCTION__, errno );
 	retval = 1;
 	goto EXIT;
     } 
     else  /* Parent Process */
     {
-        FILE *stream;
+        FILE *stream = NULL;
+        int r = 0;
 
-        close( stdin_fds[0] );
+        r = close( stdin_fds[0] );
+        stdin_fds[0] = -1;
+        if( r != 0 )
+            slog( SLOG_CRIT, "%s:(%u) close failed, pipe hosed<%d><%d><%d>", __FUNCTION__,rnum, r, errno, stdin_fds[0] );
+
         slog( SLOG_ALL, "%s: sending password to child process", __FUNCTION__ );
         stream = fdopen (stdin_fds[1], "w");
+        if( stream == NULL )
+            slog( SLOG_CRIT, "%s:(%u) fdopen of <%d> failed <%d>", __FUNCTION__,rnum, stdin_fds[0], errno );
         fprintf( stream, "%s%c", password, '\0' );
-        fflush( stream );
+        r = fclose( stream );
+        if( r != 0 )
+            slog( SLOG_CRIT, "%s:(%u) fclose of <%d> failed <%d>", __FUNCTION__,rnum, stdin_fds[1], errno );
+
         slog( SLOG_ALL, "%s: password sent", __FUNCTION__ );
-        slog( SLOG_DEBUG, "%s: parent process <%d> waiting for child process "
-		"<%d>", __FUNCTION__, getpid(), (int)pid );
+        slog( SLOG_DEBUG, "%s: parent process <%d> waiting for child process " "<%d>", __FUNCTION__, getpid(), (int)pid );
         while( ( retval = waitpid( pid, &status, 0 ) ) == -1 )  
         {
             if( errno == EINTR ) { 
-                if( vas_db2_plugin_sigt == 1 )
-                    continue;
-                if( vas_db2_plugin_sigp == 1 )
-                    break;
+                continue;
             } else if ( errno == ECHILD )
             {
                 /* Something else reaped our child? I guess we have to assume succcess */
@@ -497,12 +469,7 @@ int vas_db2_plugin_auth_user(char *username, char *password) {
                 slog( SLOG_DEBUG, "%s: waitpid failed, errno <%d>", __FUNCTION__, errno );
             break;
         }
-        close( stdin_fds[1] );
-        fclose( stream );
-        slog( SLOG_DEBUG, "%s: child process returned with value <%d>", 
-		__FUNCTION__, retval );
-        sigaction(SIGCHLD, &osigact, NULL);
-        sigaction(SIGPIPE, &osigact, NULL);
+        slog( SLOG_DEBUG, "%s: child process returned with value <%d>", __FUNCTION__, retval );
     }
 
     if( retval == -1 )
@@ -536,15 +503,12 @@ EXIT:
         }
         return( retval );
     }
-
 }
 
 int vas_db2_plugin_outcall_getgroups( const char *username, char groups[], int *ngroups ) {
     int   retval   = 0;
     int   status   = 0;
     pid_t pid      = 0;
-    struct sigaction sigact;
-    struct sigaction osigact;
     int stdout_fds[] = { -1, -1 };
     char prog_path[MAX_C_BUFF];
     char prog_file[MAX_C_BUFF];
@@ -552,42 +516,34 @@ int vas_db2_plugin_outcall_getgroups( const char *username, char groups[], int *
     char cuid[11];
     struct passwd *pwd = NULL;
     char group_back[MAX_LINE_LENGTH + 2];
+    int   rnum = rand();
     
     func_start();
-
-    memset(group_back, 0, sizeof( group_back ) );
-    memset(&sigact, 0, sizeof(sigact));
-    memset(&osigact, 0, sizeof(osigact));
-
-    sigact.sa_handler = vas_db2_plugin_sig_handle;
-
-    sigaction(SIGCHLD, &sigact, &osigact);
-    sigaction(SIGPIPE, &sigact, &osigact);
 
     errno = 0;
 
     if ( pipe( stdout_fds ) != 0 ) { 
         retval = errno;
         if( !retval ) retval = 1;
-        slog( SLOG_NORMAL, "%s: Pipe failed!", __FUNCTION__ );
+        slog( SLOG_CRIT, "%s: Pipe failed, errno <%d>", __FUNCTION__, errno );
         goto EXIT;
     }
-        
+
     if( ( pid = fork() ) == 0 ) /* Child Process */
     {
-        slog( SLOG_DEBUG, "%s: child process with pid %d", __FUNCTION__, 
-		getpid() );
+        slog( SLOG_DEBUG, "%s:(%u) child process with pid %d", __FUNCTION__, rnum, getpid() );
         
         close( stdout_fds[0] );
+        stdout_fds[0] = -1;
         if( dup2( stdout_fds[1], STDOUT_FILENO ) != STDOUT_FILENO )
         {
-            slog( SLOG_NORMAL, "%s: dup2 failed, errno %d", __FUNCTION__, 
-		    errno );
+            slog( SLOG_CRIT, "%s:(%u) dup2 failed, errno <%d>", __FUNCTION__, rnum, errno );
             retval = errno;
             if( !retval ) retval = 1;
             goto EXIT;
         }
         close( stdout_fds[1] );
+        stdout_fds[1] = -1;
 
 
         if( ( cptr = getenv( "DB2INSTANCE" ) ) == NULL ) 
@@ -607,7 +563,6 @@ int vas_db2_plugin_outcall_getgroups( const char *username, char groups[], int *
 		    __FUNCTION__ );
             _exit( EFAULT );
         }
-        
         
         cptr = pwd->pw_dir; 
         slog( SLOG_DEBUG, "%s: found directory <%s>", __FUNCTION__, cptr );
@@ -647,8 +602,8 @@ int vas_db2_plugin_outcall_getgroups( const char *username, char groups[], int *
         }
         
 
-        slog( SLOG_DEBUG, "%s: executing program <%s> from path <%s> with option <4><%s>", 
-		__FUNCTION__, prog_file, prog_path, username );
+        slog( SLOG_DEBUG, "%s:(%u) executing program <%s> from path <%s> with option <4><%s>", 
+		__FUNCTION__, rnum, prog_file, prog_path, username );
 
         if( execl( prog_path, prog_file, "4", username, NULL ) == -1 ) 
         {
@@ -667,40 +622,43 @@ int vas_db2_plugin_outcall_getgroups( const char *username, char groups[], int *
     {
         FILE *stream;
         int result = 0;
+        int r = 0;
 
-        close( stdout_fds[1] );
-        slog( SLOG_ALL, "%s: reading name from child process", __FUNCTION__ );
+        r = close( stdout_fds[1] );
+        stdout_fds[1] = -1;
+        if( r != 0 )
+            slog( SLOG_CRIT, "%s:(%u) close failed, pipe hosed<%d><%d><%d>", __FUNCTION__,rnum, r, errno, stdout_fds[1] );
+
+        slog( SLOG_ALL, "%s:(%u) reading groups from child process", __FUNCTION__,rnum  );
 READ:
+        errno = 0;
         if( ( result = read( stdout_fds[0], (void*)group_back, MAX_LINE_LENGTH + 1 ) ) <= 0 )
         { 
             if( result == -1 && errno == EINTR )
                 goto READ;
-            slog( SLOG_EXTEND, "%s: error reading groups from sys-nss for user <%s>, errno <%d>", __FUNCTION__, username, errno );
+            slog( SLOG_EXTEND, "%s:(%u) error reading groups from sys-nss for user: <%s>, errno: <%d> fd:<%d>", __FUNCTION__,rnum,  username, errno, stdout_fds[0] );
             retval = EIO;
         }
 
-        slog( SLOG_DEBUG, "%s: parent process <%d> waiting for child process "
-		"<%d>", __FUNCTION__, getpid(), (int)pid );
+        slog( SLOG_DEBUG, "%s:(%u) parent process <%d> waiting for child process " "<%d>", __FUNCTION__,rnum,  getpid(), (int)pid );
         while( ( retval = waitpid( pid, &status, 0 ) ) == -1 )  
         {
             if( errno == EINTR ) { 
-                if( vas_db2_plugin_sigt == 1 )
-                    continue;
-                if( vas_db2_plugin_sigp == 1 )
-                    break;
+                continue;
             } else if ( errno == ECHILD )
             {
                 /* Something else reaped our child? I guess we have to assume succcess */
                 retval = 0;
             }
             else
-                slog( SLOG_DEBUG, "%s: waitpid failed, errno <%d>", __FUNCTION__, errno );
+                slog( SLOG_DEBUG, "%s:(%u) waitpid failed, errno <%d>", __FUNCTION__,rnum,  errno );
             break;
         }
-        close( stdout_fds[0] );
-        slog( SLOG_DEBUG, "%s: child process returned with value <%d>", __FUNCTION__, retval );
-        sigaction(SIGCHLD, &osigact, NULL);
-        sigaction(SIGPIPE, &osigact, NULL);
+        r = close( stdout_fds[0] );
+        stdout_fds[0] = -1;
+        if( r != 0 )
+            slog( SLOG_CRIT, "%s:(%u) second close failed, pipe hosed<%d><%d><%d>", __FUNCTION__,rnum,  r, errno, stdout_fds[0] );
+        slog( SLOG_DEBUG, "%s:(%u) child process returned with value <%d>", __FUNCTION__, rnum, retval );
     }
 
     if( retval == -1 )
@@ -710,8 +668,24 @@ READ:
 
 EXIT:
     if( retval == 0 ) {
+        char *ptr;
+        int groupsize = 0;
+        int group_count = 0;
+        groupsize = (int)group_back[1];
+        ptr = &group_back[2];
+
         *ngroups = (unsigned char)group_back[0];
         memcpy( groups, &group_back[1], MAX_LINE_LENGTH );
+
+        do {
+            int oldsize = groupsize;
+            groupsize = (int)ptr[oldsize];
+            ptr[ oldsize ] = ',';
+            ptr = &ptr[oldsize + 1];
+        } while ( groupsize != 0 && ++group_count <= *ngroups );
+        ptr[groupsize - 1] = '\0';
+        slog( SLOG_EXTEND, "%s:(%u) groups for user <%s>: <%s>\n", __FUNCTION__, rnum, username, &group_back[2] );
+        
         return DB2SEC_PLUGIN_OK;
     } else {
         retval = WEXITSTATUS(status);
@@ -726,15 +700,12 @@ EXIT:
         }
         return( retval );
     }
-
 }
 
 int vas_db2_plugin_outcall_getuser( uid_t uid, char username[] ) {
     int   retval   = 0;
     int   status   = 0;
     pid_t pid      = 0;
-    struct sigaction sigact;
-    struct sigaction osigact;
     int stdout_fds[] = { -1, -1 };
     char prog_path[MAX_C_BUFF];
     char prog_file[MAX_C_BUFF];
@@ -744,20 +715,12 @@ int vas_db2_plugin_outcall_getuser( uid_t uid, char username[] ) {
     
     func_start();
 
-    memset(&sigact, 0, sizeof(sigact));
-    memset(&osigact, 0, sizeof(osigact));
-
-    sigact.sa_handler = vas_db2_plugin_sig_handle;
-
-    sigaction(SIGCHLD, &sigact, &osigact);
-    sigaction(SIGPIPE, &sigact, &osigact);
-
     errno = 0;
 
     if ( pipe( stdout_fds ) != 0 ) { 
         retval = errno;
         if( !retval ) retval = 1;
-        slog( SLOG_NORMAL, "%s: Pipe failed!", __FUNCTION__ );
+        slog( SLOG_CRIT, "%s: Pipe failed, errno <%d>", __FUNCTION__, errno );
         goto EXIT;
     }
         
@@ -767,15 +730,16 @@ int vas_db2_plugin_outcall_getuser( uid_t uid, char username[] ) {
 		getpid() );
         
         close( stdout_fds[0] );
+        stdout_fds[0] = -1;
         if( dup2( stdout_fds[1], STDOUT_FILENO ) != STDOUT_FILENO )
         {
-            slog( SLOG_NORMAL, "%s: dup2 failed, errno %d", __FUNCTION__, 
-		    errno );
+            slog( SLOG_CRIT, "%s: dup2 failed, errno <%d>", __FUNCTION__, errno );
             retval = errno;
             if( !retval ) retval = 1;
             goto EXIT;
         }
         close( stdout_fds[1] );
+        stdout_fds[1] = -1;
 
 
         if( ( cptr = getenv( "DB2INSTANCE" ) ) == NULL ) 
@@ -859,6 +823,7 @@ int vas_db2_plugin_outcall_getuser( uid_t uid, char username[] ) {
         int got_name = 0;
 
         close( stdout_fds[1] );
+        stdout_fds[1] = -1;
         slog( SLOG_ALL, "%s: reading name from child process", __FUNCTION__ );
 READ:        
         if( ( result = read( stdout_fds[0], (void*)username, SQL_AUTHID_SZ ) ) <= 0 )
@@ -879,26 +844,22 @@ READ:
         while( ( retval = waitpid( pid, &status, 0 ) ) == -1 )  
         {
             if( errno == EINTR ) { 
-                if( vas_db2_plugin_sigt == 1 )
-                    continue;
-                if( vas_db2_plugin_sigp == 1 )
-                    break;
+                continue;
             } else if ( errno == ECHILD )
             {
                 /* Something else reaped our child? I guess we have to assume succcess */
                 retval = 0;
             }
             else
-                slog( SLOG_DEBUG, "%s: waitpid failed, errno <%d>", __FUNCTION__, errno );
+                slog( SLOG_CRIT, "%s: waitpid failed, errno <%d>", __FUNCTION__, errno );
             break;
         }
         if( got_name )
             retval = 0;
 
         close( stdout_fds[0] );
+        stdout_fds[0] = -1;
         slog( SLOG_DEBUG, "%s: child process returned with value <%d>", __FUNCTION__, retval );
-        sigaction(SIGCHLD, &osigact, NULL);
-        sigaction(SIGPIPE, &osigact, NULL);
     }
 
     if( retval == -1 )
@@ -930,8 +891,6 @@ int vas_db2_plugin_outcall_check_user( const char *username ) {
     int   retval   = 0;
     int   status   = 0;
     pid_t pid      = 0;
-    struct sigaction sigact;
-    struct sigaction osigact;
     int stdout_fds[] = { -1, -1 };
     char prog_path[MAX_C_BUFF];
     char prog_file[MAX_C_BUFF];
@@ -940,14 +899,6 @@ int vas_db2_plugin_outcall_check_user( const char *username ) {
     struct passwd *pwd = NULL;
     
     func_start();
-
-    memset(&sigact, 0, sizeof(sigact));
-    memset(&osigact, 0, sizeof(osigact));
-
-    sigact.sa_handler = vas_db2_plugin_sig_handle;
-
-    sigaction(SIGCHLD, &sigact, &osigact);
-    sigaction(SIGPIPE, &sigact, &osigact);
 
     errno = 0;
 
@@ -1036,10 +987,7 @@ int vas_db2_plugin_outcall_check_user( const char *username ) {
         while( ( retval = waitpid( pid, &status, 0 ) ) == -1 )  
         {
             if( errno == EINTR ) { 
-                if( vas_db2_plugin_sigt == 1 )
-                    continue;
-                if( vas_db2_plugin_sigp == 1 )
-                    break;
+                continue;
             } else if ( errno == ECHILD )
             {
                 /* Something else reaped our child? I guess we have to assume succcess */
@@ -1050,9 +998,8 @@ int vas_db2_plugin_outcall_check_user( const char *username ) {
             break;
         }
         close( stdout_fds[0] );
+        stdout_fds[0] = -1;
         slog( SLOG_DEBUG, "%s: child process returned with value <%d>", __FUNCTION__, retval );
-        sigaction(SIGCHLD, &osigact, NULL);
-        sigaction(SIGPIPE, &osigact, NULL);
     }
 
     if( retval == -1 )
@@ -1186,7 +1133,7 @@ int vas_db2_plugin_find_groups_for_user( const char* username, char *groups,
     if( !username || username[0] == '\0' ||
         !groups || !numgroups )
     {
-        slog( SLOG_NORMAL, "%s: called with an invalid paramater", 
+        slog( SLOG_CRIT, "%s: called with an invalid paramater", 
 		__FUNCTION__ );
         return DB2SEC_PLUGIN_BAD_INPUT_PARAMETERS;
     }

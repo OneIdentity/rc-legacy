@@ -225,3 +225,15 @@ Now changelog will work off the version.
   fails to return their group membership. this leads to failures when access
   is granted to group membership, and the group was not the pgid for the user.
   Fixed. 
+
+3.0.0.8 - 3.0.0.14 ( 2009_02_24 )
+* Various debug builds trying to track down an EBADF error. Timing issue with
+  file descriptors. 
+
+3.0.0.15 ( 2009_02_26 )
+* Fixed fd timing issue.
+* Removed signal handlers as per IBM recommendation. 
+* Fixed an issue seen in testing on sles9ppc where with many group memberships, 
+  ( right at the DB2 line length limit ) processing them could trigger a
+  segfault. 
+* Added back a message at level 2 that lists a user's group memberships.  
