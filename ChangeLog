@@ -237,3 +237,8 @@ Now changelog will work off the version.
   ( right at the DB2 line length limit ) processing them could trigger a
   segfault. 
 * Added back a message at level 2 that lists a user's group memberships.  
+
+3.0.0.16 ( 2009_03_05 )
+* install_das.sh didn't work, fixed. 
+* fixed install.sh and install_das to work on Solaris with its more restrictive
+  sh. ( echo ~<username> doesn't return the user's homedir in sh on Solaris ).
