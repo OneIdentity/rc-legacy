@@ -258,7 +258,7 @@ if test -s $NEWTEXT; then
     IFS="$SAVEIFS"
     mv "$CONFMOD.new" "$CONFMOD"
     update_conf=true
-elif cmp "$CONFMOD" "$SAMBA_CONFIGFILE" >/dev/null; then
+elif cmp "$CONFMOD" "$SAMBA_CONFIGFILE" >/dev/null 2>&1; then
     update_conf=false
     rm -f "$CONFMOD"
 else
@@ -293,7 +293,7 @@ case "$VAS_VERSION" in
     ;;
 esac
 
-if cmp $VAS_CONF $NEW_VAS_CONF > /dev/null; then
+if cmp $VAS_CONF $NEW_VAS_CONF > /dev/null 2>&1; then
     update_vas=false
     rm -f $NEW_VAS_CONF
 else

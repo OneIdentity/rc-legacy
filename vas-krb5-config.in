@@ -145,7 +145,7 @@ else
     mv $FIXFILE.new $FIXFILE
 fi
 
-if cmp "$FIXFILE" "$KRB5CONF" > /dev/null; then
+if cmp "$FIXFILE" "$KRB5CONF" > /dev/null 2>&1; then
     verbose_echo "  no changes needed to $KRB5CONF"
     exitcode=$EXNOCHANGE
 else
