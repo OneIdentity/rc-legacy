@@ -4,8 +4,10 @@
 # Uncomment the following line for debug info.
 # set -x
 
+PATH=/bin:/usr/bin:/sbin:/usr/sbin:/usr/local/bin:$PATH
+
 # Usage
-if [ -z "$1" ] || [ -n "$3" ] ; then
+if [ -z "$1" -a -n "$3" ] ; then
 	echo "Usage: $0 <DAS user, i.e. dasusr1> [LAM]"
 	exit 1
 fi
@@ -17,27 +19,19 @@ if [ "`id | sed 's/uid=\([0-9]*\).*/\1/'`" -ne 0 ] ; then
 fi
 
 # Check the second argument.
-if [ "$2" != "LAM" ] && [ -n "$2" ] ; then
-	echo "Second argument can only be LAM."
+if [ "$2" != "PAM" -a -n "$2" ] ; then
+	echo "Second argument can only be PAM."
 	exit 1
 fi
 
-uname -a | awk '{print $1}' | grep AIX >/dev/null
-if [ $? -eq 0 -a "$2" = "LAM" ]; then
-
 # Figure out what program to use.
-if [ "$2" = "LAM" ] ; then 
-    if [ "`uname -s`" = "AIX" ] ; then
-        DASSECLOC=db2dassecLam
-    else
-        echo "Not AIX, LAM setting ignored."
-        DASSECLOC=db2dassecPam
-    fi
+if [ "`uname -s`" = "AIX" -a -z "$2" ] ; then
+    DASSECLOC=db2dassecLam
 else
     DASSECLOC=db2dassecPam
 fi
 
-DASHOME="`eval echo ~${1}`"
+DASHOME="`ksh -c \"echo ~${1}\"`"
 DASSEC="${DASHOME}/das/adm/db2dassec"
 DASSEC2="${DASHOME}/das/adm64/db2dassec"
 
