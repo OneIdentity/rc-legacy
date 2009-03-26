@@ -242,3 +242,10 @@ Now changelog will work off the version.
 * install_das.sh didn't work, fixed. 
 * fixed install.sh and install_das to work on Solaris with its more restrictive
   sh. ( echo ~<username> doesn't return the user's homedir in sh on Solaris ).
+
+3.0.0.17 ( 2009_03_09 )  
+* Added a check so this doesn't install on v9.1 or v8.2 since they don't
+  actually handle not having a signal handler like v9.5 requires. 
+
+3.0.0.18 ( 2009_03_25 )
+* Fixed the MAJOR issue where when run under v9.5 any password worked.     

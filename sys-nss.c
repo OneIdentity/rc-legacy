@@ -154,6 +154,8 @@ int pwnam( const char *username, gid_t *pgid )
     {
         rval = _pwnam( username, pgid );
     }
+    if( !rval )
+        fprintf( stdout, "0%c", '\0' );
     return rval;
 }
 
@@ -405,6 +407,9 @@ int main(int argc, char* argv[])
             retval = get_groups( argv[2] );
             break;
     }
+
+    if( retval )
+        fprintf( stdout, "%c%c", (unsigned char)(retval + 200), '\0' );
 
     exit( retval );
 }

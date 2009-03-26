@@ -236,6 +236,7 @@ int main(int argc, char* argv[])
         _lower( userBuffer );
         if( ( pwd = getpwnam( userBuffer ) ) == NULL ) {
             slog( SLOG_EXTEND, "%s: unable to find user <%s>", __FUNCTION__, argv[1] );
+            fprintf( stdout, "3\n", retval );
             exit( 3 );
         }
     }
@@ -249,6 +250,7 @@ int main(int argc, char* argv[])
         slog( SLOG_EXTEND, 
 	    "%s: error reading old password from std_in for user <%s>, errno <%d>",
 	    __FUNCTION__, userBuffer, errno );
+        fprintf( stdout, "%d\n", EIO);
         exit( EIO );
     }
 
@@ -335,6 +337,8 @@ FINISHED:
     {
         retval = 5;
     }
+
+    fprintf( stdout, "%d\n", retval );
 
     exit( retval );
 }

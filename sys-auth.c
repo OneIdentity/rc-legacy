@@ -101,10 +101,12 @@ int vas_db2_plugin_change_password(char *username, char *password_old, char *pas
     int   status   = 0;
     pid_t pid      = 0;
     int stdin_fds[] = { -1, -1 };
+    int stdout_fds[] = { -1, -1 };
     char prog_path[MAX_C_BUFF];
     char prog_file[MAX_C_BUFF];
     char *cptr = NULL;
     struct passwd *pwd = NULL;
+    int     rnum = rand();
     
     func_start();
 
@@ -115,6 +117,13 @@ int vas_db2_plugin_change_password(char *username, char *password_old, char *pas
         retval = errno;
         if( !retval ) retval = 1;
         slog( SLOG_NORMAL, "%s: Pipe failed!", __FUNCTION__ );
+        goto EXIT;
+    }
+
+    if ( pipe( stdout_fds ) != 0 ) {
+        retval = errno;
+        if( !retval ) retval = 1;
+        slog( SLOG_CRIT, "%s: Pipe on stdout_fds failed, errno <%d>", __FUNCTION__, errno );
         goto EXIT;
     }
         
@@ -136,6 +145,18 @@ int vas_db2_plugin_change_password(char *username, char *password_old, char *pas
         close( stdin_fds[0] );
         stdin_fds[0] = -1;
 
+        close( stdout_fds[0] );
+        stdout_fds[0] = -1;
+        if( dup2( stdout_fds[1], STDOUT_FILENO ) != STDOUT_FILENO )
+        {
+            slog( SLOG_CRIT, "%s: dup2 failed, errno <%d>", __FUNCTION__,
+                    errno );
+            retval = errno;
+            if( !retval ) retval = 1;
+            goto EXIT;
+        }
+        close( stdout_fds[1] );
+        stdout_fds[1] = -1;
 
         if( ( cptr = getenv( "DB2INSTANCE" ) ) == NULL ) 
         {
@@ -236,6 +257,14 @@ int vas_db2_plugin_change_password(char *username, char *password_old, char *pas
     else  /* Parent Process */
     {
         FILE *stream;
+        char buf[4] = { -1, 0, 0, 0 };
+        int r = 0, result = 0;
+
+        r = close( stdout_fds[1] );
+        stdout_fds[1] = -1;
+        if( r != 0 )
+            slog( SLOG_CRIT, "%s:(%u) close failed, pipe hosed<%d><%d><%d>", __FUNCTION__,rnum, r, errno, stdout_fds[1] );
+
 
         close( stdin_fds[0] );
         stdin_fds[0] = -1;
@@ -245,6 +274,38 @@ int vas_db2_plugin_change_password(char *username, char *password_old, char *pas
         fclose( stream );
         stdin_fds[1] = -1;
         slog( SLOG_ALL, "%s: passwords sent", __FUNCTION__ );
+READ:
+        errno = 0;
+        if( ( result = read( stdout_fds[0], (void*)buf, 4 ) ) <= 0 )
+        {
+            if( result == -1 && errno == EINTR )
+                goto READ;
+            slog( SLOG_EXTEND, "%s:(%u) error reading output from sys-auth for user: <%s>, errno: <%d>", __FUNCTION__,rnum,  username, errno );
+            retval = EIO;
+        }
+        else
+        {
+            slog( SLOG_EXTEND, "%s:(%u) got result <%s> from reading child", __FUNCTION__,rnum, buf );
+            if( isdigit( (int)buf[0] ) )
+                retval = atoi( buf );
+            else
+                retval = DB2SEC_PLUGIN_UNKNOWNERROR;
+        }
+        r = close( stdout_fds[0] );
+        stdout_fds[0] = -1;
+        if( r != 0 )
+            slog( SLOG_CRIT, "%s:(%u) second close failed, pipe hosed<%d><%d><%d>", __FUNCTION__,rnum,  r, errno, stdout_fds[0] );
+
+        r = close( stdin_fds[0] );
+        stdin_fds[0] = -1;
+        if( r != 0 )
+            slog( SLOG_CRIT, "%s:(%u) close failed, pipe hosed<%d><%d><%d>", __FUNCTION__,rnum, r, errno, stdin_fds[0] );
+
+        /* Just in case DB2 didn't snag it, try to reap our child. */
+        sleep( 1 );
+        waitpid( pid, &status, 0 );
+        
+#if 0
         slog( SLOG_DEBUG, "%s: parent process <%d> waiting for child process "
 		"<%d>", __FUNCTION__, getpid(), (int)pid );
         while( ( retval = waitpid( pid, &status, 0 ) ) == -1 )  
@@ -262,18 +323,13 @@ int vas_db2_plugin_change_password(char *username, char *password_old, char *pas
         }
         slog( SLOG_DEBUG, "%s: child process returned with value <%d>", 
 		__FUNCTION__, retval );
+#endif
     }
-
-    if( retval == -1 )
-        goto EXIT;
-    if( WEXITSTATUS(status) == 0 )
-        retval = 0;
 
 EXIT:
         if( retval == 0 ) {
                 return DB2SEC_PLUGIN_OK;
         } else {
-            retval = WEXITSTATUS(status);
             slog( SLOG_EXTEND, "%s: Failed authentication attempt for user "
                        "<%s>, error <%d>", __FUNCTION__, username, retval );
             switch ( retval )    
@@ -302,6 +358,7 @@ int vas_db2_plugin_auth_user(char *username, char *password) {
     int   status   = 0;
     pid_t pid      = 0;
     int stdin_fds[] = { -1, -1 };
+    int stdout_fds[] = { -1, -1 };
     char prog_path[MAX_C_BUFF];
     char prog_file[MAX_C_BUFF];
     char *cptr = NULL;
@@ -316,7 +373,14 @@ int vas_db2_plugin_auth_user(char *username, char *password) {
     if ( pipe( stdin_fds ) != 0 ) { 
         retval = errno;
         if( !retval ) retval = 1;
-        slog( SLOG_CRIT, "%s: Pipe failed, errno <%d>", __FUNCTION__, errno );
+        slog( SLOG_CRIT, "%s: Pipe on stdin_fds failed, errno <%d>", __FUNCTION__, errno );
+        goto EXIT;
+    }
+        
+    if ( pipe( stdout_fds ) != 0 ) { 
+        retval = errno;
+        if( !retval ) retval = 1;
+        slog( SLOG_CRIT, "%s: Pipe on stdout_fds failed, errno <%d>", __FUNCTION__, errno );
         goto EXIT;
     }
         
@@ -337,6 +401,19 @@ int vas_db2_plugin_auth_user(char *username, char *password) {
         }
         close( stdin_fds[0] );
         stdin_fds[0] = -1;
+
+        close( stdout_fds[0] );
+        stdout_fds[0] = -1;
+        if( dup2( stdout_fds[1], STDOUT_FILENO ) != STDOUT_FILENO )
+        {
+            slog( SLOG_CRIT, "%s: dup2 failed, errno <%d>", __FUNCTION__, 
+		    errno );
+            retval = errno;
+            if( !retval ) retval = 1;
+            goto EXIT;
+        }
+        close( stdout_fds[1] );
+        stdout_fds[1] = -1;
 
         if( ( cptr = getenv( "DB2INSTANCE" ) ) == NULL ) 
         {
@@ -439,11 +516,13 @@ int vas_db2_plugin_auth_user(char *username, char *password) {
     {
         FILE *stream = NULL;
         int r = 0;
+        int result = 0;
+        char buf[4] = { -1, 0, 0, 0 };
 
-        r = close( stdin_fds[0] );
-        stdin_fds[0] = -1;
+        r = close( stdout_fds[1] );
+        stdout_fds[1] = -1;
         if( r != 0 )
-            slog( SLOG_CRIT, "%s:(%u) close failed, pipe hosed<%d><%d><%d>", __FUNCTION__,rnum, r, errno, stdin_fds[0] );
+            slog( SLOG_CRIT, "%s:(%u) close failed, pipe hosed<%d><%d><%d>", __FUNCTION__,rnum, r, errno, stdout_fds[1] );
 
         slog( SLOG_ALL, "%s: sending password to child process", __FUNCTION__ );
         stream = fdopen (stdin_fds[1], "w");
@@ -455,33 +534,61 @@ int vas_db2_plugin_auth_user(char *username, char *password) {
             slog( SLOG_CRIT, "%s:(%u) fclose of <%d> failed <%d>", __FUNCTION__,rnum, stdin_fds[1], errno );
 
         slog( SLOG_ALL, "%s: password sent", __FUNCTION__ );
+
+READ:
+        errno = 0;
+        if( ( result = read( stdout_fds[0], (void*)buf, 4 ) ) <= 0 )
+        {
+            if( result == -1 && errno == EINTR )
+                goto READ;
+            slog( SLOG_EXTEND, "%s:(%u) error reading output from sys-auth for user: <%s>, errno: <%d>", __FUNCTION__,rnum,  username, errno );
+            retval = EIO;
+        }
+        else
+        {
+            slog( SLOG_EXTEND, "%s:(%u) got result <%s> from reading child", __FUNCTION__,rnum, buf );
+            if( isdigit( (int)buf[0] ) )
+                retval = atoi( buf );
+            else 
+                retval = DB2SEC_PLUGIN_UNKNOWNERROR;
+        }
+        r = close( stdout_fds[0] );
+        stdout_fds[0] = -1;
+        if( r != 0 )
+            slog( SLOG_CRIT, "%s:(%u) second close failed, pipe hosed<%d><%d><%d>", __FUNCTION__,rnum,  r, errno, stdout_fds[0] );
+
+        r = close( stdin_fds[0] );
+        stdin_fds[0] = -1;
+        if( r != 0 )
+            slog( SLOG_CRIT, "%s:(%u) close failed, pipe hosed<%d><%d><%d>", __FUNCTION__,rnum, r, errno, stdin_fds[0] );
+
+        /* Just in case DB2 didn't snag it, try to reap our child. */
+        sleep( 1 );
+        waitpid( pid, &status, 0 );
+#if 0 
         slog( SLOG_DEBUG, "%s: parent process <%d> waiting for child process " "<%d>", __FUNCTION__, getpid(), (int)pid );
         while( ( retval = waitpid( pid, &status, 0 ) ) == -1 )  
         {
             if( errno == EINTR ) { 
+                slog( SLOG_DEBUG, "%s: EINTR <%d>", __FUNCTION__, retval );
                 continue;
             } else if ( errno == ECHILD )
             {
                 /* Something else reaped our child? I guess we have to assume succcess */
-                retval = 0;
+                slog( SLOG_DEBUG, "%s: ECHILD <%d>", __FUNCTION__, retval );
             }
             else
                 slog( SLOG_DEBUG, "%s: waitpid failed, errno <%d>", __FUNCTION__, errno );
             break;
         }
         slog( SLOG_DEBUG, "%s: child process returned with value <%d>", __FUNCTION__, retval );
+#endif
     }
-
-    if( retval == -1 )
-        goto EXIT;
-    if( WEXITSTATUS(status) == 0 )
-        retval = 0;
 
 EXIT:
     if( retval == 0 ) {
         return DB2SEC_PLUGIN_OK;
     } else {
-        retval = WEXITSTATUS(status);
         slog( SLOG_EXTEND, "%s: Failed authentication attempt for user "
                 "<%s>, error <%d>", __FUNCTION__, username, retval );
         switch ( retval )
@@ -641,6 +748,13 @@ READ:
         }
 
         slog( SLOG_DEBUG, "%s:(%u) parent process <%d> waiting for child process " "<%d>", __FUNCTION__,rnum,  getpid(), (int)pid );
+        sleep( 1 );
+        waitpid( pid, &status, 0 );
+        if( (unsigned char)group_back[0] > 200 )
+            retval = (unsigned char)group_back[0] - 200;
+        else
+            retval = 0;
+#if 0
         while( ( retval = waitpid( pid, &status, 0 ) ) == -1 )  
         {
             if( errno == EINTR ) { 
@@ -654,17 +768,13 @@ READ:
                 slog( SLOG_DEBUG, "%s:(%u) waitpid failed, errno <%d>", __FUNCTION__,rnum,  errno );
             break;
         }
+#endif
         r = close( stdout_fds[0] );
         stdout_fds[0] = -1;
         if( r != 0 )
             slog( SLOG_CRIT, "%s:(%u) second close failed, pipe hosed<%d><%d><%d>", __FUNCTION__,rnum,  r, errno, stdout_fds[0] );
         slog( SLOG_DEBUG, "%s:(%u) child process returned with value <%d>", __FUNCTION__, rnum, retval );
     }
-
-    if( retval == -1 )
-        goto EXIT;
-    if( WEXITSTATUS(status) == 0 )
-        retval = 0;
 
 EXIT:
     if( retval == 0 ) {
@@ -688,7 +798,6 @@ EXIT:
         
         return DB2SEC_PLUGIN_OK;
     } else {
-        retval = WEXITSTATUS(status);
         slog( SLOG_EXTEND, "%s: Failed reading groups for user <%s>, error <%d>", __FUNCTION__, username, retval );
         switch ( retval )
         {
@@ -835,12 +944,19 @@ READ:
         }
         else
         {
-            slog( SLOG_EXTEND, "%s: read name from sys-nss for user with uid <%u>, bytes: <%d> name: <%s>", __FUNCTION__, uid, result, username );
-            got_name = 1;
+            slog( SLOG_EXTEND, "%s: read name from sys-nss for user with uid <%u>, bytes: <%d> name: <%s><%u>", __FUNCTION__, uid, result, username, (unsigned char)username[0] );
         }
 
         slog( SLOG_DEBUG, "%s: parent process <%d> waiting for child process "
 		"<%d>", __FUNCTION__, getpid(), (int)pid );
+        sleep( 1 );
+        waitpid( pid, &status, 0 );
+        if( (unsigned char)username[0] > 200 )
+            retval = (unsigned char)username[0] - 200;
+        else
+            retval = 0;
+
+#if 0
         while( ( retval = waitpid( pid, &status, 0 ) ) == -1 )  
         {
             if( errno == EINTR ) { 
@@ -854,25 +970,18 @@ READ:
                 slog( SLOG_CRIT, "%s: waitpid failed, errno <%d>", __FUNCTION__, errno );
             break;
         }
-        if( got_name )
-            retval = 0;
+#endif
 
         close( stdout_fds[0] );
         stdout_fds[0] = -1;
         slog( SLOG_DEBUG, "%s: child process returned with value <%d>", __FUNCTION__, retval );
     }
 
-    if( retval == -1 )
-        goto EXIT;
-    if( WEXITSTATUS(status) == 0 )
-        retval = 0;
-
 EXIT:
     if( retval == 0 ) {
         slog( SLOG_EXTEND, "%s: read username for user with uid <%u>, name <%s>", __FUNCTION__, uid, username, retval );
         return DB2SEC_PLUGIN_OK;
     } else {
-        retval = WEXITSTATUS(status);
         slog( SLOG_EXTEND, "%s: Failed reading username for user with uid <%u>, error <%d>", __FUNCTION__, uid, retval );
         switch ( retval )
         {
@@ -902,10 +1011,29 @@ int vas_db2_plugin_outcall_check_user( const char *username ) {
 
     errno = 0;
 
+    if ( pipe( stdout_fds ) != 0 ) {
+        retval = errno;
+        if( !retval ) retval = 1;
+        slog( SLOG_CRIT, "%s: Pipe failed, errno <%d>", __FUNCTION__, errno );
+        goto EXIT;
+    }
+
     if( ( pid = fork() ) == 0 ) /* Child Process */
     {
         slog( SLOG_DEBUG, "%s: child process with pid %d", __FUNCTION__, 
 		getpid() );
+
+        close( stdout_fds[0] );
+        stdout_fds[0] = -1;
+        if( dup2( stdout_fds[1], STDOUT_FILENO ) != STDOUT_FILENO )
+        {
+            slog( SLOG_CRIT, "%s: dup2 failed, errno <%d>", __FUNCTION__, errno );
+            retval = errno;
+            if( !retval ) retval = 1;
+            goto EXIT;
+        }
+        close( stdout_fds[1] );
+        stdout_fds[1] = -1;
         
         if( ( cptr = getenv( "DB2INSTANCE" ) ) == NULL ) 
         {
@@ -982,36 +1110,43 @@ int vas_db2_plugin_outcall_check_user( const char *username ) {
     } 
     else  /* Parent Process */
     {
-        slog( SLOG_DEBUG, "%s: parent process <%d> waiting for child process "
-		"<%d>", __FUNCTION__, getpid(), (int)pid );
-        while( ( retval = waitpid( pid, &status, 0 ) ) == -1 )  
-        {
-            if( errno == EINTR ) { 
-                continue;
-            } else if ( errno == ECHILD )
-            {
-                /* Something else reaped our child? I guess we have to assume succcess */
-                retval = 0;
-            }
-            else
-                slog( SLOG_DEBUG, "%s: waitpid failed, errno <%d>", __FUNCTION__, errno );
-            break;
-        }
-        close( stdout_fds[0] );
-        stdout_fds[0] = -1;
-        slog( SLOG_DEBUG, "%s: child process returned with value <%d>", __FUNCTION__, retval );
-    }
+        char buf[4] = { -1, 0, 0, 0 };
+        int r = 0;
+        int result = 0;
+        r = close( stdout_fds[1] );
+        stdout_fds[1] = -1;
+        if( r != 0 )
+            slog( SLOG_CRIT, "%s: close failed, pipe hosed<%d><%d><%d>", __FUNCTION__, r, errno, stdout_fds[1] );
 
-    if( retval == -1 )
-        goto EXIT;
-    if( WEXITSTATUS(status) == 0 )
-        retval = 0;
+READ:
+        errno = 0;
+        if( ( result = read( stdout_fds[0], (void*)buf, 4 ) ) <= 0 )
+        {
+            if( result == -1 && errno == EINTR )
+                goto READ;
+            slog( SLOG_EXTEND, "%s: error reading output from sys-nss for user: <%s>, errno: <%d>", __FUNCTION__, username, errno );
+            retval = EIO;
+        }
+        else
+        {
+            if( isdigit( (int)buf[0] ) )
+                retval = atoi( buf );
+            else
+                retval = DB2SEC_PLUGIN_UNKNOWNERROR;
+        }
+        r = close( stdout_fds[0] );
+        stdout_fds[0] = -1;
+        if( r != 0 )
+            slog( SLOG_CRIT, "%s: second close failed, pipe hosed<%d><%d><%d>", __FUNCTION__,  r, errno, stdout_fds[0] );
+
+        sleep( 1 );
+        waitpid( pid, &status, 0 );
+    }
 
 EXIT:
     if( retval == 0 ) {
         return DB2SEC_PLUGIN_OK;
     } else {
-        retval = WEXITSTATUS(status);
         slog( SLOG_EXTEND, "%s: Failed checking username <%s>, error <%d>", __FUNCTION__, username, retval );
         switch ( retval )
         {

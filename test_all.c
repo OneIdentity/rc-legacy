@@ -6,12 +6,22 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <signal.h>
+#include<sys/wait.h>
 #include "db2secPlugin.h"
 #include "csuite.h"
 #include "log.h"
 
 #define GOOD_VALUE "GOOD_VALUE"
 char test_conf[512] = "./test.conf";
+
+
+void vas_db2_plugin_sig_handle( int signo ) {
+    int status = 0;
+    while( waitpid( 0, &status, 0 ) != -1 )
+        continue; 
+    return;
+}
 
 
 void *handle = NULL;
@@ -128,7 +138,7 @@ void testLoadV( Test *pTest )
         if( err != NULL )
             fprintf( stderr, "%s: dlsym error <%s>\n", __FUNCTION__, err );
         else
-            do_version = 1;
+            do_version = 0;
     }
 }
 
@@ -138,8 +148,8 @@ void testCheckV( Test *pTest )
     if( do_version )
         ptr = GetVersion();
     else
-        ptr = "NONE";
-    ct_test( pTest, ptr && strcmp( ptr, VERSION ) == 0 );
+        ptr = NULL; 
+    ct_test( pTest, !ptr || strcmp( ptr, VERSION ) == 0 );
 }
 
 void testFillfnsC( Test *pTest )
@@ -224,6 +234,42 @@ void testAuthNoPWBAD( Test *pTest )
     if( username ) free( username );
 }
 
+void testAuthNoBinary( Test *pTest )
+{
+    db2int32 version = 1;
+    int rval = 0;
+    db2int32 msgLen = 0;
+    char *errMsg = NULL;
+    char *username = (char*)GetEntryFromFile( test_conf, "username" );
+    if( username )
+        username = (char *)strdup( username );
+    char *password = (char*)GetEntryFromFile( test_conf, "password" );
+    if( password )
+        password = (char *)strdup( password );
+    rename( "./pamAuth", "./pamAuth.save" );
+//    system( "echo one; ls -al ./pamAuth*; mv ./pamAuth ./pamAuth.save ; echo ; ls -la ./pamAuth*; if [ -f ./lamAuth ] ; then mv ./lamAuth ./lamAuth.save ; fi" );
+    rval = fnsS.db2secValidatePassword( username?username:"bad", 
+                                       username?strlen(username):3, 
+                                       NULL, 
+                                       0, 
+                                       0, 
+                                       password?password:"bad", 
+                                       password?strlen(password):3, 
+                                       NULL, 
+                                       0, 
+                                       NULL, 
+                                       0, 
+                                       0, 
+                                       NULL, 
+                                       &errMsg, 
+                                       &msgLen);
+    //system( "echo two; ls -la pamAuth* ; mv ./pamAuth.save ./pamAuth ; echo ; ls -la pamAuth*; if [ -f ./lamAuth.save ] ; then mv ./lamAuth.save ./lamAuth; fi" );
+    rename( "./pamAuth.save", "./pamAuth" );
+    ct_test( pTest, rval == DB2SEC_PLUGIN_UNKNOWNERROR );
+    if( username ) free( username );
+    if( password ) free( password );
+}
+
 void testAuthNoPW( Test *pTest )
 {
     db2int32 version = 1;
@@ -284,6 +330,34 @@ void testAuthGood( Test *pTest )
     ct_test( pTest, rval == DB2SEC_PLUGIN_OK );
     if( username ) free( username );
     if( password ) free( password );
+}
+
+void testAuthBad( Test *pTest )
+{
+    db2int32 version = 1;
+    int rval = 0;
+    db2int32 msgLen = 0;
+    char *errMsg = NULL;
+    char *username = (char*)GetEntryFromFile( test_conf, "username" );
+    if( username )
+        username = (char *)strdup( username );
+    rval = fnsS.db2secValidatePassword( username?username:"bad", 
+                                       username?strlen(username):3, 
+                                       NULL, 
+                                       0, 
+                                       0, 
+                                       "bad", 
+                                       3, 
+                                       NULL, 
+                                       0, 
+                                       NULL, 
+                                       0, 
+                                       0, 
+                                       NULL, 
+                                       &errMsg, 
+                                       &msgLen);
+    ct_test( pTest, rval == DB2SEC_PLUGIN_BADPWD );
+    if( username ) free( username );
 }
 
 void testAuthGoodUpper( Test *pTest )
@@ -660,6 +734,52 @@ void testUserUpperExists( Test *pTest )
     ct_test( pTest, rval == DB2SEC_PLUGIN_OK );
 }
 
+void testGetLoginContextBadUser( Test *pTest )
+{
+    db2int32 msgLen = 0;
+    char *errMsg = NULL;
+    struct passwd *pwd= NULL;
+    char authID[32]; /* Going off of SQL_AUTHID_SZ limit */
+    db2int32 authIDLength = 0;
+    char userid[32]; /* Going off of SQL_AUTHID_SZ limit */
+    db2int32 useridLength = 0;
+    int rval = 0;
+#ifdef HPUX
+        setresuid( -1, 999999, -1 );
+#else
+        seteuid( 999999 );
+#endif
+
+
+    if( ( pwd = getpwuid(geteuid()) ) != NULL )
+    {
+        ct_test( pTest, /* FAILED to set uid to bad uid*/ 0 );
+        return;
+    }
+
+    rval = fnsC.db2secGetDefaultLoginContext( authID,
+                                              &authIDLength,
+                                              userid,
+                                              &useridLength,
+                                              DB2SEC_PLUGIN_EFFECTIVE_USER_NAME,
+                                              NULL, /* domain */
+                                              NULL, /* domain length */
+                                              NULL, /* domain type */
+                                              NULL, /* database name */
+                                              0 , /* database name length */
+                                              NULL, /* token */
+                                              &errMsg,
+                                              &msgLen );
+#ifdef HPUX
+    setresuid( -1, 0, -1 );
+#else
+    seteuid( 0 );
+#endif
+    setuid( 0 );
+    ct_test( pTest, ( rval == DB2SEC_PLUGIN_BADUSER ) );
+
+}
+
 void testGetLoginContextEffictive( Test *pTest )
 {
     db2int32 msgLen = 0;
@@ -692,6 +812,9 @@ void testGetLoginContextEffictive( Test *pTest )
                                               &msgLen );
     ct_test( pTest, ( rval == DB2SEC_PLUGIN_OK ) );
     ct_test( pTest, strcmp( authID, pwd->pw_name ) == 0 );
+    if( strcmp( authID, pwd->pw_name ) != 0 )
+        fprintf( stderr, "%s: authid: <%s> pw_name: <%s>\n", __FUNCTION__, authID, pwd->pw_name );
+
 	ct_test( pTest, strcmp( userid, pwd->pw_name ) == 0 );
 
 }
@@ -1373,6 +1496,8 @@ Test *GetServerTests()
     rc = ct_addTestFun( pTest, testAuthNoPW );
     rc = ct_addTestFun( pTest, testAuthNoPWBAD );
     rc = ct_addTestFun( pTest, testAuthGood );
+    rc = ct_addTestFun( pTest, testAuthBad );
+//    rc = ct_addTestFun( pTest, testAuthNoBinary );
     rc = ct_addTestFun( pTest, testAuthGoodUpper );
     rc = ct_addTestFun( pTest, testAuthGoodMustChange );
     rc = ct_addTestFun( pTest, testAuthGoodCantChange );
@@ -1397,6 +1522,7 @@ Test *GetClientTests()
     Test* pTest = ct_create( "Sys-auth library Client", NULL );
     bool rc = ct_addTestFun( pTest, testGetLoginContextEffictive );
     rc = ct_addTestFun( pTest, testGetLoginContextReal );   
+    rc = ct_addTestFun( pTest, testGetLoginContextBadUser );   
     assert( rc );
     return pTest;
 }
@@ -1431,6 +1557,15 @@ Test *GetCloseTests()
 
 int main(int argc, char **argv) {
     int rc = 0;
+    struct sigaction sigact;
+    struct sigaction osigact;
+
+    memset(&sigact, 0, sizeof(sigact));
+    memset(&osigact, 0, sizeof(osigact));
+
+    sigact.sa_handler = vas_db2_plugin_sig_handle;
+
+    sigaction(SIGCHLD, &sigact, &osigact);
     
     if( argc > 2)
     {
@@ -1466,6 +1601,8 @@ int main(int argc, char **argv) {
     cs_run( s );
     rc = cs_report( s );
     cs_destroy( s, TRUE );
+
+    sigaction(SIGCHLD, &osigact, NULL);
     
     return( rc );
 }

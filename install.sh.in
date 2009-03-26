@@ -67,6 +67,18 @@ if [ ! -d ${PLUGINPATH32} -a ! -d ${PLUGINPATH64} ] ;  then
         exit 1
 fi
 
+su - db2inst1 -c db2level | egrep "DB2 v8|DB2 v9.1" >/dev/null
+if [ $? -eq 0 ] ; then
+        echo ""
+        echo "ERROR: Instance version is not DB2 v9.5+, this plugin will not install"
+        echo ""
+        echo "Please download and use the 3.0.0.5 version of this plugin ( available from http://rc.quest.com/topics/db2_sys-auth, follow the 'Other DB2_sys-auth releases' link )" 
+        echo ""
+        echo "Without a signal handler, this plugin could crash v8.2/v9.1 instances and should only be used in v9.5+ instances( which requires having no signal handler )"
+        echo ""
+        exit 1
+fi
+
 if [ -d ${PLUGINPATH32} ] ; then
     rm -f ${PLUGINPATH32}/server/${LIBFILE}
     rm -f ${PLUGINPATH32}/client/${LIBFILE}

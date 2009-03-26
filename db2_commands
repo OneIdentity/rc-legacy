@@ -5,6 +5,9 @@ db2 create database testdb
 db2 list database directory
 db2 list db directory
 
+# Create a sample DB
+db2sampl
+
 # Get the management configuration.
 db2 get dbm cfg
 

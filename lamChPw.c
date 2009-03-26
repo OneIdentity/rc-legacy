@@ -137,6 +137,7 @@ int main(int argc, char* argv[])
         _lower( userBuffer );
         if( ( pwd = getpwnam( userBuffer ) ) == NULL ) {
             slog( SLOG_EXTEND, "%s: unable to find user <%s>", __FUNCTION__, argv[1] );
+            fprintf( stdout, "3\n" );
             exit( 3 );
         }
     }
@@ -150,6 +151,7 @@ int main(int argc, char* argv[])
         slog( SLOG_EXTEND, 
 	    "%s: error reading old password from std_in for user <%s>, errno <%d>",
 	    __FUNCTION__, argv[1], errno );
+        fprintf( stdout, "%d\n", EIO );
         exit( EIO );
     }
 
@@ -180,15 +182,15 @@ int main(int argc, char* argv[])
     /* First auth the user ( verify the old password ) */
     retval = lam_auth_user( argv[1], password_old );
 
-    if( retval )
-        exit( retval );
+    if( !retval )
+        retval = lam_change_password( argv[1], password_old, password_new );
 
     /* Run the auth_user function. */
     /* As root, since local users need root access to change a password.
      * No unwanted changes since the above auth will verify they know the 
      * right stuff to do this. */
 //    if( setuid( pwd->pw_uid ) == 0 )
-        retval = lam_change_password( argv[1], password_old, password_new );
+        //retval = lam_change_password( argv[1], password_old, password_new );
 //    else
 //        retval = 1;
 
@@ -197,5 +199,7 @@ int main(int argc, char* argv[])
 	    "attempt for user <%s>", __FUNCTION__, retval, argv[1] );
 #endif
     
+    fprintf( stdout, "%d\n", retval );
+
     exit( retval );
 }
