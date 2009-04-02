@@ -127,9 +127,10 @@ loop server_gather
 
 loop server_build_test_clean
 
-make distclean
 tar cvzf out.$VERSION.tar.gz out.*
 rm -rf out.*
+
+make distclean
 cd binaries/
 tar cvf DB2_sys-auth.$VERSION.tar *
 cd ../

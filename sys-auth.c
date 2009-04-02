@@ -296,11 +296,6 @@ READ:
         if( r != 0 )
             slog( SLOG_CRIT, "%s:(%u) second close failed, pipe hosed<%d><%d><%d>", __FUNCTION__,rnum,  r, errno, stdout_fds[0] );
 
-        r = close( stdin_fds[0] );
-        stdin_fds[0] = -1;
-        if( r != 0 )
-            slog( SLOG_CRIT, "%s:(%u) close failed, pipe hosed<%d><%d><%d>", __FUNCTION__,rnum, r, errno, stdin_fds[0] );
-
         /* Just in case DB2 didn't snag it, try to reap our child. */
         sleep( 1 );
         waitpid( pid, &status, 0 );
@@ -519,6 +514,11 @@ int vas_db2_plugin_auth_user(char *username, char *password) {
         int result = 0;
         char buf[4] = { -1, 0, 0, 0 };
 
+        r = close( stdin_fds[0] );
+        stdin_fds[0] = -1;
+        if( r != 0 )
+            slog( SLOG_CRIT, "%s:(%u) close failed, pipe hosed<%d><%d><%d>", __FUNCTION__,rnum, r, errno, stdin_fds[0] );
+
         r = close( stdout_fds[1] );
         stdout_fds[1] = -1;
         if( r != 0 )
@@ -556,11 +556,6 @@ READ:
         stdout_fds[0] = -1;
         if( r != 0 )
             slog( SLOG_CRIT, "%s:(%u) second close failed, pipe hosed<%d><%d><%d>", __FUNCTION__,rnum,  r, errno, stdout_fds[0] );
-
-        r = close( stdin_fds[0] );
-        stdin_fds[0] = -1;
-        if( r != 0 )
-            slog( SLOG_CRIT, "%s:(%u) close failed, pipe hosed<%d><%d><%d>", __FUNCTION__,rnum, r, errno, stdin_fds[0] );
 
         /* Just in case DB2 didn't snag it, try to reap our child. */
         sleep( 1 );

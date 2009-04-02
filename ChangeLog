@@ -249,3 +249,8 @@ Now changelog will work off the version.
 
 3.0.0.18 ( 2009_03_25 )
 * Fixed the MAJOR issue where when run under v9.5 any password worked.     
+
+3.0.0.19 ( 2009_03_26
+* While changing password, the plugin could log a message about a failed close
+  action. This has been fixed.
+* Use instance owner, not db2inst1 when checking DB2 level.  
