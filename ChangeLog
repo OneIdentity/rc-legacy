@@ -254,3 +254,25 @@ Now changelog will work off the version.
 * While changing password, the plugin could log a message about a failed close
   action. This has been fixed.
 * Use instance owner, not db2inst1 when checking DB2 level.  
+
+3.0.0.20 ( 2009_04_02 )
+* When kicking off out-calls, close any open file handles.
+
+3.0.0.21 ( 2009_04_12 )
+Bug 672
+* Use getgrouplist on Linux, allows compatability when winbind is set to not 
+  participate in getgrent iterations.
+
+3.0.0.22 ( 2009_05_01 )
+* Removed some sleep statements from previous debugging. 
+* For Linux, only do the getgrouplist. ( no getgrent )
+
+3.0.0.23 ( 2009_05_01 )
+* Added a slight sleep ( usleep of 10ms ) for my sanity.
+
+3.0.0.24 ( 2009_05_01 )
+* Bug with getgroupslist when user only had pgid group. Fixed.
+
+3.0.0.25 ( 2009_05_05 )
+* Use syscall for read, on Linux x86_64 it seems after time to use the pthread
+  read() instead of the libc read(), and then hangs. 

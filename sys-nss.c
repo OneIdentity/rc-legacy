@@ -211,6 +211,9 @@ int _get_groups( const char* username, char *groups, int *numgroups ) {
     char delims[] = ",";
     char userBuffer[MAX_LINE_LENGTH];
     gid_t gid, pgid;
+    gid_t my_groups[256] = {0};
+    int ng = 256;
+    int i = 0;
     int groupcount = 0;
     int length = 0;
     int rval = 0;
@@ -234,6 +237,7 @@ int _get_groups( const char* username, char *groups, int *numgroups ) {
         else
             _upper( userBuffer );
     }
+    cptr = groups;
 #ifdef AIX
     /* Since we are on AIX, we can use getgrset. Get that, tokenize the
      * result, and add to the buffer as the group resolves to names.
@@ -244,7 +248,6 @@ int _get_groups( const char* username, char *groups, int *numgroups ) {
     if( ( grset = getgrset( userBuffer ) ) == NULL ) {
         return ENOENT;
     }
-    cptr = groups;
     gr = strtok( grset, delims );
     while( gr != NULL ) {
         if( ( grp = getgrgid( atoi( gr ) ) ) != NULL )
@@ -334,27 +337,47 @@ int _get_groups( const char* username, char *groups, int *numgroups ) {
 
     /* Re-set to default */
     setauthdb( NULL, NULL );
+#endif /* AIX */
+    
+#if defined (LINUX)
+    if( getgrouplist(userBuffer, pgid, my_groups, &ng) >= 1 )
+    {
+        for(i = 0; i < ng; ++i) {
+            grp = getgrgid(my_groups[i]);
+            if (grp) {
+                length = strlen( grp->gr_name );
+                if( ( length + (cptr - groups ) ) < MAX_LINE_LENGTH ) {
+                    *((unsigned char*)cptr) = (unsigned char)length;
+                    ++cptr;
+                    memcpy(cptr, grp->gr_name, length );
+                    cptr += length;
+                    ++groupcount;
+                }
+            }
+        }
+    }
 #else
-    cptr = groups;
-#endif
     setgrent();
     while( ( grp = getgrent() ) != NULL ) {
         if( ( _is_user_in_group( userBuffer, grp, pgid ) ) == 1 ) 
         {
-            length = strlen( grp->gr_name );
-            if( ( length + (cptr - groups ) ) < MAX_LINE_LENGTH )
+            if( strstr( groups, grp->gr_name ) == NULL )
             {
-                *((unsigned char*)cptr) = (unsigned char)length;
-                ++cptr;
-                memcpy(cptr, grp->gr_name, length );
-                cptr += length;
-                ++groupcount;
+                length = strlen( grp->gr_name );
+                if( ( length + (cptr - groups ) ) < MAX_LINE_LENGTH )
+                {
+                    *((unsigned char*)cptr) = (unsigned char)length;
+                    ++cptr;
+                    memcpy(cptr, grp->gr_name, length );
+                    cptr += length;
+                    ++groupcount;
+                }
             }
         }
     }
     *cptr = '\0';
     endgrent();
-
+#endif
     *numgroups = groupcount;
     return 0;
 }
