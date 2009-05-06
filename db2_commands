@@ -79,3 +79,6 @@ db2admin start
 
 Print out setting:
 db2 get admin cfg
+
+Run time:
+db2pd -

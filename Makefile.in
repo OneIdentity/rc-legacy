@@ -96,6 +96,12 @@ test_all64: $(TEST64) $(PROG64).so.@VERSION@
 test_all64.o: test_all.c
 	$(CC64) $(CFLAGS) $(INCLUDES) -o test_all64.o -c test_all.c -g
     
+test_connect: test_connect.o $(PROG64).so.@VERSION@
+	$(CC64) -o test_connect test_connect.o $(DLFLAG)
+
+test_connect.o: test_connect.c
+	$(CC64) $(CFLAGS) $(INCLUDES) -o test_connect.o -c test_connect.c -g
+    
 test_all32: $(TEST32) $(PROG32).so.@VERSION@
 	$(CC) -o test_all32 $(TEST32) $(DLFLAG)
 
