@@ -127,7 +127,7 @@ loop server_gather
 
 loop server_build_test_clean
 
-tar cvzf out.$VERSION.tar.gz out.*
+tar czf out.$VERSION.tar.gz out.*
 rm -rf out.*
 
 make distclean

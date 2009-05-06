@@ -47,6 +47,7 @@
 db2secLogMessage *logFunc = NULL;
 
 
+
 #define SUCCESS 1
 #define FAILURE 0
 #define CHPWFAILURE -1
@@ -56,6 +57,51 @@ db2secLogMessage *logFunc = NULL;
 /********************************************************************
  * Helper functions.
  *******************************************************************/
+
+/* Close all open fd's except for stdin, stdout, stderr. */
+void 
+close_fds( void )
+{
+    long                maxfds = 4096;
+    int i = 0;
+
+    if( ( maxfds = sysconf(_SC_OPEN_MAX) ) > 4096 || maxfds < 3 )
+    {
+        maxfds = 4096;
+    }
+    for( i = 3; i < maxfds; ++i )
+        close( i );
+}
+
+int
+util_usleep( int utimeout )
+{
+    struct timeval      tv = { 0, 0 };
+    int                 rval = 0;
+
+    /* This is a portable millisecond sleep timer, using select */
+    if( utimeout == 0 )
+        return( 0 );
+
+    tv.tv_sec = utimeout / 1000000;
+    tv.tv_usec = utimeout % 1000000;
+
+    /* Actually use the timer */
+    rval = select( 0, NULL, NULL, NULL, &tv );
+
+    /* If the select failed, return the errno back to the caller */
+    if( rval < 0 )
+    {
+        /* If errno is zero (because of a thread problem, then return
+         *          * back the -1 value from select
+         *                   */
+        if( errno != 0 )
+            rval = errno;
+    }
+
+    return( rval );
+}
+
 
 /* Test an 11k chunk of memory, which is needed for group calls. 
  * This is to warn in case the current thread/process is out
@@ -237,6 +283,8 @@ int vas_db2_plugin_change_password(char *username, char *password_old, char *pas
 #endif
             }
         }
+
+        close_fds();
         
         slog( SLOG_DEBUG, "%s: executing program <%s> from path <%s>", 
 		__FUNCTION__, prog_file, prog_path );
@@ -297,7 +345,8 @@ READ:
             slog( SLOG_CRIT, "%s:(%u) second close failed, pipe hosed<%d><%d><%d>", __FUNCTION__,rnum,  r, errno, stdout_fds[0] );
 
         /* Just in case DB2 didn't snag it, try to reap our child. */
-        sleep( 1 );
+        /* 10ms delay */
+        util_usleep( 10000 );
         waitpid( pid, &status, 0 );
         
 #if 0
@@ -378,7 +427,6 @@ int vas_db2_plugin_auth_user(char *username, char *password) {
         slog( SLOG_CRIT, "%s: Pipe on stdout_fds failed, errno <%d>", __FUNCTION__, errno );
         goto EXIT;
     }
-        
     if( ( pid = fork() ) == 0 ) /* Child Process */
     {
         slog( SLOG_DEBUG, "%s: child process with pid %d", __FUNCTION__, 
@@ -491,6 +539,8 @@ int vas_db2_plugin_auth_user(char *username, char *password) {
             }
         }
         
+        close_fds();
+
         slog( SLOG_DEBUG, "%s: executing program <%s> from path <%s>", 
 		__FUNCTION__, prog_file, prog_path );
 
@@ -558,7 +608,8 @@ READ:
             slog( SLOG_CRIT, "%s:(%u) second close failed, pipe hosed<%d><%d><%d>", __FUNCTION__,rnum,  r, errno, stdout_fds[0] );
 
         /* Just in case DB2 didn't snag it, try to reap our child. */
-        sleep( 1 );
+        /* 10ms delay */
+        util_usleep( 10000 );
         waitpid( pid, &status, 0 );
 #if 0 
         slog( SLOG_DEBUG, "%s: parent process <%d> waiting for child process " "<%d>", __FUNCTION__, getpid(), (int)pid );
@@ -618,7 +669,6 @@ int vas_db2_plugin_outcall_getgroups( const char *username, char groups[], int *
     char cuid[11];
     struct passwd *pwd = NULL;
     char group_back[MAX_LINE_LENGTH + 2];
-    int   rnum = rand();
     
     func_start();
 
@@ -633,13 +683,13 @@ int vas_db2_plugin_outcall_getgroups( const char *username, char groups[], int *
 
     if( ( pid = fork() ) == 0 ) /* Child Process */
     {
-        slog( SLOG_DEBUG, "%s:(%u) child process with pid %d", __FUNCTION__, rnum, getpid() );
+        slog( SLOG_DEBUG, "%s: child process with pid %d", __FUNCTION__, getpid() );
         
         close( stdout_fds[0] );
         stdout_fds[0] = -1;
         if( dup2( stdout_fds[1], STDOUT_FILENO ) != STDOUT_FILENO )
         {
-            slog( SLOG_CRIT, "%s:(%u) dup2 failed, errno <%d>", __FUNCTION__, rnum, errno );
+            slog( SLOG_CRIT, "%s: dup2 failed, errno <%d>", __FUNCTION__, errno );
             retval = errno;
             if( !retval ) retval = 1;
             goto EXIT;
@@ -704,8 +754,10 @@ int vas_db2_plugin_outcall_getgroups( const char *username, char groups[], int *
         }
         
 
-        slog( SLOG_DEBUG, "%s:(%u) executing program <%s> from path <%s> with option <4><%s>", 
-		__FUNCTION__, rnum, prog_file, prog_path, username );
+        close_fds();
+
+        slog( SLOG_DEBUG, "%s: executing program <%s> from path <%s> with option <4><%s>", 
+		__FUNCTION__, prog_file, prog_path, username );
 
         if( execl( prog_path, prog_file, "4", username, NULL ) == -1 ) 
         {
@@ -729,21 +781,22 @@ int vas_db2_plugin_outcall_getgroups( const char *username, char groups[], int *
         r = close( stdout_fds[1] );
         stdout_fds[1] = -1;
         if( r != 0 )
-            slog( SLOG_CRIT, "%s:(%u) close failed, pipe hosed<%d><%d><%d>", __FUNCTION__,rnum, r, errno, stdout_fds[1] );
+            slog( SLOG_CRIT, "%s: close failed, pipe hosed<%d><%d><%d>", __FUNCTION__, r, errno, stdout_fds[1] );
 
-        slog( SLOG_ALL, "%s:(%u) reading groups from child process", __FUNCTION__,rnum  );
+        slog( SLOG_ALL, "%s: reading groups from child process", __FUNCTION__  );
 READ:
         errno = 0;
         if( ( result = read( stdout_fds[0], (void*)group_back, MAX_LINE_LENGTH + 1 ) ) <= 0 )
         { 
             if( result == -1 && errno == EINTR )
                 goto READ;
-            slog( SLOG_EXTEND, "%s:(%u) error reading groups from sys-nss for user: <%s>, errno: <%d> fd:<%d>", __FUNCTION__,rnum,  username, errno, stdout_fds[0] );
+            slog( SLOG_EXTEND, "%s: error reading groups from sys-nss for user: <%s>, errno: <%d> fd:<%d>", __FUNCTION__,  username, errno, stdout_fds[0] );
             retval = EIO;
         }
 
-        slog( SLOG_DEBUG, "%s:(%u) parent process <%d> waiting for child process " "<%d>", __FUNCTION__,rnum,  getpid(), (int)pid );
-        sleep( 1 );
+        slog( SLOG_DEBUG, "%s: parent process <%d> waiting for child process " "<%d>", __FUNCTION__,  getpid(), (int)pid );
+        /* 10ms delay */
+        util_usleep( 10000 );
         waitpid( pid, &status, 0 );
         if( (unsigned char)group_back[0] > 200 )
             retval = (unsigned char)group_back[0] - 200;
@@ -760,15 +813,15 @@ READ:
                 retval = 0;
             }
             else
-                slog( SLOG_DEBUG, "%s:(%u) waitpid failed, errno <%d>", __FUNCTION__,rnum,  errno );
+                slog( SLOG_DEBUG, "%s: waitpid failed, errno <%d>", __FUNCTION__,  errno );
             break;
         }
 #endif
         r = close( stdout_fds[0] );
         stdout_fds[0] = -1;
         if( r != 0 )
-            slog( SLOG_CRIT, "%s:(%u) second close failed, pipe hosed<%d><%d><%d>", __FUNCTION__,rnum,  r, errno, stdout_fds[0] );
-        slog( SLOG_DEBUG, "%s:(%u) child process returned with value <%d>", __FUNCTION__, rnum, retval );
+            slog( SLOG_CRIT, "%s: second close failed, pipe hosed<%d><%d><%d>", __FUNCTION__,  r, errno, stdout_fds[0] );
+        slog( SLOG_DEBUG, "%s: child process returned with value <%d>", __FUNCTION__, retval );
     }
 
 EXIT:
@@ -789,7 +842,7 @@ EXIT:
             ptr = &ptr[oldsize + 1];
         } while ( groupsize != 0 && ++group_count <= *ngroups );
         ptr[groupsize - 1] = '\0';
-        slog( SLOG_EXTEND, "%s:(%u) groups for user <%s>: <%s>\n", __FUNCTION__, rnum, username, &group_back[2] );
+        slog( SLOG_EXTEND, "%s: groups for user <%s>: <%s>\n", __FUNCTION__, username, &group_back[2] );
         
         return DB2SEC_PLUGIN_OK;
     } else {
@@ -904,6 +957,8 @@ int vas_db2_plugin_outcall_getuser( uid_t uid, char username[] ) {
 
         sprintf( cuid, "%u\0", uid );
 
+        close_fds();
+
         slog( SLOG_DEBUG, "%s: executing program <%s> from path <%s> with option <%s>", 
 		__FUNCTION__, prog_file, prog_path, cuid ? cuid : "<NULL>" );
 
@@ -944,7 +999,8 @@ READ:
 
         slog( SLOG_DEBUG, "%s: parent process <%d> waiting for child process "
 		"<%d>", __FUNCTION__, getpid(), (int)pid );
-        sleep( 1 );
+        /* 10ms delay */
+        util_usleep( 10000 );
         waitpid( pid, &status, 0 );
         if( (unsigned char)username[0] > 200 )
             retval = (unsigned char)username[0] - 200;
@@ -1087,6 +1143,8 @@ int vas_db2_plugin_outcall_check_user( const char *username ) {
         }
         
 
+        close_fds();
+
         slog( SLOG_DEBUG, "%s: executing program <%s> from path <%s> with option <%d> <%s>", 
 		__FUNCTION__, prog_file, prog_path, 2, username );
 
@@ -1134,7 +1192,8 @@ READ:
         if( r != 0 )
             slog( SLOG_CRIT, "%s: second close failed, pipe hosed<%d><%d><%d>", __FUNCTION__,  r, errno, stdout_fds[0] );
 
-        sleep( 1 );
+        /* 10ms delay */
+        util_usleep( 10000 );
         waitpid( pid, &status, 0 );
     }
 
