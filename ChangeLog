@@ -276,3 +276,11 @@ Bug 672
 3.0.0.25 ( 2009_05_05 )
 * Use syscall for read, on Linux x86_64 it seems after time to use the pthread
   read() instead of the libc read(), and then hangs. 
+
+3.0.0.26 ( 2009_05_06 )
+* Remove the read change from previous version, it was unneeded.
+* Re-work out-calls so only async-signal-safe functions are called between 
+  the fork and execl() of an out-call. 
+* Re-do the logging system. Seems to be the root of the latest issue. Now, if 
+  debug-level is set to 2 or higher, then all debug goes to /tmp/sys-auth.debug
+  Otherwise no information is logged to that file. Syslog is no longer used. 

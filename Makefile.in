@@ -39,8 +39,8 @@ PAMAUTHS = pamAuth pamChPw db2dassecPam
 @DOPAM32@TESTS = test_all32 check32
 @DOPAM64@TESTPROGS = test_all64
 @DOPAM32@TESTPROGS = test_all32
-TEST32 = ctest32.o csuite32.o test_all32.o log32.o vsyslog32.o
-TEST64 = ctest64.o csuite64.o test_all64.o log64.o vsyslog64.o
+TEST32 = ctest32.o csuite32.o test_all32.o log32.o
+TEST64 = ctest64.o csuite64.o test_all64.o log64.o
 
 
 @DO32@@DO64@@DOLAM@all : $(PROG32).so.@VERSION@ $(PROG64).so.@VERSION@ PAMAUTH LAMAUTH
@@ -127,22 +127,22 @@ distclean: clean
 	@sudo rm -rf config.h config.log config.status Makefile install.sh install DB2* Troubleshooting autom4te.cache install_das.sh out.*
 
 $(PROG32).so.@VERSION@: $(PROG32).o log32.o
-	$(CC) $(LDFLAGS) -o $(PROG32).so.@VERSION@ $(PROG32).o vsyslog32.o log32.o
+	$(CC) $(LDFLAGS) -o $(PROG32).so.@VERSION@ $(PROG32).o log32.o
 
 $(PROG32).o: $(PROG).c
 	$(CC) $(CFLAGS) $(INCLUDES) -o $(PROG32).o -c $(PROG).c
 
 $(PROG64).so.@VERSION@: $(PROG64).o log64.o
-	$(CC64) $(LDFLAGS) -o $(PROG64).so.@VERSION@ $(PROG64).o vsyslog64.o log64.o
+	$(CC64) $(LDFLAGS) -o $(PROG64).so.@VERSION@ $(PROG64).o log64.o
 
 $(PROG64).o: $(PROG).c
 	$(CC64) $(CFLAGS) $(INCLUDES) -o $(PROG64).o -c $(PROG).c 
 
 pamAuth32: pamAuth32.o log32.o
-	$(CC) pamAuth32.o -o pamAuth32 -lpam log32.o vsyslog32.o
+	$(CC) pamAuth32.o -o pamAuth32 -lpam log32.o
 
 pamAuth64: pamAuth64.o log64.o
-	$(CC64) pamAuth64.o -o pamAuth64 -lpam log64.o vsyslog64.o
+	$(CC64) pamAuth64.o -o pamAuth64 -lpam log64.o
 
 pamAuth32.o: pamAuth.c
 	$(CC) $(CFLAGS) $(INCLUDES)  -c pamAuth.c -o pamAuth32.o
@@ -151,10 +151,10 @@ pamAuth64.o: pamAuth.c
 	$(CC64) $(CFLAGS) $(INCLUDES) -c pamAuth.c -o pamAuth64.o
 
 pamChPw32: pamChPw32.o log32.o
-	$(CC) pamChPw32.o -o pamChPw32 -lpam log32.o vsyslog32.o -g
+	$(CC) pamChPw32.o -o pamChPw32 -lpam log32.o -g
 
 pamChPw64: pamChPw64.o log64.o
-	$(CC64) pamChPw64.o -o pamChPw64 -lpam log64.o vsyslog64.o -g
+	$(CC64) pamChPw64.o -o pamChPw64 -lpam log64.o -g
 
 pamChPw32.o: pamChPw.c
 	$(CC) $(CFLAGS) $(INCLUDES)  -c pamChPw.c -o pamChPw32.o -g
@@ -163,13 +163,13 @@ pamChPw64.o: pamChPw.c
 	$(CC64) $(CFLAGS) $(INCLUDES) -c pamChPw.c -o pamChPw64.o -g
 
 lamAuth32: lamAuth32.o
-	$(CC) lamAuth32.o -o lamAuth32 vsyslog32.o log32.o
+	$(CC) lamAuth32.o -o lamAuth32 log32.o
 
 lamAuth32.o: lamAuth.c
 	$(CC) $(CFLAGS) $(INCLUDES) -c lamAuth.c -o lamAuth32.o
 
 lamChPw32: lamChPw32.o
-	$(CC) lamChPw32.o -o lamChPw32 vsyslog32.o log32.o
+	$(CC) lamChPw32.o -o lamChPw32 log32.o
 
 lamChPw32.o: lamChPw.c
 	$(CC) $(CFLAGS) $(INCLUDES) -c lamChPw.c -o lamChPw32.o
@@ -192,17 +192,11 @@ db2dassecPam32.o: db2dassecPam.c
 db2dassecPam64.o: db2dassecPam.c
 	$(CC64) $(CFLAGS) $(INCLUDES) -c db2dassecPam.c -o db2dassecPam64.o
 
-log32.o: log.c log.h vsyslog32.o
+log32.o: log.c log.h
 	$(CC) $(CFLAGS) $(INCLUDES) -c log.c -o log32.o
 
-log64.o: log.c log.h vsyslog64.o
+log64.o: log.c log.h
 	$(CC64) $(CFLAGS) $(INCLUDES) -c log.c -o log64.o
-
-vsyslog32.o: vsyslog.c vsyslog.h
-	$(CC) $(CFLAGS) $(INCLUDES) -c vsyslog.c -o vsyslog32.o
-
-vsyslog64.o: vsyslog.c vsyslog.h
-	$(CC64) $(CFLAGS) $(INCLUDES) -c vsyslog.c -o vsyslog64.o
 
 bin_dist: all $(TESTPROGS)
 	@rm -rf DB2_sys-auth
@@ -220,7 +214,7 @@ bin_dist: all $(TESTPROGS)
 src_dist: all
 	@rm -rf DB2_sys-auth
 	@mkdir DB2_sys-auth
-	@cp configure config.h.in log.h log.c vsyslog.c vsyslog.h sys-auth.c sys-nss.c install.sh.in install_das.sh.in Makefile.in INSTALL README LICENSE pamChPw.c pamAuth.c lamAuth.c lamChPw.c NEWS AUTHORS TESTING ChangeLog pam.conf.aix ctest.c ctest.h csuite.c csuite.h test_all.c test.conf bool.h Troubleshooting.in db2dassecLam.c db2dassecPam.c test2.conf.in db2secPlugin.h build-number.txt DB2_sys-auth/  
+	@cp configure config.h.in log.h log.c sys-auth.c sys-nss.c install.sh.in install_das.sh.in Makefile.in INSTALL README LICENSE pamChPw.c pamAuth.c lamAuth.c lamChPw.c NEWS AUTHORS TESTING ChangeLog pam.conf.aix ctest.c ctest.h csuite.c csuite.h test_all.c test.conf bool.h Troubleshooting.in db2dassecLam.c db2dassecPam.c test2.conf.in db2secPlugin.h build-number.txt DB2_sys-auth/  
 	@tar -cvf DB2_sys-auth_src.@VERSION@.tar DB2_sys-auth/*
 	@rm -rf DB2_sys-auth
 	@gzip DB2_sys-auth_src.@VERSION@.tar

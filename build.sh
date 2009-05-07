@@ -47,9 +47,9 @@ server_build()
 server_build_test_clean()
 {
     if [ "$1" = "10.4.23.115" ] ; then
-        ssh $1 "rm -rf DB2_sys-auth/ DB2_sys-auth_src.$VERSION.tar.gz DB2_sys-auth_src.$VERSION.tar DB2_sys-auth_*.$VERSION.tar.gz"
+        ssh $1 "rm -rf DB2_sys-auth/ DB2_sys-auth_src.$VERSION.tar.gz DB2_sys-auth_src.$VERSION.tar DB2_sys-auth_*.$VERSION.tar.gz sys-auth.conf"
     else
-        ssh $1 "export PATH=/opt/hp-gcc/bin:/opt/quest/bin:/usr/local/pa20_32/bin:/usr/local/bin:/usr/contrib/bin:/usr/local:\$PATH; cd DB2_sys-auth/ && make check && cd ../ && rm -rf DB2_sys-auth/ DB2_sys-auth_src.$VERSION.tar.gz DB2_sys-auth_src.$VERSION.tar DB2_sys-auth_*.$VERSION.tar.gz"
+        ssh $1 "export PATH=/opt/hp-gcc/bin:/opt/quest/bin:/usr/local/pa20_32/bin:/usr/local/bin:/usr/contrib/bin:/usr/local:\$PATH; cd DB2_sys-auth/ && make check && cd ../ && rm -rf DB2_sys-auth/ DB2_sys-auth_src.$VERSION.tar.gz DB2_sys-auth_src.$VERSION.tar DB2_sys-auth_*.$VERSION.tar.gz sys-auth.conf"
     fi
     if [ $? -ne 0 ] ; then
         echo "Server: <$server> failed on run."

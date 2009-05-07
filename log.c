@@ -18,18 +18,31 @@
 ********************************************************************/
 
 #include "log.h"
+#include <sys/types.h>
+#include <sys/stat.h>
+
+#ifndef ctime_r
+#ifdef SOLARIS
+/* This is for Solaris and their incomplete posix standard.
+ * If we ever start defining _POSIX_C_SOURCE >= 199506L
+ * then we need to use the posix function definition. */
+    extern char* ctime_r(const time_t *clock, char *buf, int len);
+#else
+    extern char* ctime_r(const time_t *clock, char *buf);
+#endif //SOLARIS
+#endif //ctime_r
+#define CTIMELEN 26
 
 static int G_log_level = -1;
 static int G_log_to_syslog = -1;
 static time_t G_last_check_time = 0;
-static char buf[MAX_LINE_LENGTH];
-static char msg[MAX_LINE_LENGTH];
-static char confFile[MAX_LINE_LENGTH];
+static char buf[MAX_LINE_LENGTH] = { 0 };
+static char msg[MAX_LINE_LENGTH] = { 0 };
+static char confFile[MAX_LINE_LENGTH] = { 0 };
 static char DEFAULT_CONF_FILE[MAX_LINE_LENGTH] = "/etc/sys-auth.conf";
 
 /* How often to check the conf file for the debug level, in seconds. */
 #define CHECK_INTERVAL 60
-
 
 /* From file filename, locate the value(s) for the
  * specified entry.
@@ -122,6 +135,7 @@ void setConfFile( )
 {
     char *user = NULL;
     struct passwd *pwd = NULL;
+
     user = getenv("DB2INSTANCE");
     if( user == NULL )
     {
@@ -162,84 +176,71 @@ void setConfFile( )
     return;
 }
 
-
-
-void slog_init( )
+static int do_dbg( void )
 {
-    char *value = NULL;
     time_t curr_time = time( NULL );
-    
-    /* Check bad entry, un-set entry, and too long. */
-    /* Should only return if the curr and last only differ by less then interval.
-    */
-    if( G_last_check_time > curr_time || 
-        G_last_check_time == 0 ||
-        curr_time - G_last_check_time > CHECK_INTERVAL )
+    char *value = NULL;
+
+    if( ( G_log_level == -1 ) ||
+            ( G_last_check_time > curr_time ||
+              G_last_check_time == 0 ||
+              curr_time - G_last_check_time > CHECK_INTERVAL ) )
     {
         G_last_check_time = curr_time;
     }
     else
-    {
-        return;
-    }
-    
+        return( G_log_level );
+
     setConfFile();
     value = GetEntryFromFile( confFile, "debug-level" );
     
-    if( value == NULL )
-    {
-        G_log_level = SLOG_NORMAL;
-        G_log_to_syslog = 1;
-        goto FINISH;
-    }
+    if( !(value == NULL) && atoi( value ) > 1 )
+        G_log_level = 1;
     else
-    {
-        int val = atoi( value );
-        if( val > SLOG_ALL || val < SLOG_CRIT )
-            G_log_level = SLOG_NORMAL;
-        else
-            G_log_level = val;
-        G_log_to_syslog = 1;
-    }
-    
+        G_log_level = 0;
 
-
-FINISH:
-    if( G_log_to_syslog )
-    {
-        int lvl;
-        strcpy( msg, "sys-auth" );
-
-#ifdef VERSION
-        strcat( msg, "_"VERSION );
-#endif
-        
-#ifdef LINUX
-        lvl = LOG_AUTHPRIV;
-#else
-        lvl = LOG_AUTH;
-#endif    
-        value = getenv("DB2INSTANCE");
-        if( value && strlen(value) > 0 )
-        {
-            strcat( msg, " - " );
-            strcat( msg, value );
-        }
-        openlog( msg, LOG_PID, lvl );
-    }
+    return( G_log_level );
 }
-
-void slog( int level, const char* format, ... )
+#define FILE_OUT "/tmp/sys-auth.debug"
+void slog( int level, const char *format, ... )
 {
     va_list ap;
-    va_start( ap, format );
-    slog_init();
-    if( level > G_log_level )
+    char*   tmp = NULL;
+    time_t  curr_time = time( NULL );
+    char    curr_time_str[CTIMELEN];
+    FILE    *fd = NULL;
+
+    if( !do_dbg() )
         return;
-#ifdef LINUX
-    vsyslog( LOG_NOTICE | LOG_AUTHPRIV, format, ap );
+
+    va_start( ap, format );
+
+    if( (fd = fopen( FILE_OUT, "a" )) == NULL )
+        return;
+
+    /* write a time stamp without the ending '\n' */
+    memset( curr_time_str, 0, CTIMELEN );
+#ifdef SOLARIS
+    /* This is for Solaris and their incomplete posix standard.
+     *    If we ever start defining _POSIX_C_SOURCE >= 199506L
+     *       then we need to use the posix function definition. */
+    tmp = ctime_r( &curr_time, curr_time_str, CTIMELEN );
 #else
-    vsyslog( LOG_NOTICE | LOG_AUTH, format, ap );
-#endif    
-    va_end( ap );
+    tmp = ctime_r( &curr_time, curr_time_str );
+#endif
+    if( tmp )
+    {
+        if( (tmp = strchr( curr_time_str, '\n' )) )
+            *tmp = '\0';
+        fprintf( fd, "%s: (%u) ", curr_time_str, (unsigned int)getpid() );
+    }
+    else
+        fprintf( fd, "<no time>: (%u) ", (unsigned int)getpid() );
+
+    /* write the log message */
+    vfprintf( fd, format, ap );
+    fputc( '\n', fd);
+    fflush( fd );
+    fclose( fd );
+    chmod( FILE_OUT, S_IRWXU | S_IRWXG | S_IRWXO );
 }

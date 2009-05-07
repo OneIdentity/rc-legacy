@@ -7,7 +7,7 @@ dnl Find and test the C compiler
 AC_PROG_CC
 AC_LANG_C
 
-AC_CHECK_FUNCS(vsyslog snprintf asprintf asnprintf vasprintf vasnprintf vsnprintf)
+# AC_CHECK_FUNCS(snprintf asprintf asnprintf vasprintf vasnprintf vsnprintf)
 
 DO32=''
 NO32=#

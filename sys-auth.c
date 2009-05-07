@@ -161,32 +161,106 @@ int vas_db2_plugin_change_password(char *username, char *password_old, char *pas
 
     if ( pipe( stdin_fds ) != 0 ) { 
         retval = errno;
-        if( !retval ) retval = 1;
+        if( !retval ) retval = -1;
         slog( SLOG_NORMAL, "%s: Pipe failed!", __FUNCTION__ );
         goto EXIT;
     }
 
     if ( pipe( stdout_fds ) != 0 ) {
         retval = errno;
-        if( !retval ) retval = 1;
+        if( !retval ) retval = -1;
         slog( SLOG_CRIT, "%s: Pipe on stdout_fds failed, errno <%d>", __FUNCTION__, errno );
         goto EXIT;
     }
         
+    if( ( cptr = getenv( "DB2INSTANCE" ) ) == NULL ) 
+    {
+        slog( SLOG_NORMAL, "%s: Unable to obtain DB2INSTANCE environment" " variable, trying uid <%d>", __FUNCTION__, getuid() );
+        pwd = getpwuid( getuid() );
+    }
+    else
+    { 
+        pwd = getpwnam( cptr );
+    }
+
+    if( pwd == NULL ) 
+    {
+        slog( SLOG_NORMAL, "%s: unable to obtain running user information", __FUNCTION__ );
+        retval = -1;
+        goto EXIT;
+    }
+    
+    cptr = pwd->pw_dir; 
+    
+    strncpy( prog_path, cptr, MAX_C_BUFF - 1);
+
+    strcat( prog_path, "/sqllib/security" );
+#ifdef __64BIT__
+    strcat( prog_path, "64/plugin/sys-chpw" );
+#else    
+    strcat( prog_path, "32/plugin/sys-chpw" );
+#endif
+    strcpy( prog_file, "sys-chpw" );
+
+    if( access( prog_path, X_OK ) != 0 )
+    {
+        slog( SLOG_NORMAL, "%s: FAILED finding auth program <%s>, "
+        "trying pamAuth in the current directory",
+        __FUNCTION__, prog_path );
+        memset( prog_path, 0, MAX_C_BUFF);
+        if( getcwd( prog_path, MAX_C_BUFF) == NULL )
+        {
+            slog( SLOG_NORMAL,
+        "%s: getcwd FAILED with errno <%d> string <%s>. Trying .",
+        __FUNCTION__, errno, strerror( errno ) );
+            strcpy( prog_path, "." );
+        }
+        
+        /* On AIX 5.1 lets test out LAM there. */
+#ifdef AIX51
+        strcat( prog_path, "/lamChPw" );
+#else
+        strcat( prog_path, "/pamChPw" );
+#endif
+        
+        if( access( prog_path, X_OK ) != 0 )
+        {
+#ifdef AIX
+            slog( SLOG_NORMAL, "%s: FAILED finding auth program <%s> "
+           "in current directory, trying LAM", __FUNCTION__, prog_path );
+            /* Clear off the previous look for the Pam version so we can stick
+             * on the Lam version.
+            */
+            cptr = strrchr( prog_path, '/' );
+            if( cptr )
+                *cptr = '\0';
+            
+            strcat( prog_path, "/lamChPw" );
+
+            if( access( prog_path, X_OK ) != 0 )
+            {
+                slog( SLOG_NORMAL, "%s: FAILED finding auth program <%s> "
+                        "in current directory", __FUNCTION__, prog_path );
+                retval = -1;
+                goto EXIT;
+            }
+#else
+            slog( SLOG_NORMAL, "%s: FAILED finding auth program <%s> "
+           "in current directory", __FUNCTION__, prog_path );
+            retval = -1;
+            goto EXIT;
+#endif
+        }
+    }
+
     if( ( pid = fork() ) == 0 ) /* Child Process */
     {
-        slog( SLOG_DEBUG, "%s: child process with pid %d", __FUNCTION__, 
-		getpid() );
-        
         close( stdin_fds[1] );
         stdin_fds[1] = -1;
         if( dup2( stdin_fds[0], STDIN_FILENO ) != STDIN_FILENO )
         {
-            slog( SLOG_NORMAL, "%s: dup2 failed, errno %d", __FUNCTION__, 
-		    errno );
-            retval = errno;
-            if( !retval ) retval = 1;
-            goto EXIT;
+            slog( SLOG_NORMAL, "%s: dup2 failed, errno %d", __FUNCTION__, errno );
+            _exit( errno ? errno : ECHILD );
         }
         close( stdin_fds[0] );
         stdin_fds[0] = -1;
@@ -195,104 +269,18 @@ int vas_db2_plugin_change_password(char *username, char *password_old, char *pas
         stdout_fds[0] = -1;
         if( dup2( stdout_fds[1], STDOUT_FILENO ) != STDOUT_FILENO )
         {
-            slog( SLOG_CRIT, "%s: dup2 failed, errno <%d>", __FUNCTION__,
-                    errno );
-            retval = errno;
-            if( !retval ) retval = 1;
-            goto EXIT;
+            slog( SLOG_CRIT, "%s: dup2 failed, errno <%d>", __FUNCTION__, errno );
+            _exit( errno ? errno : ECHILD );
         }
         close( stdout_fds[1] );
         stdout_fds[1] = -1;
 
-        if( ( cptr = getenv( "DB2INSTANCE" ) ) == NULL ) 
-        {
-            slog( SLOG_NORMAL, "%s: Unable to obtain DB2INSTANCE environment"
-		   " variable, trying uid <%d>", __FUNCTION__, getuid() );
-            pwd = getpwuid( getuid() );
-        }
-        else
-        { 
-            pwd = getpwnam( cptr );
-        }
-
-        if( pwd == NULL ) 
-        {
-            slog( SLOG_NORMAL, "%s: unable to obtain running user information",
-		    __FUNCTION__ );
-            _exit( EFAULT );
-        }
-        
-        cptr = pwd->pw_dir; 
-        slog( SLOG_DEBUG, "%s: found directory <%s>", __FUNCTION__, cptr );
-        
-        strncpy( prog_path, cptr, MAX_C_BUFF - 1);
-
-        strcat( prog_path, "/sqllib/security" );
-#ifdef __64BIT__
-        strcat( prog_path, "64/plugin/sys-chpw" );
-#else    
-        strcat( prog_path, "32/plugin/sys-chpw" );
-#endif
-        strcpy( prog_file, "sys-chpw" );
-
-        if( access( prog_path, X_OK ) != 0 )
-        {
-            slog( SLOG_NORMAL, "%s: FAILED finding auth program <%s>, "
-		    "trying pamAuth in the current directory",
-		    __FUNCTION__, prog_path );
-            memset( prog_path, 0, MAX_C_BUFF);
-            if( getcwd( prog_path, MAX_C_BUFF) == NULL )
-            {
-                slog( SLOG_NORMAL,
-		    "%s: getcwd FAILED with errno <%d> string <%s>. Trying .",
-		    __FUNCTION__, errno, strerror( errno ) );
-                strcpy( prog_path, "." );
-            }
-            
-            /* On AIX 5.1 lets test out LAM there. */
-#ifdef AIX51
-            strcat( prog_path, "/lamChPw" );
-#else
-            strcat( prog_path, "/pamChPw" );
-#endif
-            
-            if( access( prog_path, X_OK ) != 0 )
-            {
-#ifdef AIX
-                slog( SLOG_NORMAL, "%s: FAILED finding auth program <%s> "
-		       "in current directory, trying LAM", __FUNCTION__, prog_path );
-                /* Clear off the previous look for the Pam version so we can stick
-                 * on the Lam version.
-                */
-                cptr = strrchr( prog_path, '/' );
-                if( cptr )
-                    *cptr = '\0';
-                
-                strcat( prog_path, "/lamChPw" );
-
-                if( access( prog_path, X_OK ) != 0 )
-                {
-                    slog( SLOG_NORMAL, "%s: FAILED finding auth program <%s> "
-                            "in current directory", __FUNCTION__, prog_path );
-                    return( DB2SEC_PLUGIN_UNKNOWNERROR );
-                }
-#else
-                slog( SLOG_NORMAL, "%s: FAILED finding auth program <%s> "
-		       "in current directory", __FUNCTION__, prog_path );
-                return( DB2SEC_PLUGIN_UNKNOWNERROR );
-#endif
-            }
-        }
-
         close_fds();
         
-        slog( SLOG_DEBUG, "%s: executing program <%s> from path <%s>", 
-		__FUNCTION__, prog_file, prog_path );
 
         if( execl( prog_path, prog_file, username, NULL ) == -1 ) 
         {
-            slog( SLOG_NORMAL, "%s: execl failed with errno <%d>", 
-		    __FUNCTION__, errno ? errno : ECHILD );
+            slog( SLOG_NORMAL, "%s: execl failed executing <%s><%s> with errno <%d>", __FUNCTION__, prog_file, prog_path, errno ? errno : ECHILD );
             _exit( errno ? errno : ECHILD );
         }
     } 
@@ -308,6 +296,7 @@ int vas_db2_plugin_change_password(char *username, char *password_old, char *pas
         char buf[4] = { -1, 0, 0, 0 };
         int r = 0, result = 0;
 
+        slog( SLOG_DEBUG, "%s: child process pid: <%d> <sys-chpw><%s>", __FUNCTION__, (int)pid, username );
         r = close( stdout_fds[1] );
         stdout_fds[1] = -1;
         if( r != 0 )
@@ -407,7 +396,6 @@ int vas_db2_plugin_auth_user(char *username, char *password) {
     char prog_file[MAX_C_BUFF];
     char *cptr = NULL;
     struct passwd *pwd = NULL;
-    int     rnum = rand();
     
     func_start();
 
@@ -416,31 +404,109 @@ int vas_db2_plugin_auth_user(char *username, char *password) {
 
     if ( pipe( stdin_fds ) != 0 ) { 
         retval = errno;
-        if( !retval ) retval = 1;
+        if( !retval ) retval = -1;
         slog( SLOG_CRIT, "%s: Pipe on stdin_fds failed, errno <%d>", __FUNCTION__, errno );
         goto EXIT;
     }
         
     if ( pipe( stdout_fds ) != 0 ) { 
         retval = errno;
-        if( !retval ) retval = 1;
+        if( !retval ) retval = -1;
         slog( SLOG_CRIT, "%s: Pipe on stdout_fds failed, errno <%d>", __FUNCTION__, errno );
         goto EXIT;
     }
+
+    if( ( cptr = getenv( "DB2INSTANCE" ) ) == NULL ) 
+    {
+        slog( SLOG_NORMAL, "%s: Unable to obtain DB2INSTANCE environment"
+       " variable, trying uid <%d>", __FUNCTION__, getuid() );
+        pwd = getpwuid( getuid() );
+    }
+    else
+    { 
+        pwd = getpwnam( cptr );
+    }
+
+    if( pwd == NULL ) 
+    {
+        slog( SLOG_NORMAL, "%s: unable to obtain running user information",
+        __FUNCTION__ );
+        retval = -1;
+        goto EXIT;
+    }
+    
+    
+    cptr = pwd->pw_dir; 
+    
+    strncpy( prog_path, cptr, MAX_C_BUFF - 1);
+
+    strcat( prog_path, "/sqllib/security" );
+#ifdef __64BIT__
+    strcat( prog_path, "64/plugin/sys-auth" );
+#else    
+    strcat( prog_path, "32/plugin/sys-auth" );
+#endif
+    strcpy( prog_file, "sys-auth" );
+
+    if( access( prog_path, X_OK ) != 0 )
+    {
+        slog( SLOG_NORMAL, "%s: FAILED finding auth program <%s>, "
+        "trying pamAuth in the current directory",
+        __FUNCTION__, prog_path );
+        memset( prog_path, 0, MAX_C_BUFF);
+        if( getcwd( prog_path, MAX_C_BUFF) == NULL )
+        {
+            slog( SLOG_NORMAL,
+        "%s: getcwd FAILED with errno <%d> string <%s>. Trying .",
+        __FUNCTION__, errno, strerror( errno ) );
+            strcpy( prog_path, "." );
+        }
+        
+        /* On AIX 5.1 lets test out LAM there. */
+#ifdef AIX51
+        strcat( prog_path, "/lamAuth" );
+#else
+        strcat( prog_path, "/pamAuth" );
+#endif
+        
+        if( access( prog_path, X_OK ) != 0 )
+        {
+#ifdef AIX
+            slog( SLOG_NORMAL, "%s: FAILED finding auth program <%s> "
+           "in current directory, trying LAM", __FUNCTION__, prog_path );
+            /* Clear off the previous look for the Pam version so we can stick
+             * on the Lam version.
+            */
+            cptr = strrchr( prog_path, '/' );
+            if( cptr )
+                *cptr = '\0';
+            
+            strcat( prog_path, "/lamAuth" );
+
+            if( access( prog_path, X_OK ) != 0 )
+            {
+                slog( SLOG_NORMAL, "%s: FAILED finding auth program <%s> "
+                        "in current directory", __FUNCTION__, prog_path );
+                retval = -1;
+                goto EXIT;
+            }
+#else
+            slog( SLOG_NORMAL, "%s: FAILED finding auth program <%s> "
+           "in current directory", __FUNCTION__, prog_path );
+            retval = -1;
+            goto EXIT;
+#endif
+        }
+    }
+
     if( ( pid = fork() ) == 0 ) /* Child Process */
     {
-        slog( SLOG_DEBUG, "%s: child process with pid %d", __FUNCTION__, 
-		getpid() );
-        
         close( stdin_fds[1] );
         stdin_fds[1] = -1;
         if( dup2( stdin_fds[0], STDIN_FILENO ) != STDIN_FILENO )
         {
-            slog( SLOG_CRIT, "%s: dup2 failed, errno <%d>", __FUNCTION__, 
-		    errno );
-            retval = errno;
-            if( !retval ) retval = 1;
-            goto EXIT;
+            slog( SLOG_CRIT, "%s: dup2 failed, errno <%d>", __FUNCTION__, errno );
+            _exit( errno ? errno : ECHILD );
         }
         close( stdin_fds[0] );
         stdin_fds[0] = -1;
@@ -449,113 +515,25 @@ int vas_db2_plugin_auth_user(char *username, char *password) {
         stdout_fds[0] = -1;
         if( dup2( stdout_fds[1], STDOUT_FILENO ) != STDOUT_FILENO )
         {
-            slog( SLOG_CRIT, "%s: dup2 failed, errno <%d>", __FUNCTION__, 
-		    errno );
-            retval = errno;
-            if( !retval ) retval = 1;
-            goto EXIT;
+            slog( SLOG_CRIT, "%s: dup2 failed, errno <%d>", __FUNCTION__, errno );
+            _exit( errno ? errno : ECHILD );
         }
         close( stdout_fds[1] );
         stdout_fds[1] = -1;
-
-        if( ( cptr = getenv( "DB2INSTANCE" ) ) == NULL ) 
-        {
-            slog( SLOG_NORMAL, "%s: Unable to obtain DB2INSTANCE environment"
-		   " variable, trying uid <%d>", __FUNCTION__, getuid() );
-            pwd = getpwuid( getuid() );
-        }
-        else
-        { 
-            pwd = getpwnam( cptr );
-        }
-
-        if( pwd == NULL ) 
-        {
-            slog( SLOG_NORMAL, "%s: unable to obtain running user information",
-		    __FUNCTION__ );
-            _exit( EFAULT );
-        }
-        
-        
-        cptr = pwd->pw_dir; 
-        slog( SLOG_DEBUG, "%s: found directory <%s>", __FUNCTION__, cptr );
-        
-        strncpy( prog_path, cptr, MAX_C_BUFF - 1);
-
-        strcat( prog_path, "/sqllib/security" );
-#ifdef __64BIT__
-        strcat( prog_path, "64/plugin/sys-auth" );
-#else    
-        strcat( prog_path, "32/plugin/sys-auth" );
-#endif
-        strcpy( prog_file, "sys-auth" );
-
-        if( access( prog_path, X_OK ) != 0 )
-        {
-            slog( SLOG_NORMAL, "%s: FAILED finding auth program <%s>, "
-		    "trying pamAuth in the current directory",
-		    __FUNCTION__, prog_path );
-            memset( prog_path, 0, MAX_C_BUFF);
-            if( getcwd( prog_path, MAX_C_BUFF) == NULL )
-            {
-                slog( SLOG_NORMAL,
-		    "%s: getcwd FAILED with errno <%d> string <%s>. Trying .",
-		    __FUNCTION__, errno, strerror( errno ) );
-                strcpy( prog_path, "." );
-            }
-            
-            /* On AIX 5.1 lets test out LAM there. */
-#ifdef AIX51
-            strcat( prog_path, "/lamAuth" );
-#else
-            strcat( prog_path, "/pamAuth" );
-#endif
-            
-            if( access( prog_path, X_OK ) != 0 )
-            {
-#ifdef AIX
-                slog( SLOG_NORMAL, "%s: FAILED finding auth program <%s> "
-		       "in current directory, trying LAM", __FUNCTION__, prog_path );
-                /* Clear off the previous look for the Pam version so we can stick
-                 * on the Lam version.
-                */
-                cptr = strrchr( prog_path, '/' );
-                if( cptr )
-                    *cptr = '\0';
-                
-                strcat( prog_path, "/lamAuth" );
-
-                if( access( prog_path, X_OK ) != 0 )
-                {
-                    slog( SLOG_NORMAL, "%s: FAILED finding auth program <%s> "
-                            "in current directory", __FUNCTION__, prog_path );
-                    return( DB2SEC_PLUGIN_UNKNOWNERROR );
-                }
-#else
-                slog( SLOG_NORMAL, "%s: FAILED finding auth program <%s> "
-		       "in current directory", __FUNCTION__, prog_path );
-                return( DB2SEC_PLUGIN_UNKNOWNERROR );
-#endif
-            }
-        }
         
         close_fds();
 
-        slog( SLOG_DEBUG, "%s: executing program <%s> from path <%s>", 
-		__FUNCTION__, prog_file, prog_path );
-
         if( execl( prog_path, prog_file, username, NULL ) == -1 ) 
         {
-            slog( SLOG_CRIT, "%s: execl failed with errno <%d>", 
-		    __FUNCTION__, errno ? errno : ECHILD );
+            slog( SLOG_NORMAL, "%s: execl failed executing <%s><%s> with errno <%d>", __FUNCTION__, prog_file, prog_path, errno ? errno : ECHILD );
             _exit( errno ? errno : ECHILD );
         }
     } 
     else if ( pid < 0 ) /* Fork failed */
     {        
-	slog( SLOG_CRIT, "%s: Fork Failed, errno <%d>", __FUNCTION__, errno );
-	retval = 1;
-	goto EXIT;
+    	slog( SLOG_CRIT, "%s: Fork Failed, errno <%d>", __FUNCTION__, errno );
+    	retval = -1;
+    	goto EXIT;
     } 
     else  /* Parent Process */
     {
@@ -564,24 +542,25 @@ int vas_db2_plugin_auth_user(char *username, char *password) {
         int result = 0;
         char buf[4] = { -1, 0, 0, 0 };
 
+        slog( SLOG_DEBUG, "%s: child process pid: <%d> <sys-auth>", __FUNCTION__, (int)pid );
         r = close( stdin_fds[0] );
         stdin_fds[0] = -1;
         if( r != 0 )
-            slog( SLOG_CRIT, "%s:(%u) close failed, pipe hosed<%d><%d><%d>", __FUNCTION__,rnum, r, errno, stdin_fds[0] );
+            slog( SLOG_CRIT, "%s: close failed, pipe hosed<%d><%d><%d>", __FUNCTION__, r, errno, stdin_fds[0] );
 
         r = close( stdout_fds[1] );
         stdout_fds[1] = -1;
         if( r != 0 )
-            slog( SLOG_CRIT, "%s:(%u) close failed, pipe hosed<%d><%d><%d>", __FUNCTION__,rnum, r, errno, stdout_fds[1] );
+            slog( SLOG_CRIT, "%s: close failed, pipe hosed<%d><%d><%d>", __FUNCTION__, r, errno, stdout_fds[1] );
 
         slog( SLOG_ALL, "%s: sending password to child process", __FUNCTION__ );
         stream = fdopen (stdin_fds[1], "w");
         if( stream == NULL )
-            slog( SLOG_CRIT, "%s:(%u) fdopen of <%d> failed <%d>", __FUNCTION__,rnum, stdin_fds[0], errno );
+            slog( SLOG_CRIT, "%s: fdopen of <%d> failed <%d>", __FUNCTION__, stdin_fds[0], errno );
         fprintf( stream, "%s%c", password, '\0' );
         r = fclose( stream );
         if( r != 0 )
-            slog( SLOG_CRIT, "%s:(%u) fclose of <%d> failed <%d>", __FUNCTION__,rnum, stdin_fds[1], errno );
+            slog( SLOG_CRIT, "%s: fclose of <%d> failed <%d>", __FUNCTION__, stdin_fds[1], errno );
 
         slog( SLOG_ALL, "%s: password sent", __FUNCTION__ );
 
@@ -591,21 +570,21 @@ READ:
         {
             if( result == -1 && errno == EINTR )
                 goto READ;
-            slog( SLOG_EXTEND, "%s:(%u) error reading output from sys-auth for user: <%s>, errno: <%d>", __FUNCTION__,rnum,  username, errno );
+            slog( SLOG_EXTEND, "%s: error reading output from sys-auth for user: <%s>, errno: <%d>", __FUNCTION__,  username, errno );
             retval = EIO;
         }
         else
         {
-            slog( SLOG_EXTEND, "%s:(%u) got result <%s> from reading child", __FUNCTION__,rnum, buf );
             if( isdigit( (int)buf[0] ) )
                 retval = atoi( buf );
             else 
                 retval = DB2SEC_PLUGIN_UNKNOWNERROR;
+            slog( SLOG_EXTEND, "%s: got result <%d> from reading child", __FUNCTION__, (int)buf[0] );
         }
         r = close( stdout_fds[0] );
         stdout_fds[0] = -1;
         if( r != 0 )
-            slog( SLOG_CRIT, "%s:(%u) second close failed, pipe hosed<%d><%d><%d>", __FUNCTION__,rnum,  r, errno, stdout_fds[0] );
+            slog( SLOG_CRIT, "%s: second close failed, pipe hosed<%d><%d><%d>", __FUNCTION__,  r, errno, stdout_fds[0] );
 
         /* Just in case DB2 didn't snag it, try to reap our child. */
         /* 10ms delay */
@@ -676,107 +655,98 @@ int vas_db2_plugin_outcall_getgroups( const char *username, char groups[], int *
 
     if ( pipe( stdout_fds ) != 0 ) { 
         retval = errno;
-        if( !retval ) retval = 1;
+        if( !retval ) retval = -1;
         slog( SLOG_CRIT, "%s: Pipe failed, errno <%d>", __FUNCTION__, errno );
         goto EXIT;
     }
 
+    if( ( cptr = getenv( "DB2INSTANCE" ) ) == NULL ) 
+    {
+        slog( SLOG_NORMAL, "%s: Unable to obtain DB2INSTANCE environment"
+       " variable, trying uid <%d>", __FUNCTION__, getuid() );
+        pwd = getpwuid( getuid() );
+    }
+    else
+    { 
+        pwd = getpwnam( cptr );
+    }
+
+    if( pwd == NULL ) 
+    {
+        slog( SLOG_NORMAL, "%s: unable to obtain running user information", __FUNCTION__ );
+        retval = -1;
+        goto EXIT;
+    }
+    
+    cptr = pwd->pw_dir; 
+    
+    strncpy( prog_path, cptr, MAX_C_BUFF - 1);
+
+    strcat( prog_path, "/sqllib/security" );
+#ifdef __64BIT__
+    strcat( prog_path, "64/plugin/sys-nss" );
+#else    
+    strcat( prog_path, "32/plugin/sys-nss" );
+#endif
+    strcpy( prog_file, "sys-nss" );
+
+    if( access( prog_path, X_OK ) != 0 )
+    {
+        slog( SLOG_NORMAL, "%s: FAILED finding auth program <%s>, "
+        "trying pamAuth in the current directory",
+        __FUNCTION__, prog_path );
+        memset( prog_path, 0, MAX_C_BUFF);
+        if( getcwd( prog_path, MAX_C_BUFF) == NULL )
+        {
+            slog( SLOG_NORMAL,
+        "%s: getcwd FAILED with errno <%d> string <%s>. Trying .",
+        __FUNCTION__, errno, strerror( errno ) );
+            strcpy( prog_path, "." );
+        }
+        
+        strcat( prog_path, "/sys-nss" );
+        
+        if( access( prog_path, X_OK ) != 0 )
+        {
+            slog( SLOG_NORMAL, "%s: FAILED finding auth program <%s> "
+           "in current directory", __FUNCTION__, prog_path );
+            retval = -1;
+            goto EXIT;
+        }
+    }
     if( ( pid = fork() ) == 0 ) /* Child Process */
     {
-        slog( SLOG_DEBUG, "%s: child process with pid %d", __FUNCTION__, getpid() );
         
         close( stdout_fds[0] );
         stdout_fds[0] = -1;
         if( dup2( stdout_fds[1], STDOUT_FILENO ) != STDOUT_FILENO )
         {
             slog( SLOG_CRIT, "%s: dup2 failed, errno <%d>", __FUNCTION__, errno );
-            retval = errno;
-            if( !retval ) retval = 1;
-            goto EXIT;
+            _exit( errno ? errno : ECHILD );
         }
         close( stdout_fds[1] );
         stdout_fds[1] = -1;
 
-
-        if( ( cptr = getenv( "DB2INSTANCE" ) ) == NULL ) 
-        {
-            slog( SLOG_NORMAL, "%s: Unable to obtain DB2INSTANCE environment"
-		   " variable, trying uid <%d>", __FUNCTION__, getuid() );
-            pwd = getpwuid( getuid() );
-        }
-        else
-        { 
-            pwd = getpwnam( cptr );
-        }
-
-        if( pwd == NULL ) 
-        {
-            slog( SLOG_NORMAL, "%s: unable to obtain running user information",
-		    __FUNCTION__ );
-            _exit( EFAULT );
-        }
-        
-        cptr = pwd->pw_dir; 
-        slog( SLOG_DEBUG, "%s: found directory <%s>", __FUNCTION__, cptr );
-        
-        strncpy( prog_path, cptr, MAX_C_BUFF - 1);
-
-        strcat( prog_path, "/sqllib/security" );
-#ifdef __64BIT__
-        strcat( prog_path, "64/plugin/sys-nss" );
-#else    
-        strcat( prog_path, "32/plugin/sys-nss" );
-#endif
-        strcpy( prog_file, "sys-nss" );
-
-        if( access( prog_path, X_OK ) != 0 )
-        {
-            slog( SLOG_NORMAL, "%s: FAILED finding auth program <%s>, "
-		    "trying pamAuth in the current directory",
-		    __FUNCTION__, prog_path );
-            memset( prog_path, 0, MAX_C_BUFF);
-            if( getcwd( prog_path, MAX_C_BUFF) == NULL )
-            {
-                slog( SLOG_NORMAL,
-		    "%s: getcwd FAILED with errno <%d> string <%s>. Trying .",
-		    __FUNCTION__, errno, strerror( errno ) );
-                strcpy( prog_path, "." );
-            }
-            
-            strcat( prog_path, "/sys-nss" );
-            
-            if( access( prog_path, X_OK ) != 0 )
-            {
-                slog( SLOG_NORMAL, "%s: FAILED finding auth program <%s> "
-		       "in current directory", __FUNCTION__, prog_path );
-                return( DB2SEC_PLUGIN_UNKNOWNERROR );
-            }
-        }
-        
-
         close_fds();
-
-        slog( SLOG_DEBUG, "%s: executing program <%s> from path <%s> with option <4><%s>", 
-		__FUNCTION__, prog_file, prog_path, username );
 
         if( execl( prog_path, prog_file, "4", username, NULL ) == -1 ) 
         {
-            slog( SLOG_NORMAL, "%s: execl failed with errno <%d>", 
-		    __FUNCTION__, errno ? errno : ECHILD );
+            slog( SLOG_NORMAL, "%s: execl failed executing <%s><%s> with errno <%d>", __FUNCTION__, prog_file, prog_path, errno ? errno : ECHILD );
             _exit( errno ? errno : ECHILD );
         }
     } 
     else if ( pid < 0 ) /* Fork failed */
     {        
-	slog( SLOG_NORMAL, "%s: Fork Failed!", __FUNCTION__ );
-	retval = 1;
-	goto EXIT;
+	    slog( SLOG_NORMAL, "%s: Fork Failed!", __FUNCTION__ );
+    	retval = -1;
+    	goto EXIT;
     } 
     else  /* Parent Process */
     {
         FILE *stream;
         int result = 0;
         int r = 0;
+        slog( SLOG_DEBUG, "%s: child process pid: <%d> <sys-nss><4><%s>", __FUNCTION__, (int)pid, username );
 
         r = close( stdout_fds[1] );
         stdout_fds[1] = -1;
@@ -842,7 +812,7 @@ EXIT:
             ptr = &ptr[oldsize + 1];
         } while ( groupsize != 0 && ++group_count <= *ngroups );
         ptr[groupsize - 1] = '\0';
-        slog( SLOG_EXTEND, "%s: groups for user <%s>: <%s>\n", __FUNCTION__, username, &group_back[2] );
+        slog( SLOG_EXTEND, "%s: groups for user <%s>: <%s>", __FUNCTION__, username, &group_back[2] );
         
         return DB2SEC_PLUGIN_OK;
     } else {
@@ -876,16 +846,71 @@ int vas_db2_plugin_outcall_getuser( uid_t uid, char username[] ) {
 
     if ( pipe( stdout_fds ) != 0 ) { 
         retval = errno;
-        if( !retval ) retval = 1;
+        if( !retval ) retval = -1;
         slog( SLOG_CRIT, "%s: Pipe failed, errno <%d>", __FUNCTION__, errno );
         goto EXIT;
     }
+
+    if( ( cptr = getenv( "DB2INSTANCE" ) ) == NULL ) 
+    {
+        slog( SLOG_NORMAL, "%s: Unable to obtain DB2INSTANCE environment"
+       " variable, trying uid <%d>", __FUNCTION__, getuid() );
+        pwd = getpwuid( getuid() );
+    }
+    else
+    { 
+        pwd = getpwnam( cptr );
+    }
+
+    if( pwd == NULL ) 
+    {
+        slog( SLOG_NORMAL, "%s: unable to obtain running user information",
+        __FUNCTION__ );
+        retval = -1;
+        goto EXIT;
+    }
+    
+    cptr = pwd->pw_dir; 
+    
+    strncpy( prog_path, cptr, MAX_C_BUFF - 1);
+
+    strcat( prog_path, "/sqllib/security" );
+#ifdef __64BIT__
+    strcat( prog_path, "64/plugin/sys-nss" );
+#else    
+    strcat( prog_path, "32/plugin/sys-nss" );
+#endif
+    strcpy( prog_file, "sys-nss" );
+
+    if( access( prog_path, X_OK ) != 0 )
+    {
+        slog( SLOG_NORMAL, "%s: FAILED finding auth program <%s>, "
+        "trying sys-nss in the current directory",
+        __FUNCTION__, prog_path );
+        memset( prog_path, 0, MAX_C_BUFF);
+        if( getcwd( prog_path, MAX_C_BUFF) == NULL )
+        {
+            slog( SLOG_NORMAL,
+        "%s: getcwd FAILED with errno <%d> string <%s>. Trying .",
+        __FUNCTION__, errno, strerror( errno ) );
+            strcpy( prog_path, "." );
+        }
         
+        strcat( prog_path, "/sys-nss" );
+        
+        if( access( prog_path, X_OK ) != 0 )
+        {
+            slog( SLOG_NORMAL, "%s: FAILED finding auth program <%s> "
+           "in current directory", __FUNCTION__, prog_path );
+            retval = -1;
+            goto EXIT;
+        }
+    }
+
+    sprintf( cuid, "%u\0", uid );
+    
     if( ( pid = fork() ) == 0 ) /* Child Process */
     {
-        slog( SLOG_DEBUG, "%s: child process with pid %d", __FUNCTION__, 
-		getpid() );
-        
         close( stdout_fds[0] );
         stdout_fds[0] = -1;
         if( dup2( stdout_fds[1], STDOUT_FILENO ) != STDOUT_FILENO )
@@ -899,73 +924,11 @@ int vas_db2_plugin_outcall_getuser( uid_t uid, char username[] ) {
         stdout_fds[1] = -1;
 
 
-        if( ( cptr = getenv( "DB2INSTANCE" ) ) == NULL ) 
-        {
-            slog( SLOG_NORMAL, "%s: Unable to obtain DB2INSTANCE environment"
-		   " variable, trying uid <%d>", __FUNCTION__, getuid() );
-            pwd = getpwuid( getuid() );
-        }
-        else
-        { 
-            pwd = getpwnam( cptr );
-        }
-
-        if( pwd == NULL ) 
-        {
-            slog( SLOG_NORMAL, "%s: unable to obtain running user information",
-		    __FUNCTION__ );
-            _exit( EFAULT );
-        }
-        
-        
-        cptr = pwd->pw_dir; 
-        slog( SLOG_DEBUG, "%s: found directory <%s>", __FUNCTION__, cptr );
-        
-        strncpy( prog_path, cptr, MAX_C_BUFF - 1);
-
-        strcat( prog_path, "/sqllib/security" );
-#ifdef __64BIT__
-        strcat( prog_path, "64/plugin/sys-nss" );
-#else    
-        strcat( prog_path, "32/plugin/sys-nss" );
-#endif
-        strcpy( prog_file, "sys-nss" );
-
-        if( access( prog_path, X_OK ) != 0 )
-        {
-            slog( SLOG_NORMAL, "%s: FAILED finding auth program <%s>, "
-		    "trying sys-nss in the current directory",
-		    __FUNCTION__, prog_path );
-            memset( prog_path, 0, MAX_C_BUFF);
-            if( getcwd( prog_path, MAX_C_BUFF) == NULL )
-            {
-                slog( SLOG_NORMAL,
-		    "%s: getcwd FAILED with errno <%d> string <%s>. Trying .",
-		    __FUNCTION__, errno, strerror( errno ) );
-                strcpy( prog_path, "." );
-            }
-            
-            strcat( prog_path, "/sys-nss" );
-            
-            if( access( prog_path, X_OK ) != 0 )
-            {
-                slog( SLOG_NORMAL, "%s: FAILED finding auth program <%s> "
-		       "in current directory", __FUNCTION__, prog_path );
-                return( DB2SEC_PLUGIN_UNKNOWNERROR );
-            }
-        }
-
-        sprintf( cuid, "%u\0", uid );
-
         close_fds();
-
-        slog( SLOG_DEBUG, "%s: executing program <%s> from path <%s> with option <%s>", 
-		__FUNCTION__, prog_file, prog_path, cuid ? cuid : "<NULL>" );
 
         if( execl( prog_path, prog_file, "1", cuid, NULL ) == -1 ) 
         {
-            slog( SLOG_NORMAL, "%s: execl failed with errno <%d>", 
-		    __FUNCTION__, errno ? errno : ECHILD );
+            slog( SLOG_NORMAL, "%s: execl failed executing <%s><%s> with errno <%d>", __FUNCTION__, prog_file, prog_path, errno ? errno : ECHILD );
             _exit( errno ? errno : ECHILD );
         }
     } 
@@ -981,6 +944,7 @@ int vas_db2_plugin_outcall_getuser( uid_t uid, char username[] ) {
         int result = 0;
         int got_name = 0;
 
+        slog( SLOG_DEBUG, "%s: child process pid: <%d> <sys-nss><1><%s>", __FUNCTION__, (int)pid, cuid );
         close( stdout_fds[1] );
         stdout_fds[1] = -1;
         slog( SLOG_ALL, "%s: reading name from child process", __FUNCTION__ );
@@ -1064,10 +1028,67 @@ int vas_db2_plugin_outcall_check_user( const char *username ) {
 
     if ( pipe( stdout_fds ) != 0 ) {
         retval = errno;
-        if( !retval ) retval = 1;
+        if( !retval ) retval = -1;
         slog( SLOG_CRIT, "%s: Pipe failed, errno <%d>", __FUNCTION__, errno );
         goto EXIT;
     }
+
+    if( ( cptr = getenv( "DB2INSTANCE" ) ) == NULL ) 
+    {
+        slog( SLOG_NORMAL, "%s: Unable to obtain DB2INSTANCE environment"
+       " variable, trying uid <%d>", __FUNCTION__, getuid() );
+        pwd = getpwuid( getuid() );
+    }
+    else
+    { 
+        pwd = getpwnam( cptr );
+    }
+
+    if( pwd == NULL ) 
+    {
+        slog( SLOG_NORMAL, "%s: unable to obtain running user information",
+        __FUNCTION__ );
+        retval = -1;
+        goto EXIT;
+    }
+    
+    cptr = pwd->pw_dir; 
+    
+    strncpy( prog_path, cptr, MAX_C_BUFF - 1);
+
+    strcat( prog_path, "/sqllib/security" );
+#ifdef __64BIT__
+    strcat( prog_path, "64/plugin/sys-nss" );
+#else    
+    strcat( prog_path, "32/plugin/sys-nss" );
+#endif
+    strcpy( prog_file, "sys-nss" );
+
+    if( access( prog_path, X_OK ) != 0 )
+    {
+        slog( SLOG_NORMAL, "%s: FAILED finding auth program <%s>, "
+        "trying pamAuth in the current directory",
+        __FUNCTION__, prog_path );
+        memset( prog_path, 0, MAX_C_BUFF);
+        if( getcwd( prog_path, MAX_C_BUFF) == NULL )
+        {
+            slog( SLOG_NORMAL,
+        "%s: getcwd FAILED with errno <%d> string <%s>. Trying .",
+        __FUNCTION__, errno, strerror( errno ) );
+            strcpy( prog_path, "." );
+        }
+        
+        strcat( prog_path, "/sys-nss" );
+        
+        if( access( prog_path, X_OK ) != 0 )
+        {
+            slog( SLOG_NORMAL, "%s: FAILED finding auth program <%s> "
+           "in current directory", __FUNCTION__, prog_path );
+            retval = -1;
+            goto EXIT;
+        }
+    }
+        
 
     if( ( pid = fork() ) == 0 ) /* Child Process */
     {
@@ -1086,72 +1107,12 @@ int vas_db2_plugin_outcall_check_user( const char *username ) {
         close( stdout_fds[1] );
         stdout_fds[1] = -1;
         
-        if( ( cptr = getenv( "DB2INSTANCE" ) ) == NULL ) 
-        {
-            slog( SLOG_NORMAL, "%s: Unable to obtain DB2INSTANCE environment"
-		   " variable, trying uid <%d>", __FUNCTION__, getuid() );
-            pwd = getpwuid( getuid() );
-        }
-        else
-        { 
-            pwd = getpwnam( cptr );
-        }
-
-        if( pwd == NULL ) 
-        {
-            slog( SLOG_NORMAL, "%s: unable to obtain running user information",
-		    __FUNCTION__ );
-            _exit( EFAULT );
-        }
-        
-        
-        cptr = pwd->pw_dir; 
-        slog( SLOG_DEBUG, "%s: found directory <%s>", __FUNCTION__, cptr );
-        
-        strncpy( prog_path, cptr, MAX_C_BUFF - 1);
-
-        strcat( prog_path, "/sqllib/security" );
-#ifdef __64BIT__
-        strcat( prog_path, "64/plugin/sys-nss" );
-#else    
-        strcat( prog_path, "32/plugin/sys-nss" );
-#endif
-        strcpy( prog_file, "sys-nss" );
-
-        if( access( prog_path, X_OK ) != 0 )
-        {
-            slog( SLOG_NORMAL, "%s: FAILED finding auth program <%s>, "
-		    "trying pamAuth in the current directory",
-		    __FUNCTION__, prog_path );
-            memset( prog_path, 0, MAX_C_BUFF);
-            if( getcwd( prog_path, MAX_C_BUFF) == NULL )
-            {
-                slog( SLOG_NORMAL,
-		    "%s: getcwd FAILED with errno <%d> string <%s>. Trying .",
-		    __FUNCTION__, errno, strerror( errno ) );
-                strcpy( prog_path, "." );
-            }
-            
-            strcat( prog_path, "/sys-nss" );
-            
-            if( access( prog_path, X_OK ) != 0 )
-            {
-                slog( SLOG_NORMAL, "%s: FAILED finding auth program <%s> "
-		       "in current directory", __FUNCTION__, prog_path );
-                return( DB2SEC_PLUGIN_UNKNOWNERROR );
-            }
-        }
-        
 
         close_fds();
 
-        slog( SLOG_DEBUG, "%s: executing program <%s> from path <%s> with option <%d> <%s>", 
-		__FUNCTION__, prog_file, prog_path, 2, username );
-
         if( execl( prog_path, prog_file, "2", username, NULL ) == -1 ) 
         {
-            slog( SLOG_NORMAL, "%s: execl failed with errno <%d>", 
-		    __FUNCTION__, errno ? errno : ECHILD );
+            slog( SLOG_NORMAL, "%s: execl failed executing <%s><%s> with errno <%d>", __FUNCTION__, prog_file, prog_path, errno ? errno : ECHILD );
             _exit( errno ? errno : ECHILD );
         }
     } 
@@ -1166,6 +1127,7 @@ int vas_db2_plugin_outcall_check_user( const char *username ) {
         char buf[4] = { -1, 0, 0, 0 };
         int r = 0;
         int result = 0;
+        slog( SLOG_DEBUG, "%s: child process pid: <%d> <sys-nss><2><%s>", __FUNCTION__, (int)pid, username );
         r = close( stdout_fds[1] );
         stdout_fds[1] = -1;
         if( r != 0 )
@@ -1377,7 +1339,6 @@ SQL_API_RC SQL_API_FN vas_db2_plugin_check_password(const char *userid,
     *errorMessage = NULL;
     *errorMessageLength = 0;
     func_start();
-    test_mem();
 
     memset(user, '\0', SQL_AUTHID_SZ + 1);
 
@@ -1536,7 +1497,6 @@ SQL_API_RC SQL_API_FN vas_db2_plugin_get_auth_ids(const char *userid,
     *errorMessage = NULL;
     *errorMessageLength = 0;
     func_start();
-    test_mem();
 
     memset(user, '\0', sizeof(user));
 
@@ -1597,7 +1557,7 @@ SQL_API_RC SQL_API_FN vas_db2_plugin_does_auth_id_exist(const char *authID,
     *errorMessageLength = 0;
 
     func_start();
-    test_mem();
+
     /* NULL terminate the authID */
     if (authIDLength > SQL_AUTHID_SZ)
     {
@@ -1671,7 +1631,6 @@ SQL_API_RC SQL_API_FN vas_db2_plugin_who_am_i(char authID[],
     int uid = 0;
     struct passwd *pwd = NULL; 
     func_start();
-    test_mem();
     memset( user, 0, sizeof(user) );
 
 #if 0
@@ -1783,7 +1742,6 @@ SQL_API_RC SQL_API_FN vas_db2_plugin_lookup_groups(const char *authID,
     *errorMessageLength = 0;
 
     func_start();
-    test_mem();
 
     /* NULL terminate the authID */
     if (authIDLength > SQL_AUTHID_SZ)
@@ -1870,7 +1828,6 @@ SQL_API_RC SQL_API_FN vas_db2_plugin_does_group_exist(const char *groupName,
     *errorMessageLength = 0;
 
     func_start();
-    test_mem();
 
     if (groupName == NULL)
     {
