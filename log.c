@@ -32,7 +32,6 @@
 #endif //SOLARIS
 #endif //ctime_r
 #define CTIMELEN 26
-
 static int G_log_level = -1;
 static int G_log_to_syslog = -1;
 static time_t G_last_check_time = 0;

@@ -1092,9 +1092,6 @@ int vas_db2_plugin_outcall_check_user( const char *username ) {
 
     if( ( pid = fork() ) == 0 ) /* Child Process */
     {
-        slog( SLOG_DEBUG, "%s: child process with pid %d", __FUNCTION__, 
-		getpid() );
-
         close( stdout_fds[0] );
         stdout_fds[0] = -1;
         if( dup2( stdout_fds[1], STDOUT_FILENO ) != STDOUT_FILENO )
