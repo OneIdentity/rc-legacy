@@ -49,7 +49,6 @@ EXTRA_DIST =		LICENCE pp authtest.pp
 EXTRA_DIST +=		kuserok.1 gss-server.1 gss-client.1 pamtest.1 lamtest.1
 
 if HAVE_JAVAC
-#javagssdir =		$(datadir)/javagss
 javagss_src =		java/src/main/java
 noinst_JAVA =
 noinst_JAVA +=	$(javagss_src)/Base64Decoder.java
