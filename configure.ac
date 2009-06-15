@@ -22,6 +22,10 @@ AC_HEADER_STDC
 
 AM_MAINTAINER_MODE
 
+AC_PATH_PROG([JAVAC], [javac], [no])
+AC_PATH_PROG([JAR], [jar])
+AM_CONDITIONAL(HAVE_JAVAC, [test x"$JAVAC" != x"no"])
+
 AC_PATH_PROG([KRB5CONFIG], [krb5-config], [no], [/opt/quest/bin:$PATH])
 if test x"$KRB5CONFIG" = x"no"; then
     AC_MSG_WARN([krb5-config was not found; is the VAS SDK installed?])
@@ -49,7 +53,6 @@ AM_CONDITIONAL(HAVE_LAM, test x$have_lam = xtrue)
 
 AC_CHECK_HEADERS([syslog.h security/pam_appl.h security/pam_modules.h])
 AC_CHECK_FUNCS([pam_strerror getenv setreuid getpwnam syslog])
-
 
 # AC_CHECK_FUNC([getpass])
 # HP-UX's getpass is broken; hard to test

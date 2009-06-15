@@ -48,6 +48,33 @@ gss_client_LDADD =	libauthtest.a
 EXTRA_DIST =		LICENCE pp authtest.pp
 EXTRA_DIST +=		kuserok.1 gss-server.1 gss-client.1 pamtest.1 lamtest.1
 
+if HAVE_JAVAC
+#javagssdir =		$(datadir)/javagss
+javagss_src =		java/src/main/java
+noinst_JAVA =
+noinst_JAVA +=	$(javagss_src)/Base64Decoder.java
+noinst_JAVA +=	$(javagss_src)/Base64Encoder.java
+noinst_JAVA +=	$(javagss_src)/Client.java
+noinst_JAVA +=	$(javagss_src)/Console.java
+noinst_JAVA +=	$(javagss_src)/GSSUtil.java
+noinst_JAVA +=	$(javagss_src)/Server.java
+
+javagss_jar =		java/target/authtest-java-1.0.jar
+$(javagss_jar): $(top_srcdir)/configure.ac
+	$(MAKE) $(AM_MAKEFLAGS) class"noinst".stamp
+	$(MKDIR_P) $(dir $@)
+	$(JAR) fc $@ -C $(JAVAROOT) *.class
+EXTRA_DIST +=		$(javagss_jar)
+
+EXTRA_DIST +=	java/README
+EXTRA_DIST +=	java/jaas-krb5.conf
+EXTRA_DIST +=	java/pom.xml
+EXTRA_DIST +=	$(noinst_JAVA)
+EXTRA_DIST +=	java/src/test/java/Base64DecoderTest.java
+EXTRA_DIST +=	java/src/test/java/Base64EncoderTest.java
+
+endif
+
 package: authtest.pp pp
 	DESTDIR=`pwd -P`/destdir; rm -rf $$DESTDIR; mkdir -p $$DESTDIR && \
 	$(MAKE) install DESTDIR=$$DESTDIR && \
