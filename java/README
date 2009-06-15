@@ -24,11 +24,25 @@ INSTRUCTIONS
 Compiling
 ---------
 
-  If you have maven installed, run "mvn install". 
+  The target/authtest-java-1.0.jar file is usually bundled with the
+  distribution, so compilation is normally not required. When you see
+        -cp target/\*
+  used in the examples below, it is referring to that JAR.
 
-  Otherwise, manually compile the sources with:
-      $ mkdir -p target/classes
-      $ javac -d target/classes src/main/java/*.java
+  However, if you have modified source files, and want to rebuild the
+  JAR, you have various ways to do it.
+
+  1) In the parent directory, run
+        $ configure
+        $ make java/target/authtest-java-1.0.jar
+
+  2) OR, in this directory, run
+        $ mvn install
+
+  3) OR, in this directory, run
+        $ mkdir -p target/classes
+        $ javac -d target/classes src/main/java/*.java
+        $ jar fc target/authtest-java-1.0.jar -C target/classes .
 
 ---------------------------
 Using SUN's GSSAPI provider
@@ -40,15 +54,17 @@ Using SUN's GSSAPI provider
   to match your server.
 
   Run the server with:
-    $ java -cp target/classes \
+    $ java \
         -Djava.security.auth.login.config=jaas-krb5.conf \
         -Djavax.security.auth.useSubjectCredsOnly=false \
+        -cp target/\* \
         Server
 
   and run the client in another window with:
-    $ java -cp target/classes \
+    $ java \
         -Djava.security.auth.login.config=jaas-krb5.conf \
         -Djavax.security.auth.useSubjectCredsOnly=false \
+        -cp target/\* \
         Client host/slc4rsvgh1.prod.quest.corp
 
   Cut and paste the BASE-64 encoded tokens complete with trailing period '.'
@@ -71,7 +87,9 @@ KNOWN PROBLEMS
     - unjoin, delete the keytab and re-join the server
     - use the ktedit tool to dump and undump the keytab to a local file, 
       and then use the keyTab= parameter in jaas-krb5.conf to specify its 
-      location.
+      location:
+        $ sudo ktedit -k /etc/opt/quest/vas/host.keytab dump | 
+          ktedit -k host.keytab undump
 
 DEBUGGING
 
@@ -85,10 +103,10 @@ Using VSJ's GSSAPI provider
   use with J2EE servlets.)
 
   First, obtain the VSJ standard edition JAR and a license JAR. This example
-  assumes they are named:
+  assumes they are named as follows:
 
-        vsj-standard-3.3.jar
-        vsj-license-no-expiry.jar
+        vsj/vsj-standard-3.3.jar
+        vsj/vsj-license-no-expiry.jar
 
   Review the file vsj.security which overrides a particular part of 
   $JAVA_HOME/lib/security/java.security. Its job is to replace the entry
@@ -97,7 +115,7 @@ Using VSJ's GSSAPI provider
 
   Run the server with:
     $ java \
-        -cp vsj-standard-3.3.jar:vsj-license-no-expiry.jar:target/classes \
+        -cp vsj/\*:target/\* \
         -Djava.security.properties=./vsj.security \
         -Djcsi.kerberos.principal=host/slc4rsvgh1.prod.quest.corp \
         -Djcsi.kerberos.keytab=./host.keytab \
@@ -105,7 +123,7 @@ Using VSJ's GSSAPI provider
 
   And run the client in another window with:
     $ java \
-        -cp vsj-standard-3.3.jar:vsj-license-no-expiry.jar:target/classes \
+        -cp vsj/\*:target/\* \
         -Djava.security.properties=./vsj.security \
         Client host/slc4rsvgh1.prod.quest.corp
 
