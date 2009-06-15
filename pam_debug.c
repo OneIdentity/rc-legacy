@@ -1,5 +1,18 @@
 /*
- * A debugging module. Arguments are in the form:
+ * A PAM stack tracer module that sends messages to syslog as it is invoked.
+ *
+ * It logs the order the PAM stages are invoked, what was on the PAM stack,
+ * and what flags the stages are invoked with.
+ *
+ * All these stages return PAM_IGNORE passing control to the next module 
+ * in the PAM stack. They also take a single 'label=' argument which is 
+ * used to prefix output in syslog. This can be exploited by surrounding
+ * suspicious PAM modules with multiple instances of pam_debug.so each
+ * using different labels. For example:
+ *
+ *      auth required pam_debug.so label=Before
+ *      auth required suspicious.so
+ *      auth required pam_debug.so label=After
  *
  * References:
  *   http://www.opengroup.org/onlinepubs/008329799/toc.htm
