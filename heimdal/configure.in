@@ -55,6 +55,38 @@ AC_PROG_LIBTOOL
 
 rk_WFLAGS(-Wall -Wmissing-prototypes -Wpointer-arith -Wbad-function-cast -Wmissing-declarations -Wnested-externs)
 
+dnl Desired flags code originally from Stallone <http://tedp.id.au/stallone/>,
+dnl copied with permission.
+if test "x$GCC" = "xyes"; then
+    DESIRED_CFLAGS="-Wall -g"
+
+    # Avoid requiring libraries unnecessarily
+    # and use the common sysv symbol hash as well as the new GNU_HASH
+    DESIRED_LDFLAGS="-Wl,--as-needed -Wl,--hash-style=both"
+
+    for flag in $DESIRED_CFLAGS; do
+        AC_MSG_CHECKING([whether ${CC} accepts ${flag}])
+        orig_CFLAGS="$CFLAGS"
+        CFLAGS="$CFLAGS $flag"
+
+        AC_COMPILE_IFELSE([int main() {}],
+                          [AC_MSG_RESULT([yes])],
+                          [AC_MSG_RESULT([no])
+                           CFLAGS="$orig_CFLAGS"])
+    done
+
+    for flag in $DESIRED_LDFLAGS; do
+        AC_MSG_CHECKING([whether ${CC} accepts ${flag}])
+        orig_LDFLAGS="$LDFLAGS"
+        LDFLAGS="$LDFLAGS $flag"
+
+        AC_LINK_IFELSE([int main() {}],
+                       [AC_MSG_RESULT([yes])],
+                       [AC_MSG_RESULT([no])
+                        LDFLAGS="$orig_LDFLAGS"])
+    done
+fi
+
 AC_WITH_KRB5(yes)
 
 rk_TEST_PACKAGE(openldap,
