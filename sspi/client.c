@@ -11,6 +11,7 @@
 #include "getopt.h"
 #include "errmsg.h"
 #include "userio.h"
+#include "flags.h"
 
 /* Lists the SSPI security packages available */
 static void
@@ -36,7 +37,7 @@ list_pkgs()
 
 
 static void
-client(char *target, char *package)
+client(char *target, char *package, ULONG req_flags, int conf_req)
 {
     CredHandle credentials;
     TimeStamp expiry;
@@ -83,6 +84,7 @@ client(char *target, char *package)
                 &credentials,			/* phCredential */
                 initial ? NULL : &context,	/* phContext */
                 target,				/* pszTargetName */
+		req_flags |
                 ISC_REQ_ALLOCATE_MEMORY,	/* fContextReq */
                 0,				/* Reserved1 */
                 SECURITY_NATIVE_DREP,		/* TargetDataRep */
@@ -149,10 +151,20 @@ main(int argc, char **argv)
     char *package = "Negotiate";
     char *target = NULL;
     int lflag = 0;
+    ULONG req_flags = 0;
+    int conf_req = 0;
+
+    atexit(user_output_flush);
 
     /* Parse command line arguments */
-    while ((ch = getopt(argc, argv, "lp:")) != -1) 
+    while ((ch = getopt(argc, argv, "cf:lp:")) != -1) 
 	switch (ch) {
+ 	case 'f':
+	    req_flags |= names2flags(optarg);
+	    break;
+	case 'c':
+	    conf_req = 1;
+	    break;
 	case 'l':
 	    lflag = 1;
 	    break;
@@ -168,8 +180,9 @@ main(int argc, char **argv)
     /* Display usage if there was an error in the arguments */
     if (error) {
 	fprintf(stderr, "usage: %s -l\n"
-		        "       %s [-p pkg] target\n",
-			argv[0], argv[0]);
+		        "       %s [-c] [-f flags] [-p pkg] target\n"
+			"Available flags: %s\n",
+			argv[0], argv[0], flags_all());
 	exit(1);
     }
 
@@ -177,7 +190,7 @@ main(int argc, char **argv)
 	list_pkgs();
     else {
 	target = argv[optind];
-	client(target, package);
+	client(target, package, req_flags, conf_req);
     }
 
     exit(0);

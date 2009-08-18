@@ -11,7 +11,52 @@
 #include "base64.h"
 #include "clipboard.h"
 
-/* Dump the resulting token buffers in base64 */
+static char *clipboard_text = NULL;
+static int clipboard_text_len = 0;
+
+/* Appends text to be copied to the system clipboard later by 
+ * user_output_flush() */
+static void
+append_text_to_clipboard(const char *text, int text_len)
+{
+    char *newbuf;
+
+    if (!text_len)
+	return;
+
+    if (clipboard_text == NULL) {
+	newbuf = malloc(text_len);
+	clipboard_text_len = 0;
+    } else
+	newbuf = realloc(clipboard_text, clipboard_text_len + text_len);
+
+    if (!newbuf) {
+	fprintf(stderr, "Out of memory adding text to clipboard text buffer\n");
+	return;
+    }
+
+    clipboard_text = newbuf;
+    memcpy(clipboard_text + clipboard_text_len, text, text_len);
+    clipboard_text_len += text_len;
+}
+
+/* Flushes user output. */
+void
+user_output_flush()
+{
+    if (clipboard_text) {
+	if (clipboard_copyto(clipboard_text, clipboard_text_len, ""))
+	    printf("[copied output tokens to clipboard]\n");
+	free(clipboard_text);
+	clipboard_text = NULL;
+	clipboard_text_len = 0;
+    }
+    fflush(stdout);
+}
+
+/* Dumps the SSP token buffers in base64 to the user. Output is
+ * terminated with a period and a newline so it can be cut-and-paste
+ * to the corresponding client or server process. */
 void
 user_output_token(SecBufferDesc *desc)
 {
@@ -31,19 +76,25 @@ user_output_token(SecBufferDesc *desc)
 			j + 75 <= base64_len ? 75 : base64_len - j,
 			base64 + j);
 	printf(".\n");
-	clipboard_copyto(base64, base64_len, ".\r\n");
+	append_text_to_clipboard(base64, base64_len);
+	append_text_to_clipboard(".\r\n", strlen(".\r\n"));
         free(base64);
     }
 }
 
-/* Prompt for and input a bas64 string and put the binary into a new SecBuffer */
+/*
+ * Prompts for and reads in a bas64 string terminated by a period,
+ * and put the decoded binary into a new SecBuffer structure.
+ * Whitespace is ignored.
+ */
 void
 user_input_token(SecBuffer *buf)
 {
     char sbuf[65537], *dec;
     int bufpos, inlen, ch;
 
-    printf("input: "); fflush(stdout);
+    printf("input: "); 
+    user_output_flush();
 
     bufpos = 0;
     while ((ch = fgetc(stdin)) != EOF) {
