@@ -6,26 +6,11 @@
 
 #include <stdio.h>
 #include <windows.h>
+#include <ntsecpkg.h>	/* Gah! */
 #include <security.h>
-#include "base64.h"
 #include "getopt.h"
-
-/* Prints a windows error code as readable text. */
-static void
-errmsg(const char *msg, int status)
-{
-    static char buffer[16384];
-
-    FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM|   /* dwFlags */
-		  FORMAT_MESSAGE_IGNORE_INSERTS,
-		  0,                            /* lpSource */
-		  status,                       /* dwMessageId */
-		  0,                            /* dwLanguageId */
-		  buffer,                       /* lpBuffer */
-		  sizeof buffer,                /* nSize */
-		  0);                           /* Arguments */
-    fprintf(stderr, "%s: %s\n", msg, buffer);
-}
+#include "errmsg.h"
+#include "userio.h"
 
 /* Lists the SSPI security packages available */
 static void
@@ -49,56 +34,6 @@ list_pkgs()
     }
 }
 
-/* Dump the resulting token buffers in base64 */
-static void
-print_token(SecBufferDesc *desc)
-{
-    SecBuffer *buf;
-    int base64_len;
-    char *base64;
-    int i;
-
-    for (i = 0; i < desc->cBuffers; i++) {
-        buf = desc->pBuffers + i;
-	base64_len = base64_encode(buf->pvBuffer, buf->cbBuffer, NULL, 0);
-	base64 = malloc(base64_len);
-	base64_encode(buf->pvBuffer, buf->cbBuffer, base64, base64_len);
-	printf("output: %.*s.\n", base64_len, base64);
-        free(base64);
-    }
-}
-
-/* Prompt for and input a bas64 string and put the binary into a new SecBuffer */
-static void
-input_token(SecBuffer *buf)
-{
-    char sbuf[65537], *dec;
-    int bufpos, inlen, ch;
-
-    bufpos = 0;
-    while ((ch = fgetc(stdin)) != EOF) {
-        if (ch == '.')
-            break;
-        if (!isspace(ch) && bufpos + 1 < sizeof sbuf)
-            sbuf[bufpos++] = ch;
-    }
-    sbuf[bufpos] = '\0';
-    if (ch == EOF) {
-        fprintf(stderr, "fgetc: EOF\n");
-        exit(1);
-    }
-    dec = base64_string_decode(sbuf, &inlen);
-    if (!dec) {
-        fprintf(stderr, "base64_string_decode: failed\n");
-        exit(1);
-    }
-    printf("\n");
-
-    buf->BufferType = SECBUFFER_TOKEN;
-    buf->pvBuffer = dec;
-    buf->cbBuffer = inlen;
-}
-
 
 static void
 client(char *target, char *package)
@@ -114,6 +49,7 @@ client(char *target, char *package)
     ULONG attr;
     int i;
     SECURITY_STATUS status;
+    int initial;
 
     /* Acquire credentials */
     status = AcquireCredentialsHandle(NULL, package,
@@ -132,8 +68,8 @@ client(char *target, char *package)
     else
 	printf("Acquired credentials for: %s\n", names.sUserName);
 
-    context = NULL;
     input = NULL;
+    initial = 1;
     do {
         /* Set up a buffer structure to receive the output token */
         output.ulVersion = SECBUFFER_VERSION;
@@ -145,17 +81,18 @@ client(char *target, char *package)
 
         status = InitializeSecurityContext(
                 &credentials,			/* phCredential */
-                context,			/* phContext */
+                initial ? NULL : &context,	/* phContext */
                 target,				/* pszTargetName */
                 ISC_REQ_ALLOCATE_MEMORY,	/* fContextReq */
                 0,				/* Reserved1 */
                 SECURITY_NATIVE_DREP,		/* TargetDataRep */
                 input,				/* pInput */
                 0,				/* Reserved2 */
-                &context,			/* phNewContext */
+                initial ? &context : NULL,	/* phNewContext */
                 &output,			/* pOutput */
                 &attr,				/* pContextAttr */
                 &expiry);			/* ptsExpiry */
+	initial = 0;
         switch (status) {
             case SEC_E_OK:			/* Normal success codes */
                 break;
@@ -172,7 +109,7 @@ client(char *target, char *package)
         }
 
         if (output.cBuffers) {
-            print_token(&output);
+            user_output_token(&output);
             /* XXX TBD: free output */
         }
 
@@ -187,7 +124,7 @@ client(char *target, char *package)
             inputdesc.ulVersion = SECBUFFER_VERSION;
             inputdesc.cBuffers = 1;
             inputdesc.pBuffers = inbuffers;
-            input_token(&inbuffers[0]);
+            user_input_token(&inbuffers[0]);
             input = &inputdesc;
         }
 

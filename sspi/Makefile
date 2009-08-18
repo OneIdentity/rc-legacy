@@ -1,9 +1,9 @@
 CC = gcc
 RM = del
 LDFLAGS = -lsecur32
-CFLAGS = -I..
+CFLAGS = -I.. -DWINVER=0x500
 
-CLIENT_OBJS = client.o base64.o getopt.o
+CLIENT_OBJS = client.o base64.o getopt.o clipboard.o errmsg.o userio.o
 
 client.exe: $(CLIENT_OBJS)
 	$(CC) -o $@ $(CLIENT_OBJS) $(LDFLAGS)
