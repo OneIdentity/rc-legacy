@@ -5,14 +5,14 @@
  */
 
 #include <stdio.h>
-#include <windows.h>
-#include <ntsecpkg.h>	/* Gah! */
-#include <security.h>
+#include <ctype.h>
+#include "wsspi.h"
 #include "base64.h"
 #include "clipboard.h"
 
 static char *clipboard_text = NULL;
 static int clipboard_text_len = 0;
+static int clipboard_text_space = 0;
 
 /* Appends text to be copied to the system clipboard later by 
  * user_output_flush() */
@@ -20,35 +20,45 @@ static void
 append_text_to_clipboard(const char *text, int text_len)
 {
     char *newbuf;
+    int new_len;
 
     if (!text_len)
 	return;
 
-    if (clipboard_text == NULL) {
-	newbuf = malloc(text_len);
-	clipboard_text_len = 0;
-    } else
-	newbuf = realloc(clipboard_text, clipboard_text_len + text_len);
+    new_len = clipboard_text_len + text_len;
 
-    if (!newbuf) {
-	fprintf(stderr, "Out of memory adding text to clipboard text buffer\n");
-	return;
+    if (clipboard_text_space == 0) {
+	clipboard_text_space = 1024;
+	while (clipboard_text_space < new_len)
+	    clipboard_text_space *= 2;
+	clipboard_text = malloc(clipboard_text_space);
+	if (!clipboard_text) {
+	    fprintf(stderr, "Out of memory creating clipboard buf\n");
+	    return;
+	}
     }
 
-    clipboard_text = newbuf;
+    if (clipboard_text_space < new_len) {
+	while (clipboard_text_space < new_len)
+	    clipboard_text_space *= 2;
+	newbuf = realloc(clipboard_text, clipboard_text_space);
+	if (!newbuf) {
+	    fprintf(stderr, "Out of memory adding text to clipboard buf\n");
+	    return;
+	}
+	clipboard_text = newbuf;
+    }
     memcpy(clipboard_text + clipboard_text_len, text, text_len);
-    clipboard_text_len += text_len;
+    clipboard_text_len = new_len;
 }
 
 /* Flushes user output. */
 void
 user_output_flush()
 {
-    if (clipboard_text) {
+    if (clipboard_text_len) {
 	if (clipboard_copyto(clipboard_text, clipboard_text_len, ""))
-	    printf("[copied output tokens to clipboard]\n");
-	free(clipboard_text);
-	clipboard_text = NULL;
+	    printf("[output tokens copied to clipboard]\n");
 	clipboard_text_len = 0;
     }
     fflush(stdout);
@@ -61,25 +71,43 @@ void
 user_output_token(SecBufferDesc *desc)
 {
     SecBuffer *buf;
-    int base64_len;
-    char *base64;
+    base64_enc_state_t b64;
     int i, j;
+    int linelen = 0;
+    char out[4];
+    int outlen;
 
+    printf("output: ");
+    base64_encode_init(&b64);
     for (i = 0; i < desc->cBuffers; i++) {
+
         buf = desc->pBuffers + i;
-	base64_len = base64_encode(buf->pvBuffer, buf->cbBuffer, NULL, 0);
-	base64 = malloc(base64_len);
-	base64_encode(buf->pvBuffer, buf->cbBuffer, base64, base64_len);
-	printf("output: ");
-	for (j = 0; j < base64_len; j += 75)
-		printf("\n %.*s", 
-			j + 75 <= base64_len ? 75 : base64_len - j,
-			base64 + j);
-	printf(".\n");
-	append_text_to_clipboard(base64, base64_len);
-	append_text_to_clipboard(".\r\n", strlen(".\r\n"));
-        free(base64);
+	for (j = 0; j < buf->cbBuffer; j++) {
+	    outlen = base64_encode_sub(&b64, (char *)buf->pvBuffer + j, 1,
+		out, sizeof out);
+	    if (outlen < 0) {
+	        fprintf(stderr, "base64_encode_sub error\n");
+		exit(1);
+	    }
+	    if (outlen) {
+		printf("%.*s", outlen, out);
+		append_text_to_clipboard(out, outlen);
+		linelen += outlen;
+		if (linelen >= 64) {
+		    printf("\n ");
+		    linelen = 0;
+		    append_text_to_clipboard("\r\n ", 3);
+		}
+	    }	
+	}	
     }
+    outlen = base64_encode_fini(&b64, out, sizeof out);
+    if (outlen) {
+	printf("%.*s", outlen, out);
+	append_text_to_clipboard(out, outlen);
+    }
+    printf(".\n");
+    append_text_to_clipboard(".\r\n", strlen(".\r\n"));
 }
 
 /*
@@ -93,8 +121,12 @@ user_input_token(SecBuffer *buf)
     char sbuf[65537], *dec;
     int bufpos, inlen, ch;
 
-    printf("input: "); 
+    buf->cbBuffer = 0;
+    buf->pvBuffer = NULL;
+
     user_output_flush();
+
+    printf("input: "); fflush(stdout);
 
     bufpos = 0;
     while ((ch = fgetc(stdin)) != EOF) {
@@ -120,3 +152,12 @@ user_input_token(SecBuffer *buf)
     buf->cbBuffer = inlen;
 }
 
+void
+user_input_free_token(SecBuffer *buf)
+{
+    if (buf->pvBuffer) {
+        free(buf->pvBuffer);
+	buf->pvBuffer = NULL;
+	buf->cbBuffer = 0;
+    }
+}

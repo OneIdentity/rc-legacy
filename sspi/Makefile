@@ -1,7 +1,7 @@
 CC = gcc
 RM = del
 LDFLAGS = -lsecur32
-CFLAGS = -I.. -DWINVER=0x500
+CFLAGS = -I.. -DWINVER=0x500 -Wall
 
 CLIENT_OBJS = client.o base64.o getopt.o clipboard.o errmsg.o userio.o
 CLIENT_OBJS += flags.o
