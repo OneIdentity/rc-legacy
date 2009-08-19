@@ -4,7 +4,7 @@ LDFLAGS = -lsecur32
 CFLAGS = -I.. -DWINVER=0x500 -Wall
 
 CLIENT_OBJS = client.o base64.o getopt.o clipboard.o errmsg.o userio.o
-CLIENT_OBJS += flags.o
+CLIENT_OBJS += flags.o common.o
 
 client.exe: $(CLIENT_OBJS)
 	$(CC) -o $@ $(CLIENT_OBJS) $(LDFLAGS)
