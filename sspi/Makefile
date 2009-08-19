@@ -7,7 +7,7 @@ COMMON_OBJS = base64.o getopt.o clipboard.o errmsg.o userio.o
 COMMON_OBJS += flags.o common.o wrap.o
 
 CLIENT_OBJS = client.o $(COMMON_OBJS)
-SERVER_OBJS = server.o $(COMMON_OBJS)
+SERVER_OBJS = server.o $(COMMON_OBJS) deleg.o
 
 ALL_PROGS = client.exe server.exe
 all: $(ALL_PROGS)

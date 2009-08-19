@@ -12,8 +12,51 @@
 #include "flags.h"
 #include "common.h"
 #include "wrap.h"
+#include "deleg.h"
 
 static const char server_msg[] = "I am the SSPI server";
+
+/* Do something interesting with a context containing delegation */
+static void
+delegated(CtxtHandle *context, const char *package)
+{
+    SECURITY_STATUS status;
+    CredHandle credentials;
+    TimeStamp expiry;
+
+    status = ImpersonateSecurityContext(context);
+    if (status != SEC_E_OK) {
+	errmsg("ImpersonateSecurityContext", status);
+	return;
+    }
+
+    printf(">> Impersonated delegated user\n");
+    printf(">> Acquiring default credentials\n");
+
+    /* Acquire credentials */
+    status = sspi->AcquireCredentialsHandle(NULL, package,
+	    SECPKG_CRED_OUTBOUND, NULL, NULL, NULL, NULL,
+	    &credentials, &expiry);
+    if (status != SEC_E_OK) {
+	errmsg("AcquireCredentialsHandle", status);
+    } else {
+
+	print_cred_attrs(&credentials);
+	printf(">> Expiry: %s\n", TimeStamp_to_string(&expiry));
+
+	printf(">> Destroying creds acquired by delegation\n");
+	status = sspi->FreeCredentialsHandle(&credentials);
+	if (status != SEC_E_OK)
+	    errmsg("FreeCredentialsHandle", status);
+    }
+
+    printf(">> Reverting from impersonation\n");
+    status = RevertSecurityContext(context);
+    if (status != SEC_E_OK) {
+	errmsg("RevertSecurityContext", status);
+	exit(1);
+    }
+} 
 
 static void
 server(char *package, int req_flags, int conf_req)
@@ -33,6 +76,10 @@ server(char *package, int req_flags, int conf_req)
     ULONG qop;
     int msg_len;
     char *msg;
+    HANDLE deleg_token = INVALID_HANDLE_VALUE;
+
+    if (req_flags & ASC_REQ_DELEGATE)
+	print_self_info();
 
     /* Acquire credentials */
     status = sspi->AcquireCredentialsHandle(NULL, package,
@@ -114,6 +161,20 @@ server(char *package, int req_flags, int conf_req)
     printf("Expiry: %s\n", TimeStamp_to_string(&expiry));
     printf("Flags: <%s>\n", flags2str(attr, FLAGS_KIND_RET));
     print_context_attrs(&context);
+
+    /* Attempt to fetch any delegated credential */
+    // Argh another broken bit in mingw's <sspi.h>
+    // status = sspi->QuerySecurityContextToken(&context, &deleg_token);
+    status = ((QUERY_SECURITY_CONTEXT_TOKEN_FN)sspi->Unknown5)(&context, &deleg_token);
+    if (status == SEC_E_OK) {
+	printf("Credentials delegated:\n");
+	print_token_info(deleg_token);
+	CloseHandle(deleg_token);
+
+	delegated(&context, package);
+
+    } else 
+	errmsg("QuerySecurityContextToken", status);
 
     /* Encrypt and send the server message */
 
