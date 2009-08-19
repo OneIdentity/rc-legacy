@@ -1,6 +1,6 @@
 /* (c) 2009 Quest Software, Inc. All rights reserved */
 /*
- * Windows Security Service Provider Interface (SSPI) client sample.
+ * Windows Security Service Provider Interface (SSPI) server sample.
  * David Leonard, 2009.
  */
 
@@ -13,10 +13,10 @@
 #include "common.h"
 #include "wrap.h"
 
-static const char client_msg[] = "I am the SSPI client";
+static const char server_msg[] = "I am the SSPI server";
 
 static void
-client(char *target, char *package, ULONG req_flags, int conf_req)
+server(char *package, int req_flags, int conf_req)
 {
     CredHandle credentials;
     TimeStamp expiry;
@@ -28,27 +28,35 @@ client(char *target, char *package, ULONG req_flags, int conf_req)
     ULONG attr = 0;
     SECURITY_STATUS status;
     SECURITY_STATUS free_status;
+    SECURITY_STATUS complete_status;
     int initial;
     ULONG qop;
-    char *msg;
     int msg_len;
+    char *msg;
 
     /* Acquire credentials */
     status = sspi->AcquireCredentialsHandle(NULL, package,
-	    SECPKG_CRED_OUTBOUND, NULL, NULL, NULL, NULL,
+	    SECPKG_CRED_INBOUND, NULL, NULL, NULL, NULL,
 	    &credentials, &expiry);
     if (status != SEC_E_OK) {
 	errmsg("AcquireCredentialsHandle", status);
 	exit(1);
     }
 
-    /* Display whose credentials we got */
+    /* Display whose credentials we have */
     print_cred_attrs(&credentials);
 
     input = NULL;
     initial = 1;
     do {
-        /* Set up a buffer structure to receive the output token */
+	/* Receive an input token */
+	inputdesc.ulVersion = SECBUFFER_VERSION;
+	inputdesc.cBuffers = 1;
+	inputdesc.pBuffers = inbuffers;
+	input = &inputdesc;
+	user_input_token(&inbuffers[0]);
+
+        /* Set up a buffer structure to hold the output token */
         output.ulVersion = SECBUFFER_VERSION;
         output.cBuffers = 1;
         output.pBuffers = buffers;
@@ -56,27 +64,39 @@ client(char *target, char *package, ULONG req_flags, int conf_req)
         buffers[0].cbBuffer = 0;
         buffers[0].pvBuffer = NULL;
 
-	attr = 0;
-        status = sspi->InitializeSecurityContext(
+	status = sspi->AcceptSecurityContext(
                 &credentials,			/* phCredential */
                 initial ? NULL : &context,	/* phContext */
-                target,				/* pszTargetName */
+                input,				/* pInput */
                 ISC_REQ_ALLOCATE_MEMORY |	/* fContextReq */
 		req_flags,
-                0,				/* Reserved1 */
                 SECURITY_NATIVE_DREP,		/* TargetDataRep */
-                input,				/* pInput */
-                0,				/* Reserved2 */
                 initial ? &context : NULL,	/* phNewContext */
                 &output,			/* pOutput */
                 &attr,				/* pContextAttr */
                 &expiry);			/* ptsExpiry */
 	initial = 0;
 
-        if (input) {
-	    user_input_free_token(&inbuffers[0]);
-            input = NULL;
+	user_input_free_token(&inbuffers[0]);
+
+        switch (status) {
+            case SEC_E_OK:			/* Normal success */
+            case SEC_I_COMPLETE_NEEDED:		/* Unusual success */
+                break;
+            case SEC_I_CONTINUE_NEEDED:		/* Normal continuation */
+            case SEC_I_COMPLETE_AND_CONTINUE:	/* Unusual continuation */
+                break;
+            default:
+                errmsg("AcceptSecurityContext", status);
+                exit(1);
         }
+
+	if (status == SEC_I_COMPLETE_AND_CONTINUE ||
+	    status == SEC_I_COMPLETE_NEEDED) {
+		complete_status = sspi->CompleteAuthToken(&context, &output);
+		if (complete_status != SEC_E_OK)
+		    errmsg("CompleteAuthToken", complete_status);
+	}
 
         if (output.cBuffers && buffers[0].pvBuffer) {
             user_output_token(&output);
@@ -85,27 +105,9 @@ client(char *target, char *package, ULONG req_flags, int conf_req)
 		errmsg("FreeContextBuffer", free_status);
         }
 
-        switch (status) {
-            case SEC_E_OK:			/* Normal success */
-            case SEC_I_CONTINUE_NEEDED:		/* Normal continuation */
-                break;
-            default:
-                errmsg("InitializeSecurityContext", status);
-                exit(1);
-        }
-
-	if (status == SEC_I_CONTINUE_NEEDED) {
-	    inputdesc.ulVersion = SECBUFFER_VERSION;
-	    inputdesc.cBuffers = 1;
-	    inputdesc.pBuffers = inbuffers;
-	    input = &inputdesc;
-	    user_input_token(&inbuffers[0]);
-	}
-
     } while (status == SEC_I_CONTINUE_NEEDED);
 
-    printf("InitializeSecurityContext() completed\n");
-
+    printf("AcceptSecurityContext() completed\n");
 
     /* Display context attributes */
 
@@ -113,23 +115,22 @@ client(char *target, char *package, ULONG req_flags, int conf_req)
     printf("Flags: <%s>\n", flags2str(attr, FLAGS_KIND_RET));
     print_context_attrs(&context);
 
-    /* Wait for and decode the server message */
+    /* Encrypt and send the server message */
+
+    printf("Message to client: \"%s\"\n", server_msg);
+
+    output_encrypted(&context, server_msg, strlen(server_msg), conf_req);
+
+    /* Wait for and decode the client message */
 
     if (!input_encrypted(&context, &msg, &msg_len, &qop))
 	exit(1);
 
     fprintf(stderr, "input qop = 0x%lx\n", qop);
-    fprintf(stderr, "Message from server: \"%.*s\"\n", msg_len, msg);
+    fprintf(stderr, "Message from server: \"%.*s\"\n",  msg_len, msg);
 
     input_encrypted_free(msg);
 
-
-    /* Encrypt and send the client message */
-
-    printf("Message to server: \"%s\"\n", client_msg);
-
-    if (!output_encrypted(&context, client_msg, strlen(client_msg), conf_req))
-	exit(1);
 
     /* Delete the security context */
 
@@ -138,6 +139,8 @@ client(char *target, char *package, ULONG req_flags, int conf_req)
 	errmsg("DeleteSecurityContext", status);
 	exit(1);
     }
+
+    /* Delete the credentials */
 
     status = sspi->FreeCredentialsHandle(&credentials);
     if (status != SEC_E_OK) {
@@ -153,7 +156,6 @@ main(int argc, char **argv)
     int ch;
     int error = 0;
     char *package = "Negotiate";
-    char *target = NULL;
     int lflag = 0;
     ULONG req_flags = 0;
     int conf_req = 0;
@@ -163,11 +165,11 @@ main(int argc, char **argv)
     /* Parse command line arguments */
     while ((ch = getopt(argc, argv, "cf:lp:")) != -1) 
 	switch (ch) {
- 	case 'f':
-	    req_flags |= names2flags(optarg, FLAGS_KIND_REQ);
-	    break;
 	case 'c':
 	    conf_req = 1;	/* only affects EncryptMessage() */
+	    break;
+	case 'f':
+	    req_flags |= names2flags(optarg, FLAGS_KIND_REQ);
 	    break;
 	case 'l':
 	    lflag = 1;
@@ -178,13 +180,13 @@ main(int argc, char **argv)
 	default:
 	    error = 1;
 	}
-    if (!lflag && argc != optind + 1)
+    if (argc != optind)
 	error = 1;
 
     /* Display usage if there was an error in the arguments */
     if (error) {
 	fprintf(stderr, "usage: %s -l\n"
-		        "       %s [-c] [-f flags] [-p pkg] target\n"
+		        "       %s [-c] [-p pkg]\n"
 			"Available flags: %s\n",
 			argv[0], argv[0], flags_all(FLAGS_KIND_REQ));
 	exit(1);
@@ -198,10 +200,8 @@ main(int argc, char **argv)
 
     if (lflag)
 	list_pkgs();
-    else {
-	target = argv[optind];
-	client(target, package, req_flags, conf_req);
-    }
+    else
+	server(package, req_flags, conf_req);
 
     exit(0);
 }

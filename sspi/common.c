@@ -9,6 +9,8 @@
 #include "wsspi.h"
 #include "errmsg.h"
 
+PSecurityFunctionTable sspi;
+
 /* Lists the SSPI security packages available */
 void
 list_pkgs()
@@ -18,7 +20,7 @@ list_pkgs()
     ULONG count;
     int i;
 
-    status = EnumerateSecurityPackages(&count, &pkgs);
+    status = sspi->EnumerateSecurityPackages(&count, &pkgs);
     if (status != SEC_E_OK) {
 	errmsg("EnumerateSecurityPackages", status);
 	exit(1);
@@ -31,7 +33,7 @@ list_pkgs()
     }
 }
 
-static const char *
+const char *
 TimeStamp_to_string(TimeStamp *ts)
 {
     SYSTEMTIME st;
@@ -54,25 +56,25 @@ void print_context_attrs(CtxtHandle *context)
     SecPkgContext_Lifespan life_span;
     SECURITY_STATUS status;
 
-    status = QueryContextAttributes(context, SECPKG_ATTR_AUTHORITY, 
+    status = sspi->QueryContextAttributes(context, SECPKG_ATTR_AUTHORITY, 
 	   &authority);
     if (status == SEC_E_OK)
 	printf("authority.name          = %s\n", authority.sAuthorityName);
     else if (status != SEC_E_UNSUPPORTED_FUNCTION)
 	errmsg("QueryContextAttributes AUTHORITY", status);
 
-    status = QueryContextAttributes(context, SECPKG_ATTR_KEY_INFO, 
+    status = sspi->QueryContextAttributes(context, SECPKG_ATTR_KEY_INFO, 
 	   &key_info);
     if (status == SEC_E_OK) {
 	printf("key_info.sig_algorithm  = %s\n",
 		key_info.sSignatureAlgorithmName);
 	printf("key_info.enc_algorithm  = %s\n",
 		key_info.sEncryptAlgorithmName);
-	printf("key_info.key_size    m  = %ld bits\n", key_info.KeySize);
+	printf("key_info.key_size       = %ld bits\n", key_info.KeySize);
     } else if (status != SEC_E_UNSUPPORTED_FUNCTION)
 	errmsg("QueryContextAttributes KEY_INFO", status);
 
-    status = QueryContextAttributes(context, SECPKG_ATTR_LIFESPAN, 
+    status = sspi->QueryContextAttributes(context, SECPKG_ATTR_LIFESPAN, 
 	   &life_span);
     if (status == SEC_E_OK) {
 	printf("life_span.start         = %s\n",
@@ -82,7 +84,7 @@ void print_context_attrs(CtxtHandle *context)
     } else if (status != SEC_E_UNSUPPORTED_FUNCTION)
 	errmsg("QueryContextAttributes LIFESPAN", status);
 
-    status = QueryContextAttributes(context, SECPKG_ATTR_SIZES, &sizes);
+    status = sspi->QueryContextAttributes(context, SECPKG_ATTR_SIZES, &sizes);
     if (status == SEC_E_OK) {
 	printf("sizes.cbMaxToken        = %10ld\n", sizes.cbMaxToken);
 	printf("sizes.cbMaxSignature    = %10ld\n", sizes.cbMaxSignature);
@@ -91,7 +93,7 @@ void print_context_attrs(CtxtHandle *context)
     } else if (status != SEC_E_UNSUPPORTED_FUNCTION)
 	errmsg("QueryContextAttributes SIZES", status);
 
-    status = QueryContextAttributes(context, SECPKG_ATTR_STREAM_SIZES, 
+    status = sspi->QueryContextAttributes(context, SECPKG_ATTR_STREAM_SIZES, 
 	    &stream_sizes);
     if (status == SEC_E_OK) {
 	printf("stream_sizes.cbHeader   = %10ld\n", 
@@ -115,10 +117,11 @@ print_cred_attrs(CredHandle *credentials)
     SecPkgCredentials_Names names;
     SECURITY_STATUS status;
 
-    status = QueryCredentialsAttributes(credentials, 
+    status = sspi->QueryCredentialsAttributes(credentials, 
 	    SECPKG_CRED_ATTR_NAMES, &names);
     if (status != SEC_E_OK)
 	errmsg("QueryCredentialsAttributes", status);
     else
 	printf("credential.userName: %s\n", names.sUserName);
 }
+

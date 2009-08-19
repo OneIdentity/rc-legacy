@@ -1,9 +1,4 @@
 /* (c) 2009 Quest Software, Inc. All rights reserved */
-/*
- * Companion program to gss-client/gss-server, but using the Windows SSPI interface.
- * David Leonard, 2009.
- */
-
 #include <stdio.h>
 #include <ctype.h>
 #include "wsspi.h"
@@ -17,7 +12,7 @@ static int clipboard_text_space = 0;
 /* Appends text to be copied to the system clipboard later by 
  * user_output_flush() */
 static void
-append_text_to_clipboard(const char *text, int text_len)
+append_text_for_clipboard(const char *text, int text_len)
 {
     char *newbuf;
     int new_len;
@@ -91,12 +86,12 @@ user_output_token(SecBufferDesc *desc)
 	    }
 	    if (outlen) {
 		printf("%.*s", outlen, out);
-		append_text_to_clipboard(out, outlen);
+		append_text_for_clipboard(out, outlen);
 		linelen += outlen;
 		if (linelen >= 64) {
 		    printf("\n ");
 		    linelen = 0;
-		    append_text_to_clipboard("\r\n ", 3);
+		    append_text_for_clipboard("\r\n ", 3);
 		}
 	    }	
 	}	
@@ -104,10 +99,10 @@ user_output_token(SecBufferDesc *desc)
     outlen = base64_encode_fini(&b64, out, sizeof out);
     if (outlen) {
 	printf("%.*s", outlen, out);
-	append_text_to_clipboard(out, outlen);
+	append_text_for_clipboard(out, outlen);
     }
     printf(".\n");
-    append_text_to_clipboard(".\r\n", strlen(".\r\n"));
+    append_text_for_clipboard(".\r\n", strlen(".\r\n"));
 }
 
 /*

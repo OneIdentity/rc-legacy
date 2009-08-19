@@ -48,4 +48,11 @@ typedef struct _SecPkgContext_Lifespan {
 
 #endif
 
+#ifndef InitSecurityInterface
+# ifdef UNICODE
+#  define InitSecurityInterface InitSecurityInterfaceW
+# else
+#  define InitSecurityInterface InitSecurityInterfaceA
+# endif
+#endif
 

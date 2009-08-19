@@ -3,11 +3,20 @@ RM = del
 LDFLAGS = -lsecur32
 CFLAGS = -I.. -DWINVER=0x500 -Wall
 
-CLIENT_OBJS = client.o base64.o getopt.o clipboard.o errmsg.o userio.o
-CLIENT_OBJS += flags.o common.o
+COMMON_OBJS = base64.o getopt.o clipboard.o errmsg.o userio.o
+COMMON_OBJS += flags.o common.o wrap.o
+
+CLIENT_OBJS = client.o $(COMMON_OBJS)
+SERVER_OBJS = server.o $(COMMON_OBJS)
+
+ALL_PROGS = client.exe server.exe
+all: $(ALL_PROGS)
 
 client.exe: $(CLIENT_OBJS)
 	$(CC) -o $@ $(CLIENT_OBJS) $(LDFLAGS)
+
+server.exe: $(SERVER_OBJS)
+	$(CC) -o $@ $(SERVER_OBJS) $(LDFLAGS)
 
 base64.o: ../base64.c
 	$(CC) $(CFLAGS) -c ../base64.c -o $@
@@ -16,5 +25,5 @@ base64.o: ../base64.c
 	$(CC) $(CFLAGS) -c $<
 
 clean:
-	$(RM) client.exe $(CLIENT_OBJS)
+	$(RM) $(ALL_PROGS) $(CLIENT_OBJS) $(SERVER_OBJS)
 
