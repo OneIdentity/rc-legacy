@@ -58,7 +58,7 @@ delegated(CtxtHandle *context, char *package)
 } 
 
 static void
-server(char *package, int req_flags, int conf_req)
+server(char *package, char *principal, int req_flags, int conf_req)
 {
     CredHandle credentials;
     TimeStamp expiry;
@@ -81,8 +81,10 @@ server(char *package, int req_flags, int conf_req)
 	print_self_info();
 
     /* Acquire credentials */
-    printf("Acquiring default inbound credentials\n");
-    status = sspi->AcquireCredentialsHandle(NULL, package,
+    printf("Acquiring inbound credentials for %s\n",
+	    principal ? principal : "NULL (default)");
+
+    status = sspi->AcquireCredentialsHandle(principal, package,
 	    SECPKG_CRED_INBOUND, NULL, NULL, NULL, NULL,
 	    &credentials, &expiry);
     if (status != SEC_E_OK) {
@@ -217,6 +219,7 @@ main(int argc, char **argv)
     int ch;
     int error = 0;
     char *package = "Negotiate";
+    char *principal = NULL;
     int lflag = 0;
     ULONG req_flags = 0;
     int conf_req = 0;
@@ -241,13 +244,17 @@ main(int argc, char **argv)
 	default:
 	    error = 1;
 	}
-    if (argc != optind)
+
+    if (optind < argc)
+	principal = argv[optind++];
+
+    if (optind < argc)
 	error = 1;
 
     /* Display usage if there was an error in the arguments */
     if (error) {
 	fprintf(stderr, "usage: %s -l\n"
-		        "       %s [-c] [-p pkg]\n"
+		        "       %s [-c] [-f flags] [-p pkg] [principal]\n"
 			"Available flags: %s\n",
 			argv[0], argv[0], flags_all(FLAGS_KIND_REQ));
 	exit(1);
@@ -262,7 +269,7 @@ main(int argc, char **argv)
     if (lflag)
 	list_pkgs();
     else
-	server(package, req_flags, conf_req);
+	server(package, principal, req_flags, conf_req);
 
     exit(0);
 }

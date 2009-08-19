@@ -16,7 +16,7 @@
 static const char client_msg[] = "I am the SSPI client";
 
 static void
-client(char *target, char *package, ULONG req_flags, int conf_req)
+client(char *target, char *package, char *principal, ULONG req_flags, int conf_req)
 {
     CredHandle credentials;
     TimeStamp expiry;
@@ -34,7 +34,8 @@ client(char *target, char *package, ULONG req_flags, int conf_req)
     int msg_len;
 
     /* Acquire credentials */
-    printf("Acquiring default outbound credentials\n");
+    printf("Acquiring default outbound credentials for %s\n",
+	    principal ? principal : "NULL (default)");
     status = sspi->AcquireCredentialsHandle(NULL, package,
 	    SECPKG_CRED_OUTBOUND, NULL, NULL, NULL, NULL,
 	    &credentials, &expiry);
@@ -156,6 +157,7 @@ main(int argc, char **argv)
     int error = 0;
     char *package = "Negotiate";
     char *target = NULL;
+    char *principal = NULL;
     int lflag = 0;
     ULONG req_flags = 0;
     int conf_req = 0;
@@ -180,13 +182,19 @@ main(int argc, char **argv)
 	default:
 	    error = 1;
 	}
-    if (!lflag && argc != optind + 1)
+
+    if (optind < argc)
+        target = argv[optind++];
+    if (optind < argc)
+        principal = argv[optind++];
+
+    if (optind < argc)
 	error = 1;
 
     /* Display usage if there was an error in the arguments */
     if (error) {
 	fprintf(stderr, "usage: %s -l\n"
-		        "       %s [-c] [-f flags] [-p pkg] target\n"
+		        "       %s [-c] [-f flags] [-p pkg] target [principal]\n"
 			"Available flags: %s\n",
 			argv[0], argv[0], flags_all(FLAGS_KIND_REQ));
 	exit(1);
@@ -201,8 +209,7 @@ main(int argc, char **argv)
     if (lflag)
 	list_pkgs();
     else {
-	target = argv[optind];
-	client(target, package, req_flags, conf_req);
+	client(target, package, principal, req_flags, conf_req);
     }
 
     exit(0);
