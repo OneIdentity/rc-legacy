@@ -18,7 +18,7 @@
 #include "gss-common.h"
 #include "authtest.h"
 
-static char server_message[] = "I am the server";
+static char server_message[] = "I am the Unix server";
 
 int
 main(int argc, char **argv)

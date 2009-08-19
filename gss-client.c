@@ -19,7 +19,7 @@
 #include "gss-common.h"
 #include "authtest.h"
 
-static char client_message[] = "I am the client";
+static char client_message[] = "I am the Unix client";
 
 int
 main(int argc, char **argv)
