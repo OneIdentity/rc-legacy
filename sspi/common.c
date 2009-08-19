@@ -25,12 +25,60 @@ list_pkgs()
 	errmsg("EnumerateSecurityPackages", status);
 	exit(1);
     }
+    for (i = 0; i < count; i++)
+	print_package_info(pkgs + i);
+}
 
-    for (i = 0; i < count; i++) {
-	printf("\t%s\n", pkgs[i].Name);
-	if (pkgs[i].Comment)
-	    printf("\t\t- %s\n", pkgs[i].Comment);
-    }
+void
+print_package_info(SecPkgInfo *pkg)
+{
+    int j, first;
+    static struct {
+	ULONG flag;
+	const char *desc;
+    } map[] = {
+	{ SECPKG_FLAG_INTEGRITY, "integ" },	/* Make/VeirfySignature */
+	{ SECPKG_FLAG_PRIVACY, "privacy" },	/* Encrypt/DecryptMessage */
+	{ SECPKG_FLAG_TOKEN_ONLY, "token-only" },
+	{ SECPKG_FLAG_DATAGRAM, "datagram" },
+	{ SECPKG_FLAG_CONNECTION, "connection" },
+	{ SECPKG_FLAG_MULTI_REQUIRED, "multi" },
+	{ SECPKG_FLAG_CLIENT_ONLY, "client-only" },
+	{ SECPKG_FLAG_EXTENDED_ERROR, "ext-err" },
+	{ SECPKG_FLAG_IMPERSONATION, "impersonation" },
+	{ SECPKG_FLAG_ACCEPT_WIN32_NAME, "win32-names" },
+	{ SECPKG_FLAG_STREAM, "stream" },
+#ifdef SECPKG_FLAG_NEGOTIABLE
+	{ SECPKG_FLAG_NEGOTIABLE, "negotiable" },
+	{ SECPKG_FLAG_GSS_COMPATIBLE, "gss-compat" },
+	{ SECPKG_FLAG_LOGON, "logon" },		/* LSALogonUser */
+	{ SECPKG_FLAG_ASCII_BUFFERS, "ascii" },
+	{ SECPKG_FLAG_FRAGMENT, "fragment" },	/* ISC/ASC */
+	{ SECPKG_FLAG_MUTUAL_AUTH, "mutual" },
+	{ SECPKG_FLAG_DELEGATION, "deleg" },
+	{ SECPKG_FLAG_READONLY_WITH_CHECKSUM, "ro-cksum" },  /*EncryptMessage*/
+# ifdef SECPKG_FLAG_RESTRICTED_TOKENS
+	{ SECPKG_FLAG_RESTRICTED_TOKENS, "r-tokens" },
+	{ SECPKG_FLAG_NEGOTIABLE2, "nego2" },
+# endif
+#endif
+    };
+
+    printf(" \"%s\" {\n", pkg->Name);
+    printf("    capabilities: ");
+    first = 0;
+    for (j = 0; j < sizeof map / sizeof map[0]; j++)
+	if (pkg->fCapabilities & map[j].flag)
+	    printf("%s%s", first++ ? ",": "<", map[j].desc);
+    printf("%s\n", first ? ">": "<>");
+    if (pkg->wVersion != 1)
+	printf("    version:      %d\n", pkg->wVersion);
+    printf("    max token:    %ld bytes\n", pkg->cbMaxToken);
+    if (pkg->wRPCID != SECPKG_ID_NONE)
+	printf("    RPC ID:       %d\n", pkg->wRPCID);
+    if (pkg->Comment)
+	printf("    comment:      %s\n", pkg->Comment);
+    printf("}\n");
 }
 
 const char *
@@ -47,14 +95,19 @@ TimeStamp_to_string(TimeStamp *ts)
 }
 
 /* Prints information about context attributes */
-void print_context_attrs(CtxtHandle *context)
+void
+print_context_attrs(CtxtHandle *context)
 {
     SecPkgContext_Sizes sizes;
     SecPkgContext_StreamSizes stream_sizes;
     SecPkgContext_Authority authority;
     SecPkgContext_KeyInfo key_info;
     SecPkgContext_Lifespan life_span;
+    SecPkgContext_PackageInfo pkg_info;
+    SecPkgContext_NegotiationInfo nego_info;
     SECURITY_STATUS status;
+
+    printf("Context attributes:\n");
 
     status = sspi->QueryContextAttributes(context, SECPKG_ATTR_AUTHORITY, 
 	   &authority);
@@ -66,9 +119,9 @@ void print_context_attrs(CtxtHandle *context)
     status = sspi->QueryContextAttributes(context, SECPKG_ATTR_KEY_INFO, 
 	   &key_info);
     if (status == SEC_E_OK) {
-	printf("key_info.sig_algorithm  = %s\n",
+	printf("key_info.sig_algorithm  = \"%s\"\n",
 		key_info.sSignatureAlgorithmName);
-	printf("key_info.enc_algorithm  = %s\n",
+	printf("key_info.enc_algorithm  = \"%s\"\n",
 		key_info.sEncryptAlgorithmName);
 	printf("key_info.key_size       = %ld bits\n", key_info.KeySize);
     } else if (status != SEC_E_UNSUPPORTED_FUNCTION)
@@ -83,6 +136,32 @@ void print_context_attrs(CtxtHandle *context)
 		TimeStamp_to_string(&life_span.tsExpiry));
     } else if (status != SEC_E_UNSUPPORTED_FUNCTION)
 	errmsg("QueryContextAttributes LIFESPAN", status);
+
+    status = sspi->QueryContextAttributes(context, SECPKG_ATTR_PACKAGE_INFO, 
+	   &pkg_info);
+    if (status == SEC_E_OK)
+	printf("package.name            = \"%s\"\n",
+		pkg_info.PackageInfo->Name);
+    else if (status != SEC_E_UNSUPPORTED_FUNCTION)
+	errmsg("QueryContextAttributes PACKAGE_INFO", status);
+
+    status = sspi->QueryContextAttributes(context, SECPKG_ATTR_NEGOTIATION_INFO, &nego_info);
+    if (status == SEC_E_OK) {
+	printf("nego.package.state      = %s\n",
+	    nego_info.NegotiationState == SECPKG_NEGOTIATION_COMPLETE ? "complete" :
+	    nego_info.NegotiationState == SECPKG_NEGOTIATION_OPTIMISTIC ? "optimistic" :
+	    nego_info.NegotiationState == SECPKG_NEGOTIATION_IN_PROGRESS ? "in-progress" :
+#ifdef SECPKG_NEGOTIATION_DIRECT
+	    nego_info.NegotiationState == SECPKG_NEGOTIATION_DIRECT ? "direct" :
+#endif
+#ifdef SECPKG_NEGOTIATION_TRY_MULTICRED
+	    nego_info.NegotiationState == SECPKG_NEGOTIATION_TRY_MULTICRED ? "try-multicred" :
+#endif
+	    "?");
+	printf("nego.package.name       = \"%s\"\n",
+		nego_info.PackageInfo->Name);
+    } else if (status != SEC_E_UNSUPPORTED_FUNCTION)
+	errmsg("QueryContextAttributes NEGOTIATION_INFO", status);
 
     status = sspi->QueryContextAttributes(context, SECPKG_ATTR_SIZES, &sizes);
     if (status == SEC_E_OK) {
@@ -108,6 +187,8 @@ void print_context_attrs(CtxtHandle *context)
 		stream_sizes.cbBlockSize);
     } else if (status != SEC_E_UNSUPPORTED_FUNCTION)
 	errmsg("QueryContextAttributes STREAM_SIZES", status);
+
+    printf("\n");
 }
 
 /* Prints information about the credentials */

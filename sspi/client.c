@@ -34,6 +34,7 @@ client(char *target, char *package, ULONG req_flags, int conf_req)
     int msg_len;
 
     /* Acquire credentials */
+    printf("Acquiring default outbound credentials\n");
     status = sspi->AcquireCredentialsHandle(NULL, package,
 	    SECPKG_CRED_OUTBOUND, NULL, NULL, NULL, NULL,
 	    &credentials, &expiry);
@@ -111,24 +112,25 @@ client(char *target, char *package, ULONG req_flags, int conf_req)
 
     printf("Expiry: %s\n", TimeStamp_to_string(&expiry));
     printf("Flags: <%s>\n", flags2str(attr, FLAGS_KIND_RET));
+
     print_context_attrs(&context);
 
     /* Wait for and decode the server message */
 
-    if (!input_encrypted(&context, &msg, &msg_len, &qop))
+    if (!wrap_recv(&context, &msg, &msg_len, &qop))
 	exit(1);
 
     fprintf(stderr, "input qop = 0x%lx\n", qop);
     fprintf(stderr, "Message from server: \"%.*s\"\n", msg_len, msg);
 
-    input_encrypted_free(msg);
+    wrap_recv_free(msg);
 
 
     /* Encrypt and send the client message */
 
     printf("Message to server: \"%s\"\n", client_msg);
 
-    if (!output_encrypted(&context, client_msg, strlen(client_msg), conf_req))
+    if (!wrap_send(&context, client_msg, strlen(client_msg), conf_req))
 	exit(1);
 
     /* Delete the security context */

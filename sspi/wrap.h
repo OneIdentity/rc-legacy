@@ -1,6 +1,6 @@
 #include "wsspi.h"
-int output_encrypted(CtxtHandle *context, const char *msg, int msg_len, 
+int wrap_send(CtxtHandle *context, const char *msg, int msg_len, 
 		int conf_req);
-int input_encrypted(CtxtHandle *context, char **msg_ret, int *msg_len_ret, 
+int wrap_recv(CtxtHandle *context, char **msg_ret, int *msg_len_ret, 
 		ULONG *qop);
-void input_encrypted_free(char *msg);
+void wrap_recv_free(char *msg);

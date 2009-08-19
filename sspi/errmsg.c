@@ -1,6 +1,7 @@
 /* (c) 2009 Quest Software, Inc. All rights reserved */
 
 #include <stdio.h>
+#include <ctype.h>
 #include "wsspi.h"
 #include "errmsg.h"
 
@@ -26,6 +27,16 @@ static struct {
 };
 #define nerrtab (sizeof errtab / sizeof errtab[0])
 
+/* Remove \r and \n from the end of a string */
+static void
+rtrim(char *s)
+{
+    int p = strlen(s);
+    while (p > 0 && isspace(s[p-1]))
+	p--;
+    s[p] = '\0';
+}
+
 /* Prints a windows error code as readable text. */
 void
 errmsg(const char *msg, int status)
@@ -48,8 +59,11 @@ errmsg(const char *msg, int status)
 		  buffer,                       /* lpBuffer */
 		  sizeof buffer,                /* nSize */
 		  0);                           /* Arguments */
+
+    rtrim(buffer);
+
     if (status_name)
-	fprintf(stderr, "%s: %s: %s\n", msg, status_name, buffer);
+	fprintf(stderr, "ERROR: %s: %s: %s.\n", msg, status_name, buffer);
     else
-        fprintf(stderr, "%s: 0x%x: %s\n", msg, status, buffer);
+        fprintf(stderr, "ERROR: %s: 0x%x: %s.\n", msg, status, buffer);
 }

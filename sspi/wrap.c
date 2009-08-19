@@ -1,8 +1,4 @@
 /* (c) 2009 Quest Software, Inc. All rights reserved */
-/*
- * Companion program to gss-client/gss-server, but using the Windows SSPI interface.
- * David Leonard, 2009.
- */
 
 #include <stdio.h>
 #include "common.h"
@@ -11,8 +7,11 @@
 #include "wrap.h"
 #include "userio.h"
 
+/*
+ * Encrypts a message and then sends it to the output
+ */
 int
-output_encrypted(CtxtHandle *context, const char *msg, int msg_len, 
+wrap_send(CtxtHandle *context, const char *msg, int msg_len, 
 		int conf_req)
 {
     SecPkgContext_Sizes sizes;
@@ -65,12 +64,12 @@ output_encrypted(CtxtHandle *context, const char *msg, int msg_len,
 }
 
 /*
- * Inputs a token, and decrypts its.
+ * Receives an input token, and then decrypts it.
  * Returns 1 on success, or 0 on failure.
- * On success, the msg_ret must be freed with input_encrypted_free().
+ * On success, the decrypted pointer must be freed with wrap_recv_free().
  */
 int
-input_encrypted(CtxtHandle *context, char **msg_ret, int *msg_len_ret, 
+wrap_recv(CtxtHandle *context, char **msg_ret, int *msg_len_ret, 
 		ULONG *qop)
 {
     SecBufferDesc inputdesc;
@@ -103,7 +102,7 @@ input_encrypted(CtxtHandle *context, char **msg_ret, int *msg_len_ret,
 }
 
 void
-input_encrypted_free(char *msg)
+wrap_recv_free(char *msg)
 {
     SECURITY_STATUS status;
 

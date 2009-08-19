@@ -18,20 +18,20 @@ static const char server_msg[] = "I am the SSPI server";
 
 /* Do something interesting with a context containing delegation */
 static void
-delegated(CtxtHandle *context, const char *package)
+delegated(CtxtHandle *context, char *package)
 {
     SECURITY_STATUS status;
     CredHandle credentials;
     TimeStamp expiry;
 
+    printf(">> Impersonating delegated context\n");
     status = ImpersonateSecurityContext(context);
     if (status != SEC_E_OK) {
 	errmsg("ImpersonateSecurityContext", status);
 	return;
     }
 
-    printf(">> Impersonated delegated user\n");
-    printf(">> Acquiring default credentials\n");
+    printf(">> Acquiring delegated credentials\n");
 
     /* Acquire credentials */
     status = sspi->AcquireCredentialsHandle(NULL, package,
@@ -44,7 +44,6 @@ delegated(CtxtHandle *context, const char *package)
 	print_cred_attrs(&credentials);
 	printf(">> Expiry: %s\n", TimeStamp_to_string(&expiry));
 
-	printf(">> Destroying creds acquired by delegation\n");
 	status = sspi->FreeCredentialsHandle(&credentials);
 	if (status != SEC_E_OK)
 	    errmsg("FreeCredentialsHandle", status);
@@ -82,6 +81,7 @@ server(char *package, int req_flags, int conf_req)
 	print_self_info();
 
     /* Acquire credentials */
+    printf("Acquiring default inbound credentials\n");
     status = sspi->AcquireCredentialsHandle(NULL, package,
 	    SECPKG_CRED_INBOUND, NULL, NULL, NULL, NULL,
 	    &credentials, &expiry);
@@ -180,17 +180,17 @@ server(char *package, int req_flags, int conf_req)
 
     printf("Message to client: \"%s\"\n", server_msg);
 
-    output_encrypted(&context, server_msg, strlen(server_msg), conf_req);
+    wrap_send(&context, server_msg, strlen(server_msg), conf_req);
 
     /* Wait for and decode the client message */
 
-    if (!input_encrypted(&context, &msg, &msg_len, &qop))
+    if (!wrap_recv(&context, &msg, &msg_len, &qop))
 	exit(1);
 
     fprintf(stderr, "input qop = 0x%lx\n", qop);
     fprintf(stderr, "Message from server: \"%.*s\"\n",  msg_len, msg);
 
-    input_encrypted_free(msg);
+    wrap_recv_free(msg);
 
 
     /* Delete the security context */
