@@ -13,6 +13,7 @@
 #include "common.h"
 #include "wrap.h"
 #include "deleg.h"
+#include "version.h"
 
 static const char server_msg[] = "I am the SSPI server";
 
@@ -254,8 +255,10 @@ main(int argc, char **argv)
     if (error) {
 	fprintf(stderr, "usage: %s -l\n"
 		        "       %s [-c] [-f flags] [-p pkg] [target]\n"
-			"Available flags: %s\n",
-			argv[0], argv[0], flags_all(FLAGS_KIND_REQ));
+			"Available flags: %s\n"
+			"Version %s\n",
+			argv[0], argv[0], flags_all(FLAGS_KIND_REQ),
+			version);
 	exit(1);
     }
 

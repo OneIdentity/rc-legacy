@@ -12,6 +12,7 @@
 #include "flags.h"
 #include "common.h"
 #include "wrap.h"
+#include "version.h"
 
 static const char client_msg[] = "I am the SSPI client";
 
@@ -197,8 +198,11 @@ main(int argc, char **argv)
 	fprintf(stderr, "usage: %s -l\n"
 		        "       %s [-c] [-f flags] [-p pkg] "
 		                "[target [initiator]]\n"
-			"Available flags: %s\n",
-			argv[0], argv[0], flags_all(FLAGS_KIND_REQ));
+			"Available flags: %s\n"
+			"Version %s\n",
+			argv[0], argv[0], 
+			flags_all(FLAGS_KIND_REQ),
+			version);
 	exit(1);
     }
 
