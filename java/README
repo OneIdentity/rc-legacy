@@ -12,9 +12,8 @@ INSTRUCTIONS
   below, you can then run them either with Sun's built-in GSSAPI or with
   Quest Software's VSJ (Vintela Single Sign-on for Java).
 
-  These instructions assume you are using the host 
-  "slc4rsvgh1.prod.quest.corp" as a server, which is
-  joined to the PROD.QUEST.CORP realm.
+  These instructions assume you are using the host "server.example.com" 
+  as a server.
 
   The client assumes you have a valid credential cache with a TGT,
   while the server assumes you have read access to a keytab with
@@ -51,7 +50,17 @@ Using SUN's GSSAPI provider
   Sun's GSSAPI provider comes built-in with most JREs, so this needs no other
   configuration except for the editing of the jaas-krb5.conf file.
   In it you will need to modify the principal and keyTab parameters 
-  to match your server.
+  to match your server:
+
+        com.sun.security.jgss.accept  {
+          com.sun.security.auth.module.Krb5LoginModule required
+          storeKey=true
+          principal="host/server.example.com@EXAMPLE.COM"
+          useKeyTab=true
+          keyTab="./host.keytab"
+          debug=true
+          ;
+        };
 
   Run the server with:
     $ java \
@@ -65,7 +74,7 @@ Using SUN's GSSAPI provider
         -Djava.security.auth.login.config=jaas-krb5.conf \
         -Djavax.security.auth.useSubjectCredsOnly=false \
         -cp target/\* \
-        Client host/slc4rsvgh1.prod.quest.corp
+        Client host/server.example.com
 
   Cut and paste the BASE-64 encoded tokens complete with trailing period '.'
   between the two programs. Note that sometimes a program may send two
@@ -117,7 +126,7 @@ Using VSJ's GSSAPI provider
     $ java \
         -cp vsj/\*:target/\* \
         -Djava.security.properties=./vsj.security \
-        -Djcsi.kerberos.principal=host/slc4rsvgh1.prod.quest.corp \
+        -Djcsi.kerberos.principal=host/server.example.com \
         -Djcsi.kerberos.keytab=./host.keytab \
         Server
 
@@ -125,7 +134,7 @@ Using VSJ's GSSAPI provider
     $ java \
         -cp vsj/\*:target/\* \
         -Djava.security.properties=./vsj.security \
-        Client host/slc4rsvgh1.prod.quest.corp
+        Client host/server.example.com
 
 DEBUGGING
 
