@@ -33,15 +33,6 @@ Requirements
 
   Windows XP SP2 or later.
 
-GSSAPI interoperability 
-
-  If you are testing GSSAPI interoperability with Java or Unix (see parent
-  directory), then you should specify the "-f conf" flag to the windows 
-  client or server or you will see an error about bad sequence numbers.
-
-  Note that a GSSAPI server accepts delegated credentials automatically,
-  but the Windows SSPI server process must be given "-f deleg" explicitly.
-
 Example
 
   1. Start two console windows: 
@@ -106,7 +97,31 @@ Command line options
 
   The -l option lists the available security packages then exits. Please
   see the MSDN documentation on the SecPkgInfo structure for the meaning of
-  the attributes displayed.
+  the attributes displayed.  
+
+GSSAPI interoperability 
+
+  If you are testing GSSAPI interoperability with Java or Unix (see parent
+  directory), then you should specify the "-f conf" flag to the windows 
+  client or server or you will see an error about bad sequence numbers.
+
+  Note that a GSSAPI server accepts delegated credentials automatically,
+  but the Windows SSPI server process must be given "-f deleg" explicitly.
+
+  If you want to run the server as the host/ computer account, you must
+  run it as SYSTEM. Unfortunately, RUNAS is unable to do this, but you
+  can obtain a command shell via the Scheduler service. For example:
+
+        C:\>time /t
+        09:46 AM
+
+        C:\>at 09:47 /interactive cmd.exe
+        Added a new job with job ID = 1
+
+  After a moment, you should see a command window running as SYSTEM. You can
+  verify this by running the WHOAMI command in it. Note that using the AT
+  command requires local Administrator rights, and the Scheduler service
+  must be running.
 
 Related software
 
