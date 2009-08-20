@@ -1,6 +1,6 @@
 CC = gcc
 RM = del
-LDFLAGS = -lsecur32
+LDFLAGS = -lsecur32 -ladvapi32
 CFLAGS = -I.. -DWINVER=0x500 -Wall
 
 COMMON_OBJS = base64.o getopt.o clipboard.o errmsg.o userio.o

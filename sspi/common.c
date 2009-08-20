@@ -11,6 +11,13 @@
 
 PSecurityFunctionTable sspi;
 
+/* Guarantees a string is not NULL by replacing NULL with "(null)" */
+static const char *
+protect_null(char *s)
+{
+    return s ? s : "(null)";
+}
+
 /* Lists the SSPI security packages available */
 void
 list_pkgs()
@@ -105,6 +112,7 @@ print_context_attrs(CtxtHandle *context)
     SecPkgContext_Lifespan life_span;
     SecPkgContext_PackageInfo pkg_info;
     SecPkgContext_NegotiationInfo nego_info;
+    SecPkgContext_NativeNames native_names;
     SECURITY_STATUS status;
 
     printf("Context attributes:\n");
@@ -148,14 +156,19 @@ print_context_attrs(CtxtHandle *context)
     status = sspi->QueryContextAttributes(context, SECPKG_ATTR_NEGOTIATION_INFO, &nego_info);
     if (status == SEC_E_OK) {
 	printf("nego.package.state      = %s\n",
-	    nego_info.NegotiationState == SECPKG_NEGOTIATION_COMPLETE ? "complete" :
-	    nego_info.NegotiationState == SECPKG_NEGOTIATION_OPTIMISTIC ? "optimistic" :
-	    nego_info.NegotiationState == SECPKG_NEGOTIATION_IN_PROGRESS ? "in-progress" :
+	    nego_info.NegotiationState == SECPKG_NEGOTIATION_COMPLETE ? 
+	    					"complete" :
+	    nego_info.NegotiationState == SECPKG_NEGOTIATION_OPTIMISTIC ? 
+	    					"optimistic" :
+	    nego_info.NegotiationState == SECPKG_NEGOTIATION_IN_PROGRESS ? 
+	    					"in-progress" :
 #ifdef SECPKG_NEGOTIATION_DIRECT
-	    nego_info.NegotiationState == SECPKG_NEGOTIATION_DIRECT ? "direct" :
+	    nego_info.NegotiationState == SECPKG_NEGOTIATION_DIRECT ? 
+	    					"direct" :
 #endif
 #ifdef SECPKG_NEGOTIATION_TRY_MULTICRED
-	    nego_info.NegotiationState == SECPKG_NEGOTIATION_TRY_MULTICRED ? "try-multicred" :
+	    nego_info.NegotiationState == SECPKG_NEGOTIATION_TRY_MULTICRED ? 
+	    					"try-multicred" :
 #endif
 	    "?");
 	printf("nego.package.name       = \"%s\"\n",
@@ -188,6 +201,16 @@ print_context_attrs(CtxtHandle *context)
     } else if (status != SEC_E_UNSUPPORTED_FUNCTION)
 	errmsg("QueryContextAttributes STREAM_SIZES", status);
 
+    status = sspi->QueryContextAttributes(context, SECPKG_ATTR_NATIVE_NAMES, 
+	   &native_names);
+    if (status == SEC_E_OK) {
+	printf("native_names.client     = %s\n",
+		protect_null(native_names.sClientName));
+	printf("native_names.server     = %s\n",
+		protect_null(native_names.sServerName));
+    } else if (status != SEC_E_UNSUPPORTED_FUNCTION)
+	errmsg("QueryContextAttributes NATIVE_NAMES", status);
+
     printf("\n");
 }
 
@@ -206,3 +229,12 @@ print_cred_attrs(CredHandle *credentials)
 	printf("credential.userName: %s\n", names.sUserName);
 }
 
+/* Converts principals called "NULL" into the NULL pointer */
+char *
+null_principal(char *principal)
+{
+    if (!principal || strcmp(principal, "NULL") == 0)
+	return NULL;
+    else
+	return principal;
+}

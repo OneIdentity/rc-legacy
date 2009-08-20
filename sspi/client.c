@@ -34,11 +34,10 @@ client(char *target, char *package, char *principal, ULONG req_flags, int conf_r
     int msg_len;
 
     /* Acquire credentials */
-    printf("Acquiring default outbound credentials for %s\n",
-	    principal ? principal : "NULL (default)");
-    status = sspi->AcquireCredentialsHandle(NULL, package,
-	    SECPKG_CRED_OUTBOUND, NULL, NULL, NULL, NULL,
-	    &credentials, &expiry);
+    printf("Acquiring outbound credentials for %s\n", principal);
+    status = sspi->AcquireCredentialsHandle(null_principal(principal),
+	package, SECPKG_CRED_OUTBOUND, NULL, NULL, NULL, NULL,
+	&credentials, &expiry);
     if (status != SEC_E_OK) {
 	errmsg("AcquireCredentialsHandle", status);
 	exit(1);
@@ -46,6 +45,8 @@ client(char *target, char *package, char *principal, ULONG req_flags, int conf_r
 
     /* Display whose credentials we got */
     print_cred_attrs(&credentials);
+
+    printf("Initializing context for %s\n", target);
 
     input = NULL;
     initial = 1;
@@ -62,7 +63,7 @@ client(char *target, char *package, char *principal, ULONG req_flags, int conf_r
         status = sspi->InitializeSecurityContext(
                 &credentials,			/* phCredential */
                 initial ? NULL : &context,	/* phContext */
-                target,				/* pszTargetName */
+                null_principal(target),		/* pszTargetName */
                 ISC_REQ_ALLOCATE_MEMORY |	/* fContextReq */
 		req_flags,
                 0,				/* Reserved1 */
@@ -156,8 +157,8 @@ main(int argc, char **argv)
     int ch;
     int error = 0;
     char *package = "Negotiate";
-    char *target = NULL;
-    char *principal = NULL;
+    char *target = "NULL";
+    char *principal = "NULL";
     int lflag = 0;
     ULONG req_flags = 0;
     int conf_req = 0;
@@ -194,7 +195,8 @@ main(int argc, char **argv)
     /* Display usage if there was an error in the arguments */
     if (error) {
 	fprintf(stderr, "usage: %s -l\n"
-		        "       %s [-c] [-f flags] [-p pkg] target [principal]\n"
+		        "       %s [-c] [-f flags] [-p pkg] "
+		                "[target [initiator]]\n"
 			"Available flags: %s\n",
 			argv[0], argv[0], flags_all(FLAGS_KIND_REQ));
 	exit(1);

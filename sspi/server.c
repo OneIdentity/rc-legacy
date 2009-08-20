@@ -81,12 +81,11 @@ server(char *package, char *principal, int req_flags, int conf_req)
 	print_self_info();
 
     /* Acquire credentials */
-    printf("Acquiring inbound credentials for %s\n",
-	    principal ? principal : "NULL (default)");
+    printf("Acquiring inbound credentials for %s\n", principal);
 
-    status = sspi->AcquireCredentialsHandle(principal, package,
-	    SECPKG_CRED_INBOUND, NULL, NULL, NULL, NULL,
-	    &credentials, &expiry);
+    status = sspi->AcquireCredentialsHandle(null_principal(principal),
+	package, SECPKG_CRED_INBOUND, NULL, NULL, NULL, NULL,
+        &credentials, &expiry);
     if (status != SEC_E_OK) {
 	errmsg("AcquireCredentialsHandle", status);
 	exit(1);
@@ -219,7 +218,7 @@ main(int argc, char **argv)
     int ch;
     int error = 0;
     char *package = "Negotiate";
-    char *principal = NULL;
+    char *principal = "NULL";
     int lflag = 0;
     ULONG req_flags = 0;
     int conf_req = 0;
@@ -254,7 +253,7 @@ main(int argc, char **argv)
     /* Display usage if there was an error in the arguments */
     if (error) {
 	fprintf(stderr, "usage: %s -l\n"
-		        "       %s [-c] [-f flags] [-p pkg] [principal]\n"
+		        "       %s [-c] [-f flags] [-p pkg] [target]\n"
 			"Available flags: %s\n",
 			argv[0], argv[0], flags_all(FLAGS_KIND_REQ));
 	exit(1);

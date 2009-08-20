@@ -64,6 +64,9 @@ print_sid_attrs(DWORD attrs)
 static void
 print_sid(SID *sid)
 {
+    TCHAR *sidstr;
+
+#if 0
     TCHAR name[1024], domain[1024];
     DWORD name_sz = sizeof name;
     DWORD domain_sz = sizeof domain;
@@ -72,19 +75,21 @@ print_sid(SID *sid)
 
     if (!LookupAccountSid(NULL, sid, name, &name_sz,
 	    domain, &domain_sz, &use))
+    {
 	printf("%s\\%s(%s)", domain, name, use_to_string(use));
-    else {
-	TCHAR *sidstr;
-	if ((error = GetLastError()) != ERROR_NONE_MAPPED &&
-	    error != ERROR_IO_PENDING /* !!!??? */)
-	    errmsg("LookupAccountSid", error);
-	if (!ConvertSidToStringSid(sid, &sidstr)) {
-	    errmsg("ConvertSidToStringSid", GetLastError());
-	} else {
-	    printf("%s", sidstr);
-	    LocalFree(sidstr);
-	}
+        return;
     }
+
+    if ((error = GetLastError()) != ERROR_NONE_MAPPED
+	&& error != ERROR_IO_PENDING /* !!!??? */)
+	errmsg("LookupAccountSid", error);
+#endif
+
+    if (ConvertSidToStringSid(sid, &sidstr)) {
+	printf("%s", sidstr);
+	LocalFree(sidstr);
+    } else
+	errmsg("ConvertSidToStringSid", GetLastError());
 }
 
 /* Prints an indented array of SIDs and their attributes */
@@ -129,7 +134,7 @@ print_token_info(HANDLE token_handle)
 
     if (GetTokenInformation(token_handle, TokenSource, &u.token_source, 
 		sizeof u, &len))
-	printf("  source.name = %.*s\n", 
+	printf("  token.source.name = %.*s\n", 
 		sizeof u.token_source.SourceName,
 		u.token_source.SourceName);
     else
@@ -146,7 +151,7 @@ print_token_info(HANDLE token_handle)
 	if (GetTokenInformation(token_handle, TokenGroups, 
 		    token_groups, len, &len))
 	{
-	    printf("  groups = ");
+	    printf("  token.groups = ");
 	    print_sidattrs("  ", token_groups->GroupCount, 
 		    token_groups->Groups);
 	    printf("\n");
@@ -158,7 +163,7 @@ print_token_info(HANDLE token_handle)
     len = 0;
     if (GetTokenInformation(token_handle, TokenImpersonationLevel, 
 		&u.imp_level, sizeof u.imp_level, &len))
-	printf("  impersonation_level = %s\n",
+	printf("  token.impersonation_level = %s\n",
 		u.imp_level == SecurityAnonymous ? "anonymous" :
 		u.imp_level == SecurityIdentification ? "identification" :
 		u.imp_level == SecurityImpersonation ? "impersonation" :
@@ -170,7 +175,7 @@ print_token_info(HANDLE token_handle)
     if (GetTokenInformation(token_handle, TokenOwner, 
 		&u.token_owner, sizeof u, &len))
     {
-	printf("  owner = ");
+	printf("  token.owner = ");
 	print_sid(u.token_owner.Owner);
 	printf("\n");
     } else
