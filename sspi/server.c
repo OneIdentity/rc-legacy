@@ -144,10 +144,10 @@ server(char *package, char *principal, int req_flags, int conf_req)
                 &credentials,			/* phCredential */
                 initial ? NULL : &context,	/* phContext */
                 input,				/* pInput */
-                ISC_REQ_ALLOCATE_MEMORY |	/* fContextReq */
+                ASC_REQ_ALLOCATE_MEMORY |	/* fContextReq */
 		req_flags,
                 SECURITY_NATIVE_DREP,		/* TargetDataRep */
-                initial ? &context : NULL,	/* phNewContext */
+                &context,			/* phNewContext */
                 &output,			/* pOutput */
                 &attr,				/* pContextAttr */
                 &expiry);			/* ptsExpiry */
@@ -170,8 +170,10 @@ server(char *package, char *principal, int req_flags, int conf_req)
 	if (status == SEC_I_COMPLETE_AND_CONTINUE ||
 	    status == SEC_I_COMPLETE_NEEDED) {
 		complete_status = sspi->CompleteAuthToken(&context, &output);
-		if (complete_status != SEC_E_OK)
+		if (complete_status != SEC_E_OK) {
 		    errmsg("CompleteAuthToken", complete_status);
+		    exit(1);
+		}
 	}
 
         if (output.cBuffers && buffers[0].pvBuffer) {

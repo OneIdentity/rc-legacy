@@ -71,7 +71,7 @@ client(char *target, char *package, char *principal, ULONG req_flags, int conf_r
                 SECURITY_NATIVE_DREP,		/* TargetDataRep */
                 input,				/* pInput */
                 0,				/* Reserved2 */
-                initial ? &context : NULL,	/* phNewContext */
+                &context,			/* phNewContext */
                 &output,			/* pOutput */
                 &attr,				/* pContextAttr */
                 &expiry);			/* ptsExpiry */
