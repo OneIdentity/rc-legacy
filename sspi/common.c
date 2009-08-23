@@ -95,7 +95,7 @@ TimeStamp_to_string(TimeStamp *ts)
     static char buf[1024];
 
     FileTimeToSystemTime((FILETIME *)ts, &st);
-    snprintf(buf, sizeof buf, "%05u-%02u-%02u %02u:%02u:%02u.%03u",
+    snprintf(buf, sizeof buf, "%5u-%02u-%02u %02u:%02u:%02u.%03u",
 	    st.wYear, st.wMonth, st.wDay,
 	    st.wHour, st.wMinute, st.wSecond, st.wMilliseconds);
     return buf;
@@ -120,42 +120,45 @@ print_context_attrs(CtxtHandle *context)
     status = sspi->QueryContextAttributes(context, SECPKG_ATTR_AUTHORITY, 
 	   &authority);
     if (status == SEC_E_OK)
-	printf("authority.name          = %s\n", authority.sAuthorityName);
+	printf(" authority.name          = %s\n", authority.sAuthorityName);
     else if (status != SEC_E_UNSUPPORTED_FUNCTION)
 	errmsg("QueryContextAttributes AUTHORITY", status);
 
     status = sspi->QueryContextAttributes(context, SECPKG_ATTR_KEY_INFO, 
 	   &key_info);
     if (status == SEC_E_OK) {
-	printf("key_info.sig_algorithm  = \"%s\"\n",
-		key_info.sSignatureAlgorithmName);
-	printf("key_info.enc_algorithm  = \"%s\"\n",
-		key_info.sEncryptAlgorithmName);
-	printf("key_info.key_size       = %ld bits\n", key_info.KeySize);
+	printf(" key_info.sig_algorithm  = \"%s\"\n",
+		protect_null(key_info.sSignatureAlgorithmName));
+	printf(" key_info.enc_algorithm  = \"%s\"\n",
+		protect_null(key_info.sEncryptAlgorithmName));
+	printf(" key_info.key_size       = %ld bits\n", key_info.KeySize);
     } else if (status != SEC_E_UNSUPPORTED_FUNCTION)
 	errmsg("QueryContextAttributes KEY_INFO", status);
 
     status = sspi->QueryContextAttributes(context, SECPKG_ATTR_LIFESPAN, 
 	   &life_span);
     if (status == SEC_E_OK) {
-	printf("life_span.start         = %s\n",
+	printf(" life_span.start         = %s\n",
 		TimeStamp_to_string(&life_span.tsStart));
-	printf("life_span.expiry        = %s\n",
+	printf(" life_span.expiry        = %s\n",
 		TimeStamp_to_string(&life_span.tsExpiry));
     } else if (status != SEC_E_UNSUPPORTED_FUNCTION)
 	errmsg("QueryContextAttributes LIFESPAN", status);
 
     status = sspi->QueryContextAttributes(context, SECPKG_ATTR_PACKAGE_INFO, 
 	   &pkg_info);
-    if (status == SEC_E_OK)
-	printf("package.name            = \"%s\"\n",
-		pkg_info.PackageInfo->Name);
-    else if (status != SEC_E_UNSUPPORTED_FUNCTION)
+    if (status == SEC_E_OK) {
+	printf(" package_info            = ");
+	print_package_info(pkg_info.PackageInfo);
+	status = FreeContextBuffer(pkg_info.PackageInfo);
+	if (status != SEC_E_OK)
+	    errmsg("FreeContextBuffer NEGOTIATION_INFO", status);
+    } else if (status != SEC_E_UNSUPPORTED_FUNCTION)
 	errmsg("QueryContextAttributes PACKAGE_INFO", status);
 
     status = sspi->QueryContextAttributes(context, SECPKG_ATTR_NEGOTIATION_INFO, &nego_info);
     if (status == SEC_E_OK) {
-	printf("nego.package.state      = %s\n",
+	printf(" nego.package.state      = %s\n",
 	    nego_info.NegotiationState == SECPKG_NEGOTIATION_COMPLETE ? 
 	    					"complete" :
 	    nego_info.NegotiationState == SECPKG_NEGOTIATION_OPTIMISTIC ? 
@@ -171,32 +174,36 @@ print_context_attrs(CtxtHandle *context)
 	    					"try-multicred" :
 #endif
 	    "?");
-	printf("nego.package.name       = \"%s\"\n",
+	printf(" nego.package.name       = \"%s\"\n",
 		nego_info.PackageInfo->Name);
+
+	status = sspi->FreeContextBuffer(nego_info.PackageInfo);
+	if (status != SEC_E_OK)
+	    errmsg("FreeContextBuffer NEGOTIATION_INFO", status);
     } else if (status != SEC_E_UNSUPPORTED_FUNCTION)
 	errmsg("QueryContextAttributes NEGOTIATION_INFO", status);
 
     status = sspi->QueryContextAttributes(context, SECPKG_ATTR_SIZES, &sizes);
     if (status == SEC_E_OK) {
-	printf("sizes.cbMaxToken        = %10ld\n", sizes.cbMaxToken);
-	printf("sizes.cbMaxSignature    = %10ld\n", sizes.cbMaxSignature);
-	printf("sizes.cbBlockSize       = %10ld\n", sizes.cbBlockSize);
-	printf("sizes.cbSecurityTrailer = %10ld\n", sizes.cbSecurityTrailer);
+	printf(" sizes.cbMaxToken        = %10ld\n", sizes.cbMaxToken);
+	printf(" sizes.cbMaxSignature    = %10ld\n", sizes.cbMaxSignature);
+	printf(" sizes.cbBlockSize       = %10ld\n", sizes.cbBlockSize);
+	printf(" sizes.cbSecurityTrailer = %10ld\n", sizes.cbSecurityTrailer);
     } else if (status != SEC_E_UNSUPPORTED_FUNCTION)
 	errmsg("QueryContextAttributes SIZES", status);
 
     status = sspi->QueryContextAttributes(context, SECPKG_ATTR_STREAM_SIZES, 
 	    &stream_sizes);
     if (status == SEC_E_OK) {
-	printf("stream_sizes.cbHeader   = %10ld\n", 
+	printf(" stream_sizes.cbHeader   = %10ld\n", 
 		stream_sizes.cbHeader);
-	printf("stream_sizes.cbTrailer  = %10ld\n", 
+	printf(" stream_sizes.cbTrailer  = %10ld\n", 
 		stream_sizes.cbTrailer);
-/*	printf("stream_sizes.cbMaximumMessage = %10ld\n", 
+/*	printf(" stream_sizes.cbMaximumMessage = %10ld\n", 
 		stream_sizes.cbMaximumMessage);
-	printf("stream_sizes.cbBuffers  = %10ld\n", 
+	printf(" stream_sizes.cbBuffers  = %10ld\n", 
 		stream_sizes.cbBuffers);
-*/	printf("stream_sizes.cbBlockSize= %10ld\n", 
+*/	printf(" stream_sizes.cbBlockSize= %10ld\n", 
 		stream_sizes.cbBlockSize);
     } else if (status != SEC_E_UNSUPPORTED_FUNCTION)
 	errmsg("QueryContextAttributes STREAM_SIZES", status);
@@ -204,10 +211,16 @@ print_context_attrs(CtxtHandle *context)
     status = sspi->QueryContextAttributes(context, SECPKG_ATTR_NATIVE_NAMES, 
 	   &native_names);
     if (status == SEC_E_OK) {
-	printf("native_names.client     = %s\n",
+	printf(" native_names.client     = %s\n",
 		protect_null(native_names.sClientName));
-	printf("native_names.server     = %s\n",
+	printf(" native_names.server     = %s\n",
 		protect_null(native_names.sServerName));
+	status = sspi->FreeContextBuffer(native_names.sClientName);
+	if (status != SEC_E_OK)
+	    errmsg("FreeContextBuffer sClientName", status);
+	status = sspi->FreeContextBuffer(native_names.sServerName);
+	if (status != SEC_E_OK)
+	    errmsg("FreeContextBuffer sServerName", status);
     } else if (status != SEC_E_UNSUPPORTED_FUNCTION)
 	errmsg("QueryContextAttributes NATIVE_NAMES", status);
 
