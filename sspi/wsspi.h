@@ -10,6 +10,10 @@
 # define ISC_RET_DELEGATE 0x1
 #endif
 
+#ifndef ASC_RET_DELEGATE
+# define ASC_RET_DELEGATE 0x1
+#endif
+
 #ifndef ISC_RET_MUTUAL_AUTH
 # define ISC_RET_MUTUAL_AUTH 0x2
 #endif

@@ -19,11 +19,25 @@ static const char server_msg[] = "I am the SSPI server";
 
 /* Do something interesting with a context containing delegation */
 static void
-delegated(CtxtHandle *context, char *package)
+delegated(CtxtHandle *context)
 {
     SECURITY_STATUS status;
+    SECURITY_STATUS ac_status;
     CredHandle credentials;
     TimeStamp expiry;
+    SecPkgContext_PackageInfo pkg_info;
+    char *package;
+
+    printf("Credentials were delegated\n");
+
+    status = sspi->QueryContextAttributes(context, SECPKG_ATTR_PACKAGE_INFO, 
+	   &pkg_info);
+    if (status != SEC_E_OK) {
+	errmsg("QueryContextAttributes PACKAGE_INFO", status);
+	return;
+    }
+
+    package = (char *)pkg_info.PackageInfo->Name;
 
     printf(">> Impersonating delegated context\n");
     status = ImpersonateSecurityContext(context);
@@ -32,19 +46,31 @@ delegated(CtxtHandle *context, char *package)
 	return;
     }
 
-    printf(">> Acquiring delegated credentials\n");
+    printf(">> Acquiring delegated credentials, package=%s\n", package);
 
     /* Acquire credentials */
-    status = sspi->AcquireCredentialsHandle(NULL, package,
-	    SECPKG_CRED_OUTBOUND, NULL, NULL, NULL, NULL,
-	    &credentials, &expiry);
-    if (status != SEC_E_OK) {
-	errmsg("AcquireCredentialsHandle", status);
+    ac_status = sspi->AcquireCredentialsHandle(
+	    NULL, 				/* pszPrincipal */
+	    package,				/* pszPackage */
+	    SECPKG_CRED_OUTBOUND, 		/* fCredentialUse */
+	    NULL, 				/* pvLogonID */
+	    NULL, 				/* pAuthData */
+	    NULL, 				/* pGetKeyFn */
+	    NULL,				/* pvGetKeyArgument */
+	    &credentials, 			/* phCredential */
+	    &expiry);				/* ptsExpiry */
+
+    if (ac_status != SEC_E_OK) {
+	errmsg("AcquireCredentialsHandle", ac_status);
     } else {
 
+	printf(">> Acquired delegated credentials!\n");
+
 	print_cred_attrs(&credentials);
+
 	printf(">> Expiry: %s\n", TimeStamp_to_string(&expiry));
 
+	printf(">> Freeing delegated credentials\n");
 	status = sspi->FreeCredentialsHandle(&credentials);
 	if (status != SEC_E_OK)
 	    errmsg("FreeCredentialsHandle", status);
@@ -56,6 +82,7 @@ delegated(CtxtHandle *context, char *package)
 	errmsg("RevertSecurityContext", status);
 	exit(1);
     }
+
 } 
 
 static void
@@ -76,7 +103,7 @@ server(char *package, char *principal, int req_flags, int conf_req)
     ULONG qop;
     int msg_len;
     char *msg;
-    HANDLE deleg_token = INVALID_HANDLE_VALUE;
+    //HANDLE deleg_token = INVALID_HANDLE_VALUE;
 
     if (req_flags & ASC_REQ_DELEGATE)
 	print_self_info();
@@ -164,6 +191,10 @@ server(char *package, char *principal, int req_flags, int conf_req)
     printf("Flags: <%s>\n", flags2str(attr, FLAGS_KIND_RET));
     print_context_attrs(&context);
 
+    if (attr & ASC_RET_DELEGATE)
+	delegated(&context);
+
+#if 0
     /* Attempt to fetch any delegated credential */
     // Argh another broken bit in mingw's <sspi.h>
     // status = sspi->QuerySecurityContextToken(&context, &deleg_token);
@@ -177,6 +208,7 @@ server(char *package, char *principal, int req_flags, int conf_req)
 
     } else 
 	errmsg("QuerySecurityContextToken", status);
+#endif
 
     /* Encrypt and send the server message */
 
