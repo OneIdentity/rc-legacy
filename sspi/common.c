@@ -95,9 +95,10 @@ TimeStamp_to_string(TimeStamp *ts)
     static char buf[1024];
 
     FileTimeToSystemTime((FILETIME *)ts, &st);
-    snprintf(buf, sizeof buf, "%5u-%02u-%02u %02u:%02u:%02u.%03u",
+    snprintf(buf, sizeof buf, "%5u-%02u-%02u %02u:%02u:%02u.%03u (%08lx:%08lx)",
 	    st.wYear, st.wMonth, st.wDay,
-	    st.wHour, st.wMinute, st.wSecond, st.wMilliseconds);
+	    st.wHour, st.wMinute, st.wSecond, st.wMilliseconds,
+	    ts->HighPart, ts->LowPart);
     return buf;
 }
 

@@ -24,7 +24,7 @@ delegated(CtxtHandle *context)
     SECURITY_STATUS status;
     SECURITY_STATUS ac_status;
     CredHandle credentials;
-    TimeStamp expiry;
+    TimeStamp expiry = { 0, 0 };
     SecPkgContext_PackageInfo pkg_info;
     char *package;
 
@@ -89,7 +89,7 @@ static void
 server(char *package, char *principal, int req_flags, int conf_req)
 {
     CredHandle credentials;
-    TimeStamp expiry;
+    TimeStamp expiry = { 0, 0 };
     CtxtHandle context;
     SecBufferDesc output;
     SecBufferDesc *input, inputdesc;
