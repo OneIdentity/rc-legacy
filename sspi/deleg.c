@@ -66,24 +66,25 @@ print_sid(SID *sid)
 {
     TCHAR *sidstr;
 
-#if 0
-    TCHAR name[1024], domain[1024];
-    DWORD name_sz = sizeof name;
-    DWORD domain_sz = sizeof domain;
-    SID_NAME_USE use;
-    DWORD error;
+    if (0) {
+	    TCHAR name[1024], domain[1024];
+	    DWORD name_sz = sizeof name;
+	    DWORD domain_sz = sizeof domain;
+	    SID_NAME_USE use;
+	    DWORD error;
 
-    if (!LookupAccountSid(NULL, sid, name, &name_sz,
-	    domain, &domain_sz, &use))
-    {
-	printf("%s\\%s(%s)", domain, name, use_to_string(use));
-        return;
+	    /* This call takes time and generally doesn't work!! */
+	    if (!LookupAccountSid(NULL, sid, name, &name_sz,
+		    domain, &domain_sz, &use))
+	    {
+		printf("%s\\%s(%s)", domain, name, use_to_string(use));
+		return;
+	    }
+
+	    error = GetLastError();
+	    if (error != ERROR_NONE_MAPPED)
+		errmsg("LookupAccountSid", error);
     }
-
-    if ((error = GetLastError()) != ERROR_NONE_MAPPED
-	&& error != ERROR_IO_PENDING /* !!!??? */)
-	errmsg("LookupAccountSid", error);
-#endif
 
     if (ConvertSidToStringSid(sid, &sidstr)) {
 	printf("%s", sidstr);
