@@ -46,7 +46,15 @@ gss_client_LDFLAGS =	@GSS_LIBS@
 gss_client_LDADD =	libauthtest.a
 
 EXTRA_DIST =		LICENCE pp authtest.pp
-EXTRA_DIST +=		kuserok.1 gss-server.1 gss-client.1 pamtest.1 lamtest.1
+EXTRA_DIST +=		kuserok.1 pamtest.1 lamtest.1
+EXTRA_DIST +=		gss-client.1 gss-server.1 gss-dump.1
+
+bin_SCRIPTS =		gss-dump
+EXTRA_DIST +=		gss-dump.sh
+CLEANFILES  =		gss-dump
+gss-dump: $(srcdir)/gss-dump.sh
+	cp $(srcdir)/gss-dump.sh $@
+	chmod +x $@
 
 if HAVE_JAVAC
 javagss_src =		java/src/main/java

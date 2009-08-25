@@ -1,5 +1,6 @@
 1.4.0
- - added Windows SSPI client/server (source only)
+ - added Windows SSPI GSSAPI client/server (source only)
+ - added gss-dump tool for decoding GSSAPI tokens
 1.3.0
  - added Java GSS client/server (source only)
  - pam_debug.so: corrected hex display

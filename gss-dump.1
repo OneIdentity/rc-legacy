@@ -1,0 +1,27 @@
+.\" (c) 2006, Quest Software, Inc. All rights reserved.
+.TH GSS-DUMP 1
+.SH NAME
+gss-dump \- decodes content of GSSAPI tokens
+.SH SYNOPSIS
+.B gss-dump
+.RI [\-k\  keytab ]
+.SH DESCRIPTION
+The
+.B gss-dump
+tool uses
+.B wireshark(1)
+to decode and display the content of the
+base-64 encoded GSSAPI tokens emitted from the
+.B gss-client
+and
+.B gss-server
+tools.
+.SS OPTIONS
+.TP
+\-k
+specifies a keytab that can be used to decrypt parts of the token
+.SH "SEE ALSO"
+gss-client(1),
+gss-server(1)
+.SH AUTHORS
+David Leonard, Quest Software, Inc.
