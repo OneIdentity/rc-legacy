@@ -107,7 +107,20 @@ endif
 #
 # Windows GSSAPI
 #
-EXTRA_DIST +=	gssapi/windows
+EXTRA_DIST +=	gssapi/windows/README.txt
+EXTRA_DIST +=	gssapi/windows/Makefile
+EXTRA_DIST +=	gssapi/windows/mkversion.vbs
+EXTRA_DIST +=	gssapi/windows/client.c
+EXTRA_DIST +=	gssapi/windows/server.c
+EXTRA_DIST +=	gssapi/windows/wsspi.h
+EXTRA_DIST +=	gssapi/windows/clipboard.c gssapi/windows/clipboard.h
+EXTRA_DIST +=	gssapi/windows/common.c    gssapi/windows/common.h
+EXTRA_DIST +=	gssapi/windows/deleg.c     gssapi/windows/deleg.h
+EXTRA_DIST +=	gssapi/windows/errmsg.c    gssapi/windows/errmsg.h
+EXTRA_DIST +=	gssapi/windows/flags.c     gssapi/windows/flags.h
+EXTRA_DIST +=	gssapi/windows/getopt.c    gssapi/windows/getopt.h
+EXTRA_DIST +=	gssapi/windows/userio.c    gssapi/windows/userio.h
+EXTRA_DIST +=	gssapi/windows/wrap.c      gssapi/windows/wrap.h
 
 package: authtest.pp pp
 	DESTDIR=`pwd -P`/destdir; rm -rf $$DESTDIR; mkdir -p $$DESTDIR && \
