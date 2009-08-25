@@ -4,6 +4,7 @@ AUTOMAKE_OPTIONS =	foreign subdir-objects
 AM_CPPFLAGS = -I$(srcdir)/include
 bin_PROGRAMS =
 man_MANS =
+EXTRA_DIST =
 
 noinst_LIBRARIES =	 libauthtest.a
 libauthtest_a_SOURCES =	 lib/authtest/colours.c
@@ -55,9 +56,6 @@ lamtest_DEPENDENCIES =	libauthtest.a $(LIBOBJS)
 man_MANS +=		src/lamtest.1
 endif
 
-EXTRA_DIST =		LICENCE pp authtest.pp
-EXTRA_DIST +=		src/kuserok.1 src/pamtest.1 src/lamtest.1
-
 #
 # Unix GSSAPI
 #
@@ -77,12 +75,9 @@ gss_client_CFLAGS =	@GSS_CFLAGS@
 gss_client_LDFLAGS =	@GSS_LIBS@
 gss_client_LDADD =	libauthtest.a
 
-EXTRA_DIST +=		gssapi/unix/gss-client.1 
-EXTRA_DIST +=		gssapi/unix/gss-server.1
-EXTRA_DIST +=		gssapi/unix/gss-dump.1
-
 bin_SCRIPTS =		gss-dump
 EXTRA_DIST +=		gssapi/unix/gss-dump.sh
+man_MANS +=		gssapi/unix/gss-dump.1
 CLEANFILES  =		gss-dump
 
 gss-dump: $(srcdir)/gssapi/unix/gss-dump.sh
@@ -135,6 +130,9 @@ EXTRA_DIST +=	gssapi/windows/getopt.c    gssapi/windows/getopt.h
 EXTRA_DIST +=	gssapi/windows/userio.c    gssapi/windows/userio.h
 EXTRA_DIST +=	gssapi/windows/wrap.c      gssapi/windows/wrap.h
 
+
+EXTRA_DIST +=	$(man_MANS)
+EXTRA_DIST +=	LICENCE pp authtest.pp
 package: authtest.pp pp
 	DESTDIR=`pwd -P`/destdir; rm -rf $$DESTDIR; mkdir -p $$DESTDIR && \
 	$(MAKE) install DESTDIR=$$DESTDIR && \
