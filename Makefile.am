@@ -4,16 +4,20 @@ AUTOMAKE_OPTIONS =	foreign
 noinst_LIBRARIES =	libauthtest.a
 libauthtest_a_SOURCES =	colours.c privsep.c strtouid.c authtest.h
 
-bin_PROGRAMS =		kuserok gss-server gss-client
-man_MANS = 		kuserok.1 gss-server.1 gss-client.1
-
+#
+# Kerberos User OK
+#
+bin_PROGRAMS =		kuserok
+man_MANS = 		kuserok.1
 kuserok_CFLAGS =	@KRB5_CFLAGS@
 kuserok_LDFLAGS =	@KRB5_LIBS@
 kuserok_LDADD =		-L. -lauthtest
 kuserok_DEPENDENCIES =	libauthtest.a
 
+#
+# PAM test
+#
 if HAVE_PAM
-
 bin_PROGRAMS +=		pamtest
 pamtest_LDADD =		-L. -lauthtest $(LIBOBJS)
 pamtest_DEPENDENCIES =	libauthtest.a $(LIBOBJS)
@@ -24,11 +28,13 @@ security_LTLIBRARIES =  pam_debug.la
 pam_debug_la_SOURCES =  pam_debug.c syslog.c
 pam_debug_la_LDFLAGS =  -module -XCClinker -nostdlib
 #pam_debug_la_LIBADD =	$(LIBOBJS)
-
 install-pam: pam_debug.la
 	sudo $(MAKE) install-securityLTLIBRARIES
 endif
 
+#
+# LAM test
+#
 if HAVE_LAM
 bin_PROGRAMS +=		lamtest
 lamtest_LDADD =		-L. -lauthtest $(LIBOBJS)
@@ -36,8 +42,21 @@ lamtest_DEPENDENCIES =	libauthtest.a $(LIBOBJS)
 man_MANS +=		lamtest.1
 endif
 
-gss_server_SOURCES=	gss-server.c base64.c gss-common.c base64.h gss-common.h
-gss_client_SOURCES=	gss-client.c base64.c gss-common.c base64.h gss-common.h
+EXTRA_DIST =		LICENCE pp authtest.pp
+EXTRA_DIST +=		kuserok.1 pamtest.1 lamtest.1
+
+#
+# Unix GSSAPI
+#
+bin_PROGRAMS +=		gss-server gss-client
+man_MANS +=		gssapi/unix/gss-server.1
+man_MANS +=		gssapi/unix/gss-client.1
+
+gss_common_sources =    gssapi/unix/base64.c      gssapi/unix/base64.h
+gss_common_sources +=   gssapi/unix/gss-common.c  gssapi/unix/gss-common.h
+
+gss_server_SOURCES=	gssapi/unix/gss-server.c $(gss_common_sources)
+gss_client_SOURCES=	gssapi/unix/gss-client.c $(gss_common_sources)
 gss_server_CFLAGS =	@GSS_CFLAGS@
 gss_server_LDFLAGS =	@GSS_LIBS@
 gss_server_LDADD =	libauthtest.a
@@ -45,17 +64,21 @@ gss_client_CFLAGS =	@GSS_CFLAGS@
 gss_client_LDFLAGS =	@GSS_LIBS@
 gss_client_LDADD =	libauthtest.a
 
-EXTRA_DIST =		LICENCE pp authtest.pp
-EXTRA_DIST +=		kuserok.1 pamtest.1 lamtest.1
-EXTRA_DIST +=		gss-client.1 gss-server.1 gss-dump.1
+EXTRA_DIST +=		gssapi/unix/gss-client.1 
+EXTRA_DIST +=		gssapi/unix/gss-server.1
+EXTRA_DIST +=		gssapi/unix/gss-dump.1
 
 bin_SCRIPTS =		gss-dump
-EXTRA_DIST +=		gss-dump.sh
+EXTRA_DIST +=		gssapi/unix/gss-dump.sh
 CLEANFILES  =		gss-dump
-gss-dump: $(srcdir)/gss-dump.sh
-	cp $(srcdir)/gss-dump.sh $@
+
+gss-dump: $(srcdir)/gssapi/unix/gss-dump.sh
+	cp $(srcdir)/gssapi/unix/gss-dump.sh $@
 	chmod +x $@
 
+#
+# Java GSSAPI
+#
 if HAVE_JAVAC
 javagss_src =		java/src/main/java
 noinst_JAVA =
@@ -79,7 +102,6 @@ EXTRA_DIST +=	java/pom.xml
 EXTRA_DIST +=	$(noinst_JAVA)
 EXTRA_DIST +=	java/src/test/java/Base64DecoderTest.java
 EXTRA_DIST +=	java/src/test/java/Base64EncoderTest.java
-
 endif
 
 package: authtest.pp pp
