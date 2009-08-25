@@ -1,7 +1,9 @@
 
-AUTOMAKE_OPTIONS =	foreign
+AUTOMAKE_OPTIONS =	foreign subdir-objects
 
 AM_CPPFLAGS = -I$(srcdir)/include
+bin_PROGRAMS =
+man_MANS =
 
 noinst_LIBRARIES =	 libauthtest.a
 libauthtest_a_SOURCES =	 lib/authtest/colours.c
@@ -12,28 +14,30 @@ libauthtest_a_SOURCES += include/authtest.h
 #
 # Kerberos User OK
 #
-bin_PROGRAMS =		kuserok
-man_MANS = 		kuserok.1
+bin_PROGRAMS +=		kuserok
 kuserok_CFLAGS =	@KRB5_CFLAGS@
+kuserok_SOURCES =       src/kuserok.c
 kuserok_LDFLAGS =	@KRB5_LIBS@
 kuserok_LDADD =		-L. -lauthtest
 kuserok_DEPENDENCIES =	libauthtest.a
+man_MANS += 		src/kuserok.1
 
 #
 # PAM test
 #
 if HAVE_PAM
 bin_PROGRAMS +=		pamtest
+pamtest_SOURCES =       src/pamtest.c
 pamtest_LDADD =		-L. -lauthtest $(LIBOBJS)
 pamtest_DEPENDENCIES =	libauthtest.a $(LIBOBJS)
-man_MANS +=		pamtest.1
+man_MANS +=		src/pamtest.1
 
 #
 # pam_debug module
 #
 securitydir =		$(libdir)/security
 security_LTLIBRARIES =  pam_debug.la
-pam_debug_la_SOURCES =  pam_debug.c syslog.c
+pam_debug_la_SOURCES =  src/pam_debug.c src/syslog.c
 pam_debug_la_LDFLAGS =  -module -XCClinker -nostdlib
 #pam_debug_la_LIBADD =	$(LIBOBJS)
 install-pam: pam_debug.la
@@ -45,13 +49,14 @@ endif
 #
 if HAVE_LAM
 bin_PROGRAMS +=		lamtest
+lamtest_SOURCES =       src/lamtest.c
 lamtest_LDADD =		-L. -lauthtest $(LIBOBJS)
 lamtest_DEPENDENCIES =	libauthtest.a $(LIBOBJS)
-man_MANS +=		lamtest.1
+man_MANS +=		src/lamtest.1
 endif
 
 EXTRA_DIST =		LICENCE pp authtest.pp
-EXTRA_DIST +=		kuserok.1 pamtest.1 lamtest.1
+EXTRA_DIST +=		src/kuserok.1 src/pamtest.1 src/lamtest.1
 
 #
 # Unix GSSAPI
