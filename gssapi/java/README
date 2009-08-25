@@ -31,9 +31,9 @@ Compiling
   However, if you have modified source files, and want to rebuild the
   JAR, you have various ways to do it.
 
-  1) In the parent directory, run
+  1) In the source root directory, run
         $ configure
-        $ make java/target/authtest-java-1.0.jar
+        $ make gssapi/java/target/authtest-java-1.0.jar
 
   2) OR, in this directory, run
         $ mvn install
