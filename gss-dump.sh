@@ -31,7 +31,7 @@ if $error || test $# -gt 0; then
 fi
 
 while :; do
-   test -t && printf "Input: " >&2
+   test -t 0 2>/dev/null && printf "Input: " >&2
    # Read lines until a '.' is seen
    DATA=
    while :; do 
@@ -47,9 +47,9 @@ while :; do
      od -Ax -tx1 | 
        $TEXT2PCAP -q -T 1,2 - "$TMP" || exit 1
 
-   test -t && echo "Decoded:" >&2
+   test -t 0 2>/dev/null && echo "Decoded:" >&2
    $TSHARK -d tcp.port==1,http -V \
-       ${keytab+-o Kerberos.decrypt:true -o Kerberos.file:"$keytab"} \
+       ${keytab:+-o Kerberos.decrypt:true -o Kerberos.file:"$keytab"} \
            -r "$TMP" |
        # Strip out the 'fabricated' parts
        sed -n -e '1,/WWW-Authenticate:/d;s/^        //;/^[ ]*\\r\\n$/q;p'
