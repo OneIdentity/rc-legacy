@@ -16,12 +16,20 @@ base-64 encoded GSSAPI tokens emitted from the
 and
 .B gss-server
 tools.
+.PP
+For this script to work properly, you will need to have 
+wireshark installed; specifically the programs named
+.B tshark
+and
+.BR text2pcap .
 .SS OPTIONS
 .TP
 \-k
 specifies a keytab that can be used to decrypt parts of the token
 .SH "SEE ALSO"
 gss-client(1),
-gss-server(1)
+gss-server(1),
+tshark(1),
+text2pcap(1)
 .SH AUTHORS
-David Leonard, Quest Software, Inc.
+Quest Software, Inc.
