@@ -1,8 +1,11 @@
 
 AUTOMAKE_OPTIONS =	foreign
 
-noinst_LIBRARIES =	libauthtest.a
-libauthtest_a_SOURCES =	colours.c privsep.c strtouid.c authtest.h
+noinst_LIBRARIES =	 libauthtest.a
+libauthtest_a_SOURCES =	 lib/authtest/colours.c
+libauthtest_a_SOURCES += lib/authtest/privsep.c 
+libauthtest_a_SOURCES += lib/authtest/strtouid.c 
+libauthtest_a_SOURCES += authtest.h
 
 #
 # Kerberos User OK
@@ -23,6 +26,9 @@ pamtest_LDADD =		-L. -lauthtest $(LIBOBJS)
 pamtest_DEPENDENCIES =	libauthtest.a $(LIBOBJS)
 man_MANS +=		pamtest.1
 
+#
+# pam_debug module
+#
 securitydir =		$(libdir)/security
 security_LTLIBRARIES =  pam_debug.la
 pam_debug_la_SOURCES =  pam_debug.c syslog.c
