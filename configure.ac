@@ -4,7 +4,7 @@ AC_INIT([authtest],
 	[1.4.0.]esyscmd((svnversion . /trunk || echo 0)|tr : _|tr -d \\012),
 	[david.leonard@quest.com])
 AM_INIT_AUTOMAKE
-AC_CONFIG_SRCDIR([authtest.h])
+AC_CONFIG_SRCDIR([include/authtest.h])
 AC_CONFIG_FILES([Makefile])
 AC_CONFIG_HEADERS([config.h])
 

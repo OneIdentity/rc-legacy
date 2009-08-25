@@ -1,11 +1,13 @@
 
 AUTOMAKE_OPTIONS =	foreign
 
+AM_CPPFLAGS = -I$(srcdir)/include
+
 noinst_LIBRARIES =	 libauthtest.a
 libauthtest_a_SOURCES =	 lib/authtest/colours.c
 libauthtest_a_SOURCES += lib/authtest/privsep.c 
 libauthtest_a_SOURCES += lib/authtest/strtouid.c 
-libauthtest_a_SOURCES += authtest.h
+libauthtest_a_SOURCES += include/authtest.h
 
 #
 # Kerberos User OK
