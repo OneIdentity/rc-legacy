@@ -80,7 +80,7 @@ gss-dump: $(srcdir)/gssapi/unix/gss-dump.sh
 # Java GSSAPI
 #
 if HAVE_JAVAC
-javagss_src =		java/src/main/java
+javagss_src =		gssapi/java/src/main/java
 noinst_JAVA =
 noinst_JAVA +=	$(javagss_src)/Base64Decoder.java
 noinst_JAVA +=	$(javagss_src)/Base64Encoder.java
@@ -89,19 +89,19 @@ noinst_JAVA +=	$(javagss_src)/Console.java
 noinst_JAVA +=	$(javagss_src)/GSSUtil.java
 noinst_JAVA +=	$(javagss_src)/Server.java
 
-javagss_jar =		java/target/authtest-java-1.0.jar
+javagss_jar =		gssapi/java/target/authtest-java-1.0.jar
 $(javagss_jar): $(top_srcdir)/configure.ac
 	$(MAKE) $(AM_MAKEFLAGS) class"noinst".stamp
 	$(MKDIR_P) $(dir $@)
 	$(JAR) fc $@ -C $(JAVAROOT) *.class
 EXTRA_DIST +=		$(javagss_jar)
 
-EXTRA_DIST +=	java/README
-EXTRA_DIST +=	java/jaas-krb5.conf
-EXTRA_DIST +=	java/pom.xml
+EXTRA_DIST +=	gssapi/java/README
+EXTRA_DIST +=	gssapi/java/jaas-krb5.conf
+EXTRA_DIST +=	gssapi/java/pom.xml
 EXTRA_DIST +=	$(noinst_JAVA)
-EXTRA_DIST +=	java/src/test/java/Base64DecoderTest.java
-EXTRA_DIST +=	java/src/test/java/Base64EncoderTest.java
+EXTRA_DIST +=	gssapi/java/src/test/java/Base64DecoderTest.java
+EXTRA_DIST +=	gssapi/java/src/test/java/Base64EncoderTest.java
 endif
 
 package: authtest.pp pp
