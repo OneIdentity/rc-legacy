@@ -18,13 +18,13 @@ client.exe: $(CLIENT_OBJS)
 server.exe: $(SERVER_OBJS)
 	$(CC) -o $@ $(SERVER_OBJS) $(LDFLAGS)
 
-base64.o: ../base64.c
-	$(CC) $(CFLAGS) -c ../base64.c -o $@
+base64.o: ../unix/base64.c
+	$(CC) $(CFLAGS) -c ../unix/base64.c -o $@
 
 .c.o:
 	$(CC) $(CFLAGS) -c $<
 
-version.c: mkversion.vbs ../configure.ac
+version.c: mkversion.vbs ../../configure.ac
 	cscript //NoLogo mkversion.vbs
 
 clean:

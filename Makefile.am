@@ -104,6 +104,11 @@ EXTRA_DIST +=	gssapi/java/src/test/java/Base64DecoderTest.java
 EXTRA_DIST +=	gssapi/java/src/test/java/Base64EncoderTest.java
 endif
 
+#
+# Windows GSSAPI
+#
+EXTRA_DIST +=	gssapi/windows
+
 package: authtest.pp pp
 	DESTDIR=`pwd -P`/destdir; rm -rf $$DESTDIR; mkdir -p $$DESTDIR && \
 	$(MAKE) install DESTDIR=$$DESTDIR && \

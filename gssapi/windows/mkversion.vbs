@@ -10,7 +10,7 @@ Dim fso, cf, vc, r, m
 'Dim l as String = ""
 'dim version as string
 
-conf_ac = "..\configure.ac"
+conf_ac = "..\..\configure.ac"
 vers_c = "version.c"
 
 Set fso = CreateObject("Scripting.FileSystemObject")
