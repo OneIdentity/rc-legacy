@@ -364,9 +364,20 @@ static int vlmapd_uid_to_sid(vas_ctx_t *vasctx, vas_id_t *vasid,
                          val, errno);
 		return 0;
 	}
+
+	if (uid == 0) {
+		DEBUG(1, "ERROR: not handling request for uid 0\n");
+		return 0;
+	}
+
 	if ((pwent = getpwuid(uid)) == NULL) {
 		DEBUG(1, "ERROR: uid (%d) not found!\n", uid);
 		return 0;
+	}
+
+	if (strcmp(pwent->pw_passwd, "VAS") != 0) {
+	    DEBUG(1, "ERROR: uid " UID_T_FMT " not from VAS\n", uid);
+	    return 0;
 	}
 
 	if ((vas_user_init(vasctx, vasid, pwent->pw_name,
@@ -418,9 +429,20 @@ static int vlmapd_gid_to_sid(vas_ctx_t *vasctx, vas_id_t *vasid, ber_int_t msgid
                          val, errno);
 		return 0;
 	}
+
+	if (gid == 0) {
+	    DEBUG(1, "ERROR: not handling request for gid 0\n");
+	    return 0;
+	}
+
 	if ((grent = getgrgid(gid)) == NULL) {
 		DEBUG(1, "ERROR: gid " GID_T_FMT " not found!\n", gid);
 		return 0;
+	}
+
+	if (strcmp(grent->gr_passwd, "VAS") != 0) {
+	    DEBUG(1, "ERROR: gid " GID_T_FMT " not from VAS\n", gid);
+	    return 0;
 	}
 
 	if ((vas_group_init(vasctx, vasid, grent->gr_name,
