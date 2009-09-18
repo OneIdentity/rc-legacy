@@ -1,5 +1,5 @@
 #!/bin/sh
-# (c) 2008 Quest Software, Inc. All rights reserved.
+# (c) 2009 Quest Software, Inc. All rights reserved.
 #
 # Configures 'native' Kerberos configuration files "krb5.conf" so 
 # they interoperate with VAS.

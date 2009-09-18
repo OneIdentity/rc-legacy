@@ -1,4 +1,4 @@
-# (c) 2008, Quest Software, Inc. All rights reserved.
+# (c) 2009, Quest Software, Inc. All rights reserved.
 
 AUTOMAKE_OPTIONS =	foreign
 
