@@ -623,6 +623,14 @@ static int vlmapd_search(vas_ctx_t *vasctx, vas_id_t *vasid,
                         } else {
                                 DEBUG(1, "skipping unexpected attribute request: [%s]\n", name);
                         }
+
+			/* to tell if we are done with the filter, see if the
+			 * next section is a filter tag (equality) or not. If
+			 * it's not, then we don't want to parse the attrs or
+			 * later sections of the be */
+			tag = ber_peek_tag(be, &nl);
+			if (tag != FILTER_TAG_EQUALITY_MATCH)
+			    break;
 		}
 
 		ret = ber_scanf(be, "}");
