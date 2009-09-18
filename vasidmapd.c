@@ -362,6 +362,7 @@ static int vlmapd_uid_to_sid(vas_ctx_t *vasctx, vas_id_t *vasid,
 		DEBUG(1, "ERROR Conversion to uid_t failed.\n"
                          "            (val=[%s],errno=%d)\n", 
                          val, errno);
+		return 0;
 	}
 	if ((pwent = getpwuid(uid)) == NULL) {
 		DEBUG(1, "ERROR: uid (%d) not found!\n", uid);
@@ -415,6 +416,7 @@ static int vlmapd_gid_to_sid(vas_ctx_t *vasctx, vas_id_t *vasid, ber_int_t msgid
 		DEBUG(1, "ERROR Conversion to gid_t failed.\n"
                          "            (val=[%s],errno=%d)\n", 
                          val, errno);
+		return 0;
 	}
 	if ((grent = getgrgid(gid)) == NULL) {
 		DEBUG(1, "ERROR: gid " GID_T_FMT " not found!\n", gid);
