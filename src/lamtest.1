@@ -25,6 +25,13 @@ AIX authentication calls made:
 .PP
 .SS OPTIONS
 .TP
+.RI \-A
+Disables changing the administrative domain to the user's registry
+before authentication.
+Practically this stops
+.IR setauthdb (3)
+from being called.
+.TP
 \-l
 specifies that
 .IR loginsuccess (3)
@@ -36,13 +43,6 @@ should be called after an authentication attempt.
 causes the authentication loop to restart on failure.
 This simulates how servers like OpenSSH perform multiple authentications.
 .TP
-.RI \-A
-Disables changing the administrative domain to the user's registry
-before authentication.
-Practically this stops
-.IR setauthdb (3)
-from being called.
-.TP
 .RI \-m\  mode
 specifies the authentication mode.
 Valid modes are login, rlogin, su and daemon.
@@ -51,13 +51,13 @@ The default mode is rlogin.
 .RI \-p\  password
 specifies the initial response to use.
 This is normally the password.
-Defaults to none (NULL).
+Defaults to no initial response.
 .TP
-.TI \-h\  hostname
+.RI \-h\  hostname
 specifies the hostname to use when logging authentication results.
 .TP
-.TI \-t\  tty
-specifies the serial TTY name to use when logging authentication results.
+.RI \-t\  tty
+specifies the TTY name to use when logging authentication results.
 .SH "SEE ALSO"
 .IR authenticate (3)
 .SH AUTHORS
