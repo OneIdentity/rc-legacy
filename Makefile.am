@@ -41,6 +41,7 @@ CLEANFILES = vas-krb5-config vas-set-samba-password vas-samba-config
 
 # Rules for generating the shell scripts
 SUFFIXES = .in
+SED = sed
 subst = $(SED) -e 's,[@]VERSION[@],$(VERSION),g' \
 	       -e 's,[@]bindir[@],$(bindir),g' \
 	       -e 's,[@]libdir[@],$(libdir),g' \
