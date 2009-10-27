@@ -34,6 +34,7 @@ EXTRA_DIST +=		vas-samba-config.in
 EXTRA_DIST +=		vas-krb5-config.in
 EXTRA_DIST +=		vas-set-samba-password.in
 EXTRA_DIST +=		$(TESTS)
+EXTRA_DIST +=		err.h inet_pton.h
 
 CLEANFILES = vas-krb5-config vas-set-samba-password vas-samba-config
 
