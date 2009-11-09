@@ -1,3 +1,12 @@
+1.1.1
+* Fix invalid lookups for "uidNumber" (bug #714).
+* Avoid lookups of non-QAS users (bug #714).
+* Avoid lookups of non-numeric uids & gids.
+* Fix harmless "cmp: EOF on <file>" error message (bug #646).
+* Add usage help to vas-samba-config (-h option).
+* Add -V flag for vasidmapd to print its version number (bug #616).
+* Correct vas-set-samba-password path in example (bug #615).
+
 1.1.0
 * bug 598: domain sid detection
 * vas-krb5-config warns about symlinks
