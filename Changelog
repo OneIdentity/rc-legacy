@@ -1,4 +1,4 @@
-1.1.1
+1.2.0
 * Fix invalid lookups for "uidNumber" (bug #714).
 * Avoid lookups of non-QAS users (bug #714).
 * Avoid lookups of non-numeric uids & gids.
