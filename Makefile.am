@@ -54,7 +54,7 @@ subst = $(SED) -e 's,[@]VERSION[@],$(VERSION),g' \
 	$(subst) <$< >$@
 	chmod +x $@
 
-PP_DESTDIR=$${TMPDIR-/tmp}/vasidmap.root
+PP_DESTDIR=$${TMPDIR-/tmp}/vasidmap.root.$$
 # Rule for building a package
 package: pp vasidmap.pp
 	DESTDIR="$(PP_DESTDIR)"; \
