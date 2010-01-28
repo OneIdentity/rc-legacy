@@ -287,3 +287,7 @@ Bug 672
 
 3.0.0.27 ( 2009_05_06 )
 * Missed one message, in the outcall_check_user code. Removed.
+
+3.0.0.28 ( 2009_06_02 )
+* Increased name length from 30 to 128. Apparently this is supported, though the
+  #define SQL_AUTHID_SZ in the v9.5 dev package is still 30. 

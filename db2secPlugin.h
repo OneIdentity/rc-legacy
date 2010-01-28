@@ -57,7 +57,7 @@ extern "C" {
 typedef sqlint32        db2int32;
 typedef sqluint32       db2Uint32;       
 #define SQL_API_FN    
-#define SQL_AUTHID_SZ          30
+#define SQL_AUTHID_SZ          128
 /* End modifications by Seth */
 
 #define DB2SEC_API_VERSION_1 1

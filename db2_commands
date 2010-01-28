@@ -82,3 +82,6 @@ db2 get admin cfg
 
 Run time:
 db2pd -
+
+Instance status:
+db2gcf -s

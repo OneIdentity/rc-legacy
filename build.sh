@@ -126,9 +126,9 @@ cp DB2_sys-auth_src.$VERSION.tar.gz binaries/
 loop server_gather
 
 loop server_build_test_clean
-
+F="`ls out.*`"
 tar czf out.$VERSION.tar.gz out.*
-rm -rf out.*
+rm -rf $F
 
 make distclean
 cd binaries/

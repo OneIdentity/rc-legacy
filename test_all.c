@@ -697,7 +697,7 @@ void testGetAuthIDsBAD( Test *pTest )
     /*
      * What makes this bad is a username longer then allowed, so it 
      * should return BADUSER  */
-    char *name = "ReallyLongUserNameLongerThen32Char";
+    char *name = "ReallyLongUserNameLongerThen128CharReallyLongUserNameLongerThen128CharReallyLongUserNameLongerThen128CharReallyLongUserNameLongerThen128Char";
     rval = fnsS.db2secGetAuthIDs( name,
                                   strlen( name ),
                                   "",

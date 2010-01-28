@@ -124,7 +124,7 @@ clean:
 	@sudo rm -f *.o *.so.@VERSION@ $(LAM) $(LAMAUTHS) $(PAM32) $(PAM64) test/*.o $(TESTS) $(PAMAUTHS) sys-nss
 
 distclean: clean
-	@sudo rm -rf config.h config.log config.status Makefile install.sh install DB2* Troubleshooting autom4te.cache install_das.sh out.*
+	@sudo rm -rf config.h config.log config.status Makefile install.sh install DB2* Troubleshooting autom4te.cache install_das.sh
 
 $(PROG32).so.@VERSION@: $(PROG32).o log32.o
 	$(CC) $(LDFLAGS) -o $(PROG32).so.@VERSION@ $(PROG32).o log32.o
