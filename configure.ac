@@ -24,7 +24,8 @@ AC_SUBST([VASCONFIG])
 
 VAS_CFLAGS=`$VASCONFIG --cflags`
 AC_SUBST([VAS_CFLAGS])
-VAS_LIBS=`$VASCONFIG --libs`
+# Don't need gcc, and this makes the aix 5.1 work on 5.3.
+VAS_LIBS=`$VASCONFIG --libs | sed -e 's,-L/opt/quest/lib/support -lgcc_s,,'`
 AC_SUBST([VAS_LIBS])
 
 AC_CHECK_FUNC([getopt], [], [AC_LIBOBJ([getopt])])
