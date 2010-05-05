@@ -197,10 +197,19 @@ check_parm "use spnego" "$CONFMOD" &&
     check_and_fix_add "use spnego" "yes"	    "$CONFMOD" $NEWTEXT
 check_and_fix_add "domain master" "no"		    "$CONFMOD" $NEWTEXT
 check_and_fix_add "domain logons" "no"		    "$CONFMOD" $NEWTEXT
-check_and_fix_add "use kerberos keytab" "yes"	    "$CONFMOD" $NEWTEXT
 check_and_fix_add "machine password timeout" "0"    "$CONFMOD" $NEWTEXT
 test "$PAMOPT" = "yes" &&
     check_and_fix_add "obey pam restrictions" "yes" "$CONFMOD" $NEWTEXT
+
+
+if is_lt $SAMBA_VERSION 3.4.0; then
+  check_and_fix_add "use kerberos keytab" "yes"	    "$CONFMOD" $NEWTEXT
+else
+  # The following are Samba 3.4 parameters
+  check_and_rename "use kerberos keytab" "kerberos method"  "$CONFMOD"
+  check_and_fix_add "kerberos method" "dedicated keytab"    "$CONFMOD" $NEWTEXT
+  check_and_fix_add "dedicated keytab file" "$VAS_KEYTAB"   "$CONFMOD" $NEWTEXT
+fi
 
 #check_parm "username map script" && cat <<-. >&2
 #	Warning: username map script is OK only in VAS Unix Personality Mode
