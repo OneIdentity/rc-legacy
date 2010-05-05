@@ -22,6 +22,8 @@ man_MANS +=		vas-krb5-config.1
 libexec_SCRIPTS =	vas-set-samba-password
 man_MANS +=		vas-set-samba-password.8
 
+libexec_SCRIPTS +=	vasidmap-status
+
 dist_pkgdata_DATA =	vasidmap-common.sh
 
 TESTS=			rc.test t-vasidmap-common
@@ -33,10 +35,11 @@ EXTRA_DIST +=		$(man_MANS)
 EXTRA_DIST +=		vas-samba-config.in 
 EXTRA_DIST +=		vas-krb5-config.in
 EXTRA_DIST +=		vas-set-samba-password.in
+EXTRA_DIST +=		vasidmap-status.in
 EXTRA_DIST +=		$(TESTS)
 EXTRA_DIST +=		err.h inet_pton.h
 
-CLEANFILES = vas-krb5-config vas-set-samba-password vas-samba-config
+CLEANFILES = vas-krb5-config vas-set-samba-password vas-samba-config vasidmap-status
 
 
 # Rules for generating the shell scripts
