@@ -1,3 +1,8 @@
+1.2.1
+* Updated vas-samba-config to work with Samba 3.4.0 kerberos settings (bug #750)
+* vas-set-samba-password script no longer fails when METHOD=tdb in vas-set-samba-password.conf (bug #733)
+* Added vasidmap-status script to vasidmap package
+
 1.2.0
 * Fix invalid lookups for "uidNumber" (bug #714).
 * Avoid lookups of non-QAS users (bug #714).
