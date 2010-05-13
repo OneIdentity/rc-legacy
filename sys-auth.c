@@ -152,6 +152,8 @@ int vas_db2_plugin_change_password(char *username, char *password_old, char *pas
     char prog_file[MAX_C_BUFF];
     char *cptr = NULL;
     struct passwd *pwd = NULL;
+    struct passwd p;
+    char buf[2048];
     int     rnum = rand();
     
     func_start();
@@ -176,11 +178,11 @@ int vas_db2_plugin_change_password(char *username, char *password_old, char *pas
     if( ( cptr = getenv( "DB2INSTANCE" ) ) == NULL ) 
     {
         slog( SLOG_NORMAL, "%s: Unable to obtain DB2INSTANCE environment" " variable, trying uid <%d>", __FUNCTION__, getuid() );
-        pwd = getpwuid( getuid() );
+        getpwuid_r( getuid(), &p, buf, 2048, &pwd );
     }
     else
     { 
-        pwd = getpwnam( cptr );
+        getpwnam_r( cptr, &p, buf, 2048, &pwd );
     }
 
     if( pwd == NULL ) 
@@ -396,6 +398,8 @@ int vas_db2_plugin_auth_user(char *username, char *password) {
     char prog_file[MAX_C_BUFF];
     char *cptr = NULL;
     struct passwd *pwd = NULL;
+    struct passwd p;
+    char buf[2048];
     
     func_start();
 
@@ -420,11 +424,11 @@ int vas_db2_plugin_auth_user(char *username, char *password) {
     {
         slog( SLOG_NORMAL, "%s: Unable to obtain DB2INSTANCE environment"
        " variable, trying uid <%d>", __FUNCTION__, getuid() );
-        pwd = getpwuid( getuid() );
+        getpwuid_r( getuid(), &p, buf, 2048, &pwd );
     }
     else
     { 
-        pwd = getpwnam( cptr );
+        getpwnam_r( cptr, &p, buf, 2048, &pwd );
     }
 
     if( pwd == NULL ) 
@@ -647,6 +651,8 @@ int vas_db2_plugin_outcall_getgroups( const char *username, char groups[], int *
     char *cptr = NULL;
     char cuid[11];
     struct passwd *pwd = NULL;
+    struct passwd p;
+    char buf[2048];
     char group_back[MAX_LINE_LENGTH + 2];
     
     func_start();
@@ -664,11 +670,11 @@ int vas_db2_plugin_outcall_getgroups( const char *username, char groups[], int *
     {
         slog( SLOG_NORMAL, "%s: Unable to obtain DB2INSTANCE environment"
        " variable, trying uid <%d>", __FUNCTION__, getuid() );
-        pwd = getpwuid( getuid() );
+        getpwuid_r( getuid(), &p, buf, 2048, &pwd );
     }
     else
     { 
-        pwd = getpwnam( cptr );
+        getpwnam_r( cptr, &p, buf, 2048, &pwd );
     }
 
     if( pwd == NULL ) 
@@ -839,6 +845,8 @@ int vas_db2_plugin_outcall_getuser( uid_t uid, char username[] ) {
     char *cptr = NULL;
     char cuid[11];
     struct passwd *pwd = NULL;
+    struct passwd p;
+    char buf[2048];
     
     func_start();
 
@@ -855,11 +863,11 @@ int vas_db2_plugin_outcall_getuser( uid_t uid, char username[] ) {
     {
         slog( SLOG_NORMAL, "%s: Unable to obtain DB2INSTANCE environment"
        " variable, trying uid <%d>", __FUNCTION__, getuid() );
-        pwd = getpwuid( getuid() );
+        getpwuid_r( getuid(), &p, buf, 2048, &pwd );
     }
     else
     { 
-        pwd = getpwnam( cptr );
+        getpwnam_r( cptr, &p, buf, 2048, &pwd );
     }
 
     if( pwd == NULL ) 
@@ -1021,6 +1029,8 @@ int vas_db2_plugin_outcall_check_user( const char *username ) {
     char *cptr = NULL;
     char cuid[11];
     struct passwd *pwd = NULL;
+    struct passwd p;
+    char buf[2048];
     
     func_start();
 
@@ -1037,11 +1047,11 @@ int vas_db2_plugin_outcall_check_user( const char *username ) {
     {
         slog( SLOG_NORMAL, "%s: Unable to obtain DB2INSTANCE environment"
        " variable, trying uid <%d>", __FUNCTION__, getuid() );
-        pwd = getpwuid( getuid() );
+        getpwuid_r( getuid(), &p, buf, 2048, &pwd );
     }
     else
     { 
-        pwd = getpwnam( cptr );
+        getpwnam_r( cptr, &p, buf, 2048, &pwd );
     }
 
     if( pwd == NULL ) 
@@ -1192,18 +1202,21 @@ FOUND:
 }
 
 int vas_db2_plugin_check_group( const char* groupname) {
-    struct group *grp= NULL;
+//    struct group *grp= NULL;
     int retval = FAILURE;
+    struct group grp;
+    struct group *pgrp = NULL;
+    char buf[8192];
 
     func_start();
     slog( SLOG_DEBUG, "%s: checking group <%s>", __FUNCTION__, groupname );
-    if( ( grp = (struct group*)getgrnam(groupname) ) == NULL ) {
+    if( ( getgrnam_r(groupname, &grp, buf, 1024, &pgrp) ) != 0 || !pgrp ) {
         slog( SLOG_EXTEND, "%s: group <%s> not found", __FUNCTION__, groupname);
         errno = ENOENT;
         return FAILURE;
     }
     slog( SLOG_DEBUG, "%s: found group <%s><%s>", __FUNCTION__, groupname,
-	    grp->gr_name );
+	    pgrp->gr_name );
     return SUCCESS;
 }
 
@@ -1900,11 +1913,36 @@ SQL_API_RC SQL_API_FN vas_db2_plugin_free_error_message(char *msg)
 /* vas_db2_plugin_plugin_terminate()
  * There is no cleanup required when this plugin is unloaded.
  */
-SQL_API_RC SQL_API_FN vas_db2_plugin_plugin_terminate(char **errorMessage,
+SQL_API_RC SQL_API_FN vas_db2_server_plugin_terminate(char **errorMessage,
                            db2int32 *errorMessageLength)
 {
     *errorMessage = NULL;
     *errorMessageLength = 0;
+    func_start();
+    return(DB2SEC_PLUGIN_OK);
+}
+
+/* vas_db2_plugin_plugin_terminate()
+ * There is no cleanup required when this plugin is unloaded.
+ */
+SQL_API_RC SQL_API_FN vas_db2_client_plugin_terminate(char **errorMessage,
+                           db2int32 *errorMessageLength)
+{
+    *errorMessage = NULL;
+    *errorMessageLength = 0;
+    func_start();
+    return(DB2SEC_PLUGIN_OK);
+}
+
+/* vas_db2_plugin_plugin_terminate()
+ * There is no cleanup required when this plugin is unloaded.
+ */
+SQL_API_RC SQL_API_FN vas_db2_group_plugin_terminate(char **errorMessage,
+                           db2int32 *errorMessageLength)
+{
+    *errorMessage = NULL;
+    *errorMessageLength = 0;
+    func_start();
     return(DB2SEC_PLUGIN_OK);
 }
 
@@ -1936,7 +1974,7 @@ SQL_API_RC SQL_API_FN db2secServerAuthPluginInit(
     p->db2secDoesAuthIDExist = vas_db2_plugin_does_auth_id_exist;
     p->db2secFreeToken = vas_db2_plugin_free_token;
     p->db2secFreeErrormsg = vas_db2_plugin_free_error_message;
-    p->db2secServerAuthPluginTerm = vas_db2_plugin_plugin_terminate;
+    p->db2secServerAuthPluginTerm = vas_db2_server_plugin_terminate;
 
     logFunc = msgFunc;
 
@@ -1966,7 +2004,7 @@ SQL_API_RC SQL_API_FN db2secClientAuthPluginInit (db2int32 version,
     p->db2secValidatePassword = &vas_db2_plugin_check_password;
     p->db2secFreeToken = &vas_db2_plugin_free_token;
     p->db2secFreeErrormsg = &vas_db2_plugin_free_error_message;
-    p->db2secClientAuthPluginTerm = &vas_db2_plugin_plugin_terminate;
+    p->db2secClientAuthPluginTerm = &vas_db2_client_plugin_terminate;
 
     logFunc = msgFunc;
 
@@ -1992,7 +2030,7 @@ SQL_API_RC SQL_API_FN db2secGroupPluginInit(db2int32 version,
     p->db2secDoesGroupExist = &vas_db2_plugin_does_group_exist;
     p->db2secFreeGroupListMemory = &vas_db2_plugin_free_group_list;
     p->db2secFreeErrormsg = &vas_db2_plugin_free_error_message;
-    p->db2secPluginTerm = &vas_db2_plugin_plugin_terminate;
+    p->db2secPluginTerm = &vas_db2_group_plugin_terminate;
 
     logFunc = msgFunc;
     func_start();

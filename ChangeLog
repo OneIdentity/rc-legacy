@@ -291,3 +291,7 @@ Bug 672
 3.0.0.28 ( 2009_06_02 )
 * Increased name length from 30 to 128. Apparently this is supported, though the
   #define SQL_AUTHID_SZ in the v9.5 dev package is still 30. 
+* Use only getgroups on linux.
+
+3.0.0.29 ( 2009_05_13 )
+* Use reentrant NSS calls ( _r ).

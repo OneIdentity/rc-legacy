@@ -67,9 +67,11 @@ db2 update dbm cfg using CLNT_PW_PLUGIN sys-auth
 
 For the DB2 connection at the database level, you will want to revoke
 connect from public then grant it to specific groups.
-db2 connect to database
+db2 connect to <database>
 db2 revoke connect on database from public
 db2 grant connect on database to group
+
+
 
 
 DAS commands:
