@@ -295,3 +295,4 @@ Bug 672
 
 3.0.0.29 ( 2009_05_13 )
 * Use reentrant NSS calls ( _r ).
+* Check for pw_dir.

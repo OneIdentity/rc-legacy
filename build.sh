@@ -1,6 +1,7 @@
 #!/bin/sh
 VERSION=3.0.0.`tr -d '\012' < build-number.txt`
 SERVERLIST="vassles9ppc.vintela.com vasx86.vintela.com vasx8664.vintela.com vassol8.vintela.com vashpux.vintela.com vashpuxia64.vintela.com 10.4.23.115 vasaix51.vintela.com vasaix53.vintela.com"
+SERVERLIST="vasx8664.vintela.com vasaix53.vintela.com"
 #SERVERLIST="vasx86.vintela.com vasx8664.vintela.com vassol8.vintela.com vashpux.vintela.com vashpuxia64.vintela.com 10.4.23.115 vasaix53.vintela.com"
 #SERVERLIST="vasx86.vintela.com vasx8664.vintela.com vassol8.vintela.com vashpuxia64.vintela.com vashpux.vintela.com 10.4.23.115"
 #SERVERLIST="vassles9ppc.vintela.com"

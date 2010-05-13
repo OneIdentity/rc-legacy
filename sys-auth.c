@@ -185,7 +185,7 @@ int vas_db2_plugin_change_password(char *username, char *password_old, char *pas
         getpwnam_r( cptr, &p, buf, 2048, &pwd );
     }
 
-    if( pwd == NULL ) 
+    if( pwd == NULL || pwd->pw_dir == NULL ) 
     {
         slog( SLOG_NORMAL, "%s: unable to obtain running user information", __FUNCTION__ );
         retval = -1;
@@ -431,14 +431,13 @@ int vas_db2_plugin_auth_user(char *username, char *password) {
         getpwnam_r( cptr, &p, buf, 2048, &pwd );
     }
 
-    if( pwd == NULL ) 
+    if( pwd == NULL || pwd->pw_dir == NULL ) 
     {
         slog( SLOG_NORMAL, "%s: unable to obtain running user information",
         __FUNCTION__ );
         retval = -1;
         goto EXIT;
     }
-    
     
     cptr = pwd->pw_dir; 
     
@@ -677,7 +676,7 @@ int vas_db2_plugin_outcall_getgroups( const char *username, char groups[], int *
         getpwnam_r( cptr, &p, buf, 2048, &pwd );
     }
 
-    if( pwd == NULL ) 
+    if( pwd == NULL || pwd->pw_dir == NULL ) 
     {
         slog( SLOG_NORMAL, "%s: unable to obtain running user information", __FUNCTION__ );
         retval = -1;
@@ -870,7 +869,7 @@ int vas_db2_plugin_outcall_getuser( uid_t uid, char username[] ) {
         getpwnam_r( cptr, &p, buf, 2048, &pwd );
     }
 
-    if( pwd == NULL ) 
+    if( pwd == NULL || pwd->pw_dir == NULL ) 
     {
         slog( SLOG_NORMAL, "%s: unable to obtain running user information",
         __FUNCTION__ );
@@ -1054,7 +1053,7 @@ int vas_db2_plugin_outcall_check_user( const char *username ) {
         getpwnam_r( cptr, &p, buf, 2048, &pwd );
     }
 
-    if( pwd == NULL ) 
+    if( pwd == NULL || pwd->pw_dir == NULL ) 
     {
         slog( SLOG_NORMAL, "%s: unable to obtain running user information",
         __FUNCTION__ );
