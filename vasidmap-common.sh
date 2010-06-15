@@ -287,6 +287,9 @@ search_for_smbd () {
 	AIX)
 	    search=`echo /opt/pware/samba/*/sbin/smbd`
 	    ;;
+	Darwin)
+		search=/usr/sbin/smdb
+		;;
     esac
     search="/opt/quest/sbin/smbd $search /usr/local/sbin/smbd"
 
