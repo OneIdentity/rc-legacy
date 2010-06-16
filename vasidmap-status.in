@@ -3,7 +3,7 @@
 
 . "@pkgdatadir@/vasidmap-common.sh"
 
-VERSION=1.0.0.4
+VERSION=1.0.0.5
 DEBUG=false
 CLEANUP=true
 
@@ -134,15 +134,149 @@ query () {
 }
 
 #
+# get_groupnames_from_gid_for_domain
+# 
+# Returns a list of groupnames that match on GID for a given domain
+#
+get_groupnames_from_gid_for_domain() {
+  
+    debug_echo "get_groupnames_from_gid_for_domain: Start"
+
+    DN=$2
+    GID=$1
+    SEARCH_ERRNO=1
+    GRNAMES=
+
+    debug_echo "Looking for Groups for GID: $GID, in domain-dn $DN"
+
+    for GRNAME in `$VASTOOL -u host/ search -q -b "$DN" "(&(gidNumber=$GID)(objectclass=group))" samaccountname 2>/dev/null`; do
+      SEARCH_ERRNO=$?
+      if [ -z "$GRNAMES" ]; then
+        GRNAMES="$GRNAME"
+      else
+        GRNAMES="$GRNAMES:$GRNAME"
+      fi
+    done
+
+    test -n "$GRNAMES" && echo "$GRNAMES"
+
+    debug_echo "get_groupnames_from_gid_for_domain: End($SEARCH_ERRNO)"
+
+    return $SEARCH_ERRNO
+}
+
+#
+# get_primary_grnam_for_user
+#
+# Returns a list of groupnames that match on GID for the users primary GID
+#
+get_primary_grnam_for_user() {
+    
+  USERNAME=$1
+  RC=0
+
+  debug_echo "get_primary_grnam_for_user: Start"
+
+  GID=`$VASTOOL -u host/ attrs -u -q $USERNAME gidNumber`
+  RC=$?
+  if [ $RC -ne "0" ]; then
+    return $RC
+  fi
+
+  USERDOMAINDN=`$VASTOOL -u host/ info id -u $USERNAME | grep -i "^LDAP:" | cut -f2 -d: | sed -e 's/,[Dd][Cc]=/~/' -e 's/^[^~]*~/DC=/'`
+  
+  GRNAME=`get_groupnames_from_gid_for_domain $GID $USERDOMAINDN`
+  USERDOMAINDN_RC=$?
+  if [ -n "$GRNAME" ]; then
+    GRNAMES="$GRNAME"
+    debug_echo "Found the following groups for GID $GID: $GRNAMES"
+  fi
+
+  DOMAINDN_RC=1
+  for DN in `$VASTOOL -u host/ info domains-dn`; do
+    if [ "$DN" = "$USERDOMAINDN" ]; then
+      break;
+    fi
+    GRNAME=`get_groupnames_from_gid_for_domain $GID $DN`
+    DOMAINDN_RC=$?
+    if [ -n "$GRNAME" ]; then
+      if [ -z "$GRNAMES" ]; then
+        GRNAMES="$GRNAME"
+      else
+        GRNAMES="$GRNAMES:$GRNAME"
+      fi
+    fi
+  done
+
+  test -n "$GRNAMES" && echo "$GRNAMES"
+
+  if [ $DOMAINDN_RC -ne "0" ]; then
+    if [ $USERDOMAINDN_RC -ne "0" ]; then
+      RC=1
+    fi
+  fi
+  debug_echo "get_primary_grnam_for_user End($RC)"
+  return $RC
+}
+
+#
+# vastool_id
+# 
+#
+vastool_id() {
+
+  FLAG=$2
+  USERNAME=$1
+
+  RC=1
+  ID=
+
+  debug_echo "vastool_id: Start"
+
+  if [ "$FLAG" = "-g" ]; then
+    debug_echo "Looking up GID for user: $USERNAME"
+    ID=`$VASTOOL -u host/ attrs -u -q $USERNAME gidNumber`
+    RC=$?
+  elif [ "$FLAG" = "-u" ]; then
+    debug_echo "Looking up UID for user: $USERNAME"
+    ID=`$VASTOOL -u host/ attrs -u -q $USERNAME uidNumber`
+    RC=$?
+  elif [ "$FLAG" = "-un" ]; then
+    debug_echo "Looking up username for user: $USERNAME"
+    ID=$USERNAME
+  elif [ "$FLAG" = "-gn" ]; then
+    debug_echo "Looking up groupname for user: $USERNAME"
+    GID=`$VASTOOL -u host/ attrs -u -q $USERNAME gidNumber`
+    RC=$?
+    if [ $RC -eq "0" ]; then
+      ID=`id -gn $USERNAME`
+      RC=$?
+      if [ $RC -ne "0" ]; then
+        ID=`get_primary_grnam_for_user $USERNAME $GID`
+        RC=$?
+       
+      fi
+    fi
+  else
+    ID=`$VASTOOL -u host/ attrs -u $USERNAME gidNumber uidNumber`
+    RC=$?
+  fi  
+
+  test -n "$ID" && echo "$ID"
+
+  debug_echo "vastool_id: End($RC)"
+  return $RC
+}
+
+#
+#  vastool_klist
 #  Sets the RUNASUSER variable
 #
 #
-vastool_klist()
-{
+vastool_klist() {
   
   $VASTOOL klist -c $KRB5CCNAME
   VTKLIST_ERRNO=$?
-  debug_echo "Errno: $RU_ERRNO"
   if [ $VTKLIST_ERRNO -ne "0" ]; then
     return $VTKLIST_ERRNO
   fi
@@ -183,7 +317,6 @@ kinit () {
           debug_echo "kinit: End($RU_ERRNO)"
 	  return $RU_ERRNO
         fi
-	#RUNASUSER=`$VASTOOL klist -c KRB5CCNAME | head -2 | tail -1 | awk '{ print $2 }'`
         label "Running tests as user: "
 	echo $RUNASUSER
         debug_echo "kinit: End(1)"
@@ -192,7 +325,6 @@ kinit () {
 
     if test -r /tmp/krb5cc_`id -u`; then
         KRB5CCNAME=/tmp/krb5cc_`id -u`; export KRB5CCNAME
-        #RUNASUSER=`$VASTOOL klist -c $KRB5CCNAME | head -2 | tail -1 | awk '{ print $2 }'`
         vastool_klist
 	label  "Running as user: "
 	echo "$RUNASUSER"
@@ -202,7 +334,6 @@ kinit () {
 
     if [ "z$SUDO_UID" != "z" ] && [ -r /tmp/krb5cc_${SUDO_UID} ]; then
         KRB5CCNAME=/tmp/krb5cc_${SUDO_UID}; export KRB5CCNAME
-        #RUNASUSER=`$VASTOOL klist -c /tmp/krb5cc_${SUDO_UID} | head -2 | tail -1 | awk '{ print $2 }'`
 	vastool_klist
 	label "Running tests as user: "
 	echo "$RUNASUSER"
@@ -226,11 +357,10 @@ kinit () {
         #query "Username" USER ${USER}
 	query "Username" USER
         KRB5CCNAME=FILE:$ccname; export KRB5CCNAME
-        trap "rm -f $ccname" 0
+        #trap "rm -f $ccname" 0
         $VASTOOL kinit "$USER" || die "Unable to acquire credentials"
     fi
 
-    #RUNASUSER=`$VASTOOL klist -c $KRB5CCNAME |head -2 | tail -1 | awk '{ print $2 }'`
     vastool_klist
     label "Running tests as user: "
     echo "$RUNASUSER"
@@ -253,6 +383,29 @@ detect_samba_settings "$smbd" "$samba_configfile" || die_cat <<-.
 
 SMBCLIENT="$SAMBA_BINDIR/smbclient"
 
+#
+# vas_user_domain_realm
+#
+vas_user_domain_realm () {
+
+  USERNAME=$1
+  USEREALM=
+  USERREALM=`$VASTOOL -u host/ info id -u $USERNAME 2>/dev/null | grep -i "^Kerberos" | cut -f2 -d@`
+  
+  test -n "$USERREALM" && echo "$USERREALM"
+}
+
+#
+# vas_group_domain_realm
+#
+vas_group_domain_realm () {
+  GROUPNAME=$1
+  GROUPREALM=
+  GROUPREALM=`$VASTOOL -u host/ info id -g $GROUPNAME 2>/dev/null | grep -i "^Kerberos" | cut -f2 -d@`
+
+  test -n "$GROUPREALM" && echo "$GROUPREALM"
+}
+
 # vas_user_domain_netbios_name
 #   $1 - Username
 #   Determines the users domains netbios name
@@ -260,15 +413,18 @@ SMBCLIENT="$SAMBA_BINDIR/smbclient"
 #   This method will return an empty string  if USERNAME is a cross-forest user.
 vas_user_domain_netbios_name () {
     USERNAME=$1
-    forestDNC=`$VASTOOL -u host/ info forest-root-dn 2>/dev/null ||
-               $VASTOOL -u host/ search -q -s base -b '' \
-                "(rootDomainNamingContext=*)" \
-                rootDomainNamingContext` &&
-     rootDNC=`$VASTOOL -u host/ attrs -q $USERNAME distinguishedName | sed -e 's/,[Dd][Cc]=/~/g' -e 's/[^~]*~/DC=/' -e 's/~/,DC=/g'` &&
-    $VASTOOL -u host/ \
-        search -q -b "CN=Partitions,CN=Configuration,$forestDNC" -s sub \
-        "nCName=$rootDNC" \
-        nETBIOSName
+
+    NETBIOS=
+
+    #USERREALM=`$VASTOOL -u host/ info id -u $1 2>/dev/null | grep -i "^Kerberos" | cut -f2 -d@`
+    USERREALM=`vas_user_domain_realm $USERNAME`
+
+    if [ -n "$USERREALM" ]; then
+     NETBIOS=`joined_domain_info "$USERREALM" "Server_Netbios_Domain"`
+    fi
+
+   test -n "$NETBIOS" && echo "$NETBIOS"
+
 }
 
 # create_dir
@@ -558,6 +714,17 @@ compare_files()
 }
 
 #
+# cleanup_ccname
+#
+cleanup_ccname () {
+
+  debug_echo "Cleaning up $ccname"
+  rm -f $ccname 2>/dev/null
+
+}
+
+
+#
 # smbclient_tests_cleanup
 # 
 # Restores the original smb.conf file, removes the backups and deletes the tmp share directories
@@ -576,11 +743,9 @@ smbclient_tests_cleanup()
     return $RB_ERRNO
   fi
 
-  #RM_OUT="`rm --preserve-root -vrf "$test_share_dir"`"
   RM_OUT="`rm -rf "$test_share_dir"`"
   RM_ERRNO=$?
 
- #RM2_OUT="`rm --preserve-root -vrf "$_SAMBA_BACKUPFILE"`"
   RM2_OUT="`rm -rf "$_SAMBA_BACKUPFILE"`"
   RM2_ERRNO=$?
 
@@ -603,6 +768,8 @@ smbclient_tests_cleanup()
     debug_echo "cleanup: End($RM2_ERRNO)"
     return $RM2_ERRNO
   fi
+
+  cleanup_ccname
 
   debug_echo "cleanup: $RM_OUT"
   debug_echo "cleanup: $RM2_OUT"
@@ -755,8 +922,14 @@ test_valid_user()
   PERMS="0777"
   RC=1
 
-  VALID_USER="`vas_user_domain_netbios_name $USER`\\\\`echo $USER | cut -f1 -d@`"
-  setup_samba_share "$SHARE" "$PERMS" "$USER_UID" "$USER_GID" "Comment=Valid User Test" "Path=$test_share_dir/$SHARE" "valid users = $VALID_USER" "Browseable = no" "Read only = no"
+  VALID_USER="`vas_user_domain_realm $USER`\\\\`echo $USER | cut -f1 -d@`"
+
+  if [ -z "$VALID_USER" ]; then
+    debug_echo "Couldn't find a valid user named: $USER"
+    return $RC
+  fi
+   
+  setup_samba_share "$SHARE" "$PERMS" "$USER_UID" "$USER_GID" "Comment=Valid User Test" "Path=$test_share_dir/$SHARE" "valid users = \"$VALID_USER\"" "Browseable = no" "Read only = no"
   SSS_ERRNO=$?
   if [ $SSS_ERRNO -ne "0" ]; then
     return $SSS_ERRNO
@@ -826,15 +999,16 @@ test_valid_group()
 {
   RC=1
   USER="$RUNASUSER"
+  GROUP_GID=`vastool_id $RUNASUSER -g`
+  ATTR_ERRNO=$?
 
-  if id -g $RUNASUSER >/dev/null 2>&1; then
-        debug_echo "Unix Enabled User"
-        GROUP_GID=`id -g $RUNASUSER`
-        GROUP="@`$VASTOOL nss getgrgid $GROUP_GID | cut -d: -f1`"
+  if [ $ATTR_ERRNO -eq "0" ]; then
+        debug_echo "Using Group GID: $GROUP_GID"
+        GROUPNAME="`vastool_id $RUNASUSER -gn | cut -d: -f1`"
+        GROUP="@`vas_group_domain_realm $GROUPNAME`\\\\$GROUPNAME"
   else
-        debug_echo "Cannot be ran with Non-Unix Enabled User"
-        RC=1      
-        return $RC
+	debug_echo "Could not find a Primary Group ID for user: $RUNASUSER"
+	return $ATTR_ERRNO
   fi
 
   SHARE="VG"
@@ -843,7 +1017,7 @@ test_valid_group()
   USER_GID="0"
   PERMS="0777"
 
-  setup_samba_share "$SHARE" "$PERMS" "$USER_UID" "$USER_GID" "Comment=Valid User Test" "Path=$test_share_dir/$SHARE" "valid users =$GROUP" "Browseable = no" "Read only = no"
+  setup_samba_share "$SHARE" "$PERMS" "$USER_UID" "$USER_GID" "Comment=Valid Group Test" "Path=$test_share_dir/$SHARE" "valid users = \"$GROUP"\" "Browseable = no" "Read only = no"
   SSS_ERRNO=$?
   if [ $SSS_ERRNO -ne "0" ]; then
     return $SSS_ERRNO
@@ -911,10 +1085,16 @@ test_user_acl()
   USER="$RUNASUSER"
   SHARE="UACL"
   FILENAME="valid_user"
-  USER_UID=`id -u "$USER"`
+  USER_UID=`vastool_id "$USER" -u`
+  USER_UID_ERRNO=$?
   USER_GID="0"
   PERMS="0700"
   RC=1
+
+  if [ $USER_UID_ERRNO -ne "0" ]; then
+     debug_echo "User $USER, No such user"
+     return $USER_UID_ERRNO
+  fi
 
   setup_samba_share "$SHARE" "$PERMS" "$USER_UID" "$USER_GID" "Comment=User Owned acls Test" "Path=$test_share_dir/$SHARE" "Browseable = no" "Read only = no"
   SSS_ERRNO=$?
@@ -966,9 +1146,15 @@ test_group_acl()
   SHARE="GACL"
   FILENAME="group_acl"
   USER_UID="0"
-  USER_GID=`id -g $USER`
+  USER_GID=`vastool_id $USER -g 2>/dev/null`
+  USER_GID_ERRNO=$?
   PERMS="0070"
   RC=1
+
+  if [ "$USER_GID_ERRNO" -ne "0" ]; then
+     debug_echo "User $USER, No such user"
+     return $USER_GID_ERRNO
+  fi
 
   setup_samba_share "$SHARE" "$PERMS" "$USER_UID" "$USER_GID" "Comment=Group Owned acls Test" "Path=$test_share_dir/$SHARE" "Browseable = no" "Read only = no"
   SSS_ERRNO=$?
@@ -1085,10 +1271,16 @@ vasidmap_sid_to_gid()
   debug_echo "vasidmap_sid_to_gid: Start"
 
   USER=$RUNASUSER
-  GROUP=`id -gn $USER`
+  GROUP=`vastool_id "$USER" -gn | cut -d: -f1`
   GROUPID_ERRNO=$?
   if [ $GROUPID_ERRNO -ne "0" ]; then
-    echo "Could not get primary groupname for user: $USER"
+    if $DEBUG; then
+      debug_echo "Could not get primary groupname for user: $USER"
+    else
+      echo "Could not get primary groupname for user: $USER"
+    fi
+    debug_echo "vasidmap_sid_to_gid: End($GROUPID_ERRNO)"
+    return $GROUPID_ERRNO
   fi
 
   GROUP_SID=`$VASTOOL -u host/ attrs -bqg "$GROUP" objectSid`
@@ -1139,7 +1331,7 @@ vasidmap_username_to_sid()
     echo "Could not get SID for user: $USER"
   fi
 
-  debug_echo "vasidmap_username_to_sid: End"
+  debug_echo "vasidmap_username_to_sid: End($VASID_ERRNO)"
 
   return $VASID_ERRNO
  
@@ -1157,10 +1349,15 @@ vasidmap_groupname_to_sid()
   debug_echo "vasidmap_groupname_to_sid: Start"
 
   USER=$RUNASUSER
-  GROUP=`id -gn $USER`
+  GROUP=`vastool_id "$USER" -gn`
   GROUPID_ERRNO=$?
   if [ $GROUPID_ERRNO -ne "0" ]; then
-    echo "Could not get primary groupname for user: $USER"
+    if $DEBUG; then
+      debug_echo "Could not get primary groupname for user: $USER"
+    else
+      echo "Could not get primary groupname for user: $USER"
+    fi
+    debug_echo "vasidmap_groupname_to_sid: End($GROUPID_ERRNO)"
     return $GROUPID_ERRNO
   fi
   
@@ -1188,10 +1385,16 @@ vasidmap_uid_to_sid()
   debug_echo "vasidmap_uid_to_sid: Start"
 
   USER=$RUNASUSER
-  USER_UID=`id -u $USER`
+  USER_UID=`vastool_id "$USER" -u`
   USERID_ERRNO=$?
   if [ $USERID_ERRNO -ne "0" ]; then
-    echo "Could not get UID for user: $USER"
+    if $DEBUG; then
+      debug_echo "Could not get UID for user: $USER"
+    else
+      echo "Could not get UID for user: $USER"
+    fi 
+    debug_echo "vasidmap_uid_to_sid: End($USERID_ERRNO)"
+    return $USERID_ERRNO
   fi
 
   debug_echo "Testing: $VASIDMAP -u $USER_UID"
@@ -1218,10 +1421,16 @@ vasidmap_gid_to_sid()
   debug_echo "vasidmap_gid_to_sid: Start"
 
   USER=$RUNASUSER
-  GROUP_GID=`id -g $USER`
+  GROUP_GID=`vastool_id "$USER" -g`
   GROUPID_ERRNO=$?
   if [ $GROUPID_ERRNO -ne "0" ]; then
-    echo "Could not get primary GID for user: $USER"
+    if $DEBUG; then
+      debug_echo "Could not get primary GID for user: $USER"
+    else
+      echo "Could not get primary GID for user: $USER"
+    fi
+    debug_echo "vasidmap_gid_to_sid: End($GROUPID_ERRNO)"
+    return $GROUPID_ERRNO
   fi
  
   debug_echo "Testing: $VASIDMAP -g $GROUP_GID"
@@ -1268,10 +1477,10 @@ run_smbclient_tests()
 #    if [ $PASS = "false" ]; then return 1; fi; 
   fi
  
-  if test_world_read; then WORLDREAD_ERRNO=$?; else WORLDREAD_ERRNO=$?; FAILED_COUNT=`expr $FAILED_COUNT +1`; fi
+  if test_world_read; then WORLDREAD_ERRNO=$?; else WORLDREAD_ERRNO=$?; FAILED_COUNT=`expr $FAILED_COUNT + 1`; fi
   ssout "Running test_world_read:    " `passfail [ $WORLDREAD_ERRNO -eq "0" ]`
 
-  if test_world_write; then WORLDWRITE_ERRNO=$?; else WORLDWRITE_ERRNO=$?; FAILED_COUNT=`expr $FAILED_COUNT +1`; fi
+  if test_world_write; then WORLDWRITE_ERRNO=$?; else WORLDWRITE_ERRNO=$?; FAILED_COUNT=`expr $FAILED_COUNT + 1`; fi
   ssout "Running test_world_write:   " `passfail [ $WORLDWRITE_ERRNO -eq "0" ]`
 
   if test_valid_user; then VALIDUSER_ERRNO=$?; else VALIDUSER_ERRNO=$?; FAILED_COUNT=`expr $FAILED_COUNT + 1`; fi
@@ -1395,6 +1604,6 @@ else
 fi
 }
 # //TODO Need to create a more unique file name encase they run this script more than one.
-run_tests 2>&1 | tee /tmp/smbclient_status.out
-#tar -cf /tmp/smbclient_status.out.tar /tmp/smbclient_status.out
+run_tests 2>&1 | tee /tmp/vasidmap-status.out
+#tar -cf /tmp/smbclient-status.out.tar /tmp/vasidmap_status.out
 

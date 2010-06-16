@@ -14,6 +14,8 @@
 # search_for_smbd
 # vas_version
 # vas_workgroup
+# joined_domain_netbios_name
+# joined_domain_info
 # yesorno
 
 # Common VAS tools and files
@@ -325,6 +327,36 @@ vas_workgroup () {
 	nETBIOSName
 }
 
+# joined_domain_netbios_name [vastool-options]
+#   Determines the currently joined netbios name.
+#   Uses vastoo
+#   Extra arguments are passed directly to vastool (eg, -u host/).
+#
+joined_domain_netbios_name () {
+
+  NETBIOS=
+
+  for SERVER in `$VASTOOL "$@" info servers | grep -v "^Servers"`; do
+        NETBIOS="`$VASTOOL "$@" info cldap $SERVER 2>/dev/null | grep -i \"Server Netbios Domain:\" | awk '{print $4}'`"
+	if [ -n "$NETBIOS" ]; then
+	  break
+        fi
+  done
+
+  if [ -z "$NETBIOS" ]; then
+
+  for SERVER in `$VASTOOL "$@" info servers -s * | grep -v "^Servers"`; do
+    NETBIOS="`$VASTOOL "$@" info cldap $SERVER 2>/dev/null | grep -i \"Server Netbios Domain:\" | awk '{print $4}'`"
+    if [ -n "$NETBIOS" ]; then
+      break
+    fi
+  done
+  
+  fi
+
+  test -n "$NETBIOS" && echo "$NETBIOS"
+}
+
 # vas_domainsid [vastool-options]
 #   Returns the domain SID for the currently joined domain.
 #   If not joined to a domain, then returns the domain SID for the root.
@@ -336,6 +368,7 @@ vas_domainsid () {
     $VASTOOL "$@" \
 	attrs -q -b -d "$rootDNC" objectSid
 }
+
 
 # yesorno <question> [default-response]
 #   Prompts the user for a yes-no question.
@@ -353,3 +386,41 @@ yesorno () {
 	    esac
 	done
 }
+
+# joined_domain_info
+#
+#  $1 server
+#  $2 cldap attributes: Possible values:
+#     Server_IP, Server_Forest, Server_Domain, Server_Hostname,
+#     Server_Netbios_Domain, Server_Netbios_Hostname, Server_Site,
+#     Client_Site.
+#
+#  Returns a ":" delim string of attribute values about the queried server
+#
+#  EXAMPLE: joined_domain info "example.com" "server_ip server_Netbios_name"
+#
+joined_domain_info() {
+  DOMAIN="$1"
+  ATTRS=`echo $2 | tr '[A-Z]' '[a-z]'`
+  VALUES=
+
+  for INFO in "`/opt/quest/bin/vastool info cldap $DOMAIN`"; do
+    for ATTR in $ATTRS; do
+
+      ATTR=`echo $ATTR | tr '[_]' '[ ]'`
+
+      KEY=`echo "$INFO" | sed 's,:.*,,' | grep -i "^$ATTR" | tr '[A-Z]' '[a-z]'`
+
+      if [ x"$KEY" = x"$ATTR" ]; then
+       if [ -z "$VALUES" ]; then
+         VALUES=`printf "%s\n" "$INFO" | grep -i "^$ATTR"| sed 's,[^:]*:,,' | awk '{print $1}'`
+       else
+         VALUES=$VALUES:`printf "%s\n" "$INFO" | grep -i "^$ATTR"| sed 's,[^:]*:,,' | awk '{print $1}'`
+       fi
+      fi
+    done
+  done
+
+  test -n "$VALUES" && echo "$VALUES"
+}
+

@@ -80,6 +80,24 @@ have_winbind=false
 test -x "$samba_prefix/sbin/winbindd" && have_winbind=true
 debug_echo "have_winbind = $have_winbind"
 
+
+with_ads_support=false
+if [ `$samba_prefix/sbin/smbd -b | grep WITH_ADS | wc -l` -eq "2" ]; then
+  with_ads_support=true
+fi
+  debug_echo "with_ads_support = $with_ads_support"
+
+
+test $with_ads_support = "false" && die_cat <<-.
+        ERROR: Samba does not appear to support kerberos.
+        Please validate that your version of samba supports
+        kerberos by checking the build settings on smbd by
+        running $samba_prefix/sbin/smbd -b and looking for 
+        WITH_ADS under the "--with Options" or "Build Options"
+        sections.
+.
+
+
 ##########################
 #          MAIN          #
 ##########################
@@ -109,12 +127,12 @@ test -n "$DOMAIN" || die_cat <<-.
 REALM=`echo "$DOMAIN" | tr '[a-z]' '[A-Z]'`
 
 # Find the pre-Windows 2000 Domain Name (Workgroup)
-WORKGROUP=`vas_workgroup -u host/` || die_cat <<-.
+WORKGROUP=`joined_domain_netbios_name -u host/` || die_cat <<-.
         ERROR: Unable to determine the domain's pre-Windows 2000 name.
 	Is this machine properly joined to the domain?
 .
 
-test -f "$SAMBA_CONFIGFILE" || die <<-.
+test -f "$SAMBA_CONFIGFILE" || die_cat <<-.
 	ERROR: $SAMBA_CONFIGFILE is missing.
 	Please verify that the Samba package is installed.
 .

@@ -3,6 +3,11 @@
 * vas-set-samba-password script no longer fails when METHOD=tdb in vas-set-samba-password.conf (bug #733)
 * Added vasidmap-status script to vasidmap package
 * Port to Mac OSX (bug #777)
+* vas-samba-config can now find the netbios name of the joined domain when VAS is not joined with a DC 
+  list that does not contain a forest root DC (bug #685)
+* vas-samba-config will report an error when it cannot find a smb.conf file (bug #768)
+* vas-samba-config now checks that smbd was compiled with Kerberos support (bug #769)
+* vasidmap-status now works with groupname containing spaces (bug #774)
 
 1.2.0
 * Fix invalid lookups for "uidNumber" (bug #714).
