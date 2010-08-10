@@ -924,11 +924,23 @@ static int vmapd_server(int sd)
 		goto FINISHED;
         }
 
-	while (1) {
+        while (1) {
+            fd_set                  readfds;
+            struct timeval          tv;
 
-		ret = vmapd_recv(sd, &query);
-		if (ret != 0) {
-			goto FINISHED;
+            FD_ZERO( &readfds );
+            FD_SET( sd, &readfds );
+
+            tv.tv_sec = 300;
+            tv.tv_usec = 0;
+            ret = select( sd + 1, &readfds, NULL, NULL, &tv );
+            /* Handle both error and timeout */
+            if( ret < 1 )
+                goto FINISHED;
+
+		    ret = vmapd_recv(sd, &query);
+    		if (ret != 0) {
+    			goto FINISHED;
 		}
 		DEBUG(2, "QUERY successfully received\n");
 
