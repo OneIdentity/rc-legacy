@@ -1,3 +1,6 @@
+1.2.2
+* Close connecitons that are idle for more then 5 minutes. 
+    
 1.2.1
 * Updated vas-samba-config to work with Samba 3.4.0 kerberos settings (bug #750)
 * vas-set-samba-password script no longer fails when METHOD=tdb in vas-set-samba-password.conf (bug #733)

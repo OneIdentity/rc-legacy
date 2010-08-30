@@ -1,7 +1,7 @@
 # (c) 2009, Quest Software, Inc. All rights reserved.
 
 AC_INIT([quest-vasidmap],
-	[1.2.1],
+	[1.2.2],
 	[support@quest.com])
 AM_INIT_AUTOMAKE()
 AC_CONFIG_SRCDIR([vasidmap.c])
