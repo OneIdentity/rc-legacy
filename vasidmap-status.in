@@ -3,9 +3,10 @@
 
 . "@pkgdatadir@/vasidmap-common.sh"
 
-VERSION=1.0.0.5
+VERSION=1.0.0.6
 DEBUG=false
 CLEANUP=true
+RUN_ALL_TESTS=true
 
 _SAMBA_BACKUPFILE=
 SMBCLIENT=
@@ -16,6 +17,7 @@ samba_prefix=
 samba_configfile=
 test_share_dir="/tmp/vasidmap-testshare"
 VASIDMAP="@bindir@/vasidmap"
+VASIDMAPD="@sbindir@/vasidmapd"
 
 # Re-execute with a reasonable shell and sensible PATH on Solaris.
 if id -un >/dev/null 2>&1; then
@@ -50,6 +52,10 @@ while test $# -gt 0; do
 #                uflag="$2"; shift; shift
 #             fi;;
         -V) echo "$VERSION"; exit 0;;
+        --smbclient) SMBCLIENT_TESTS=true; RUN_ALL_TESTS=false; shift;;
+        --vasidmap) VASIDMAP_TOOL_TESTS=true; RUN_ALL_TESTS=false; shift;;
+        --vasiddaemon) VASIDMAP_DAEMON_TESTS=true; RUN_ALL_TESTS=false; shift;;
+        all) RUN_ALL_TESTS=true; shift;;
         --) shift; break;;
         -*) echo "Unknown option '$1'" >&2; shift; opterr=true;;
         *)  break;;
@@ -219,6 +225,45 @@ get_primary_grnam_for_user() {
   return $RC
 }
 
+
+#
+#  vastool_getpwnam
+#
+#  returns the given users pwnam
+#
+vastool_getpwnam()
+{
+   USERNAME=$1
+   ATTRIBUTE="username-attr-name"
+   VALUE=`$VASTOOL inspect vasd $ATTRIBUTE`
+   INSPECT_ERRNO=$?
+   if [ $INSPECT_ERRNO -ne "0" ]; then
+    debug_echo "Could not determine value for vas.conf option $ATTRIBUTE"
+   fi
+   
+   if [ -z $VALUE ]; then 
+     debug_echo "$ATTRIBUTE not set, using default"
+     VALUE="userprincipalname"
+   else
+     debug_echo "$ATTRIBUTE set to $VALUE"
+   fi
+
+   ID=`$VASTOOL -u host/ attrs -u -q $USERNAME $VALUE`
+   RC=$?
+   if [ $RC -ne "0" ]; then
+    debug_echo "Could not determine user: $USERNAME pwname"
+    return $RC
+   fi
+
+   debug_echo "User $USERNAME, pwname is: $ID"
+
+   test -n "$ID" && echo "$ID"
+
+   debug_echo "vastool_getpwnam: END($RC)"
+
+   return $RC
+}
+
 #
 # vastool_id
 # 
@@ -243,18 +288,18 @@ vastool_id() {
     RC=$?
   elif [ "$FLAG" = "-un" ]; then
     debug_echo "Looking up username for user: $USERNAME"
-    ID=$USERNAME
+    ID=`vastool_getpwnam $USERNAME`
+    RC=$?
   elif [ "$FLAG" = "-gn" ]; then
     debug_echo "Looking up groupname for user: $USERNAME"
     GID=`$VASTOOL -u host/ attrs -u -q $USERNAME gidNumber`
     RC=$?
     if [ $RC -eq "0" ]; then
-      ID=`id -gn $USERNAME`
+      ID=`id -gn $USERNAME 2> /dev/null`
       RC=$?
       if [ $RC -ne "0" ]; then
         ID=`get_primary_grnam_for_user $USERNAME $GID`
         RC=$?
-       
       fi
     fi
   else
@@ -911,10 +956,13 @@ test_world_write()
 #
 # test_valid_user
 #
+# //TODO Find a way to get this to work when the users SamAccountName does not match the users UPN
+# //     This is only a problem when vas.conf option username-attr-name != SamAccountName
 #
 test_valid_user()
 {
-  USER="$RUNASUSER"
+  #USER="$RUNASUSER"
+  USER=`vastool_id $RUNASUSER -un`
   SHARE="VU"
   FILENAME="valid_user"
   USER_UID="0"
@@ -958,7 +1006,7 @@ test_valid_user()
 
     if [ -e "$cmp_file" ]; then
       if [ "x`compare_files "$org_file" "$cmp_file"`" = "xtrue" ]; then
-        PASS="true"
+        #PASS="true"
         RC=0
       fi
     else
@@ -970,7 +1018,7 @@ test_valid_user()
 
   # Now validate than a non-valid user cannot connect to the share and write
 
-  debug_echo "PASS $PASS"
+  # debug_echo "PASS $PASS"
   if [ $RC -eq "0" ]; then
     debug_echo "Testing if non-valid user can connect to share"
     debug_echo "Running: $SMBCLIENT -K -N -U nobody //localhost/$SHARE -c 'put $org_file $FILENAME.cmp'"
@@ -994,6 +1042,8 @@ test_valid_user()
 #
 # test_valid_group
 #
+# //TODO Find a way to get this to work when the users SamAccountName does not match the users UPN
+# //     This is only a problem when vas.conf option username-attr-name != SamAccountName
 #
 test_valid_group()
 {
@@ -1079,6 +1129,8 @@ test_valid_group()
 #
 # test_user_acl
 #
+# //TODO Find a way to get this to work when the users SamAccountName does not match the users UPN
+# //     This is only a problem when vas.conf option username-attr-name != SamAccountName
 #
 test_user_acl()
 {
@@ -1139,6 +1191,8 @@ test_user_acl()
 #
 # test_group_acl
 #
+# //TODO Find a way to get this to work when the users SamAccountName does not match the users UPN
+# //     This is only a problem when vas.conf option username-attr-name != SamAccountName
 #
 test_group_acl()
 {
@@ -1210,8 +1264,8 @@ test_group_acl()
 ##
 ##  vasidmap_sid_to_uid
 ##  vasidmap_sid_to_gid
-##  vasidmap_username_sid
-##  vasidmap_groupname_sid
+##  vasidmap_username_to_sid
+##  vasidmap_groupname_to_sid
 ##  vasidmap_uid_to_sid
 ##  vasidmap_gid_to_sid
 ##
@@ -1299,7 +1353,7 @@ vasidmap_sid_to_gid()
   GROUP_GID=`$VASIDMAP -sG "$GROUP_SID"`
   VASID_ERRNO=$?
   if [ $VASID_ERRNO -eq "0" ]; then
-    PASS="true"
+    #PASS="true"
     debug_echo "GID for SID: $GROUP_SID is: $GROUP_GID"
   else
     echo "Could not not get GID for SID: $GROUP_SID"
@@ -1311,7 +1365,7 @@ vasidmap_sid_to_gid()
 }
 
 #
-# vasidmap_username_sid
+# vasidmap_username_to_sid
 #
 # vasidmap -un <username>
 #
@@ -1320,7 +1374,7 @@ vasidmap_username_to_sid()
 
   debug_echo "vasidmap_username_to_sid: Start"
 
-  USER=$RUNASUSER
+  USER=`vastool_id $RUNASUSER -un`
  
   debug_echo "Testing: $VASIDMAP -un $USER"
   USER_SID=`$VASIDMAP -un "$USER"`
@@ -1337,7 +1391,6 @@ vasidmap_username_to_sid()
  
 }
 
-
 #
 # vasidmap_groupname_to_sid
 #
@@ -1348,7 +1401,7 @@ vasidmap_groupname_to_sid()
 
   debug_echo "vasidmap_groupname_to_sid: Start"
 
-  USER=$RUNASUSER
+  USER=`vastool_id $RUNASUSER -un`
   GROUP=`vastool_id "$USER" -gn`
   GROUPID_ERRNO=$?
   if [ $GROUPID_ERRNO -ne "0" ]; then
@@ -1451,6 +1504,230 @@ vasidmap_gid_to_sid()
 ## vasidmap tool tests end
 ###############################################################################################################
 
+###############################################################################################################
+###############################################################################################################
+###############################################################################################################
+##
+##  vasidmap daemon tests
+##
+##  vasidmap_daemon_sid_to_uid
+##  vasidmap_daemon_sid_to_gid
+##  vasidmap_daemon_uid_to_sid
+##  vasidmap_daemon_gid_to_sid
+##
+##
+###############################################################################################################
+###############################################################################################################
+###############################################################################################################
+
+#
+# vasidmap_daemon_sid_to_uid
+#
+# Uses the vastool search command to query the vasidmapd daemon
+# for a users uidnumber based on the users sid.
+#
+# vastool search -a -h 127.0.0.1 "(&(objectclass="sambaidmapentry")(sambaSID=<usersid>))" uidNumber
+#
+vasidmap_daemon_sid_to_uid()
+{
+
+  debug_echo "vasidmap_daemon_sid_to_uid: Start"
+
+  OBJECTCLASS="sambaidmapentry"
+  HOST="127.0.0.1"
+  ATTRIBUTE="uidNumber"
+
+  USER=$RUNASUSER
+
+  USER_SID=`$VASTOOL -u host/ attrs -bq $USER objectSid`
+  VT_ERRNO=$?
+  if [ $VT_ERRNO -ne "0" ]; then
+   if $DEBUG; then
+     debug_echo "Could not lookup sid for user: $USER"
+   else
+     echo "Could not lookup sid for user: $USER"
+   fi
+   debug_echo "vasidmap_daemon_sid_to_uid: End($VT_ERRNO)"
+   return $VT_ERRNO
+  fi
+
+  FILTER="(&(objectClass="$OBJECTCLASS")(sambaSID="$USER_SID"))"
+
+  debug_echo "Testing: $VASTOOL search -a -q -h $HOST $FILTER $ATTRIBUTE"
+ 
+  USER_UID=`$VASTOOL search -a -q -h $HOST $FILTER $ATTRIBUTE`
+
+  VASID_ERRNO=$?
+  if [ $VASID_ERRNO -eq "0" ]; then
+    debug_echo "UID for SID: $USER_SID is: $USER_UID"
+  else
+    echo "Could not get UID for SID: $USER_SID"
+  fi
+
+  debug_echo "vasidmap_daemon_sid_to_uid: END($VASID_ERRNO)"
+
+  return $VASID_ERRNO
+} # vasidmap_daemon_sid_to_uid END
+
+#
+# vasidmap_daemon_sid_to_gid
+#
+# Uses the vastool search command to query the vasidmapd daemon
+# for a groups gidnumber based on the group sid.
+#
+# vastool search -a -h 127.0.0.1 "(&(objectclass="sambaidmapentry")(sambaSID=<groupsid>))" gidNumber
+#
+vasidmap_daemon_sid_to_gid()
+{
+
+  debug_echo "vasidmap_daemon_sid_to_gid: Start"
+
+  OBJECTCLASS="sambaidmapentry"
+  HOST="127.0.0.1"
+  ATTRIBUTE="gidNumber"
+
+  USER=$RUNASUSER
+  GROUP=`vastool_id "$USER" -gn | cut -d: -f1`
+  GROUPID_ERRNO=$?
+  if [ $GROUPID_ERRNO -ne "0" ]; then
+    if $DEBUG; then
+      debug_echo "Could not get primary groupname for user: $USER"
+    else
+      echo "Could not get primary groupname for user: $USER"
+    fi
+    debug_echo "vasidmap_daemon_sid_to_gid: End($GROUPID_ERRNO)"
+    return $GROUPID_ERRNO
+  fi
+
+  GROUP_SID=`$VASTOOL -u host/ attrs -bqg "$GROUP" objectSid`
+  VT_ERRNO=$?
+  if [ $VT_ERRNO -ne "0" ]; then
+    if $DEBUG; then
+      debug_echo "Could not look up sid for group: $GROUP"
+    else
+      echo "Could not look up sid for group: $GROUP"
+    fi
+    debug_echo "vasidmap_daemon_sid_to_gid: End($VT_ERRNO)"
+    return $VT_ERRNO
+  fi
+
+  FILTER="(&(objectClass="$OBJECTCLASS")(sambaSID="$GROUP_SID"))"
+
+  debug_echo "Testing: $VASTOOL search -a -q -h $HOST $FILTER $ATTRIBUTE"
+  GROUP_GID=`$VASTOOL search -a -q -h $HOST $FILTER $ATTRIBUTE`
+  VASID_ERRNO=$?
+  if [ $VASID_ERRNO -eq "0" ]; then
+    #PASS="true"
+    debug_echo "GID for SID: $GROUP_SID is: $GROUP_GID"
+  else
+    echo "Could not not get GID for SID: $GROUP_SID"
+  fi
+
+  debug_echo "vasidmap_daemon_sid_to_gid: End($VASID_ERRNO)"
+
+  return $VASID_ERRNO
+} # vasidmap_daemon_sid_to_gid END
+
+#
+# vasidmap_daemon_uid_to_sid
+#
+# Uses the vastool search command to query the vasidmapd daemon
+# for a users SID based on uidNumber.
+#
+# vastool search -a -h 127.0.0.1 "(&(objectclass="sambaidmapentry")(uidNumber=<uidnumber>))" sambaSID
+#
+vasidmap_daemon_uid_to_sid()
+{
+
+  debug_echo "vasidmap_daemon_uid_to_sid: Start"
+
+  OBJECTCLASS="sambaidmapentry"
+  HOST="127.0.0.1"
+  ATTRIBUTE="sambaSID"
+
+  USER=$RUNASUSER
+  USER_UID=`vastool_id "$USER" -u`
+  USERID_ERRNO=$?
+  if [ $USERID_ERRNO -ne "0" ]; then
+    if $DEBUG; then
+      debug_echo "Could not get UID for user: $USER"
+    else
+      echo "Could not get UID for user: $USER"
+    fi
+    debug_echo "vasidmap_uid_to_sid: End($USERID_ERRNO)"
+    return $USERID_ERRNO
+  fi
+
+  FILTER="(&(objectClass="$OBJECTCLASS")(uidNumber="$USER_UID"))"
+ 
+  debug_echo "Testing: $VASTOOL search -a -q -h $HOST $FILTER $ATTRIBUTE"
+  USER_SID=`$VASTOOL search -a -q -h $HOST $FILTER $ATTRIBUTE`
+  VASID_ERRNO=$?
+
+  if [ $VASID_ERRNO -eq "0" ]; then
+     debug_echo "SID for user: $USER_GID is: $USER_SID"
+  else
+     echo "Could not get SID for user: $USER_GID"
+  fi
+
+  # TODO Do we compare the result of the sid lookup with that of a vastool search attrs -b objectSid?
+  
+  debug_echo "vasidmap_daemon_uid_to_sid: End($VASID_ERRNO)"
+
+  return $VASID_ERRNO
+} # vasidmap_daemon_uid_to_sid END
+
+#
+# vasidmap_daemon_gid_to_sid
+#
+# Uses the vastool search command to query the vasidmapd daemon
+# for a groups SID based on gidNumber.
+#
+# vastool search -a -h 127.0.0.1 "(&(objectclass="sambaidmapentry")(gidNumber=<gidnumber>))" sambaSID
+#
+vasidmap_daemon_gid_to_sid()
+{
+
+  debug_echo "vasidmap_dameon_gid_to_sid: Start"
+
+  OBJECTCLASS="sambaidmapentry"
+  HOST="127.0.0.1"
+  ATTRIBUTE="sambaSID"
+
+  USER=$RUNASUSER
+  GROUP_GID=`vastool_id "$USER" -g`
+  GROUPID_ERRNO=$?
+  if [ $GROUPID_ERRNO -ne "0" ]; then
+    if $DEBUG; then
+      debug_echo "Could not get primary GID for user: $USER"
+    else
+      echo "Could not get primary GID for user: $USER"
+    fi
+    debug_echo "vasidmap_daemon_gid_to_sid: End($GROUPID_ERRNO)"
+    return $GROUPID_ERRNO
+  fi
+
+  FILTER="(&(objectClass="$OBJECTCLASS")(gidNumber=$GROUP_GID))"
+
+  debug_echo "Testing: $VASTOOL search -a -q -h $HOST $FILTER $ATTRIBUTE"
+  GROUP_SID=`$VASTOOL search -a -q -h $HOST $FILTER $ATTRIBUTE`
+  VASID_ERRNO=$?
+  
+  if [ $VASID_ERRNO -eq	"0" ]; then
+     debug_echo "SID for group: $GROUP_GID is: $GROUP_SID"
+  else
+     echo "Could not get SID for group: $GROUP_GID"
+  fi
+  
+  debug_echo "vasidmap_daemon_gid_to_sid: End($VASID_ERRNO)"
+
+  return $VASID_ERRNO
+} # vasidmap_daemon_gid_to_sid END
+
+###############################################################################################################
+## vasidmap daemon tests end
+###############################################################################################################
+
 #
 # run_smbclient_tests
 #
@@ -1509,7 +1786,7 @@ run_smbclient_tests()
 #
 # Run all vasidmap tool tests
 #
-run_vasidmap_tests()
+run_vasidmap_tool_tests()
 {
   FAILED_COUNT=0 
   # Check to see if vasidmap exists
@@ -1518,6 +1795,7 @@ run_vasidmap_tests()
   test -x "$VASIDMAP" && vasidmap_exists=true
   ssout "Checking if $VASIDMAP exists:" `yesno [ "x$vasidmap_exists" = "xtrue" ]`
   if [ "x$vasidmap_exists" = "xfalse" ]; then
+    echo "$VASIDMAP could not be found, not running tests for vasidmap tool"
     return 1
   fi
   
@@ -1528,10 +1806,10 @@ run_vasidmap_tests()
   ssout "Running vasidmap_sid_to_uid:    " `passfail [ "$SIDUID_ERRNO" -eq "0" ]`
 
   if vasidmap_username_to_sid; then UNSID_ERRNO=$?; else UNSID_ERRNO=$?; FAILED_COUNT=`expr $FAILED_COUNT + 1`; fi
-  ssout "Running vasidmap_username_sid:    " ` passfail [ "$UNSID_ERRNO" -eq "0" ]`
+  ssout "Running vasidmap_username_to_sid:    " ` passfail [ "$UNSID_ERRNO" -eq "0" ]`
 
   if vasidmap_groupname_to_sid; then GNSID_ERRNO=$?; else GNSID_ERRNO=$?; FAILED_COUNT=`expr $FAILED_COUNT + 1`; fi
-  ssout "Running vasidmap_groupname_sid:   " `passfail [ "$GNSID_ERRNO" -eq "0" ]`
+  ssout "Running vasidmap_groupname_to_sid:   " `passfail [ "$GNSID_ERRNO" -eq "0" ]`
 
   if vasidmap_uid_to_sid; then UIDSID_ERRNO=$?; else UIDSID_ERRNO=$?; FAILED_COUNT=`expr $FAILED_COUNT + 1`; fi
   ssout "Running vasidmap_uid_to_sid:   " ` passfail [ "$UIDSID_ERRNO" -eq "0" ]` 
@@ -1540,6 +1818,55 @@ run_vasidmap_tests()
   ssout "Running vasidmap_gid_to_sid:  " `passfail [ "$GIDSID_ERRNO" -eq "0" ]`
 
   ssout "Number of vasidmap tool tests that failed" "[ $FAILED_COUNT ]"
+  return $FAILED_COUNT
+}
+
+is_vasidmapd_running()
+{
+  if [ "`ps -ef | grep -c -w $VASIDMAPD`" -gt "1" ]; then
+    debug_echo "$VASIDMAPD is running"
+    return 0
+  else
+    debug_echo "$VASIDMAPD is NOT running"
+    return 1
+  fi
+}
+
+#
+# run_vasidmap_daemon_tests
+#
+# 
+#
+run_vasidmap_daemon_tests()
+{
+  FAILED_COUNT=0
+
+  vasidmapid_exists="false"
+  test -x "$VASIDMAPD" && vasidmapd_exists=true
+  ssout "Checking if $VASIDMAPD exists:" `yesno [ "x$vasidmapd_exists" = "xtrue" ]`
+  if [ "x$vasidmapd_exists" = "xfalse" ]; then
+    echo "$VASIDMAPD could not be found, not running tests for vasidmap daemon"
+    return 1
+  fi
+
+  if ! is_vasidmapd_running ; then
+    echo "$VASIDMAPD was not running, not running tests for vasidmap daemon"
+    return 1
+  fi
+
+  if vasidmap_daemon_sid_to_uid; then SIDUID_ERRNO=$?; else SIDUID_ERRNO=$?; FAILED_COUNT=`expr $FAILED_COUNT + 1`; fi
+  ssout "Running vasidmap_dameon_sid_to_uid:	" `passfail [ "$SIDUID_ERRNO" -eq "0" ]`
+
+  if vasidmap_daemon_sid_to_gid; then SIDGID_ERRNO=$?; else SIDGID_ERRNO=$?; FAILED_COUNT=`expr $FAILED_COUNT + 1`; fi
+  ssout "Running vasidmap_dameon_sid_to_gid: 	" `passfail [ "$SIDGID_ERRNO" -eq "0" ]`
+
+  if vasidmap_daemon_uid_to_sid; then UIDSID_ERRNO=$?; else UIDSID_ERRNO=$?; FAILED_COUNT=`expr $FAILED_COUNT + 1`; fi
+  ssout "Running vasidmap_daemon_uid_to_sid:	" `passfail [ "$UIDSID_ERRNO" -eq "0" ]`
+
+  if vasidmap_daemon_gid_to_sid; then GIDSID_ERRNO=$?; else GIDSID_ERRNO=$?; FAILED_COUNT=`expr $FAILED_COUNT + 1`; fi
+  ssout "Running vasidmap_dameon_gid_to_sid:	" `passfail [ "$GIDSID_ERRNO" -eq "0" ]`
+
+  ssout "Number of vasidmap daemon tests that failed" "[ $FAILED_COUNT ]"
   return $FAILED_COUNT
 }
 
@@ -1581,6 +1908,7 @@ check_ownership()
 
 run_tests()
 {
+
 smbd_exist=false
 test -x "$smbd" && smbd_exist=true
 ssout "Checking if $smbd exists:" `yesno [ "x$smbd_exist" = "xtrue" ]`
@@ -1593,10 +1921,20 @@ ssout "Checking if winbind is installed:" `yesno [ x"$have_winbind" = x"true" ]`
 
 checkroot
 if kinit; then 
-  echo "\nRunning vasidmap tool tests\n"
-  run_vasidmap_tests && { echo "All vasidmap tests passed"; } || { echo "NOTICE: One or more vasidmap tests failed. For more information run again  with the -d (debug) option"; }
-  echo "\nRunning smbclient tests\n"
-  run_smbclient_tests && { echo "All smbclient tests passed"; } || { echo "NOTICE: One or more smbclient tests failed. For more information run again with the -d (debug) option"; }
+  if [ "x$VASIDMAP_TOOL_TESTS" = "xtrue" ] || [ "x$RUN_ALL_TESTS" = "xtrue" ]; then
+    echo "\nRunning vasidmap tool tests\n"
+    run_vasidmap_tool_tests && { echo "\nAll vasidmap tool tests passed"; } || { echo "\nNOTICE: One or more vasidmap tool tests failed. For more information run again  with the -d (debug) option"; }
+  fi
+
+  if [ "x$VASIDMAP_DAEMON_TESTS" = "xtrue" ] || [ "x$RUN_ALL_TESTS" = "xtrue" ]; then
+    echo "\nRunning vasidmap daemon tests\n"
+    run_vasidmap_daemon_tests && { echo "\nAll vasidmap daemon tests passed"; } || { echo "\nNOTICE: One or more vasidmap daemon tests failed. For more information run again  with the -d (debug) option"; }
+  fi
+
+  if [ "x$SMBCLIENT_TESTS" = "xtrue" ] || [ "x$RUN_ALL_TESTS" = "xtrue" ]; then
+    echo "\nRunning smbclient tests\n"
+    run_smbclient_tests && { echo "\nAll smbclient tests passed"; } || { echo "\nNOTICE: One or more smbclient tests failed. For more information run again with the -d (debug) option"; }
+  fi
 else
   echo "errno: $?"
   echo "Failed getting credentials for user: $USER"
