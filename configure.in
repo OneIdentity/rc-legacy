@@ -32,25 +32,22 @@ case `uname -a | awk '{print $1}'` in
         NOSUDO=#
         case `uname -m` in
             x86_64)
-                case $CROSSCOMPILE in
-                    s390x)
-                        PLATFORM="LINUX_S390X"
-                        USERNAME="lx390"
-                        DO32=#
-                        NO32=''
-                        CC="/opt/crosstool/gcc-4.1.0-glibc-2.3.6/s390-unknown-linux-gnu/s390-unknown-linux-gnu/bin/gcc"
-                        CC64="/opt/crosstool/gcc-4.1.0-glibc-2.3.6/s390x-unknown-linux-gnu/s390x-unknown-linux-gnu/bin/gcc"
-                        DOPAM32='#'
-                        DOPAM64=''
-                        ;;
-                    *)
-                        PLATFORM="LINUX_X86_64"
-                        USERNAME="lxx64"
-                        CC64="$CC64 -m64"
-                        DOPAM32='#'
-                        DOPAM64=''
-                        ;;
-                esac
+                if [ "x$CROSSC_s390x" = "x" ] ; then
+                    PLATFORM="LINUX_X86_64"
+                    USERNAME="lxx64"
+                    CC64="$CC64 -m64"
+                    DOPAM32='#'
+                    DOPAM64=''
+                else
+                    PLATFORM="LINUX_S390X"
+                    USERNAME="lx390"
+#                    DO32=#
+#                    NO32=''
+                    CC="/opt/crosstool/gcc-4.1.0-glibc-2.3.6/s390-unknown-linux-gnu/s390-unknown-linux-gnu/bin/gcc"
+                    CC64="/opt/crosstool/gcc-4.1.0-glibc-2.3.6/s390x-unknown-linux-gnu/s390x-unknown-linux-gnu/bin/gcc"
+                    DOPAM32='#'
+                    DOPAM64=''
+                fi
                 ;;
             ppc64)
                 PLATFORM="LINUX_PPC64"
