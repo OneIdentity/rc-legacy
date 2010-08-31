@@ -64,6 +64,10 @@ db2 update dbm cfg using SRVCON_PW_PLUGIN sys-auth
 db2 update dbm cfg using GROUP_PLUGIN sys-auth
 db2 update dbm cfg using CLNT_PW_PLUGIN sys-auth
 
+db2 update dbm cfg using SRVCON_PW_PLUGIN NULL
+db2 update dbm cfg using GROUP_PLUGIN NULL
+db2 update dbm cfg using CLNT_PW_PLUGIN NULL
+
 
 For the DB2 connection at the database level, you will want to revoke
 connect from public then grant it to specific groups.
