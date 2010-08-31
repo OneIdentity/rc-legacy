@@ -71,14 +71,14 @@ case `uname -a | awk '{print $1}'` in
         OS="SOLARIS"
         PLATFORM="SOLARIS_SPARC"
         USERNAME="sol8s"
-        CC="$CC -m32"
+        CC="$CC -m32 -D_POSIX_PTHREAD_SEMANTICS"
         AC_DEFINE(_TS_ERRNO,1,Thread_safe_errno_define)
 # The -m and elf parts are for the new gcc/ld setup on the 
 # VAS Dev build server. The new setup is so it could do 
 # Smartcard compiling. 
 # Other situations might need to use the other CC64 entry.
 #CC64="$CC64 -m64" 
-        CC64="$CC64 -m64 -Wl,-m -Wl,elf64_sparc"
+        CC64="$CC64 -m64 -D_POSIX_PTHREAD_SEMANTICS -Wl,-m -Wl,elf64_sparc"
         ;;
     HP-UX)
         OS=HPUX
