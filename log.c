@@ -22,6 +22,7 @@
 #include <sys/stat.h>
 
 #ifndef ctime_r
+#if 0
 #ifdef SOLARIS
 /* This is for Solaris and their incomplete posix standard.
  * If we ever start defining _POSIX_C_SOURCE >= 199506L
@@ -31,6 +32,7 @@
     extern char* ctime_r(const time_t *clock, char *buf);
 #endif //SOLARIS
 #endif //ctime_r
+#endif
 #define CTIMELEN 26
 static int G_log_level = -1;
 static int G_log_to_syslog = -1;
