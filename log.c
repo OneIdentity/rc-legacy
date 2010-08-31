@@ -221,14 +221,14 @@ void slog( int level, const char *format, ... )
 
     /* write a time stamp without the ending '\n' */
     memset( curr_time_str, 0, CTIMELEN );
-#ifdef SOLARIS
+//#ifdef SOLARIS 
     /* This is for Solaris and their incomplete posix standard.
      *    If we ever start defining _POSIX_C_SOURCE >= 199506L
      *       then we need to use the posix function definition. */
-    tmp = ctime_r( &curr_time, curr_time_str, CTIMELEN );
-#else
+//    tmp = ctime_r( &curr_time, curr_time_str, CTIMELEN );
+//#else
     tmp = ctime_r( &curr_time, curr_time_str );
-#endif
+//#endif
     if( tmp )
     {
         if( (tmp = strchr( curr_time_str, '\n' )) )
