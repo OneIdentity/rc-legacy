@@ -32,7 +32,7 @@ case `uname -a | awk '{print $1}'` in
         NOSUDO=#
         case `uname -m` in
             x86_64)
-                if [ "x$CROSSC_s390x" = "x" ] ; then
+                if test "x$CROSSC_s390x" = "x" ; then
                     PLATFORM="LINUX_X86_64"
                     USERNAME="lxx64"
                     CC64="$CC64 -m64"
