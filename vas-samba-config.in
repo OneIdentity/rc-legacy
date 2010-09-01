@@ -267,6 +267,7 @@ if test -s $NEWTEXT; then
     SAVEIFS="$IFS"
     IFS=""
     INGLOBAL=false
+    update_conf=false
     while read ILINE; do
         if echo "$ILINE" | grep -i "^$SP*\[global\]" >/dev/null; then
             INGLOBAL=true
@@ -278,11 +279,23 @@ if test -s $NEWTEXT; then
             echo
             echo "$ILINE"
             cat
+            update_conf=true
             break
         fi
         echo "$ILINE"
     done < "$CONFMOD" > "$CONFMOD.new"
     IFS="$SAVEIFS"
+
+    if [ "x$update_conf" = "xfalse" ] && [ "x$INGLOBAL" != "xfalse" ]; then
+      # A [section] besides Global was not found. EOF
+      echo
+      echo "  ;--- begin options added by vas-samba-config ($TODAY) ---"
+      cat $NEWTEXT
+      echo "  ;--- end options added by vas-samba-config ($TODAY) ---"
+      echo
+      echo "$ILINE"
+    fi >> "$CONFMOD.new"  
+
     mv "$CONFMOD.new" "$CONFMOD"
     update_conf=true
 elif cmp "$CONFMOD" "$SAMBA_CONFIGFILE" >/dev/null 2>&1; then

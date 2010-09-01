@@ -127,6 +127,37 @@ check_and_fix () {
 	fi
 }
 
+# check_and_add <param-name> <value> <config-file>
+#   Checks if the parameter is defined incorrectly in the config file, and
+#   if so, repalce it. If the paramter is not defined then define it.
+#   Returns 0 if the parameter was added or corrected.
+#   Returns 1 otherwise
+#   Exits the script if there is an error correcting the config-file
+check_and_add()
+{
+  debug_echo "check_and_fix_add2: $1 = $2"
+  if oldvalue=`ini_get "global" "$1" "$3"`; then
+    # the parameter definition exists
+    if ini_put "global" "$1" "$2" "$3" > "$3.new"; then
+      # the value was changed
+      verbose_echo "Correcting parameter '$1' from '$oldvalue' to '$2'"
+      cat "$3.new" > "$3" || exit 1
+    fi
+      rm "$3.new"
+      return 0
+  else
+    if ini_put "global" "$1" "$2" "$3" > "$3.new"; then
+      # the value was added
+      verbose_echo "Adding parameter '$1' with value '$2'"
+      cat "$3.new" > "$3" || exit 1
+    fi
+      rm "$3.new"    
+      return 0 # parameter was not defined at all
+  fi
+
+  return 1
+}
+
 # check_and_rename <old-param-name> <new-param-name> <config-file>
 #   Replaces definitions of old-param-name with new-param-name.
 #   Returns 0 if a renaming occurred.
