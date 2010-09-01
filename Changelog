@@ -1,3 +1,6 @@
+1.2.3
+* vas-samba-config now updates smb.conf even when no other sections exist besides [global] (bug #785)
+
 1.2.2
 * Close connecitons that are idle for more then 5 minutes. 
 * vasidmap-status now runs LDAP tests against vasidmapd.
