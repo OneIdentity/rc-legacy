@@ -69,7 +69,7 @@ close_fds( void )
     if( ( maxfds = sysconf(_SC_OPEN_MAX) ) > MAXFD )
         maxfds = MAXFD;
     else if( maxfds < 3 )
-        maxfds = 1024
+        maxfds = 1024;
 
     for( i = 3; i < maxfds; ++i )
         close( i );
