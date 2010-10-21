@@ -296,3 +296,6 @@ Bug 672
 3.0.0.29 ( 2009_05_13 )
 * Use reentrant NSS calls ( _r ).
 * Check for pw_dir.
+
+3.0.0.30 ( 2010_10_21 )
+* Change max fd closed to min(_SC_OPEN_MAX, 16K), 4K was too low.  

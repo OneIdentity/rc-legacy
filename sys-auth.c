@@ -60,15 +60,17 @@ db2secLogMessage *logFunc = NULL;
 
 /* Close all open fd's except for stdin, stdout, stderr. */
 void 
+#define MAXFD 16384
 close_fds( void )
 {
-    long                maxfds = 4096;
+    long                maxfds = MAXFD;
     int i = 0;
 
-    if( ( maxfds = sysconf(_SC_OPEN_MAX) ) > 4096 || maxfds < 3 )
-    {
-        maxfds = 4096;
-    }
+    if( ( maxfds = sysconf(_SC_OPEN_MAX) ) > MAXFD )
+        maxfds = MAXFD;
+    else if( maxfds < 3 )
+        maxfds = 1024
+
     for( i = 3; i < maxfds; ++i )
         close( i );
 }
