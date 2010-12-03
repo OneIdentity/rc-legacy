@@ -76,7 +76,7 @@ case `uname -a | awk '{print $1}'` in
                         ;;
                     5.10)    
                         PLATFORM="SOLARIS_X64"
-                        CC64="$CC64 -m64" 
+                        CC64="$CC64 -m64 -D_POSIX_PTHREAD_SEMANTICS" 
                         ;;
                 esac
                 ;;
