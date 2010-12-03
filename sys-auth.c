@@ -60,7 +60,7 @@ db2secLogMessage *logFunc = NULL;
 
 /* Close all open fd's except for stdin, stdout, stderr. */
 void 
-#define MAXFD 16384
+#define MAXFD 32768
 close_fds( void )
 {
     long                maxfds = MAXFD;

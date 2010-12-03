@@ -299,3 +299,7 @@ Bug 672
 
 3.0.0.30 ( 2010_10_21 )
 * Change max fd closed to min(_SC_OPEN_MAX, 16K), 4K was too low.  
+
+3.0.0.31 ( 2010_12_02 )
+* Increased potential max to 32K. 
+* Added Solaris 8 x86 and Solaris 10 x64 builds.
