@@ -1566,6 +1566,7 @@ int main(int argc, char **argv) {
     sigact.sa_handler = vas_db2_plugin_sig_handle;
 
     sigaction(SIGCHLD, &sigact, &osigact);
+    sigaction(SIGPIPE, &sigact, &osigact);
     
     if( argc > 2)
     {
@@ -1603,6 +1604,7 @@ int main(int argc, char **argv) {
     cs_destroy( s, TRUE );
 
     sigaction(SIGCHLD, &osigact, NULL);
+    sigaction(SIGPIPE, &osigact, NULL);
     
     return( rc );
 }
