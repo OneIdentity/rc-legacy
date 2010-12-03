@@ -68,10 +68,21 @@ case `uname -a | awk '{print $1}'` in
         OS="SOLARIS"
         case `uname -p` in 
             i386)
-                PLATFORM="SOLARIS_X64"
+                case `uname -r` in 
+                    5.8)
+                        PLATFORM="SOLARIS_X86"
+                        DO64=#
+                        NO64=''
+                        ;;
+                    5.10)    
+                        PLATFORM="SOLARIS_X64"
+                        CC64="$CC64 -m64" 
+                        ;;
+                esac
                 ;;
             *)
                 PLATFORM="SOLARIS_SPARC"
+                CC64="$CC64 -m64 -D_POSIX_PTHREAD_SEMANTICS -Wl,-m -Wl,elf64_sparc"
                 ;;
         esac
         USERNAME="sol8s"
@@ -82,7 +93,6 @@ case `uname -a | awk '{print $1}'` in
 # Smartcard compiling. 
 # Other situations might need to use the other CC64 entry.
 #CC64="$CC64 -m64" 
-        CC64="$CC64 -m64 -D_POSIX_PTHREAD_SEMANTICS -Wl,-m -Wl,elf64_sparc"
         ;;
     HP-UX)
         OS=HPUX
