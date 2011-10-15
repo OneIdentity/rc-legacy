@@ -15,8 +15,9 @@
 # vas_version
 # vas_workgroup
 # joined_domain_netbios_name
-# joined_domain_info
+# vas_domainsid
 # yesorno
+# joined_domain_info
 
 # Common VAS tools and files
 VASTOOL=/opt/quest/bin/vastool
@@ -190,7 +191,6 @@ verbose_echo () {
 	echo "$*"
     fi
 }
-
 # detect_opsys
 #   Detects then sets the variable $OPSYS to represent the
 #   current operating system.
@@ -321,8 +321,8 @@ search_for_smbd () {
 	    search=`echo /opt/pware/samba/*/sbin/smbd`
 	    ;;
 	Darwin)
-		search=/usr/sbin/smdb
-		;;
+            search=/usr/sbin/smbd
+            ;;
     esac
     search="/opt/quest/sbin/smbd $search /usr/local/sbin/smbd"
 
@@ -330,12 +330,12 @@ search_for_smbd () {
     #   respond to the -V version request. Set $smbd to the result
     smbd=
     for s in $search; do 
-	if test -x $s && $s -V >/dev/null 2>/dev/null; then 
+	if test -x "$s" && "$s" -V >/dev/null 2>/dev/null; then 
 	    smbd=$s
 	    break
 	fi
     done
-    test -n $smbd && echo $smbd	    # Returns false if smbd is not set
+    test -n "$smbd" && echo $smbd	    # Returns false if smbd is not set
 }
 
 # vas_workgroup [vastool-options]
