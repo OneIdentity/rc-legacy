@@ -1,5 +1,11 @@
 1.2.3
 * vas-samba-config now updates smb.conf even when no other sections exist besides [global] (bug #785)
+* Updated the kinit function in vasidmap-status to work in more scenarios
+* Implemented Unix shell traps, to handle proper cleanup when script is finished running
+* vasidmap-status now cleans up properly after itself (bug #812)
+* Fixed issues on HPUX in vasidmap-status where shell test methods were not being quoted (bug #803)
+* Added/Fixed Solaris SMF support in Polypkg (bug #795)
+* Add ability for Makefile.am to download the latest RC Polypkg if PP is not in the build directory
 
 1.2.2
 * Close connecitons that are idle for more then 5 minutes. 
