@@ -1,5 +1,8 @@
 # (c) 2009, Quest Software, Inc. All rights reserved.
 
+POLYPKGFILE=/data/rc/pub/rc/polypkg/pp
+POLYPKGURI=http://rc.quest.com/pub/rc/polypkg/pp
+
 AUTOMAKE_OPTIONS =	foreign
 
 AM_LDFLAGS =		$(VAS_LIBS)
@@ -58,6 +61,21 @@ subst = $(SED) -e 's,[@]VERSION[@],$(VERSION),g' \
 	chmod +x $@
 
 PP_DESTDIR=$${TMPDIR-/tmp}/vasidmap.root.`echo $$$$`
+
+
+pp:
+	if [ -r "$(POLYPKGFILE)" ]; then \
+	ln -s $(POLYPKGFILE) $@; \
+	elif which wget >/dev/null 2>&1; then \
+	wget -O $@ "$(POLYPKGURI)"; \
+	elif which curl >/dev/null 2>&1; then \
+	curl -o $@ "$(POLYPKGURI)"; \
+	else \
+	echo "Cannot figure out how to get polypkg"; \
+	exit 1; \
+	fi
+	chmod +x $@
+
 # Rule for building a package
 package: pp vasidmap.pp
 	DESTDIR="$(PP_DESTDIR)"; \
