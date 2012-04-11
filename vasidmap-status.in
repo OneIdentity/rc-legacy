@@ -69,18 +69,18 @@ while test "$#" -gt 0; do
              -u) if test "$#" -lt 3; then
                    echo "Missing argument to $2"; opterr=true; shift
                  else
-                   RUNASUSER="$3"; shift; shift
+                   RUNASUSER_TOOL="$3"; shift; shift
                  fi;;
              *);;
             esac
             shift
             ;;
-        --vasiddaemon) VASIDMAP_DAEMON_TESTS=true; RUN_ALL_TESTS=false; 
+        --vasidmapd) VASIDMAP_DAEMON_TESTS=true; RUN_ALL_TESTS=false; 
            case "$2" in 
              -u) if test "$#" -lt 3; then 
                    echo "Missing argument to $2"; opterr=true; shift
                  else
-                   RUNASUSER="$3"; shift; shift
+                   RUNASUSER_DAEMON="$3"; shift; shift
                  fi;;
              esac
              shift
@@ -249,8 +249,10 @@ get_primary_grnam_for_user() {
 vastool_getpwnam()
 {
    USERNAME=$1
-   ATTRIBUTE="username-attr-name"
-   VALUE=`$VASTOOL inspect vasd $ATTRIBUTE`
+   #ATTRIBUTE="username-attr-name"
+   #VALUE=`$VASTOOL inspect vasd $ATTRIBUTE`
+   ATTRIBUTE="username attribute name"
+   VALUE=`$VASTOOL schema list | grep -i "$ATTRIBUTE" | cut -d: -f2 | awk '{print $1}'`
    INSPECT_ERRNO=$?
    if [ $INSPECT_ERRNO -ne "0" ]; then
     debug_echo "Could not determine value for vas.conf option $ATTRIBUTE"
@@ -368,8 +370,6 @@ kinit () {
             # If KRB5CCNAME is exported, then assume kinit is done
 	    echo "The environment variable \"KRB5CCNAME\" is set, using ccache $KRB5CCNAME"
 	    vastool_klist
-	    label "Running tests as user: "
-	    echo "$RUNASUSER"
 	    debug_echo "kinit: End(1)"
 	    return 0
         fi
@@ -379,8 +379,6 @@ kinit () {
             KRB5CCNAME=/tmp/krb5cc_`id -u`; export KRB5CCNAME
 	    debug_echo "Found credential cache for user: `id -un`"
             vastool_klist
-	    label  "Running tests as user: "
-	    echo "$RUNASUSER"
             debug_echo "kinit: End(2)"
             return 0
         else
@@ -392,8 +390,6 @@ kinit () {
             KRB5CCNAME=/tmp/krb5cc_${SUDO_UID}; export KRB5CCNAME
             debug_echo "Found credential cache for user: $SUDO_USER"
 	    vastool_klist
-	    label "Running tests as user: "
-	    echo "$RUNASUSER"
             debug_echo "kinit: End(3)"
             return 0
         else
@@ -429,8 +425,6 @@ kinit () {
     fi
 
     vastool_klist
-    label "Running tests as user: "
-    echo "$RUNASUSER"
 
     debug_echo "kinit: End(0)"
    
@@ -1309,7 +1303,11 @@ vasidmap_sid_to_uid()
 
   debug_echo "vasidmap_sid_to_uid: Start"
 
-  USER=$RUNASUSER
+  if [ -n "$RUNASUSER_TOOL" ]; then 
+       USER=$RUNASUSER_TOOL
+  else
+       USER=$RUNASUSER
+  fi
 
   USER_SID=`$VASTOOL -u host/ attrs -bq $USER objectSid`
   VT_ERRNO=$?
@@ -1348,7 +1346,12 @@ vasidmap_sid_to_gid()
 
   debug_echo "vasidmap_sid_to_gid: Start"
 
-  USER=$RUNASUSER
+  if [ -n "$RUNASUSER_TOOL" ]; then
+        USER=$RUNASUSER_TOOL
+  else
+        USER=$RUNASUSER
+  fi
+
   GROUP=`vastool_id "$USER" -gn | cut -d: -f1`
   GROUPID_ERRNO=$?
   if [ $GROUPID_ERRNO -ne "0" ]; then
@@ -1397,7 +1400,14 @@ vasidmap_username_to_sid()
 
   debug_echo "vasidmap_username_to_sid: Start"
 
-  USER=`vastool_id $RUNASUSER -un`
+ 
+  if [ -n "$RUNASUSER_TOOL" ]; then
+        USER=$RUNASUSER_TOOL
+  else
+        USER=$RUNASUSER
+  fi
+
+  USER=`vastool_id $USER -un`
  
   debug_echo "Testing: $VASIDMAP -un $USER"
   USER_SID=`$VASIDMAP -un "$USER"`
@@ -1424,7 +1434,13 @@ vasidmap_groupname_to_sid()
 
   debug_echo "vasidmap_groupname_to_sid: Start"
 
-  USER=`vastool_id $RUNASUSER -un`
+  if [ -n "$RUNASUSER_TOOL" ]; then
+        USER=$RUNASUSER_TOOL
+  else
+        USER=$RUNASUSER
+  fi
+
+  USER=`vastool_id $USER -un`
   GROUP=`vastool_id "$USER" -gn`
   GROUPID_ERRNO=$?
   if [ $GROUPID_ERRNO -ne "0" ]; then
@@ -1460,7 +1476,12 @@ vasidmap_uid_to_sid()
 {
   debug_echo "vasidmap_uid_to_sid: Start"
 
-  USER=$RUNASUSER
+  if [ -n "$RUNASUSER_TOOL" ]; then
+        USER=$RUNASUSER_TOOL
+  else
+        USER=$RUNASUSER
+  fi
+
   USER_UID=`vastool_id "$USER" -u`
   USERID_ERRNO=$?
   if [ $USERID_ERRNO -ne "0" ]; then
@@ -1496,7 +1517,12 @@ vasidmap_gid_to_sid()
 {
   debug_echo "vasidmap_gid_to_sid: Start"
 
-  USER=$RUNASUSER
+  if [ -n "$RUNASUSER_TOOL" ]; then
+        USER=$RUNASUSER_TOOL
+  else
+        USER=$RUNASUSER
+  fi
+
   GROUP_GID=`vastool_id "$USER" -g`
   GROUPID_ERRNO=$?
   if [ $GROUPID_ERRNO -ne "0" ]; then
@@ -1559,7 +1585,12 @@ vasidmap_daemon_sid_to_uid()
   OBJECTCLASS="sambaidmapentry"
   HOST="127.0.0.1"
   ATTRIBUTE="uidNumber"
-  USER=$RUNASUSER
+
+  if [ -n "$RUNASUSER_DAEMON" ]; then
+        USER=$RUNASUSER_DAEMON
+  else
+        USER=$RUNASUSER
+  fi
 
   USER_SID=`$VASTOOL -u host/ attrs -bq $USER objectSid`
   VT_ERRNO=$?
@@ -1608,7 +1639,12 @@ vasidmap_daemon_sid_to_gid()
   HOST="127.0.0.1"
   ATTRIBUTE="gidNumber"
 
-  USER=$RUNASUSER
+  if [ -n "$RUNASUSER_DAEMON" ]; then
+        USER=$RUNASUSER_DAEMON
+  else
+        USER=$RUNASUSER
+  fi
+
   GROUP=`vastool_id "$USER" -gn | cut -d: -f1`
   GROUPID_ERRNO=$?
   if [ $GROUPID_ERRNO -ne "0" ]; then
@@ -1666,7 +1702,12 @@ vasidmap_daemon_uid_to_sid()
   HOST="127.0.0.1"
   ATTRIBUTE="sambaSID"
 
-  USER=$RUNASUSER
+  if [ -n "$RUNASUSER_DAEMON" ]; then
+        USER=$RUNASUSER_DAEMON
+  else
+        USER=$RUNASUSER
+  fi
+
   USER_UID=`vastool_id "$USER" -u`
   USERID_ERRNO=$?
   if [ $USERID_ERRNO -ne "0" ]; then
@@ -1715,7 +1756,12 @@ vasidmap_daemon_gid_to_sid()
   HOST="127.0.0.1"
   ATTRIBUTE="sambaSID"
 
-  USER=$RUNASUSER
+  if [ -n "$RUNASUSER_DAEMON" ]; then
+        USER=$RUNASUSER_DAEMON
+  else
+        USER=$RUNASUSER
+  fi
+
   GROUP_GID=`vastool_id "$USER" -g`
   GROUPID_ERRNO=$?
   if [ $GROUPID_ERRNO -ne "0" ]; then
@@ -1965,7 +2011,7 @@ vasidmapd_status () {
 exec_cmd()
 {
   DAEMON_PORT=`find_open_port`
-  VASIDMAPDCMD="$VASIDMAPD -F -p $DAEMON_PORT"
+  VASIDMAPDCMD="$VASIDMAPD -D -p $DAEMON_PORT"
  
   $VASIDMAPDCMD & echo $! > "$vasidmapd_pidfile"
   VASIDMAPD_CLEANUP="true"
@@ -2083,30 +2129,29 @@ run_tests()
 
   rc=0
   checkroot
-  if [ "x$RUNASUSER" = "x" ]; then
+#  if [ "x$RUNASUSER" = "x" -a  \( \( \("x$RUNASUSER_TOOL" = "x" -o "x$VASIDMAP_TOOL_TESTS" = "xtrue" \) -o \( "x$RUNASUSER_DAEMON" = "x" -o "x$VASIDMAP_DAEMON_TESTS" = "xtrue" \)  \) -o "x$SMBCLIENT_TESTS" = "xtrue" \) ]; then
+
+  if [ \( "x$RUNASUSER" = "x" -a "x$SMBCLIENT_TESTS" = "xtrue" \) -o  \( "x$RUNASUSER_TOOL" = "x" -a "x$VASIDMAP_TOOL_TESTS" = "xtrue" \) -o \( "x$RUNASUSER_DAEMON" = "x" -a "x$VASIDMAP_DAEMON_TESTS" = "xtrue" \) -o "x$RUN_ALL_TESTS" = "xtrue" ]; then
     if ! kinit; then
        echo "errno: $?"
        echo "Failed getting credentials for user: $USER"
        echo "Please make sure that you are using a valid UNIX enabled user"
        return 1
     fi
-  else
-     label "Running tests as user: "
-     echo $RUNASUSER
   fi
 
   if [ "x$VASIDMAP_TOOL_TESTS" = "xtrue" ] || [ "x$RUN_ALL_TESTS" = "xtrue" ]; then
-    echo; echo "Running vasidmap tool tests"; echo
+    echo; label "Running vasidmap tool tests as user: "; if [ -n "$RUNASUSER_TOOL" ]; then echo "$RUNASUSER_TOOL"; else echo "$RUNASUSER"; fi
     run_vasidmap_tool_tests && { echo; echo "All vasidmap tool tests passed"; } || { echo; echo "NOTICE: One or more vasidmap tool tests failed. For more information run again  with the -d (debug) option"; rc=1; }
   fi
 
   if [ "x$VASIDMAP_DAEMON_TESTS" = "xtrue" ] || [ "x$RUN_ALL_TESTS" = "xtrue" ]; then
-    echo; echo "Running vasidmap daemon tests"; echo
+    echo; label "Running vasidmap daemon tests as user: "; if [ -n "$RUNASUSER_DAEMON" ]; then echo "$RUNASUSER_DAEMON"; else echo "$RUNASUSER"; fi
     run_vasidmap_daemon_tests && { echo; echo "All vasidmap daemon tests passed"; } || { echo; echo "NOTICE: One or more vasidmap daemon tests failed. For more information run again  with the -d (debug) option"; rc=2; }
   fi
 
   if [ "x$SMBCLIENT_TESTS" = "xtrue" ] || [ "x$RUN_ALL_TESTS" = "xtrue" ]; then
-    echo; echo "Running smbclient tests"; echo
+    echo; label "Running smbclient tests as user: "; echo "$RUNASUSER"
     run_smbclient_tests && { echo; echo "All smbclient tests passed"; } || { echo; echo "NOTICE: One or more smbclient tests failed. For more information run again with the -d (debug) option"; rc=4; }
   fi
   return $rc

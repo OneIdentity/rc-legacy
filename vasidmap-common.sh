@@ -38,7 +38,7 @@ test -x /bin/nawk && AWK=/bin/nawk
 #   Extracts the first definition or a parameter from the given section
 #   Returns true if the value was found and printed; false otherwise
 ini_get () {
-    PREG=`echo "$2" | sed -e "s/$SP$SP*/$LSP$LSP*/g"`
+    PREG=`echo "$2" | sed 's/\\*/\\\*/g' | sed "s/$SP$SP*/$LSP$LSP*/g"`
     $AWK "/^$SP*\\[/ { in_section = 0; }
 	 /^$SP*\\[$1\\]/ { in_section=1; }
          /^$SP*$PREG$SP*=$SP*/ && in_section { 
@@ -51,7 +51,7 @@ ini_get () {
 #   Returns true if the value was changed; false if no change was needed
 #   Note: the resulting file content is written to stdout. 
 ini_put () {
-    PREG=`echo "$2" | sed -e "s/$SP$SP*/$LSP$LSP*/g"`
+    PREG=`echo "$2" | sed 's/\\*/\\\*/g' | sed -e "s/$SP$SP*/$LSP$LSP*/g"`
     VALUE=`echo "$3" | sed -e "$METASUBST"`
     $AWK "/^$SP*\\[/ { 
 	    if (in_section && !found) 
@@ -86,7 +86,7 @@ ini_put () {
 #   Returns true if the parameter was found and removed.
 #   Note: the resulting file stream is written to stdout
 ini_del () {
-    PREG=`echo "$2" | sed -e "s/$SP$SP*/$LSP$LSP*/g"`
+    PREG=`echo "$2" | sed 's/\\*/\\\*/g' | sed -e "s/$SP$SP*/$LSP$LSP*/g"`
     $AWK "/^$SP*\\[/ { in_section = 0; }
 	 /^$SP*\\[$1\\]/ { in_section=1; }
          /^$SP*$PREG$SP*=$SP*/ && in_section { found = 1; }
@@ -157,6 +157,23 @@ check_and_add()
   fi
 
   return 1
+}
+
+# check_and_remove <param-name> <config-file>
+# Removes definitions of param-name
+# Returns 0 if removal occured.
+# Exits the script if updating the config-file fails.
+check_and_remove() {
+  debug_echo "check_and_remove: $1"
+  if value=`ini_get "global" "$1" "$2"`; then
+    # the parameter definition exists
+        ini_del "global" "$1" "$2" > "$2.new"
+        verbose_echo "Removing parameter '$1'"
+        cat "$2.new" > "$2" || exit 1
+        return 0
+  else
+        return 1
+  fi
 }
 
 # check_and_rename <old-param-name> <new-param-name> <config-file>
