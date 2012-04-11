@@ -82,9 +82,13 @@
 
 #if HAVE_SYSLOG
 # include <syslog.h>
-# define DEBUG(level, fmt, va...) do { \
+
+# define LOG(level, fmt, va...) do { \
+  if (debug != VLMAPD_NOT_DEFINED) { \
     if (debug >= level) \
-        syslog(LOG_DAEMON | LOG_DEBUG, fmt , ## va); \
+      fprintf(stderr, fmt, ##va); \
+    } else \
+      syslog(LOG_DAEMON | level, fmt, ## va); \
   } while (0)
 
 /* Use syslog for warn() and err() */
@@ -107,7 +111,7 @@
 #else
 /* Prints a message to stderr only when the debug level is 
  * at 'level' or higher */
-# define DEBUG(level, fmt, va...)  \
+# define LOG(level, fmt, va...)  \
     do { if (debug >= level) fprintf(stderr, fmt , ## va); } while (0)
 #endif
 
@@ -144,6 +148,15 @@
 # define socklen_t int
 #endif
 
+typedef enum vlmapd_err {
+       VLMAPD_NOT_DEFINED      = -2,
+       VLMAPD_ERROR            = -1,
+       VLMAPD_SUCCESS          =  0,
+       VLMAPD_FAILURE      =  1,
+       VLMAPD_SUCCESS_EXIT =  2,
+       VLMAPD_FAILURE_EXIT =  3
+} vlmapd_err_t;
+
 /* Prototypes */
 static void usage(const char *prog);
 static int search_result_ok(ber_int_t msgid, struct berval **reply);
@@ -167,16 +180,26 @@ static int vmapd_server(int sd);
 static void become_daemon(void);
 
 
-int debug;                          /* Set by the -d option */
-const char *service_name = "host/"; /* Set by the -s option */
+int debug = VLMAPD_NOT_DEFINED;                          /* Set by the -d option */
+const char *service_name = "host/";                      /* Set by the -s option */
 
 /* Displays command line usage message */
 static void usage(const char *prog) 
 {
         fprintf(stderr, "usage: %s"
+               " [-hFD]"
                " [-A ipaddr] [-d level] [-p port]"
-               " [-s spn]"
-               " [-D] [-F]\n", prog);
+               " [-s spn]\n", prog);
+
+        fprintf(stderr, 
+               "-h             Display usage\n"
+               "-F             Don't fork-and-detach from the controlling terminal\n"
+               "-D             Run in daemon mode: fork-and-detach from the controlling terminal\n"
+               "-A ipaddr      Address to listen for idmap requests\n"
+               "-d level       Debug mode. Uses syslog if available\n"
+               "-p port        Port to listen for idmap requests on\n"
+               "-s spn         Service name to be used when establishing creds. Default is host/\n"
+               );
 }
 
 /* Constructs the reply message: SEARCH_RESULT{SUCCESS} */
@@ -192,7 +215,7 @@ FINISHED:
 
 /* Common failure macro; logs a message and returns an empty search result */
 #define FAIL(level, fmt, va...) do { \
-        DEBUG(level, fmt , ## va); \
+        LOG(level, fmt , ## va); \
         goto FINISHED; \
     } while (0);
 
@@ -209,12 +232,12 @@ static int vlmapd_sid_to_id(vas_ctx_t *vasctx, vas_id_t *vasid,
     int ret;
 
     vas_product_version( &major, &minor, NULL);
-    DEBUG(2, "libvas major: %d, minor: %d\n", major, minor);
+    LOG(LOG_INFO, "libvas major: %d, minor: %d\n", major, minor);
 
-    DEBUG(1, "\nLook up Unix ID for sid: %s\n", sid);
+    LOG(LOG_INFO, "\nLook up Unix ID for sid: %s\n", sid);
 
     /* check to see if the SID is a Group */
-    DEBUG(1, "Looking up as group...\n");
+    LOG(LOG_DEBUG, "Looking up as group...\n");
 
     if ((vas_group_init(vasctx,
                         vasid, 
@@ -238,7 +261,7 @@ static int vlmapd_sid_to_id(vas_ctx_t *vasctx, vas_id_t *vasid,
                 } else {
 
                     /* No members ... let's see if it is a user instead */                    
-                    DEBUG(1, "Memberhip empty! Looking up as a user...\n");
+                    LOG(LOG_DEBUG, "Memberhip empty! Looking up as a user...\n");
                 
                     if ((vas_user_init(vasctx,
                                        vasid,
@@ -264,8 +287,7 @@ static int vlmapd_sid_to_id(vas_ctx_t *vasctx, vas_id_t *vasid,
         }
         else {
 
-            DEBUG(1, 
-                  "   WARNING: no grinfo. %s\n",
+            LOG(LOG_WARNING, "   WARNING: no grinfo. %s\n",
                   vas_err_get_string(vasctx, 1));
 
             if (major == 3 && minor == 0) { /* ( major == 3 && minor == 0 ) */
@@ -281,24 +303,23 @@ static int vlmapd_sid_to_id(vas_ctx_t *vasctx, vas_id_t *vasid,
                  */
                 if ( strncmp( vas_err_get_string(vasctx, 1), "Group", 5) == 0 )
                 {
-                    FAIL(1, "ERROR: Could not map SID to a GID\n");
+                    FAIL(LOG_ERR, "ERROR: Could not map SID to a GID\n");
                 }
 
-                DEBUG(1, "   WARNING: may not be a group.\n" );
+                LOG(LOG_WARNING, "   WARNING: may not be a group.\n" );
             }
             else { /* VAS 3.1 and later */
-                FAIL(1, "ERROR: Could not map SID to a Unix ID\n");
+                FAIL(LOG_ERR, "ERROR: Could not map SID to a Unix ID\n");
 	    }
         }
     }
     else {
-        DEBUG(1,
-              "   WARNING: Unable to initialize VAS group. %s\n",
+        LOG(LOG_WARNING, "   WARNING: Unable to initialize VAS group. %s\n",
               vas_err_get_string(vasctx, 1));
     }
 
     /* check to see if the SID is a User */
-    DEBUG(1, "Looking up as a user...\n");
+    LOG(LOG_DEBUG, "Looking up as a user...\n");
 
     if ((vas_user_init(vasctx,
                        vasid,
@@ -314,19 +335,19 @@ static int vlmapd_sid_to_id(vas_ctx_t *vasctx, vas_id_t *vasid,
             attr = "uidNumber";
         }
         else {
-            FAIL(1, 
+            FAIL(LOG_ERR, 
                   "   ERROR: no pwinfo. %s\n",
                   vas_err_get_string(vasctx, 1));
         }
     }
     else {
-        FAIL(1, 
+        FAIL(LOG_ERR, 
               "   ERROR: Unable to initalize VAS user. %s\n", 
               vas_err_get_string(vasctx, 1));
     }
 
 SUCCESS:
-    DEBUG(1, 
+    LOG(LOG_INFO, 
           "SUCCESS: converted SID to %s: %s.\n",
           pwent?"UID":"GID", 
           num);
@@ -359,31 +380,31 @@ static int vlmapd_uid_to_sid(vas_ctx_t *vasctx, vas_id_t *vasid,
 	errno = 0;
 	uid = (uid_t)strtol(val, NULL, 10);
 	if (errno != 0) {
-		DEBUG(1, "ERROR Conversion to uid_t failed.\n"
+		LOG(LOG_ERR, "ERROR Conversion to uid_t failed.\n"
                          "            (val=[%s],errno=%d)\n", 
                          val, errno);
 		return 0;
 	}
 
 	if (uid == 0) {
-		DEBUG(1, "ERROR: not handling request for uid 0\n");
+		LOG(LOG_ERR, "ERROR: not handling request for uid 0\n");
 		return 0;
 	}
 
 	if ((pwent = getpwuid(uid)) == NULL) {
-		DEBUG(1, "ERROR: uid (%d) not found!\n", uid);
+		LOG(LOG_ERR, "ERROR: uid (%d) not found!\n", uid);
 		return 0;
 	}
 
 	if (strcmp(pwent->pw_passwd, "VAS") != 0) {
-	    DEBUG(1, "ERROR: uid " UID_T_FMT " not from VAS\n", uid);
+	    LOG(LOG_ERR, "ERROR: uid " UID_T_FMT " not from VAS\n", uid);
 	    return 0;
 	}
 
 	if ((vas_user_init(vasctx, vasid, pwent->pw_name,
 				   VAS_NAME_FLAG_FOREST_SCOPE,
 				   &vasuser)) != VAS_ERR_SUCCESS) {
-		DEBUG(1, "ERROR Unable to initalize VAS user:%s.\n"
+		LOG(LOG_ERR, "ERROR Unable to initalize VAS user:%s.\n"
                          "            [%s]\n",
                          pwent->pw_name,
                          vas_err_get_string(vasctx, 1));
@@ -391,7 +412,7 @@ static int vlmapd_uid_to_sid(vas_ctx_t *vasctx, vas_id_t *vasid,
 	}
 
 	if ((vas_user_get_sid(vasctx, vasid, vasuser, &sid)) != VAS_ERR_SUCCESS) {
-		DEBUG(1, "ERROR Unable to get the SID of user %s.\n"
+		LOG(LOG_ERR, "ERROR Unable to get the SID of user %s.\n"
                          "            [%s]\n",
 			 sid,
 			 vas_err_get_string(vasctx, 1));
@@ -401,7 +422,7 @@ static int vlmapd_uid_to_sid(vas_ctx_t *vasctx, vas_id_t *vasid,
 
 	vas_user_free(vasctx, vasuser);
 
-	DEBUG(1, "SUCCESS: converted UID " UID_T_FMT " to SID %s.\n", uid, sid);
+	LOG(LOG_INFO, "SUCCESS: converted UID " UID_T_FMT " to SID %s.\n", uid, sid);
 
         ret = ber_printf(berep, "{it{s{{s{s}}{s{s}}{s{s}}}}}",
 		        msgid, LDAP_RES_SEARCH_ENTRY,
@@ -424,31 +445,31 @@ static int vlmapd_gid_to_sid(vas_ctx_t *vasctx, vas_id_t *vasid, ber_int_t msgid
 	errno = 0;
 	gid = (gid_t)strtol(val, NULL, 10);
 	if (errno != 0) {
-		DEBUG(1, "ERROR Conversion to gid_t failed.\n"
+		LOG(LOG_ERR, "ERROR Conversion to gid_t failed.\n"
                          "            (val=[%s],errno=%d)\n", 
                          val, errno);
 		return 0;
 	}
 
 	if (gid == 0) {
-	    DEBUG(1, "ERROR: not handling request for gid 0\n");
+	    LOG(LOG_ERR, "ERROR: not handling request for gid 0\n");
 	    return 0;
 	}
 
 	if ((grent = getgrgid(gid)) == NULL) {
-		DEBUG(1, "ERROR: gid " GID_T_FMT " not found!\n", gid);
+		LOG(LOG_ERR, "ERROR: gid " GID_T_FMT " not found!\n", gid);
 		return 0;
 	}
 
 	if (strcmp(grent->gr_passwd, "VAS") != 0) {
-	    DEBUG(1, "ERROR: gid " GID_T_FMT " not from VAS\n", gid);
+	    LOG(LOG_ERR, "ERROR: gid " GID_T_FMT " not from VAS\n", gid);
 	    return 0;
 	}
 
 	if ((vas_group_init(vasctx, vasid, grent->gr_name,
 				    VAS_NAME_FLAG_FOREST_SCOPE,
 				    &vasgrp)) != VAS_ERR_SUCCESS) {
-		DEBUG(1, "ERROR Unable to initalize VAS group:%s.\n"
+		LOG(LOG_ERR, "ERROR Unable to initalize VAS group:%s.\n"
                          "            [%s]\n",
                          grent->gr_name,
                          vas_err_get_string(vasctx, 1));
@@ -456,7 +477,7 @@ static int vlmapd_gid_to_sid(vas_ctx_t *vasctx, vas_id_t *vasid, ber_int_t msgid
 	}
 
 	if ((vas_group_get_sid(vasctx, vasid, vasgrp, &sid)) != VAS_ERR_SUCCESS) {
-		DEBUG(1, "ERROR Unable to get the SID"
+		LOG(LOG_ERR, "ERROR Unable to get the SID"
                          " of group %s.\n"
                          "            [%s]\n",
 			 sid,
@@ -467,7 +488,7 @@ static int vlmapd_gid_to_sid(vas_ctx_t *vasctx, vas_id_t *vasid, ber_int_t msgid
 
 	vas_group_free(vasctx, vasgrp);
 
-        DEBUG(1, "SUCCESS: converted GID " GID_T_FMT " to SID %s.\n", gid, sid);
+        LOG(LOG_INFO, "SUCCESS: converted GID " GID_T_FMT " to SID %s.\n", gid, sid);
 
         ret = ber_printf(berep, "{it{s{{s{s}}{s{s}}{s{s}}}}}",
 		        msgid, LDAP_RES_SEARCH_ENTRY,
@@ -524,7 +545,7 @@ static int vlmapd_search(vas_ctx_t *vasctx, vas_id_t *vasid,
 		return -1;
 	}
 
-        DEBUG(3, "search filter tag %02x\n", ft);
+        LOG(LOG_DEBUG, "search filter tag %02x\n", ft);
 
 	switch (ft) {
 
@@ -535,7 +556,7 @@ static int vlmapd_search(vas_ctx_t *vasctx, vas_id_t *vasid,
                         warnx("malformed AttributeDescription");
 			return -1;
 		}
-                DEBUG(3, "(%.*s=*)\n", nl, name);
+                LOG(LOG_DEBUG, "(%.*s=*)\n", nl, name);
 		/* XXX if name=="objectclass" then we should dump all 
 		 * objects? */
 		ret = search_result_ok(msgid, reply);
@@ -550,7 +571,7 @@ static int vlmapd_search(vas_ctx_t *vasctx, vas_id_t *vasid,
                         warnx("malformed AttributeValueAssertion");
 			return -1;
 		}
-                DEBUG(3, "(%.*s=%.*s)\n", nl, name, vl, val);
+                LOG(LOG_DEBUG, "(%.*s=%.*s)\n", nl, name, vl, val);
 		if (strncasecmp(name, "objectclass", nl) == 0) {
 			if (strncasecmp(val, "sambaUnixIdPool", vl) == 0) {
 				ret = vlmapd_search_idpool(msgid, reply);
@@ -576,10 +597,10 @@ static int vlmapd_search(vas_ctx_t *vasctx, vas_id_t *vasid,
 		if (ret == -1) {
                         warnx("expected filter (&(=)...)");
 			ber_free(berep, 1);
-			return -1;
+			return ret;
 		}
 
-                DEBUG(3, "(&(%.*s=%.*s)...)\n", nl, name, vl, val);
+                LOG(LOG_DEBUG, "(&(%.*s=%.*s)...)\n", nl, name, vl, val);
 
 		if (strncasecmp(name, "objectclass", nl) != 0 ||
                     strncasecmp(val, "sambaIdmapEntry", vl) != 0) {
@@ -609,7 +630,7 @@ static int vlmapd_search(vas_ctx_t *vasctx, vas_id_t *vasid,
 				/* end of sequence? */
 				continue;
                         }
-                        DEBUG(3, "(&...(%.*s=%.*s))\n", nl, name, vl, val);
+                        LOG(LOG_DEBUG, "(&...(%.*s=%.*s))\n", nl, name, vl, val);
 
                         if (strncasecmp(name, "sambaSID", nl) == 0) {
                                 vlmapd_sid_to_id(vasctx, vasid, msgid, val, berep);
@@ -621,7 +642,7 @@ static int vlmapd_search(vas_ctx_t *vasctx, vas_id_t *vasid,
                                 vlmapd_gid_to_sid(vasctx, vasid, msgid, val, berep);
 
                         } else {
-                                DEBUG(1, "skipping unexpected attribute request: [%s]\n", name);
+                                LOG(LOG_NOTICE, "skipping unexpected attribute request: [%s]\n", name);
                         }
 
 			/* to tell if we are done with the filter, see if the
@@ -637,14 +658,14 @@ static int vlmapd_search(vas_ctx_t *vasctx, vas_id_t *vasid,
 		if (ret == -1) {
 			warnx("expected filter end");
 			ber_free(berep, 1);
-			return -1;
+			return ret;
 		}
 		if (multi) {
 			ret = ber_scanf(be, "}");
 			if (ret == -1) {
 				warnx("expected filter end");
 				ber_free(berep, 1);
-				return -1;
+				return ret;
 			}
 		}
 
@@ -663,7 +684,7 @@ static int vlmapd_search(vas_ctx_t *vasctx, vas_id_t *vasid,
                 ber_free(berep, 1);
                 if (ret == -1) {
                         warnx("ber_flatten failed");
-			return -1;
+			return ret;
                 }
 		break;
 
@@ -680,7 +701,7 @@ static int vlmapd_bind(ber_int_t msgid, struct berval **reply)
 {
 	int ret;
 
-        DEBUG(1, "returning success to a BindRequest\n");
+        LOG(LOG_NOTICE, "returning success to a BindRequest\n");
 
 	BERVAL_PRINTF(reply, "{it{eoo}}", msgid, LDAP_RES_BIND, 
                 LDAP_SUCCESS, NULL, 0, NULL, 0);
@@ -693,7 +714,7 @@ static int vlmapd_generic_error(ber_int_t msgid, ber_tag_t msgtype,
 {
 	int ret;
 
-	DEBUG(1, "returning error on non-search request\n");
+	LOG(LOG_NOTICE, "returning error on non-search request\n");
 
 	BERVAL_PRINTF(reply, "{it{eoo}}", msgid, msgtype + 1,
                 LDAP_INSUFFICIENT_ACCESS, NULL, 0, NULL, 0);
@@ -942,14 +963,14 @@ static int vmapd_server(int sd)
     		if (ret != 0) {
     			goto FINISHED;
 		}
-		DEBUG(2, "QUERY successfully received\n");
+		LOG(LOG_NOTICE, "QUERY successfully received\n");
 
 		ret = vmapd_query(vasctx, vasid, &query, &reply);
 		if (ret != 0) {
 			goto FINISHED;
 		}
 
-		DEBUG(2, "REPLY successfully delivered\n");
+		LOG(LOG_NOTICE, "REPLY successfully delivered\n");
 		ret = vmapd_send(sd, reply);
 		if (ret != 0) {
 			goto FINISHED;
