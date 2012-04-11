@@ -62,19 +62,19 @@
 # error "Requires VAS 3.0.2 or later"
 #endif
 
-#if SIZEOF_GID_T == SIZEOF_LONG
+#if SIZEOF_GID_T == SIZEOF_LONG && SIZEOF_LONG != SIZEOF_INT
 # define GID_T_FMT    "%ld"
 #elif SIZEOF_GID_T == SIZEOF_INT
 # define GID_T_FMT    "%d"
 #endif
 
-#if SIZEOF_UID_T == SIZEOF_LONG
+#if SIZEOF_UID_T == SIZEOF_LONG && SIZEOF_LONG != SIZEOF_INT
 # define UID_T_FMT    "%ld"
 #elif SIZEOF_UID_T == SIZEOF_INT
 # define UID_T_FMT    "%d"
 #endif
 
-#if SIZEOF_PID_T == SIZEOF_LONG
+#if SIZEOF_PID_T == SIZEOF_LONG && SIZEOF_LONG != SIZEOF_INT
 # define PID_T_FMT    "%ld"
 #elif SIZEOF_PID_T == SIZEOF_INT
 # define PID_T_FMT    "%d"
