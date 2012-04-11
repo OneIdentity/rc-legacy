@@ -1,3 +1,7 @@
+1.2.4
+* Added the compile flag -Wl,-brtl so we run-time link to labvas.  This fixes a segfault in vasidmap
+  on Aix when ran against QAS that is shiped with a different libvas version. (bug #818)
+
 1.2.3
 * vas-samba-config now updates smb.conf even when no other sections exist besides [global] (bug #785)
 * Updated the kinit function in vasidmap-status to work in more scenarios
