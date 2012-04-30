@@ -2,13 +2,15 @@
     name="quest-vasidmap"
     description="VAS idmap module for Samba"
     pp_solaris_name=QSFTidmap
+    pidfile="/var/run/vasidmapd.pid"
+    daemon="/opt/quest/sbin/vasidmapd"
+    summary="VAS idmap module for Samba"
 
-#%depend
-#    libvas.so.4.2
-#    vasclnt 3.0.2
-
-#%check
-#    %(quest_require_vas 3.0.2)
+%set [aix]
+    pp_aix_pidfile="/var/opt/quest/vas/vasidmapd.pid"
+    pp_aix_mkssys_cmd_args="-F -P $pp_aix_pidfile"
+    pp_aix_mkssys_args=-R
+    pp_aix_mkssys_group=quest-vas
 
 %files
     $sbindir/vasidmapd
@@ -20,5 +22,12 @@
     $pkgdatadir/vasidmap-common.sh
     $mandir/man*/*
 
+# AIX doesn't want a pidfile set when creating a system service.
+%service vasidmapd [!aix]
+    pidfile="/var/run/vasidmapd.pid"
+
 %service vasidmapd
-    cmd="$sbindir/vasidmapd -F"
+    cmd="$sbindir/vasidmapd -D ${pidfile:+-P $pidfile}"
+
+%post
+svc=vasidmapd

@@ -1,7 +1,3 @@
-1.2.4
-* Added the compile flag -Wl,-brtl so we run-time link to labvas.  This fixes a segfault in vasidmap
-  on Aix when ran against QAS that is shipped with a different libvas version. (bug #818)
-
 1.2.3
 * vas-samba-config now updates smb.conf even when no other sections exist besides [global] (bug #785)
 * Updated the kinit function in vasidmap-status to work in more scenarios
@@ -10,11 +6,18 @@
 * Fixed issues on HPUX in vasidmap-status where shell test methods were not being quoted (bug #803)
 * Added/Fixed Solaris SMF support in Polypkg (bug #795)
 * Add ability for Makefile.am to download the latest RC Polypkg if PP is not in the build directory
-* Added ability to run each test group as a seperate user
+* Added ability to run each test group in vasidmap-status as a seperate user
 * Fixed some compilation warnings: "warning: format ‘%ld’ expects type ‘long int’,
   but argument 4 has type ‘__gid_t’"
+* The vasidmapd pidfile is no longer a hidden file.
+* On AIX the pidfile is stored at /var/opt/quest/vas/ instead of the standard location /var/run/ this
+  is because /var/run/ doesn't exist by default on AIX.
+* Added ability to specify pidfile location for the vasidmapd daemon by using the -P option.
 * vasidmapd logging is controlled by syslog where available.
 * updated usage for vasidmapd
+* Daemon will recreate pid file if it is removed. Checks every 30 seconds
+* Added the compile flag -Wl,-brtl so we run-time link to libvas.  This fixes a segfault in vasidmap
+  on Aix when ran against QAS that is shipped with a different libvas version. (bug #818)
 
 1.2.2
 * Close connecitons that are idle for more then 5 minutes. 

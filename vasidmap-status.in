@@ -3,7 +3,7 @@
 
 . "@pkgdatadir@/vasidmap-common.sh"
 
-VERSION=1.0.0.9
+VERSION=1.0.0.10
 DEBUG=false
 CLEANUP=true
 VASIDMAPD_CLEANUP=false
@@ -24,8 +24,17 @@ samba_configfile=
 TEST_SHARE_DIR="/tmp/vasidmap-testshare"
 VASIDMAP="@bindir@/vasidmap"
 VASIDMAPD="@sbindir@/vasidmapd"
+VASIDMAPD_OPSYS=`uname -s || echo unknown`
 
-vasidmapd_pidfile="/var/run/vasidmapd.pid"
+# Add any special cases for the location of the pid file here.
+case $VASIDMAPD_OPSYS in
+  AIX)
+    vasidmapd_pidfile="/var/opt/quest/vas/vasidmapd.pid"
+    ;;
+  *)
+    vasidmapd_pidfile="/var/run/vasidmapd.pid"
+    ;;
+esac
 
 TRAP_SIGNAL_LIST="TERM INT HUP PIPE ALRM ABRT QUIT"
 TRAP_COMMAND_RUNNING="false"
@@ -2011,9 +2020,9 @@ vasidmapd_status () {
 exec_cmd()
 {
   DAEMON_PORT=`find_open_port`
-  VASIDMAPDCMD="$VASIDMAPD -D -p $DAEMON_PORT"
+  VASIDMAPDCMD="$VASIDMAPD -D -p $DAEMON_PORT -P $vasidmapd_pidfile"
  
-  $VASIDMAPDCMD & echo $! > "$vasidmapd_pidfile"
+  $VASIDMAPDCMD &
   VASIDMAPD_CLEANUP="true"
 
   # check to make sure we really started (even if the process fails it will return 0 for success because of the & )
@@ -2129,8 +2138,6 @@ run_tests()
 
   rc=0
   checkroot
-#  if [ "x$RUNASUSER" = "x" -a  \( \( \("x$RUNASUSER_TOOL" = "x" -o "x$VASIDMAP_TOOL_TESTS" = "xtrue" \) -o \( "x$RUNASUSER_DAEMON" = "x" -o "x$VASIDMAP_DAEMON_TESTS" = "xtrue" \)  \) -o "x$SMBCLIENT_TESTS" = "xtrue" \) ]; then
-
   if [ \( "x$RUNASUSER" = "x" -a "x$SMBCLIENT_TESTS" = "xtrue" \) -o  \( "x$RUNASUSER_TOOL" = "x" -a "x$VASIDMAP_TOOL_TESTS" = "xtrue" \) -o \( "x$RUNASUSER_DAEMON" = "x" -a "x$VASIDMAP_DAEMON_TESTS" = "xtrue" \) -o "x$RUN_ALL_TESTS" = "xtrue" ]; then
     if ! kinit; then
        echo "errno: $?"
