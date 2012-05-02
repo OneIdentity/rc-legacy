@@ -246,10 +246,8 @@ if $have_winbind; then
     if is_lt $SAMBA_VERSION 3.0.25; then
      check_and_fix_add "idmap expire time" "300"	     "$CONFMOD" $NEWTEXT
     else
-     check_and_rename "idmap expire time" "idmap cache time" "$CONFMOD"
-     check_and_rename "idmap negative time" "idmap negative cache time" "$CONFMOD"
-     check_parm "idmap cache time" "$CONFMOD" ||
-      check_and_fix_add "idmap cache time" "300"	     "$CONFMOD" $NEWTEXT
+      check_and_rename "idmap expire time" "idmap cache time" "$CONFMOD"
+      check_and_rename "idmap negative time" "idmap negative cache time" "$CONFMOD"
     fi
 fi
 
