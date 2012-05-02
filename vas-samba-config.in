@@ -261,51 +261,79 @@ check_parm "netbios name" "$CONFMOD" && cat <<-.
 
 .
 
+# Possible insert scenarios assuming there is something to insert
+#
+# 1. [global] section exists, [share] exists: Should insert right above first [share]
+# 2. [global] section exists, [share] exists, include stanza exists in [global] section: Should insert right above first include stanza
+# 3. [global] section exists, [share] does not exist, include stanza exists in [global] section: Should insert right above first include stanza
+# 4. [global] section exists, [share] does not exist, include stanza does not exist: Should append to end of file
+# 5. [global] section exists, [share] exists, include stanza exists in the [share] section: Should insert right above first [share]
+# 6. [global] section does not exist, [share] exists: Should insert right above first [share]
+# 7. [global] section does not exist, [share] exists, include stanza exists in [global] section: Should insert right above first include stanza
+# 8. [global] section does not exist, [share] does not exist, include stanza exists: Should insert right above first include stanza
+# 9. [global] section does not exist, [share] does not exist, include stanza does not exist: Should append to end of file
+# 10.[global] section does not exist, [share] exists, include stanza exists in the [share] section: Should insert right above first [share] 
+# ?
+#
+    # Filter should finde exact match of any include =, ignoring whitespace and tabs
+    filter="^[[:blank:]]*include[[:blank:]]*="
+    if test -s "$NEWTEXT"; then
+        SAVEIFS="$IFS"
+        IFS=""
+        INGLOBAL=false
+        INSHARE=false
+        include_found=false
+        # update_conf = true only when we found somewhere to insert the custom cfg
+        update_conf=false
 
-#-- insert the new text at the end of the [global] section
-if test -s $NEWTEXT; then
-    SAVEIFS="$IFS"
-    IFS=""
-    INGLOBAL=false
-    update_conf=false
-    while read ILINE; do
-        if echo "$ILINE" | grep -i "^$SP*\[global\]" >/dev/null; then
-            INGLOBAL=true
-        elif $INGLOBAL && echo "$ILINE" | grep -i "^$SP*\[.*\]" >/dev/null; then
-            echo
-            echo "  ;--- begin options added by vas-samba-config ($TODAY) ---"
-            cat $NEWTEXT
-            echo "  ;--- end options added by vas-samba-config ($TODAY) ---"
-            echo
+        newtext=`cat $NEWTEXT`
+        include_text=`printf "%s%s%s%s" \
+                        "  ;#--- begin options added by vas-samba-config ($TODAY) ---\n" \
+                        "$newtext\n" \
+                        "  ;#--- end options added by vas-samba-config ($TODAY) ---\n"`
+
+        while read ILINE; do
+            if echo "$ILINE" | grep -i "^$SP*\[global\]" >/dev/null; then
+                # Currently unused but perhaps for future purposes I will leave it in.
+                INGLOBAL=true
+            elif [ "x$include_found" = "xfalse" ] && echo "$ILINE" | grep -i "^$SP*\[.*\]" >/dev/null; then
+                INGLOBAL=false
+                INSHARE=true
+                # At this point we found the share and there was no inlclude stanza, we need to insert the custom code right above it and then break the loop
+                echo "$include_text"
+                echo "$ILINE"
+                cat
+                update_conf=true
+                break
+            elif [ "x$INSHARE" = "xfalse" ] && echo "$ILINE" | grep "$filter" >/dev/null; then
+                include_found=true
+                # At this point we are not in a [share] and we found an include stanza. We need to insert the custom code right above it and then break the loop
+                echo "$include_text"
+                echo "$ILINE"
+                cat
+                update_conf=true
+                break
+            fi
             echo "$ILINE"
-            cat
+        done < "$CONFMOD" > "$CONFMOD.new"
+        IFS="$SAVEIFS"
+    
+        #Check to see if we completed the whole loop without inserting into a [share], [global] section or above an include stanza
+        if [ "x$update_conf" = "xfalse" ]; then
+            # insert the custom cfg at the end of the file
+            echo "$include_text"
+            echo "$ILINE"
             update_conf=true
-            break
-        fi
-        echo "$ILINE"
-    done < "$CONFMOD" > "$CONFMOD.new"
-    IFS="$SAVEIFS"
+        fi >> "$CONFMOD.new"
 
-    if [ "x$update_conf" = "xfalse" ] && [ "x$INGLOBAL" != "xfalse" ]; then
-      # A [section] besides Global was not found. EOF
-      echo
-      echo "  ;--- begin options added by vas-samba-config ($TODAY) ---"
-      cat $NEWTEXT
-      echo "  ;--- end options added by vas-samba-config ($TODAY) ---"
-      echo
-      echo "$ILINE"
-    fi >> "$CONFMOD.new"  
+        mv "$CONFMOD.new" "$CONFMOD"
 
-    mv "$CONFMOD.new" "$CONFMOD"
-    update_conf=true
-elif cmp "$CONFMOD" "$SAMBA_CONFIGFILE" >/dev/null 2>&1; then
-    update_conf=false
-    rm -f "$CONFMOD"
-else
-    update_conf=true
-fi
-$update_conf && verbose_echo "$SAMBA_CONFIGFILE: update pending"
-rm -f $NEWTEXT
+    elif cmp "$CONFMOD" "$SAMBA_CONFIGFILE" >/dev/null 2>&1; then
+        update_conf=false
+        rm -f "$CONFMOD"
+    fi
+    $update_conf && verbose_echo "$SAMBA_CONFIGFILE: update pending"
+    rm -f $NEWTEXT
 
 ##########################
 # Modify vas.conf
