@@ -1,4 +1,4 @@
-# (c) 2009, Quest Software, Inc. All rights reserved.
+# (c) 2012, Quest Software, Inc. All rights reserved.
 
 POLYPKGFILE=/data/rc/pub/rc/polypkg/pp
 POLYPKGURI=http://rc.quest.com/pub/rc/polypkg/pp

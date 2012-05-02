@@ -1,5 +1,5 @@
 #!/bin/sh
-# (c) 2009 Quest Software, Inc. All rights reserved.
+# (c) 2012 Quest Software, Inc. All rights reserved.
 
 . "@pkgdatadir@/vasidmap-common.sh"
 

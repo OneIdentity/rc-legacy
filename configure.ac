@@ -1,4 +1,4 @@
-# (c) 2009, Quest Software, Inc. All rights reserved.
+# (c) 2012, Quest Software, Inc. All rights reserved.
 
 AC_INIT([quest-vasidmap],
 	[1.2.4],
