@@ -142,15 +142,23 @@ TODAY=`date +"%Y%m%d"`
 ######################
 # Samba service control
 
+
+
 #-- bug 254: this may need updating when porting
 # These are really just wild guesses; sometimes there are
 # separate init scripts for smbd, nmbd, winbindd.
 detect_opsys
 case $OPSYS in
 	HP-UX)  initdir=/sbin/init.d   SAMBASVC=samba ;;
-	SunOS)  initdir=/etc/init.d    SAMBASVC=samba-csw ;;
+	SunOS)  if [ -x /usr/bin/svcs ]; then
+                initdir=SMF
+            else
+                initdir=/etc/init.d
+            fi
+            SAMBASVC=samba
+            WINBINDSVC=winbind ;;
 	AIX)    initdir=SRC            SAMBASVC=samba ;;
-        *)      initdir=/etc/init.d    SAMBASVC=samba ;;  # Linux!
+        *)  initdir=/etc/init.d    SAMBASVC=samba ;;  # Linux!
 esac
 
 # If we're using Quest Samba, use the samba-quest service group
@@ -161,18 +169,22 @@ fi
 #-- stops a service
 stopsvc () {
     if [ $initdir = SRC ]; then
-	stopsrc -s $1
+	  stopsrc -s $1
+    elif [ $initdir = SMF ]; then
+      svcadm disable $1
     else
-	test -x $initdir/$1 && $initdir/$1 stop
+	  test -x $initdir/$1 && $initdir/$1 stop
     fi
 }
 
 #-- starts a service
 startsvc () {
     if [ $initdir = SRC ]; then
-	startsrc -s $1
+	  startsrc -s $1
+    elif [ $initdir = SMF ]; then
+      svcadm enable $1
     else
-	test -x $initdir/$1 && $initdir/$1 start
+	  test -x $initdir/$1 && $initdir/$1 start
     fi
 }
 
@@ -459,6 +471,7 @@ cat <<-. >"$PWDCHGCONF"
 verbose_echo "Stopping services..."
 $RESTART_SAMBA && stopsvc $SAMBASVC
 stopsvc vasidmapd
+$have_winbind && stopsvc winbind 
 
 # update smb.conf 
 if $update_conf; then
@@ -508,6 +521,7 @@ fi
 verbose_echo "Restarting services...."
 $have_winbind && startsvc vasidmapd
 $RESTART_SAMBA && startsvc $SAMBASVC
+$have_winbind && startsvc winbind
 
 if $have_winbind; then
     : # yay, SID translation will work
@@ -527,18 +541,19 @@ cat <<-.
 
 	Summary:
 
-	  Samba server:          $smbd
-	  Samba config:          $SAMBA_CONFIGFILE
-	  VAS config:            $VAS_CONF
-	  winbind present:       `$have_winbind && echo yes || echo no`
+      Samba server:          $smbd
+      Samba config:          $SAMBA_CONFIGFILE
+      VAS config:            $VAS_CONF
+      winbind present:       `$have_winbind && echo yes || echo no`
 
-	  smb.conf updated:      `$update_conf && echo yes || echo not needed`
-	  vas.conf updated:      `$update_vas && echo yes || echo not needed`
-	  krb5.conf updated:     $KRB5CHANGE
-	  Host key reset         $PWDCHANGE
+      smb.conf updated:      `$update_conf && echo yes || echo not needed`
+      vas.conf updated:      `$update_vas && echo yes || echo not needed`
+      krb5.conf updated:     $KRB5CHANGE
+      Host key reset         $PWDCHANGE
 
-	  vasidmapd (re)started: `$have_winbind && echo yes || echo not needed`
-	  samba (re)started:     `$RESTART_SAMBA && echo yes || echo no`
+      vasidmapd (re)started: `$have_winbind && echo yes || echo not needed`
+      samba (re)started:     `$RESTART_SAMBA && echo yes || echo no`
+      winbind (re)started:   `$have_winbind && echo yes || echo not needed`
 
 .
 
