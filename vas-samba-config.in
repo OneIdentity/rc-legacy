@@ -249,11 +249,45 @@ if $have_winbind; then
     check_and_fix_add "winbind nested groups" "no"	    "$CONFMOD" $NEWTEXT
     # Attach vasidmap as an idmap backend for winbind
     check_and_fix_add "ldap admin dn" "CN=VasIdmapAdmin" "$CONFMOD" $NEWTEXT
-    check_and_fix_add "idmap backend" "ldap:ldap://localhost" "$CONFMOD" $NEWTEXT
-    check_parm "idmap uid" "$CONFMOD" ||
-     check_and_fix_add "idmap uid" "1-2147483647"	     "$CONFMOD" $NEWTEXT
-    check_parm "idmap gid" "$CONFMOD" ||
-     check_and_fix_add "idmap gid" "1-2147483647"	     "$CONFMOD" $NEWTEXT
+
+# In Samba 3.6 the idmap system was re-written and idmap uid, gid, and backend were depricated 
+# in favor of 
+# idmap config <domain> : backend
+# idmap config <domain> : range
+# The defaults for smb now would look like:
+# idmap config * : backend = tdb
+# idmap config * : range = 10000-20000
+#
+# Because of <domain> we should only update the wildcard and possibliy the BUILTIN domain 
+# configs for idmap.
+#
+    idmap_domain="*"
+
+    if is_lt $SAMBA_VERSION 3.6.0; then
+      check_and_fix_add "idmap backend" "ldap:ldap://localhost" "$CONFMOD" $NEWTEXT
+      check_parm "idmap uid" "$CONFMOD" ||
+        check_and_fix_add "idmap uid" "1-2147483647"	     "$CONFMOD" $NEWTEXT
+      check_parm "idmap gid" "$CONFMOD" ||
+       check_and_fix_add "idmap gid" "1-2147483647"	     "$CONFMOD" $NEWTEXT
+    else
+      check_and_remove "idmap gid" "$CONFMOD"
+      check_and_remove "idmap backend" "$CONFMOD"
+
+      check_parm "idmap config BUILTIN : backend" "$CONFMOD" ||
+        check_and_fix_add "idmap config BUILTIN : backend" "tdb" "$CONFMOD" $NEWTEXT
+
+      check_parm "idmap config BUILTIN : range" "$CONFMOD" ||
+        check_and_fix_add "idmap config BUILTIN : range" "1-1000" "$CONFMOD" $NEWTEXT
+
+      check_and_fix_add "idmap config $idmap_domain : backend" "ldap" "$CONFMOD" $NEWTEXT
+
+      check_and_rename "idmap uid" "idmap config $idmap_domain : range" "$CONFMOD"
+      check_parm "idmap config $idmap_domain : range" "$CONFMOD" ||
+        check_and_fix_add "idmap config $idmap_domain : range" "1-2147483647" "$CONFMOD" $NEWTEXT
+
+      check_parm "idmap config $idmap_domain : ldap_url" "$CONFMOD" ||
+        check_and_fix_add "idmap config $idmap_domain : ldap_url" "ldap://localhost/" "$CONFMOD" $NEWTEXT
+    fi
 
     if is_lt $SAMBA_VERSION 3.0.25; then
      check_and_fix_add "idmap expire time" "300"	     "$CONFMOD" $NEWTEXT
@@ -297,10 +331,10 @@ check_parm "netbios name" "$CONFMOD" && cat <<-.
         update_conf=false
 
         newtext=`cat $NEWTEXT`
-        include_text=`printf "%s%s%s%s" \
-                        "  ;#--- begin options added by vas-samba-config ($TODAY) ---\n" \
-                        "$newtext\n" \
-                        "  ;#--- end options added by vas-samba-config ($TODAY) ---\n"`
+        include_text=`printf "\n%s\n%s\n%s\n\n" \
+                        "  ;#--- begin options added by vas-samba-config ($TODAY) ---" \
+                        "$newtext" \
+                        "  ;#--- end options added by vas-samba-config ($TODAY) ---"`
 
         while read ILINE; do
             if echo "$ILINE" | grep -i "^$SP*\[global\]" >/dev/null; then
