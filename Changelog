@@ -1,3 +1,12 @@
+1.2.4
+* vas-samba-config supports include statements being at the end of the global section. (bug #817)
+* vas-samba-config no longer adds idmap cache time to version of smb.conf newer than 3.3.0 (bug #610)
+* Added pp (polypkg) as part of the vasidmapd package
+* Includes the latest PolyPackage which adds support for debian upstart jobs.
+* vas-samba-config now restarts winbind if daemon is present. This is a best guess as to the location
+  of winbind, may not work in all environments (bug #631)
+* Added vas-samba-config support for Samba 3.6 idmap backend parameters. (bug # 816)
+
 1.2.3
 * vas-samba-config now updates smb.conf even when no other sections exist besides [global] (bug #785)
 * Updated the kinit function in vasidmap-status to work in more scenarios
