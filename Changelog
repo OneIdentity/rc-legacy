@@ -1,3 +1,6 @@
+1.2.5
+* Can now compile with GCC 4.6 and higher (bug #820)
+
 1.2.4
 * vas-samba-config supports include statements being at the end of the global section. (bug #817)
 * vas-samba-config no longer adds idmap cache time to version of smb.conf newer than 3.3.0 (bug #610)
