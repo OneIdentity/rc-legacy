@@ -5,15 +5,15 @@ POLYPKGURI=http://rc.quest.com/pub/rc/polypkg/pp
 
 AUTOMAKE_OPTIONS =	foreign
 
-AM_LDFLAGS =		$(VAS_LIBS)
+#AM_LDFLAGS =		$(VAS_LIBS)
 AM_CFLAGS =		$(VAS_CFLAGS)
 
 sbin_PROGRAMS =		vasidmapd
-vasidmapd_LDADD =	$(LIBOBJS)
+vasidmapd_LDADD =	$(LIBOBJS) $(VAS_LIBS)
 man_MANS =		vasidmapd.8
 
 bin_PROGRAMS =		vasidmap
-vasidmap_LDADD =	$(LIBOBJS)
+vasidmap_LDADD =	$(LIBOBJS) $(VAS_LIBS)
 man_MANS +=		vasidmap.1
 
 sbin_SCRIPTS =		vas-samba-config
