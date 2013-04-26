@@ -1,0 +1,158 @@
+<?xml version='1.0'?>
+<!-- (c) 2005 Quest Software, Inc. All rights reserved. -->
+<Wix xmlns='http://schemas.microsoft.com/wix/2003/01/wi'>
+  <Fragment>
+       <DirectoryRef Id='INSTALLDIR'>
+
+	 <Component Id='PuTTY' Guid='3A86948F-5983-4590-915B-74150B4CBA31'>
+	   <File Id='PuTTY.exe' Name='PuTTY.exe' DiskId='1' Vital='yes'
+		 src='PuTTY.exe'>
+	       <Shortcut Id='scPuTTY.exe'
+		     Directory='SHORTCUTFOLDER'
+		     Name='PUTTY'
+		     LongName='PuTTY'
+		     Description='Secure shell terminal emulator'
+		     Icon='putty.ico' IconIndex='0'
+		     WorkingDirectory='PersonalFolder'/>
+	   </File>
+         </Component>
+
+	 <Component Id='BasicFileAssociations' Guid='C2C3911F-4CA0-40ed-8CE1-69F551130EA6'>
+	   <Registry Action='createKeyAndRemoveKeyOnUninstall' Root='HKCR'
+	     Key='.ppk'>
+		<Registry Type='string' Value='PuTTYPrivateKey' />
+	   </Registry>
+	   <Registry Action='createKeyAndRemoveKeyOnUninstall' Root='HKCR'
+	     Key='PuTTYPrivateKey'>
+	     <Registry Type='string' Value='PuTTY Private Key File' />
+	   </Registry>
+	 </Component>
+
+	 <Component Id='PuTTYgen' Guid='3C47F5C0-8B13-4A31-B8E5-AF638FDB3458'>
+	     <File Id='PuTTYgen.exe' Name='PuTTYgen.exe' DiskId='1'
+		 src='PuTTYgen.exe' />
+	     <Registry Action='createKeyAndRemoveKeyOnUninstall' Root='HKCR'
+	       Key='PuTTYPrivateKey\shell\edit'>
+		 <Registry Type='string' Value='&amp;Edit' />
+		 <Registry Action='createKeyAndRemoveKeyOnUninstall'
+		   Key='command'>
+		   <Registry Type='string'
+		     Value='"[INSTALLDIR]\puttygen.exe" "%1"' />
+		 </Registry>
+	     </Registry>
+	 </Component>
+
+	 <Component Id='Pscp' Guid='2267FE61-8508-4417-BA8F-181D653CF6A7'>
+	     <File Id='PSCP.exe' Name='Pscp.exe' DiskId='1'
+		 src='PSCP.exe' />
+	 </Component>
+
+	 <Component Id='Plink' Guid='0EB52F90-2633-4ba1-8F86-F6B4E51B851F'>
+	     <File Id='Plink.exe' Name='Plink.exe' DiskId='1'
+		 src='Plink.exe' />
+	 </Component>
+
+	 <Component Id='Plinkw' Guid='7AFDF866-0D06-4fc0-9FFA-3AB3CA5D5CB0'>
+	     <File Id='Plinkw.exe' Name='Plinkw.exe' DiskId='1'
+		 src='Plinkw.exe' />
+	 </Component>
+
+	 <Component Id='Psftp' Guid='85015068-C3FC-41d9-9DDB-A1C16B618773'>
+	     <File Id='PSFTP.exe' Name='Psftp.exe' DiskId='1'
+		 src='PSFTP.exe' />
+	 </Component>
+
+	 <Component Id='Pageant' Guid='4AC90AD8-4CF9-445a-81FE-CF1E9FE1A3D3'>
+	     <File Id='Pageant.exe' Name='Pageant.exe' DiskId='1'
+		 src='Pageant.exe' />
+	     <Registry Action='createKeyAndRemoveKeyOnUninstall' Root='HKCR'
+		 Key='PuTTYPrivateKey\DefaultIcon'>
+		 <Registry Type='string'
+		     Value='[INSTALLDIR]\pageant.exe,0' />
+	     </Registry>
+	     <Registry Action='createKeyAndRemoveKeyOnUninstall' Root='HKCR'
+		 Key='PuTTYPrivateKey\shell\open\command'>
+		 <Registry Type='string'
+		     Value='"[INSTALLDIR]\pageant.exe" "%1"' />
+	     </Registry>
+	 </Component>
+
+	 <Component Id='PuTTYCmd' Guid='CDFA0842-3790-4BA3-8CD9-8CFDCE9D6B0B'>
+	     <Shortcut Id='scPuttyCmd.exe' 
+		 Directory='SHORTCUTFOLDER'
+		 Name="COMMANDS"
+		 LongName="Command line tools"
+		 Target="[COMMANDPATH]"
+		 Description="Prompt to allow running PuTTY command line tools"
+		 Show="normal"
+		 WorkingDirectory="INSTALLDIR" 
+		 />
+	 </Component>
+
+	 <Component Id='PuTTYchm' Guid='05F268AD-3133-4e07-B780-DE056365215B'>
+	     <File Id='PuTTY.chm' Name='PuTTY.chm' DiskId='1'
+		 src='..\doc\PuTTY.chm'>
+		 <Shortcut Id='scPuTTYchm'
+		     Description='Help files for PuTTY'
+		     Directory='SHORTCUTFOLDER'
+		     Name='PuTTY.chm'
+		     LongName="PuTTY User Manual"
+		     Show='normal' />
+	     </File>
+	 </Component>
+
+	 <Component Id='PuTTYADM' Guid='C10EC0C6-222E-4634-9C63-14EC0F850566'>
+	     <File Id='PuTTY.adm' Name='PuTTY.adm' DiskId='1'
+	         src='$(var.srcdir)putty.adm'  />
+	 </Component>
+
+	 <Component Id='PuTTYSysPath' Guid='4D3B3CC3-5146-4a5a-9B21-537F68F16A4C'>
+	     <Environment Id='PuTTYSysPathEnv' Action='set' Name='PATH'
+		 Part='last' Permanent='no' System='no' Value='[INSTALLDIR]' />
+	 </Component>
+
+       </DirectoryRef>
+
+       <DirectoryRef Id='SHORTCUTFOLDER'>
+
+	 <Component Id='Uninstall' Guid='9AB2BA1E-E270-4431-967A-7E2DA23BD61E'>
+	   <Shortcut Id="scUninstall.exe"
+		 Directory='SHORTCUTFOLDER'
+		 Name='UNINSTAL'
+		 LongName="Uninstall PuTTY"
+		 Target="[MSIEXECPATH]"
+		 WorkingDirectory="INSTALLDIR" 
+		 Description="Uninstall PuTTY"
+		 Arguments="/x [ProductCode]"
+		 />
+	 </Component>
+
+	 <Component Id='WebSite' Guid='1F5E47CA-D96B-4d18-AB2C-C9B8DCF942FB'>
+	     <File Id='website.url' DiskId='1'
+		 Name='WEBSITE.URL'
+		 LongName='Quest Resource Central web site.url'
+		 src='$(var.srcdir)website.url' 
+		 />
+	 </Component>
+
+     </DirectoryRef>
+
+     <!--
+     <Property Id="MSIEXECPATH">[SystemFolder]\MsiExec.exe</Property>
+     <Property Id="COMMANDPATH">[SystemFolder]\Cmd.exe</Property>
+     -->
+     <Property Id="MSIEXECPATH">%SystemRoot%\system32\MsiExec.exe</Property>
+     <Property Id="COMMANDPATH">%SystemRoot%\system32\Cmd.exe</Property>
+
+     <!--
+     This action prompts the user if they want to remove all their 
+     saved settings. 
+       -->
+     <CustomAction Id="PuTTYCleanupAction"
+	 ExeCommand="-cleanup-during-uninstall"
+	 FileKey="PuTTY.exe"
+	 Impersonate='yes'
+	 />
+
+ </Fragment>
+</Wix>

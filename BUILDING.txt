@@ -1,0 +1,53 @@
+
+1. Download and install the MinGW compiler tools from www.mingw.org.
+
+   mingw32-make-3.80.0-3.exe
+   binutils-2.16.91-20060119-1.tar.gz
+   gcc-core-3.4.5-20060117-1.tar.gz
+   mingw-runtime-3.9.tar.gz
+   w32api-3.6.tar.gz
+
+   I installed these files into C:\MinGW, meaning I had to add C:\MinGW\bin
+   to my PATH.
+
+   You'll also need the HtmlHelp SDK from Microsoft so you can build 
+   integrated CHM help. The HTMLHelp SDK available from
+   <http://msdn.microsoft.com/library/en-us/htmlhelp/html/vsconHH1Start.asp>
+   It normally installs into "C:\Program Files\HTML Help Workshop"
+   Add that to your PATH.
+
+   Optionally, to support multiple monitor displays, find multimon.h
+   and put it in the include path.  The reliable way to find
+   multimon.h is to download the Microsoft Platform SDK and extract
+   from there. Once that is done, add this line to localconf.bat:
+	set multimon=
+
+2. cd into putty/ and run mkfiles.pl once to generate the makefile(s). 
+
+   You can do this on a unix host with Perl, or download and install perl
+   from http://www.activestate.com/Products/ActivePerl/ and run it from windows.
+
+3. If you want to build MSI packages, you will need to download and install
+   the WiX core toolset from http://wix.sf.net/ - I install them into 
+   C:\Program Files\Wix but if you have them elsewhere, set the variable WIXDIR
+   in localconf.bat (It is called by the build.bat script).
+
+   You might also want to install the Platform SDK from 
+   <http://msdn.microsoft.com/library/en-us/msi/setup/
+       platform_sdk_components_for_windows_installer_developers.asp>
+   for development, but it is optional.
+
+4. Finally, on the build host, run the build.bat script. This will build the 
+   packages and object files in a temporary build area (defaults to 
+   %TEMP%/putty).
+   This split source-build directory approach speeds up development, but if
+   you don't like it, set builddir to the empty string or "./" in 
+   localconf.bat.
+
+If you are building from a subversion checkout, the revision number will be
+automatically detected. Otherwise, set the REVISION variable in localconf.bat
+to something representative.
+
+If you are external to Quest Software, please do not publish custom PuTTY 
+builds in such a way that an installation could be mistaken as an official 
+builds by Quest Software.
