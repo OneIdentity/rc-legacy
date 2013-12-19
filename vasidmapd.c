@@ -93,7 +93,7 @@
   if (debug != VLMAPD_NOT_DEFINED) { \
     if (debug >= level) \
       fprintf(stderr, fmt, ##va); \
-    } else \
+  } else \
       syslog(LOG_DAEMON | level, fmt, ## va); \
   } while (0)
 
@@ -205,17 +205,19 @@ int VLMAPD_SIGNAL = VLMAPD_NOT_DEFINED;
 static void usage(const char *prog) 
 {
         fprintf(stderr, "usage: %s"
-               " [-hFD]"
+               " [-hDFV]"
                " [-A ipaddr] [-d level] [-p port]"
                " [-s spn]"
                " [-P pidfile]\n", prog);
 
         fprintf(stderr, 
                "-h             Display usage\n"
-               "-F             Don't fork-and-detach from the controlling terminal\n"
                "-D             Run in daemon mode: fork-and-detach from the controlling terminal\n"
+               "-F             Don't fork-and-detach from the controlling terminal\n"
+			   "-V             Causes the daemon to print its version number and exit immediately\n"
                "-A ipaddr      Address to listen for idmap requests\n"
-               "-d level       Debug mode. Uses syslog if available\n"
+               "-d level       Prints debug to stderr, otherwise logging goes\n"
+			   "               through syslog if available. Valid debug levels are 0 - 7\n"
                "-p port        Port to listen for idmap requests on\n"
                "-s spn         Service name to be used when establishing creds. Default is host/\n"
                "-P pidfile     The pid file to use. Default is: /var/run/vasidmapd.pid\n"
@@ -254,7 +256,7 @@ static int vlmapd_sid_to_id(vas_ctx_t *vasctx, vas_id_t *vasid,
     vas_product_version( &major, &minor, NULL);
     LOG(LOG_INFO, "libvas major: %d, minor: %d\n", major, minor);
 
-    LOG(LOG_INFO, "\nLook up Unix ID for sid: %s\n", sid);
+    LOG(LOG_INFO, "Look up Unix ID for sid: %s\n", sid);
 
     /* check to see if the SID is a Group */
     LOG(LOG_DEBUG, "Looking up as group...\n");
@@ -1421,8 +1423,8 @@ int main (int argc, char *argv[])
             switch (ch) {
                 case 'h': usage(argv[0]); exit(EXIT_SUCCESS);
                 case 'A': bindaddr = optarg; break;
-                case 'd': debug = atoi(optarg); if(debug == 0) error=1; break;
-                case 'p': port = atoi(optarg);  if(port == 0) error=1; break;
+                case 'd': debug = atoi(optarg); break;
+                case 'p': port = atoi(optarg); if(port == 0) error=1; break;
                 case 'D': daemonize = 1; use_default_pidfile = 1; break;
                 case 'F': daemonize = 0; use_default_pidfile = 0; break;
                 case 's': service_name = optarg; break;

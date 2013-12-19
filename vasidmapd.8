@@ -11,6 +11,7 @@ vasidmapd \- SID-UID and SID-GID mapper for Active Directory
 .RI [\-d\  debug-level ]
 .RI [\-p\  port ]
 .RI [\-s\  spn ]
+.RI [\-P\  pidfile ]
 .SH DESCRIPTION
 The
 .B vasidmapd
@@ -50,8 +51,9 @@ The listen address defaults to the loopback address 127.0.0.1.
 .TP
 .RI \-d\  debug-level
 This parameter sets the debug level as an integer.
-The default is level 0 and indicates no debugging.
-Debug messages are sent to the syslog using facility daemon, level debug.
+Debug messages are sent to stderr. Omitting the -d option will output log
+messages to syslog using facility daemon, level debug.
+A debug-level of 0 disables debugging.
 .TP
 .RI \-p\  port
 This parameter sets the TCP port number on which
@@ -67,9 +69,13 @@ This parameter sets the principal name that the
 service authenticates as.
 It defaults to
 .IR host/ .
+.TP
+.RI \-P\  pidfile
+The pid file to use. Default is:
+.IR /var/run/vasidmapd.pid
 .SH "SEE ALSO"
 vastool(1),
 smb.conf(5),
-.I http://rc.quest.com/topics/samba/
+.I http://rc.quest.com/topics/vasidmap/
 .SH AUTHORS
 Simo Sorce, Quest Software, Inc.
