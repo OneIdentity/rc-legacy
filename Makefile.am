@@ -5,7 +5,6 @@ POLYPKGURI=http://rc.quest.com/pub/rc/polypkg/pp
 
 AUTOMAKE_OPTIONS =	foreign
 
-#AM_LDFLAGS =		$(VAS_LIBS)
 AM_CFLAGS =		$(VAS_CFLAGS)
 
 sbin_PROGRAMS =		vasidmapd
@@ -34,6 +33,7 @@ TESTS_ENVIRONMENT=	srcdir=$(srcdir) $(SHELL)
 
 EXTRA_DIST =		LICENCE README 
 EXTRA_DIST +=		pp vasidmap.pp 
+EXTRA_DIST +=       pp vas-samba-config.pp
 EXTRA_DIST +=		$(man_MANS)
 EXTRA_DIST +=		vas-samba-config.in 
 EXTRA_DIST +=		vas-krb5-config.in
@@ -92,4 +92,21 @@ package: pp vasidmap.pp
 	    pkgdatadir=$(pkgdatadir) \
 	    sbindir=$(sbindir) \
 	    sysconfdir=$(sysconfdir) \
+	&& rm -rf "$$DESTDIR"
+
+config: pp vas-samba-config.pp
+	DESTDIR="$${TMPDIR-/tmp}/vas-samba-config.root.`echo $$$$`"; \
+	rm -rf "$$DESTDIR"; \
+	$(MAKE) install DESTDIR="$$DESTDIR" && \
+	$(srcdir)/pp --destdir="$$DESTDIR" \
+	--install-script="inst.sh" \
+	$(srcdir)/vas-samba-config.pp \
+	version="$(VERSION)" \
+	bindir=$(bindir) \
+	libdir=$(bindir) \
+	libexecdir=$(libexecdir) \
+	mandir=$(mandir) \
+	pkgdatadir=$(pkgdatadir) \
+	sbindir=$(sbindir) \
+	sysconfdir=$(sysconfdir) \
 	&& rm -rf "$$DESTDIR"
