@@ -122,6 +122,10 @@ TIME=`date +"%m-%d-%Y %H:%M:%S"`
 
 echo "Runtime: $TIME"
 
+have_vasidmap=false
+test -x "$VASIDMAPD" && have_vasidmap=true
+debug_echo "have_vasidmap = $have_vasidmap"
+
 yesno() { debug_echo "$@"; if "$@"; then echo \[YES\]; else echo \[NO\]; fi; }
 #passfail() { debug_echo "$@"; if "$@"; then echo \[PASSED\]; else echo \[FAILED\]; fi; }
 passfail() { debug_echo "$@"; if "$@"; then echo \[passed\]; else echo \[FAILED\]; fi; }
@@ -2147,14 +2151,18 @@ run_tests()
     fi
   fi
 
-  if [ "x$VASIDMAP_TOOL_TESTS" = "xtrue" ] || [ "x$RUN_ALL_TESTS" = "xtrue" ]; then
-    echo; label "Running vasidmap tool tests as user: "; if [ -n "$RUNASUSER_TOOL" ]; then echo "$RUNASUSER_TOOL"; else echo "$RUNASUSER"; fi
-    run_vasidmap_tool_tests && { echo; echo "All vasidmap tool tests passed"; } || { echo; echo "NOTICE: One or more vasidmap tool tests failed. For more information run again  with the -d (debug) option"; rc=1; }
-  fi
+  if $have_vasidmap; then
+    if [ "x$VASIDMAP_TOOL_TESTS" = "xtrue" ] || [ "x$RUN_ALL_TESTS" = "xtrue" ]; then
+      echo; label "Running vasidmap tool tests as user: "; if [ -n "$RUNASUSER_TOOL" ]; then echo "$RUNASUSER_TOOL"; else echo "$RUNASUSER"; fi
+      run_vasidmap_tool_tests && { echo; echo "All vasidmap tool tests passed"; } || { echo; echo "NOTICE: One or more vasidmap tool tests failed. For more information run again  with the -d (debug) option"; rc=1; }
+    fi
 
-  if [ "x$VASIDMAP_DAEMON_TESTS" = "xtrue" ] || [ "x$RUN_ALL_TESTS" = "xtrue" ]; then
-    echo; label "Running vasidmap daemon tests as user: "; if [ -n "$RUNASUSER_DAEMON" ]; then echo "$RUNASUSER_DAEMON"; else echo "$RUNASUSER"; fi
-    run_vasidmap_daemon_tests && { echo; echo "All vasidmap daemon tests passed"; } || { echo; echo "NOTICE: One or more vasidmap daemon tests failed. For more information run again  with the -d (debug) option"; rc=2; }
+    if [ "x$VASIDMAP_DAEMON_TESTS" = "xtrue" ] || [ "x$RUN_ALL_TESTS" = "xtrue" ]; then
+      echo; label "Running vasidmap daemon tests as user: "; if [ -n "$RUNASUSER_DAEMON" ]; then echo "$RUNASUSER_DAEMON"; else echo "$RUNASUSER"; fi
+      run_vasidmap_daemon_tests && { echo; echo "All vasidmap daemon tests passed"; } || { echo; echo "NOTICE: One or more vasidmap daemon tests failed. For more information run again  with the -d (debug) option"; rc=2; }
+    fi
+  else
+	  echo "vasidmap is not installed. Not running vasidmapd or vasidmap tool tests"
   fi
 
   if [ "x$SMBCLIENT_TESTS" = "xtrue" ] || [ "x$RUN_ALL_TESTS" = "xtrue" ]; then
