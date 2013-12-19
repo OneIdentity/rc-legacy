@@ -77,8 +77,31 @@ detect_samba_settings "$smbd" "$samba_configfile" || die_cat <<-.
 .
 
 have_winbind=false
+have_vasidmap=false
+winbindd_running=false
+vasidmapd_running=false
+
 test -x "$samba_prefix/sbin/winbindd" && have_winbind=true
 debug_echo "have_winbind = $have_winbind"
+
+if ${have_winbind}; then
+  if ps -ef | grep -v "grep" | grep "${samba_prefix}/sbin/winbindd" > /dev/null
+  then
+   winbindd_running=true
+  fi
+  debug_echo "winbind was running = $winbindd_running"
+fi
+
+test -x "$VASIDMAPD" && have_vasidmap=true
+debug_echo "have_vasidmap = $have_vasidmap"
+
+if ${have_vasidmap}; then
+  if ps -ef | grep -v "grep" | grep "${VASIDMAPD}" > /dev/null
+  then
+     vasidmapd_running=true
+  fi
+  debug_echo "vasidmapd was running = ${vasidmapd_running}"
+fi
 
 
 with_ads_support=false
@@ -202,7 +225,7 @@ cp "$SAMBA_CONFIGFILE" "$CONFMOD"
 
 PAMOPT=undefined
 if $FORCE; then
-    PAMOPT=yes
+    PAMOPT=no
 elif check_parm "obey pam restrictions" "$CONFMOD"; then
     debug_echo "'obey pam restrictions' is already in place"
 else
@@ -212,7 +235,7 @@ else
 	  by calling the PAM account and session stacks whenever
 	  a Samba share is mounted. This is a recommended option.
 .
-    yesorno "Enable 'obey pam restrictions' option?" yes \
+    yesorno "Enable 'obey pam restrictions' option?" no \
 	&& PAMOPT=yes || PAMOPT=no
 fi
 debug_echo "PAMOPT=$PAMOPT"
@@ -245,7 +268,7 @@ fi
 #	Warning: username map script is OK only in VAS Unix Personality Mode
 #.
 
-if $have_winbind; then
+if $have_winbind && $have_vasidmap; then
     check_and_fix_add "winbind nested groups" "no"	    "$CONFMOD" $NEWTEXT
     # Attach vasidmap as an idmap backend for winbind
     check_and_fix_add "ldap admin dn" "CN=VasIdmapAdmin" "$CONFMOD" $NEWTEXT
@@ -261,6 +284,7 @@ if $have_winbind; then
 # Because of <domain> we should only update the wildcard and possibliy the BUILTIN domain 
 # configs for idmap.
 #
+
     idmap_domain="*"
 
     if is_lt $SAMBA_VERSION 3.6.0; then
@@ -504,8 +528,8 @@ cat <<-. >"$PWDCHGCONF"
 # stop the samba and vasidmap services
 verbose_echo "Stopping services..."
 $RESTART_SAMBA && stopsvc $SAMBASVC
-stopsvc vasidmapd
-$have_winbind && stopsvc winbind 
+$vasidmapd_running && stopsvc vasidmapd
+$winbindd_running && stopsvc winbind 
 
 # update smb.conf 
 if $update_conf; then
@@ -553,9 +577,9 @@ fi
 
 # and restart samba services
 verbose_echo "Restarting services...."
-$have_winbind && startsvc vasidmapd
+$vasidmapd_running && startsvc vasidmapd
 $RESTART_SAMBA && startsvc $SAMBASVC
-$have_winbind && startsvc winbind
+$winbindd_running && startsvc winbind
 
 if $have_winbind; then
     : # yay, SID translation will work
@@ -579,15 +603,16 @@ cat <<-.
       Samba config:          $SAMBA_CONFIGFILE
       VAS config:            $VAS_CONF
       winbind present:       `$have_winbind && echo yes || echo no`
+      vasidmapd present:     `$have_vasidmap && echo yes || echo no`
 
       smb.conf updated:      `$update_conf && echo yes || echo not needed`
       vas.conf updated:      `$update_vas && echo yes || echo not needed`
       krb5.conf updated:     $KRB5CHANGE
       Host key reset         $PWDCHANGE
 
-      vasidmapd (re)started: `$have_winbind && echo yes || echo not needed`
+      vasidmapd (re)started: `$vasidmapd_running && echo yes || echo not needed`
       samba (re)started:     `$RESTART_SAMBA && echo yes || echo no`
-      winbind (re)started:   `$have_winbind && echo yes || echo not needed`
+      winbind (re)started:   `$winbindd_running && echo yes || echo not needed`
 
 .
 

@@ -23,6 +23,7 @@
 VASTOOL=/opt/quest/bin/vastool
 VAS_CONF=/etc/opt/quest/vas/vas.conf
 VAS_KEYTAB=/etc/opt/quest/vas/host.keytab
+VASIDMAPD=/opt/quest/sbin/vasidmapd
 
 # regular expressions strings used in the check_* functions:
 TAB='	'			# single tab \x09
