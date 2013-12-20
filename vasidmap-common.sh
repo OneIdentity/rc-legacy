@@ -218,6 +218,19 @@ detect_opsys () {
     fi
 }
 
+#
+# Determines if we are running in a chroot
+#
+chrooted() {
+   if [ "$(stat -c %d/%i /)" = "$(stat -Lc %d/%i /proc/1/root 2>/dev/null)" ]; then
+	   # the devicenumber/inode pair of / is the same as that of
+	   # /sbin/init's root, so we're *not* in a chroot and hence
+	   # return false.
+	   return 1
+   fi
+   return 0
+}
+
 # detect_samba_settings /path/to/smbd [/path/to/smb.conf]
 #   Uses the samba server to set various $SAMBA_* variables, including:
 #   $SAMBA_SBINDIR	location of server programs (eg smbd)

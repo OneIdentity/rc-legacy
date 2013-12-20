@@ -181,6 +181,13 @@ case $OPSYS in
             SAMBASVC=samba
             WINBINDSVC=winbind ;;
 	AIX)    initdir=SRC            SAMBASVC=samba ;;
+    Linux)  if [ -x /lib/init/upstart-job -a -e /etc/init/vasidmapd.conf ] && ! chrooted; then
+	          initdir=SERVICE
+	          SAMBASVC=smbd
+	        else
+	          initdir=/etc/init.d
+	          SAMBASVC=samba
+		    fi;;
         *)  initdir=/etc/init.d    SAMBASVC=samba ;;  # Linux!
 esac
 
@@ -195,6 +202,8 @@ stopsvc () {
 	  stopsrc -s $1
     elif [ $initdir = SMF ]; then
       svcadm disable $1
+	elif [ $initdir = SERVICE ]; then
+      service $1 stop
     else
 	  test -x $initdir/$1 && $initdir/$1 stop
     fi
@@ -206,6 +215,8 @@ startsvc () {
 	  startsrc -s $1
     elif [ $initdir = SMF ]; then
       svcadm enable $1
+    elif [ $initdir = SERVICE ]; then
+      service $1 start
     else
 	  test -x $initdir/$1 && $initdir/$1 start
     fi
