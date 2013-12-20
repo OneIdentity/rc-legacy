@@ -1,5 +1,19 @@
 1.2.5
 * Can now compile with GCC 4.6 and higher (bug #820)
+* Default value for 'obey pam restrictions' is now NO (bug #664)
+* vas-samba-config is now its own package. Vasidmap sitll contains
+  vas-samba-config as well. The vas-samba-config package can be used
+  when winbind is not needed on the system and will simplfy the samba
+  setup process.
+* Updated vasidmapd usage and man pages on how to correctly enable logging
+  (bug #841)
+* vasidmap-status will not run vasidmapd and vasidmap test when vasidmap
+  is not installed.
+* vasidmapd will ignore a few common well-known-sids. s-1-1-0, s-1-5-2 and
+  s-1-5-11. We will not attempt to find a unix user object for these sids
+  bug #837
+* vas-samba-config uses upstart jobs on Ubuntu to restart smbd,winbind and
+  vasidmapd. (Bug #843)
 
 1.2.4
 * vas-samba-config supports include statements being at the end of the global section. (bug #817)
