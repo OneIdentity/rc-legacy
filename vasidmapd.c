@@ -258,6 +258,11 @@ static int vlmapd_sid_to_id(vas_ctx_t *vasctx, vas_id_t *vasid,
 
     LOG(LOG_INFO, "Look up Unix ID for sid: %s\n", sid);
 
+	if( strcmp(sid, "S-1-1-0") == 0 || strcmp(sid, "S-1-5-2") == 0 || strcmp(sid, "S-1-5-11") == 0 ) {
+		LOG(LOG_INFO, "%s is a well known sid. Ignoring the request\n", sid);
+		goto FINISHED;
+	}
+
     /* check to see if the SID is a Group */
     LOG(LOG_DEBUG, "Looking up as group...\n");
 
