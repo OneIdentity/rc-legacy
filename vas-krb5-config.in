@@ -45,18 +45,37 @@ fi
 ##########################
 # VAS and KRB5 checks
 
-verbose_echo "Checking for Kerberos 5..."
-
 # check that krb5.conf exists
-test -f "$KRB5CONF" || die_cat <<-.
+check_for_krb5_conf()
+{
+  verbose_echo "Checking for Kerberos 5..."
+  echo "Check for krb5.conf"
+  if ! test -f "$KRB5CONF"; then
+    if yesorno "Cannot find $KRB5CONF. Is this the correct krb5.conf file?" yes; then
+      if yesorno "Do you wish to create the file $KRB5CONF?" yes; then
+        touch $KRB5CONF
+        return 0
+      fi
+    fi
+  else
+    return 0
+  fi
+  return 1
+}
 
-	ERROR: $KRB5CONF is missing.
-	Please verify that this is the right configuration file and
-	that your Kerberos 5 (krb5) packages are installed.
-	If this is the right file, please create it with 
-	    touch $KRB5CONF
-	and then re-run this script.
+if ! check_for_krb5_conf; then
+  die_cat <<-.  
+
+    ERROR: $KRB5CONF is missing.
+    Please verify that this is the right configuration file and
+    that your Kerberos 5 (krb5) packages are installed.
+    If this is the right file, please create it with 
+        touch $KRB5CONF
+    and then re-run this script.
 .
+else
+    echo "Found $KRB5CONF"
+fi
 
 # check for VAS >= 3.0
 verbose_echo "Checking VAS..."

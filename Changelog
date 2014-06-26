@@ -1,5 +1,7 @@
 1.2.6
 * Remove hard check for VAS in returned pwgrent structure (bug #828)
+* If krb5.conf doesn't exist the vas-krb5-config script now asks
+  the user if they wish to create it. (bug #600)
 
 1.2.5
 * Can now compile with GCC 4.6 and higher (bug #820)
