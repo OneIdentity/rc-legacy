@@ -491,11 +491,6 @@ static int vlmapd_gid_to_sid(vas_ctx_t *vasctx, vas_id_t *vasid, ber_int_t msgid
 		return 0;
 	}
 
-	if (strcmp(grent->gr_passwd, "VAS") != 0) {
-	    LOG(LOG_ERR, "ERROR: gid " GID_T_FMT " not from VAS\n", gid);
-	    return 0;
-	}
-
 	if ((vas_group_init(vasctx, vasid, grent->gr_name,
 				    VAS_NAME_FLAG_FOREST_SCOPE,
 				    &vasgrp)) != VAS_ERR_SUCCESS) {
