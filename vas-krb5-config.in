@@ -49,7 +49,6 @@ fi
 check_for_krb5_conf()
 {
   verbose_echo "Checking for Kerberos 5..."
-  echo "Check for krb5.conf"
   if ! test -f "$KRB5CONF"; then
     if yesorno "Cannot find $KRB5CONF. Is this the correct krb5.conf file?" yes; then
       if yesorno "Do you wish to create the file $KRB5CONF?" yes; then
@@ -73,8 +72,6 @@ if ! check_for_krb5_conf; then
         touch $KRB5CONF
     and then re-run this script.
 .
-else
-    echo "Found $KRB5CONF"
 fi
 
 # check for VAS >= 3.0
