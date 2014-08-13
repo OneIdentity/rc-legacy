@@ -1,7 +1,8 @@
 # (c) 2012, Quest Software, Inc. All rights reserved.
 
 AC_INIT([quest-vasidmap],
-	[1.2.4],
+	esyscmd(if test -d .git && which git >/dev/null 2>&1; then echo -n `git describe``if ! git diff --quiet || ! git diff --cached --quiet; then echo M; fi`; else
+         echo -n `head -n1 NEWS | cut -f1 " "`; fi),
 	[support@quest.com])
 AM_INIT_AUTOMAKE()
 AC_CONFIG_SRCDIR([vasidmap.c])
