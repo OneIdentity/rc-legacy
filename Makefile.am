@@ -31,7 +31,7 @@ dist_pkgdata_DATA =	vasidmap-common.sh
 TESTS=			rc.test t-vasidmap-common
 TESTS_ENVIRONMENT=	srcdir=$(srcdir) $(SHELL)
 
-EXTRA_DIST =		LICENCE README 
+EXTRA_DIST =		LICENCE README Changelog
 EXTRA_DIST +=		pp vasidmap.pp 
 EXTRA_DIST +=       pp vas-samba-config.pp
 EXTRA_DIST +=		$(man_MANS)
