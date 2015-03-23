@@ -1,3 +1,7 @@
+1.2.7
+* Check for 1 or more instances of WITH_ADS when determining if Samba
+  has been compiled with ADS support. Bug #854
+
 1.2.6
 * Remove hard check for VAS in returned pwgrent structure (bug #828)
 * If krb5.conf doesn't exist the vas-krb5-config script now asks
