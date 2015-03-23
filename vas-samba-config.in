@@ -105,7 +105,7 @@ fi
 
 
 with_ads_support=false
-if [ `$samba_prefix/sbin/smbd -b | grep WITH_ADS | wc -l` -eq "2" ]; then
+if [ `$samba_prefix/sbin/smbd -b | grep WITH_ADS | wc -l` -ge "1" ]; then
   with_ads_support=true
 fi
   debug_echo "with_ads_support = $with_ads_support"
