@@ -1,6 +1,7 @@
 1.2.7
 * Check for 1 or more instances of WITH_ADS when determining if Samba
   has been compiled with ADS support. Bug #854
+* vas-samba-config asks if vasidmapd should be configured. Default is no
 
 1.2.6
 * Remove hard check for VAS in returned pwgrent structure (bug #828)
