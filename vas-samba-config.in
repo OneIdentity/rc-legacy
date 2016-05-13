@@ -115,7 +115,7 @@ test $with_ads_support = "false" && die_cat <<-.
         ERROR: Samba does not appear to support kerberos.
         Please validate that your version of samba supports
         kerberos by checking the build settings on smbd by
-        running $samba_prefix/sbin/smbd -b and looking for 
+        running $samba_prefix/sbin/smbd -b and looking for
         WITH_ADS under the "--with Options" or "Build Options"
         sections.
 .
@@ -128,8 +128,19 @@ test $with_ads_support = "false" && die_cat <<-.
 verbose_echo "Checking for VAS..."
 detect_vas || die "Cannot find VAS installed"
 
-is_lt $VAS_VERSION 3 && 
-    die "Requires VAS version 3 or later (current VAS version is $VERSION)"
+is_lt $VAS_VERSION 3 &&
+    die "Requires VAS version 3 or later (current VAS version is $VAS_VERSION)"
+
+# Warn if version of Samba is older than 3.3.16
+if is_lt $SAMBA_VERSION 3.3.16; then
+            cat <<-.
+
+    *** WARNING: Samba version is older than 3.3.16 ***
+        Samba versions older than 3.3.16 are known to have
+        issues working with Windows 2008 domain controllers.
+
+.
+fi
 
 # First of all check if we are joined
 $VASTOOL -u host/ auth -S host/ > /dev/null || die_cat <<-.
@@ -242,9 +253,10 @@ elif check_parm "obey pam restrictions" "$CONFMOD"; then
 else
     cat <<-.
 
-	  Samba can use PAM for user access control. This works
-	  by calling the PAM account and session stacks whenever
-	  a Samba share is mounted. This is a recommended option.
+      Samba can use PAM for user access control. This works
+      by calling the PAM account and session stacks whenever
+      a Samba share is mounted. Please make sure that pam
+      is configured for Samba if enabling this option.
 .
     yesorno "Enable 'obey pam restrictions' option?" no \
 	&& PAMOPT=yes || PAMOPT=no
@@ -280,9 +292,10 @@ fi
 #.
 
 if $have_winbind && $have_vasidmap; then
-    check_and_fix_add "winbind nested groups" "no"	    "$CONFMOD" $NEWTEXT
-    # Attach vasidmap as an idmap backend for winbind
-    check_and_fix_add "ldap admin dn" "CN=VasIdmapAdmin" "$CONFMOD" $NEWTEXT
+    if yesorno "Configure winbind to use vasidmapd for id mapping" no; then
+        check_and_fix_add "winbind nested groups" "no"	    "$CONFMOD" $NEWTEXT
+        # Attach vasidmap as an idmap backend for winbind
+        check_and_fix_add "ldap admin dn" "CN=VasIdmapAdmin" "$CONFMOD" $NEWTEXT
 
 # In Samba 3.6 the idmap system was re-written and idmap uid, gid, and backend were depricated 
 # in favor of 
@@ -296,39 +309,40 @@ if $have_winbind && $have_vasidmap; then
 # configs for idmap.
 #
 
-    idmap_domain="*"
+        idmap_domain="*"
 
-    if is_lt $SAMBA_VERSION 3.6.0; then
-      check_and_fix_add "idmap backend" "ldap:ldap://localhost" "$CONFMOD" $NEWTEXT
-      check_parm "idmap uid" "$CONFMOD" ||
-        check_and_fix_add "idmap uid" "1-2147483647"	     "$CONFMOD" $NEWTEXT
-      check_parm "idmap gid" "$CONFMOD" ||
-       check_and_fix_add "idmap gid" "1-2147483647"	     "$CONFMOD" $NEWTEXT
-    else
-      check_and_remove "idmap gid" "$CONFMOD"
-      check_and_remove "idmap backend" "$CONFMOD"
+        if is_lt $SAMBA_VERSION 3.6.0; then
+          check_and_fix_add "idmap backend" "ldap:ldap://localhost" "$CONFMOD" $NEWTEXT
+          check_parm "idmap uid" "$CONFMOD" ||
+            check_and_fix_add "idmap uid" "1-2147483647"	     "$CONFMOD" $NEWTEXT
+          check_parm "idmap gid" "$CONFMOD" ||
+           check_and_fix_add "idmap gid" "1-2147483647"	     "$CONFMOD" $NEWTEXT
+        else
+          check_and_remove "idmap gid" "$CONFMOD"
+          check_and_remove "idmap backend" "$CONFMOD"
 
-      check_parm "idmap config BUILTIN : backend" "$CONFMOD" ||
-        check_and_fix_add "idmap config BUILTIN : backend" "tdb" "$CONFMOD" $NEWTEXT
+          check_parm "idmap config BUILTIN : backend" "$CONFMOD" ||
+            check_and_fix_add "idmap config BUILTIN : backend" "tdb" "$CONFMOD" $NEWTEXT
 
-      check_parm "idmap config BUILTIN : range" "$CONFMOD" ||
-        check_and_fix_add "idmap config BUILTIN : range" "1-1000" "$CONFMOD" $NEWTEXT
+          check_parm "idmap config BUILTIN : range" "$CONFMOD" ||
+            check_and_fix_add "idmap config BUILTIN : range" "1-1000" "$CONFMOD" $NEWTEXT
 
-      check_and_fix_add "idmap config $idmap_domain : backend" "ldap" "$CONFMOD" $NEWTEXT
+          check_and_fix_add "idmap config $idmap_domain : backend" "ldap" "$CONFMOD" $NEWTEXT
 
-      check_and_rename "idmap uid" "idmap config $idmap_domain : range" "$CONFMOD"
-      check_parm "idmap config $idmap_domain : range" "$CONFMOD" ||
-        check_and_fix_add "idmap config $idmap_domain : range" "1-2147483647" "$CONFMOD" $NEWTEXT
+          check_and_rename "idmap uid" "idmap config $idmap_domain : range" "$CONFMOD"
+          check_parm "idmap config $idmap_domain : range" "$CONFMOD" ||
+            check_and_fix_add "idmap config $idmap_domain : range" "1-2147483647" "$CONFMOD" $NEWTEXT
 
-      check_parm "idmap config $idmap_domain : ldap_url" "$CONFMOD" ||
-        check_and_fix_add "idmap config $idmap_domain : ldap_url" "ldap://localhost/" "$CONFMOD" $NEWTEXT
-    fi
+          check_parm "idmap config $idmap_domain : ldap_url" "$CONFMOD" ||
+            check_and_fix_add "idmap config $idmap_domain : ldap_url" "ldap://localhost/" "$CONFMOD" $NEWTEXT
+        fi
 
-    if is_lt $SAMBA_VERSION 3.0.25; then
-     check_and_fix_add "idmap expire time" "300"	     "$CONFMOD" $NEWTEXT
-    else
-      check_and_rename "idmap expire time" "idmap cache time" "$CONFMOD"
-      check_and_rename "idmap negative time" "idmap negative cache time" "$CONFMOD"
+        if is_lt $SAMBA_VERSION 3.0.25; then
+         check_and_fix_add "idmap expire time" "300"	     "$CONFMOD" $NEWTEXT
+        else
+          check_and_rename "idmap expire time" "idmap cache time" "$CONFMOD"
+          check_and_rename "idmap negative time" "idmap negative cache time" "$CONFMOD"
+        fi
     fi
 fi
 
@@ -599,10 +613,12 @@ else
 
 	* NOTE: Winbind not found
 
-	  AD authentication will still be available to Samba, but access
-	  control entries and file ownership will appear to be for local
-	  users instead of domain users. To correct this, please install
-	  and start winbind and then re-run this script.
+      AD authentication will still be available to Samba, but access
+      control entries and file ownership will appear to be for local
+      users instead of domain users if AD users are not UNIX enabled.
+      For more information regarding identity mapping in Samba see:
+
+      https://www.samba.org/samba/docs/man/Samba-HOWTO-Collection/idmapper.html
 .
 fi
 
