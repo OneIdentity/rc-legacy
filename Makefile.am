@@ -1,4 +1,4 @@
-# (c) 2014, Dell Software, Inc. All rights reserved.
+# (c) 2017, Quest Software, Inc. All rights reserved.
 
 POLYPKGFILE=/data/rc/pub/rc/polypkg/pp
 POLYPKGURI=http://rc.quest.com/pub/rc/polypkg/pp

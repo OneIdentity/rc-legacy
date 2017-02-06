@@ -1,4 +1,4 @@
-# (c) 2014 Dell Software, Inc. All rights reserved.
+# (c) 2017 Quest Software, Inc. All rights reserved.
 # Common shell functions for vasidmap scripts
 
 # check_parm

@@ -1,4 +1,4 @@
-# (c) 2014, Dell Software, Inc. All rights reserved.
+# (c) 2017, Quest Software, Inc. All rights reserved.
 
 AC_INIT([quest-vasidmap],
      esyscmd(if test -d .git && which git >/dev/null 2>&1; then echo -n `git describe``if ! git diff --quiet || ! git diff

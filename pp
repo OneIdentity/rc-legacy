@@ -1,7 +1,7 @@
 #!/bin/sh
-# Copyright 2014 Dell Software, Inc. ALL RIGHTS RESERVED
+# Copyright 2017 Quest Software, Inc. ALL RIGHTS RESERVED
 pp_revision="20120502"
- # Copyright 2014 Dell Software, Inc.  ALL RIGHTS RESERVED.
+ # Copyright 2017 Quest Software, Inc.  ALL RIGHTS RESERVED.
  #
  # Redistribution and use in source and binary forms, with or without
  # modification, are permitted provided that the following conditions
@@ -12,7 +12,7 @@ pp_revision="20120502"
  # 2. Redistributions in binary form must reproduce the above copyright
  #    notice, this list of conditions and the following disclaimer in the
  #    documentation and/or other materials provided with the distribution.
- # 3. Neither the name of Dell Software, Inc. nor the names of its
+ # 3. Neither the name of Quest Software, Inc. nor the names of its
  #    contributors may be used to endorse or promote products derived from
  #    this software without specific prior written permission.
  #
@@ -31,7 +31,7 @@ pp_revision="20120502"
  # Please see <http://rc.quest.com/topics/polypkg/> for more information
 
 pp_version="1.0.0.$pp_revision"
-pp_copyright="Copyright 2014, Dell Software, Inc. ALL RIGHTS RESERVED."
+pp_copyright="Copyright 2017, Quest Software, Inc. ALL RIGHTS RESERVED."
 
 pp_opt_debug=false
 pp_opt_destdir="$DESTDIR"
@@ -802,7 +802,7 @@ pp_frontend_init () {
     version=
     summary="no summary"
     description="No description"
-    copyright="Copyright 2014 Dell Software, Inc. ALL RIGHTS RESERVED."
+    copyright="Copyright 2017 Quest Software, Inc. ALL RIGHTS RESERVED."
 
     #-- if the user supplied extra arguments on the command line
     #   then load them now.
@@ -2232,7 +2232,7 @@ pp_backend_sd_init () {
     pp_sd_stoplevels=auto
     pp_sd_config_file=
     pp_sd_vendor=
-    pp_sd_vendor_tag=Dell
+    pp_sd_vendor_tag=Quest
     pp_sd_default_start=1           # config_file default start value
 
     pp_readlink_fn=pp_ls_readlink   # HPUX has no readlink
@@ -6578,7 +6578,7 @@ pp_backend_rpm_function () {
 
     <http://developer.apple.com/documentation/DeveloperTools/Conceptual/SoftwareDistribution4/Concepts/sd_pkg_flags.html>
     Info.plist = {
-     CFBundleGetInfoString: "1.2.3, Dell Software, Inc.",
+     CFBundleGetInfoString: "1.2.3, Quest Software, Inc.",
      CFBundleIdentifier: "com.quest.rc.openssh",
      CFBundleShortVersionString: "1.2.3",
      IFMajorVersion: 1,
