@@ -291,7 +291,7 @@ fi
 #	Warning: username map script is OK only in VAS Unix Personality Mode
 #.
 
-if $have_winbind && $have_vasidmap; then
+if ! $FORCE && $have_winbind && $have_vasidmap; then
     if yesorno "Configure winbind to use vasidmapd for id mapping" no; then
         check_and_fix_add "winbind nested groups" "no"	    "$CONFMOD" $NEWTEXT
         # Attach vasidmap as an idmap backend for winbind
