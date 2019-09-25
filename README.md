@@ -23,3 +23,17 @@ A: **vasidmap** can be used on servers that are accessed by Unix-enabled users v
 
 ## Compiling
 Compiling the vasidmap package from source requires the Authentication Services SDK to be installed. The SDK can be found in the SDK subdirectory directory of the Quest Authentication Services Installation CD.
+
+Run the following in the main directory:
+```
+    ./configure
+    make
+    make package
+```
+
+If the 'configure' script doesn't exist, make it using the 'autogen.sh' script.
+
+If 'pp' doesn't understand your system and can't create a package, you can 
+try installing the software directly with:
+
+    make install
