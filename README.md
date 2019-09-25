@@ -26,9 +26,9 @@ Compiling the vasidmap package from source requires the Authentication Services 
 
 Run the following in the main directory:
 ```
-    ./configure
-    make
-    make package
+./configure
+make
+make package
 ```
 
 If the 'configure' script doesn't exist, make it using the 'autogen.sh' script.
