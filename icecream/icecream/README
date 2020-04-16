@@ -1,0 +1,19 @@
+NOTE: Although icecream will compile on some non-Linux systems,
+it depends critically on Linux' /proc/ structures and will fail
+at runtime until somebody figures out how to emulate the "ticks"
+form of process accounting in there.
+
+How to install icecream
+=======================
+
+cd icecream
+(make -f Makefile.cvs)
+./configure --prefix=/opt/icecream
+make
+make install
+
+WARNING: Make sure you specify a prefix, otherwise icecream
+might override your gcc installation!
+
+Please have a look at http://en.opensuse.org/Icecream - the docu 
+is maintained there for the time being
