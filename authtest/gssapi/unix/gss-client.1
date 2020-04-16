@@ -1,0 +1,43 @@
+.\" (c) 2006, Quest Software, Inc. All rights reserved.
+.TH GSS-CLIENT 1
+.SH NAME
+gss-client \- GSSAPI test client
+.SH SYNOPSIS
+.B gss-client
+[\-c]
+.RI [\-f\  flags ]
+.RI [\-t\  name-type ]
+.I target
+.SH DESCRIPTION
+The
+.B gss-client
+tool is the counterpart to
+.B gss-server .
+The client generates base-64 encoded GSSAPI tokens on standard output
+followed by a period (.) character.
+It then reads a base-64 encoded GSSAPI token from standard input 
+terminated by a period character.
+.PP
+Once a security context is established, the client reads a wrapped
+token from the server, then replies with a wrapped token 
+containing "I am the client".
+.SS OPTIONS
+.TP
+\-c
+specifies that the wrapped tokens should be confidential (encrypted)
+.TP
+.RI \-f\  flags
+a comma-separated list of flags used when constructing the security 
+context. 
+Valid flags are:  deleg, mutual, replay, sequence, conf, integ, anon.
+.TP
+.RI \-t\  name-type
+specifies the name type of the
+.I target
+parameter.
+Valid name types are: none, hostbased, krb5.
+.SH "SEE ALSO"
+gss-dump(1),
+gss-server(1)
+.SH AUTHORS
+David Leonard, Quest Software, Inc.

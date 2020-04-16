@@ -1,0 +1,24 @@
+
+Preparation after checkout
+--------------------------
+
+  After checking out this package, you can build it with
+
+    autoreconf --install
+    ./configure
+    make
+    make package
+
+
+Preparation before release
+---------------------------
+
+  * read CHANGES
+  * run 'make distcheck'
+      - there should be no errors
+  * run 'make dist' 
+      - check that all gssapi/windows files are actually there
+  * run 'make package'
+      - inspect entire contents of the created 'destdir' directory
+
+

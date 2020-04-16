@@ -1,0 +1,142 @@
+
+INTRODUCTION
+
+  This test code forms a counterpart to the gss-client and gss-server 
+  programs found elsewhere in the authtest package. It exercises the
+  GSSAPI security layer and is useful as a simple demonstration that
+  secure contexts may be established and messages securely exchanged.
+
+INSTRUCTIONS
+
+  After compiling the Java stand-alone client and server as described
+  below, you can then run them either with Sun's built-in GSSAPI or with
+  Quest Software's VSJ (Vintela Single Sign-on for Java).
+
+  These instructions assume you are using the host "server.example.com" 
+  as a server.
+
+  The client assumes you have a valid credential cache with a TGT,
+  while the server assumes you have read access to a keytab with
+  valid entries.
+
+---------
+Compiling
+---------
+
+  The target/authtest-java-1.0.jar file is usually bundled with the
+  distribution, so compilation is normally not required. When you see
+        -cp target/\*
+  used in the examples below, it is referring to that JAR.
+
+  However, if you have modified source files, and want to rebuild the
+  JAR, you have various ways to do it.
+
+  1) In the source root directory, run
+        $ configure
+        $ make gssapi/java/target/authtest-java-1.0.jar
+
+  2) OR, in this directory, run
+        $ mvn install
+
+  3) OR, in this directory, run
+        $ mkdir -p target/classes
+        $ javac -d target/classes src/main/java/*.java
+        $ jar fc target/authtest-java-1.0.jar -C target/classes .
+
+---------------------------
+Using SUN's GSSAPI provider
+---------------------------
+
+  Sun's GSSAPI provider comes built-in with most JREs, so this needs no other
+  configuration except for the editing of the jaas-krb5.conf file.
+  In it you will need to modify the principal and keyTab parameters 
+  to match your server:
+
+        com.sun.security.jgss.accept  {
+          com.sun.security.auth.module.Krb5LoginModule required
+          storeKey=true
+          principal="host/server.example.com@EXAMPLE.COM"
+          useKeyTab=true
+          keyTab="./host.keytab"
+          debug=true
+          ;
+        };
+
+  Run the server with:
+    $ java \
+        -Djava.security.auth.login.config=jaas-krb5.conf \
+        -Djavax.security.auth.useSubjectCredsOnly=false \
+        -cp target/\* \
+        Server
+
+  and run the client in another window with:
+    $ java \
+        -Djava.security.auth.login.config=jaas-krb5.conf \
+        -Djavax.security.auth.useSubjectCredsOnly=false \
+        -cp target/\* \
+        Client host/server.example.com
+
+  Cut and paste the BASE-64 encoded tokens complete with trailing period '.'
+  between the two programs. Note that sometimes a program may send two
+  consecutive tokens.
+
+  You will probably need to edit jaas-krb5.conf to change principal name 
+  used by the server.
+
+KNOWN PROBLEMS
+
+  There appears to be a problem with host.keytabs written by QAS
+  that contain removed entries. Java 1.5 and Java 6's kerberos libraries
+  do not appear to understand the removed entries and will randomly
+  report that they cannot find the service principal in the default keytab.
+  The reason is that the Heimdal code used by VAS writes negative record 
+  lengths for deleted records.
+
+  Workarounds: 
+    - unjoin, delete the keytab and re-join the server
+    - use the ktedit tool to dump and undump the keytab to a local file, 
+      and then use the keyTab= parameter in jaas-krb5.conf to specify its 
+      location:
+        $ sudo ktedit -k /etc/opt/quest/vas/host.keytab dump | 
+          ktedit -k host.keytab undump
+
+DEBUGGING
+
+  Add debug=true to either or both clauses in jaas-krb5.conf
+
+---------------------------
+Using VSJ's GSSAPI provider
+---------------------------
+
+  (VSJ is an Active Directory authenticator product intended for
+  use with J2EE servlets.)
+
+  First, obtain the VSJ standard edition JAR and a license JAR. This example
+  assumes they are named as follows:
+
+        vsj/vsj-standard-3.3.jar
+        vsj/vsj-license-no-expiry.jar
+
+  Review the file vsj.security which overrides a particular part of 
+  $JAVA_HOME/lib/security/java.security. Its job is to replace the entry
+  that is Sun's GSS provider. You may have to vary the number at the end
+  of the key if it isn't working.
+
+  Run the server with:
+    $ java \
+        -cp vsj/\*:target/\* \
+        -Djava.security.properties=./vsj.security \
+        -Djcsi.kerberos.principal=host/server.example.com \
+        -Djcsi.kerberos.keytab=./host.keytab \
+        Server
+
+  And run the client in another window with:
+    $ java \
+        -cp vsj/\*:target/\* \
+        -Djava.security.properties=./vsj.security \
+        Client host/server.example.com
+
+DEBUGGING
+
+  Add -Djcsi.kerberos.debug=true
+

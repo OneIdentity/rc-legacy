@@ -1,0 +1,4 @@
+# Overrides java.security to use VSJ as a GSSAPI provider
+# Slot 5 is *usually* sun's GSS provider. Please see 
+# $JAVA_HOME/lib/security/java.security to make sure.
+security.provider.5=com.dstc.security.kerberos.provider.WedgetailGSSProvider

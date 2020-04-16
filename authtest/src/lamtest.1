@@ -1,0 +1,64 @@
+.\" (c) 2006, Quest Software, Inc. All rights reserved.
+.TH LAMTEST 1
+.SH NAME
+lamtest \- AIX authentication test tool
+.SH SYNOPSIS
+.B lamtest
+[\-Alr]
+.RI [\-m\  mode ]
+.RI [\-p\  password ]
+.RI [\-h\  hostname ]
+.RI [\-t\  tty ]
+.RI [ username ]
+.SH DESCRIPTION
+The
+.B lamtest
+tool invokes all the stages of AIX local authentication to test
+a LAM module.
+.PP
+The tool provides checking and verbose status information about the
+AIX authentication calls made:
+.IR authenticate (3),
+.IR passwdexpired (3),
+.IR loginrestrictions (3),
+.IR loginsuccess (3).
+.PP
+.SS OPTIONS
+.TP
+.RI \-A
+Disables changing the administrative domain to the user's registry
+before authentication.
+Practically this stops
+.IR setauthdb (3)
+from being called.
+.TP
+\-l
+specifies that
+.IR loginsuccess (3)
+or
+.IR loginfailed (3)
+should be called after an authentication attempt.
+.TP
+\-r
+causes the authentication loop to restart on failure.
+This simulates how servers like OpenSSH perform multiple authentications.
+.TP
+.RI \-m\  mode
+specifies the authentication mode.
+Valid modes are login, rlogin, su and daemon.
+The default mode is rlogin.
+.TP
+.RI \-p\  password
+specifies the initial response to use.
+This is normally the password.
+Defaults to no initial response.
+.TP
+.RI \-h\  hostname
+specifies the hostname to use when logging authentication results.
+.TP
+.RI \-t\  tty
+specifies the TTY name to use when logging authentication results.
+.SH "SEE ALSO"
+.IR authenticate (3)
+.SH AUTHORS
+David Leonard, Quest Software, Inc.

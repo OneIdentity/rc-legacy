@@ -1,0 +1,8 @@
+1.4.0
+ - added Windows SSPI GSSAPI client/server (source only)
+ - added gss-dump tool for decoding GSSAPI tokens
+1.3.0
+ - added Java GSS client/server (source only)
+ - pam_debug.so: corrected hex display
+ - pamtest: check conv function
+ - pamtest: zero pam response fields for Linux
