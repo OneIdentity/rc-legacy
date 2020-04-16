@@ -1,0 +1,339 @@
+\versionid $Id$
+
+\A{quest} Quest Software changes
+
+\W{http://www.quest.com/}{Quest Software} has 
+extended PuTTY's capabilities to include Kerberos/\i{GSSAPI}
+authentication, providing
+secure, single sign-on for enterprise users. 
+
+This section describes the features added to PuTTY by \i{Quest Software}.
+
+\H{quest-rfc4462} Supported GSSAPI authentication methods
+
+This version of PuTTY has been extended to implement the GSSAPI user and
+host authentication methods from RFC 4462.
+
+Specifically, the authentication methods implemented are:
+
+\dt \ii{GSSKEX}: \i{GSSAPI Key Exchange}
+
+\dd This is a host authentication algorithm that obviates public-key
+authentication.
+This means that server host keys no longer need to be stored nor
+checked by the user.
+In addition to the standard SHA-1 key exchange algorithms described in
+RFC 4462, Quest PuTTY also includes support for SHA-256.
+
+\dt \e{\i{gssapi-with-mic}} user authentication
+
+\dd This is a user authentication protocol that uses established login
+credentials to automatically authenticate the user.
+Quest PuTTY also supports the specification of blank usernames for
+SSH servers that support this.
+
+\dt \e{\i{gssapi-keyex}} user authentication
+
+\dd This user authentication protocol uses a successful previous
+mutual authentication by GSSKEX to avoid double-authentication and
+achieve automatic user authentication.
+
+\i{GSSAPI}
+stands for \i{Generic Security Services Application Programming Interface},
+and \i{MIC} stands for \i{Message Integrity Check}.
+
+Earlier drafts of the IETF standard RFC4462 specified a different user 
+authentication method
+named \e{gssapi}, but it was determined to be insecure and replaced with
+an improved method \e{gssapi-with-mic}.
+This version of PuTTY does not implement the insecure \e{gssapi}
+user authentication method.
+
+\H{quest-options} Extended options
+
+This section describes extensions made to the command-line arguments of
+Plink (\k{plink}), 
+PSCP (\k{pscp}) and 
+PSFTP (\k{psftp}).
+
+Note:
+The installer places \cw{plink.exe} and the other executables in the
+\cw{Program Files\\Quest Software\\PuTTY} folder. Since these are command line tools,
+you may wish to add this folder to your system \cw{%PATH%} variable.
+This can be done
+through the \q{Advanced} tab on the \q{My Computer} Properties display.
+
+\S{quest-username} Username option (\c{-l})
+
+Plink, pscp and psftp will default to using the current logged-in username when
+connecting. The username can still be specified with the
+\c{-l} option, or by using a target of the form \e{username}\c{@}\e{hostname}.
+However, GSSAPI authentication may be rejected by the server if
+your credentials do not match that username.
+
+\S{quest-common-options} Additional common options
+
+Quest Software has added the following command line parameters to Plink,
+pscp and psftp.
+
+\dt \cw{-ng}
+
+\dd Disables use of GSSAPI authentication
+(\k{config-ssh-auth-gssapi})
+
+\dt \cw{-f}
+
+\dd Uses forwardable tickets, that is attempt credential delegation
+(\k{config-ssh-auth-gssapi-fwd-ticket})
+
+\dt \cw{-k} \e{spn}
+
+\dd Specifies a Service Principal Name (\k{quest-spn})
+to use instead of deducing one from the target hostname
+(\k{config-ssh-auth-gssapi-prin-name})
+
+\dt \cw{-use_vintela_gui_w_pwd} 
+
+\dd Cause all Putty-based
+input to be be prompted in a dialog box rather than in
+the console window.
+
+\dt \cw{-use_vintela_gui_no_pwd} 
+
+\dd Causes all Putty-based
+input, except passwords, to be be prompted in a dialog box rather than in
+the console window.
+
+\dt \cw{-hide_console} 
+
+\dd Causes the created Command Prompt window
+to be hidden. This option is useful when calling X Window System based
+applications where all user interaction is graphical.
+However, see the discussion on Plinkw (\k{quest-plinkw}).
+
+\dt \cw{-auto_store_key_in_cache} 
+
+\dd Bypasses the "Store Key in Cache"
+dialog, trusting and saving host keys automatically.
+\e{This is not recommended.
+Please consider using GSSAPI key exchange instead.}
+
+\dt \cw{-no_in} 
+
+\dd Redirects input to the NUL device. This is useful when you see
+the error message "Unable to read from standard input" from plinkw
+and don't need to send any data.
+
+\dt \cw{-no_out} 
+
+\dd Sends session output to the NUL device. This is useful when you see
+the error message "Unable to write to standard output" from plinkw
+and don't expect to receive any data.
+
+\S{quest-plinkw} \i{Plinkw}
+
+The Plink tool (\k{plink}) establishes I/O channels to 
+a remote host, and
+is suitable for use as an I/O transport for tools such as CVS and Subversion.
+However, if you only need Plink to start a remote command and do not need
+
+\b stdin/stdout I/O, or the 'console window' that accompanies it, or
+
+\b a delay while the command completes
+
+then you can use Plinkw.exe, which is a non-console version of Plink.exe.
+
+An example Plinkw command line is:
+
+\c plinkw -X -ssh targetmachine /usr/X11R6/bin/xterm
+
+\S{quest-pscp-options} PSCP options
+
+The PSCP command (\k{pscp}) has been extended with the following
+command-line option:
+
+\dt \cw{-limit} \e{kbps}
+
+\dd Limits the file transfers to the specified uncompressed data rate.
+
+\H{quest-policy} Group Policy support
+
+Microsoft's Group Policy creates a two-level preferences system, where
+system (administrator) application preferences take priority over user 
+preferences.
+
+This version of PuTTY has been extended to honour the following
+system security-related policies:
+
+\dt Prohibit remote window title querying
+
+\dd See \k{config-features-qtitle}.
+
+\dt SSH protocol version
+
+\dd This selects whether PuTTY will negotiate SSH protocol version
+1 or version 2 as described in \k{config-ssh-prot}.
+Allowing negotiation of protocol 1 exposes the connection to known attacks.
+
+\dt Blocked ciphers
+
+\dd This setting specifies which SSH encryption ciphers will be excluded 
+from use by PuTTY.
+Ciphers are cryptographic algorithms which, over
+time, are subject to scrutiny and analysis by the security community. 
+Occasionally, flaws or weaknesses are discovered which render a 
+cipher insecure. 
+Also, the cost to break ciphers in a brute force manner decreases over 
+time until the cipher is considered relatively weak.
+
+\dt Prohibit agent forwarding
+
+\dd PuTTY is able to forward a user's private keys through a helper
+program, Pageant. 
+A compromised server may obtain a user's private keys through this 
+mechanism and potentially masquerade as them on other systems.
+See \k{config-ssh-agentfwd}.
+
+Group Policy support for Windows is provided through the
+\cw{putty.adm} file.
+Refer to you Group Policy documentation on how to install and
+use ADM files.
+
+Note: Group Policy requires fundamentally that users have agreed to delegate 
+some of their preferences to the system administrator. 
+In a corporate setting, this is generally the case.
+However, the policy controls described in this section apply only to this 
+version of Quest PuTTY, and can be easily circumvented by users downloading 
+other SSH applications or other versions of PuTTY.
+
+If desirable, PuTTY can be recompiled 
+without the \cw{/DFORCE_POLICY} flag, which
+gives users an extra command-line option,
+\cw{-nopolicy}.
+
+\H{quest-sspi} SSPI and Active Directory
+
+This section gives a brief overview of SSPI and Active Directory.
+
+Microsoft's \i{Active Directory}\u00AE{(R)} 
+uses \i{Kerberos} to authenticate users.
+Kerberos works by obtaining cryptographic \i{tickets} from a trusted source
+called the \i{Key Distribution Center} (\i{KDC}).
+The KDC is the only
+place that knows a user's password (besides, hopefully, the user).
+Services (such as sshd)
+trust the KDC to authenticate users for them.
+The KDC issues 
+short-term 'tickets' to users that they send to services to
+obtain access. 
+Only the service can decrypt the ticket.
+Inside the ticket is the user's name.
+In this way, services can serve users
+without having to know their password, 
+or communicate directly with the KDC (which may be down).
+
+This version of PuTTY has been extended by Quest Software to use Microsoft
+\i{Security Service Provider Interface} (\i{SSPI}) to obtain tickets to
+access remote sshd services.  SSPI is Microsoft's
+wire-compatible version of the GSSAPI (an IETF standard).
+SSPI is the native Microsoft Windows means by
+which PuTTY obtains service ticket from Active Directory.
+
+With Quest Software's \i{VAS}, the target Unix/Linux computer can
+be 'joined' to the same Active Directory domain to which the 
+Microsoft Window\u00AE{(R)}'s client belongs.
+It can then act as a Kerberos service and
+understand the tickets (and \i{credentials}) obtained by
+the PuTTY via SSPI.
+The end result is that the user is not prompted for a password
+(single sign-on.)
+
+This only works if both the SSH client (PuTTY) and the remote host's 
+SSH server
+are capable of \i{GSSAPI} authentication.
+Free OpenSSH server packages, enabled with GSSAPI and pre-configured to use
+VAS, are available from \W{http://rc.quest.com/}\c{rc.quest.com}.
+
+\H{quest-spn} Determining Kerberos service principal names
+
+The Kerberos security system
+identifies services by their \i{service principal name} (\ii{SPN}).
+An example of an SPN is:
+
+\c ftp/server.example.com@EXAMPLE.COM
+
+SPNs are usually of the form \e{service}\c{/}\e{fqdn}\c{@}\e{domain}, 
+where \e{fqdn} is the
+fully qualified domain name of the host (\i{FQDN}), and \e{domain} is the 
+\i{Active Directory} domain.
+The \e{service} in this case is \c{ftp}
+(although for SSH, the service is generally \c{host}).
+Note that the \e{domain} is usually
+displayed in uppercase, and is not necessarily the same as the DNS domain name.
+Active Directory SPNs are not case sensitive.
+
+PuTTY must use the right SPN to get the right ticket from the KDC
+to present to the remote host service.
+If not, the remote service will not recognise the ticket.
+
+Generally, PuTTY deduces the SPN from the target's hostname,
+entered either in the \q{Host Name} field in the configuration panel
+(\k{config-ssh-auth})
+or on the command line.
+The SPN can be specified either through the 
+\q{Service Principal Name} configuration field
+(\k{config-ssh-auth-gssapi-prin-name})
+or with the \e{-k} option (\k{quest-common-options}).
+
+If not specified,
+the rules that PuTTY follows to deduce the SPN from the target hostname
+are as follows:
+
+\b If the target hostname is an IP address (eg \c{123.4.56.78}),
+and DNS is trusted (\k{config-ssh-trust-dns}), then
+try a reverse DNS lookup (PTR) to get the hostname.
+If the lookup is successful, use that as the target's FQDN and continue
+to the next step.  Otherwise, an SPN cannot be determined
+and GSSAPI will not be used for the connection.
+
+\b Check to see if the target hostname contains a period ('.'),
+and if so, then assume it is already an FQDN. 
+Otherwise, if DNS is trusted, use DNS to
+resolve and canonicalize into an FQDN.
+
+\b Construct the result SPN in the form \c{host/}\e{fqdn}.
+The domain part is omitted allowing the system to default to the
+current domain.
+
+PuTTY will display the resulting SPN
+at the beginning of interactive sessions
+if DNS is trusted (\k{config-ssh-trust-dns}).
+This is because DNS attacks can
+cause PuTTY to connect to a different, possibly compromised service,
+however the SPN will be visibly different.
+
+\H{quest-tm} Trademarks
+
+\b Windows\u00ae{(R)} and Active Directory\u00AE{(R)} are 
+registered trademarks of Microsoft Corporation.
+
+\b Kerberos\u2122{(TM)} is a trademark of the 
+Massachusetts Institute of Technology
+
+\b Quest and Quest Software are registered trademarks of Quest Software, Inc.
+The Quest Software logo and all other Quest Software product or service names 
+and slogans are registered trademarks or trademarks of Quest Software, Inc. 
+
+\b All other trademarks and registered trademarks are property of their 
+respective owners.
+
+\H{quest-about} About Quest Software, Inc.
+
+Quest Software, Inc. delivers innovative products that help
+organizations get more performance and productivity from their
+applications, databases and infrastructure.
+Through a deep expertise in IT operations and a continued focus on
+what works best, Quest helps more than 18,000 customers worldwide
+meet higher expectations for enterprise IT.  
+Quest Software can be found in offices around the globe and at
+\W{http://www.quest.com/}\c{www.quest.com}.

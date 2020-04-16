@@ -1,0 +1,10 @@
+
+srcdir=	
+CFLAGS=	-I$(srcdir). -I.
+
+LIBCHARSET_SRCDIR=	$(srcdir)
+LIBCHARSET_OBJDIR=	
+
+default: $(LIBCHARSET_OBJDIR)libcharset.a
+
+include $(srcdir)Makefile

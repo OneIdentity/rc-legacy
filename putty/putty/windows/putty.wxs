@@ -1,0 +1,188 @@
+<?xml version='1.0' encoding='windows-1252'?>
+<Wix xmlns='http://schemas.microsoft.com/wix/2003/01/wi'>
+
+<!--
+  $Id$
+
+  Copyright (c) 2005 Quest Software, Inc. 
+  All rights reserved.
+  
+  Redistribution and use in source and binary forms, with or without
+  modification, are permitted provided that the following conditions
+  are met:
+  
+  a. Redistributions of source code must retain the above copyright notice,
+     this list of conditions and the following disclaimer.
+  b. Redistributions in binary form must reproduce the above copyright
+     notice, this list of conditions and the following disclaimer in the
+     documentation and/or other materials provided with the distribution.
+  c. Neither the name of Quest Software, Inc. nor the names of its
+     contributors may be used to endorse or promote products derived from
+     this software without specific prior written permission. THIS SOFTWARE
+     IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
+     EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+     WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+     ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS
+     BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY,
+     OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+     SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+     INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+     CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+     ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+     THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+  <Product 
+      Name='Quest PuTTY $(var.VERSION)'
+      Id='9AB2BA1E-E270-4431-967A-7E2DA23BD61E'
+      Language='1033' Codepage='1252' Version='$(var.MSIVERSION)'
+      Manufacturer='Quest Software, Inc.'
+      UpgradeCode='EF40513A-1020-408F-A96F-9DA3DA2ECAED'>
+
+    <Package Id='????????-????-????-????-????????????' 
+	Keywords='Installer'
+	Description="Quest PuTTY $(var.VERSION) installer"
+	Comments='PuTTY is a secure remote shell tool'
+	Manufacturer='Quest Software, Inc.'
+	InstallerVersion='200' Compressed='yes' 
+	Languages='1033' SummaryCodepage='1252' />
+
+    <Media Id='1' Cabinet='PuTTY.cab' EmbedCab='yes' DiskPrompt="CD-ROM #1" />
+    <Property Id='DiskPrompt' Value="[ProductName] Installation [1]" />
+
+    <!-- GetConsoleWindow and SSPI were provided in Win2k/WinXP -->
+    <Condition
+       	Message='This application requires Microsoft Windows 2000 or later'>
+	   VersionNT >= 500
+    </Condition>
+
+
+    <Directory Id='TARGETDIR' Name='SourceDir'>
+
+      <Directory Id='ProgramFilesFolder' Name='PFiles'>
+	<Directory Id='Quest' Name='QUESTSFT' LongName='Quest Software'>
+	    <Directory Id='INSTALLDIR' Name='PuTTY' />
+	</Directory>
+      </Directory>
+
+      <Directory Id='ProgramMenuFolder' Name='SFiles'>
+	<Directory Id='pmQuest' Name='QUESTSFT' LongName='Quest Software'>
+	  <Directory Id='SHORTCUTFOLDER' Name='PuTTY' />
+	</Directory>
+      </Directory>
+
+      <Directory Id='DesktopFolder' Name='Desktop' />
+
+    </Directory>
+
+
+    <Feature Id='Complete' Title='PuTTY' 
+	Description='A complete installation of PuTTY. This feature always installs the PuTTY terminal tool.'
+	Display='expand' Level='1'
+       	ConfigurableDirectory='INSTALLDIR'>
+
+	<ComponentRef Id='PuTTY' />
+	<ComponentRef Id='BasicFileAssociations' />
+	<ComponentRef Id='Uninstall' />
+
+	<Feature Id='KeyMgmt' Title='Key management tools' 
+	    Description='Tools for managing SSH-2 user keys: PuTTYgen (key generator) and Pageant (a key server).'
+	    Level='1'>
+	    <ComponentRef Id='PuTTYgen' />
+	    <ComponentRef Id='Pageant' />
+	</Feature>
+
+	<Feature Id='CmdLine' Title='Command-line tools' 
+	    Description='Command-line/non-console tools: Pscp (remote file copy), Psftp (secure file transfer) and Plink (secure channel tool).'
+	    Level='1'>
+	    <ComponentRef Id='Pscp' />
+	    <ComponentRef Id='Plink' />
+	    <ComponentRef Id='Plinkw' />
+	    <ComponentRef Id='Psftp' />
+
+	    <Feature Id='CmdShortCut' Title='Shortcut'
+		Description='Creates a shortcut that launches a command prompt in the PuTTY install directory.'
+		Level='1'>
+		<ComponentRef Id='PuTTYCmd' />
+	    </Feature>
+
+	    <Feature Id='PathEnv' Title='Add to PATH'
+		Level='1' 
+		Description='Allows PuTTY applications to be run without needing the full file path.'>
+	        <ComponentRef Id='PuTTYSysPath' />
+	    </Feature>
+
+	</Feature>
+
+	<Feature Id='Documentation' Title='Documentation' 
+	    Level='1' Description='This feature installs help files for PuTTY and an Internet Shortcut to Resource Central.'>
+	    <ComponentRef Id='PuTTYchm' />
+	    <ComponentRef Id='WebSite' />
+	</Feature>
+
+	<Feature Id='GroupPolicy' Title='Group Policy'
+	    Level='1' 
+	    Description='Support files for administration through Group Policy'>
+	    <ComponentRef Id='PuTTYADM' />
+	</Feature>
+
+    </Feature>
+
+    <UI>
+      <AdminUISequence>
+        <Show Dialog="FatalError"      OnExit="error" />
+        <Show Dialog="UserExit"        OnExit="cancel" />
+        <Show Dialog="ExitDialog"      OnExit="success" />
+	<Show Dialog="PrepareDlg"      Before="CostInitialize" />
+        <Show Dialog="AdminWelcomeDlg" After="CostFinalize" />
+        <Show Dialog="ProgressDlg"     After="AdminWelcomeDlg" />
+      </AdminUISequence>
+
+      <InstallUISequence>
+        <Show Dialog="FatalError" OnExit="error" />
+        <Show Dialog="UserExit"   OnExit="cancel" />
+        <Show Dialog="ExitDialog" OnExit="success" />
+        <Show Dialog="PrepareDlg" After="LaunchConditions" />
+        <Show Dialog="WelcomeDlg" After="MigrateFeatureStates">NOT Installed</Show>
+        <Show Dialog="ResumeDlg"  After="WelcomeDlg">Installed AND (RESUME OR Preselected)</Show>
+        <Show Dialog="MaintenanceWelcomeDlg" After="ResumeDlg">Installed AND NOT RESUME AND NOT Preselected</Show>
+        <Show Dialog="ProgressDlg" After="MaintenanceWelcomeDlg" />
+      </InstallUISequence>
+    </UI>
+
+    <AdminExecuteSequence />
+
+    <InstallExecuteSequence>
+      <RemoveExistingProducts After='InstallFinalize' />
+      <Custom Action="PuTTYCleanupAction" Before='RemoveFiles'
+	    >(&amp;Complete=2) AND (!Complete=3)</Custom>
+    </InstallExecuteSequence>
+
+    <!-- Install dialog resources -->
+    <Binary Id="Up"        src="$(var.srcdir)instbin\Up.ico" />
+    <Binary Id="New"       src="$(var.srcdir)instbin\New.ico" />
+    <Binary Id="custicon"  src="$(var.srcdir)instbin\Custom.ico" />
+    <Binary Id="repairic"  src="$(var.srcdir)instbin\Repair.ico" />
+    <Binary Id="exclamic"  src="$(var.srcdir)instbin\Exclam.ico" />
+    <Binary Id="removico"  src="$(var.srcdir)instbin\Remove.ico" />
+    <Binary Id="completi"  src="$(var.srcdir)instbin\Complete.ico" />
+    <Binary Id="insticon"  src="$(var.srcdir)instbin\Typical.ico" />
+    <Binary Id="info"      src="$(var.srcdir)instbin\Info.ico" />
+    <Binary Id="bannrbmp"  src="$(var.srcdir)instbin\Banner_rc.bmp" />
+    <Binary Id="dlgbmp"    src="$(var.srcdir)instbin\Dialog_rc.bmp" />
+
+    <Icon   Id="putty.ico" src="$(var.srcdir)putty.ico" />
+
+    <!-- Add/Remove Program properties -->
+    <Property Id='ARPCONTACT'>support@quest.com</Property>
+    <Property Id='ARPURLINFOABOUT'>http://rc.quest.com/topics/putty/</Property>
+    <Property Id='ARPPRODUCTICON'>putty.ico</Property>
+
+    <!-- Add install dir to PATH -->
+    <!--
+    <Environment Id='UpdatePath' Name='PATH' Action='create'
+		 System='yes' Part='last' Value='[INSTALLDIR]' />
+     -->
+
+  </Product>
+</Wix>

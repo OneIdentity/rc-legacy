@@ -1,0 +1,41 @@
+
+# Simplified Makefile for halibut
+
+MODULES := main malloc ustring error help licence version misc tree234
+MODULES += input in_afm in_pf in_sfnt keywords contents index biblio
+MODULES += bk_text bk_html bk_whlp bk_man bk_info bk_paper bk_ps bk_pdf
+MODULES += winhelp deflate psdata wcwidth
+
+exe=		.exe
+RM=		del /q
+HHC=		hhc
+
+srcdir=		
+VPATH=		$(srcdir).
+
+OBJS= 		$(MODULES:=.o)
+LDFLAGS=	-L../charset
+LDLIBS=		-lcharset
+CPPFLAGS=	-I$(srcdir)../charset
+
+HALIBUT = halibut$(exe)
+
+INPUTS := doc/blurb doc/intro doc/running doc/input doc/output \
+	    doc/licence doc/manpage doc/index
+
+all:	$(HALIBUT) doc
+
+$(HALIBUT): $(OBJS)
+	$(LINK.c) -o $@ $(OBJS) $(LDFLAGS) $(LDLIBS)
+
+doc: halibut.chm halibut.1
+halibut.1: doc/manpage.but
+	$(HALIBUT) --man=halibut.1 $<
+halibut.chm: $(INPUTS:=.but) doc/chm.but
+	$(HALIBUT) --html $^
+	-$(HHC) halibut.hhp
+
+clean:
+	$(RM) $(OBJS) halibut$(exe)
+	$(RM) halibut.chm halibut.1 halibut.hhc halibut.hhk halibut.hhp
+	$(RM) *.html 

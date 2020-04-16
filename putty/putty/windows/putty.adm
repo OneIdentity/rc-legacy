@@ -1,0 +1,73 @@
+;
+; Administrative template for PuTTY policies
+;
+; (c) 2006, Quest Software, Inc. All rights reserved.
+
+CLASS User
+;CATEGORY !!Quest
+CATEGORY !!PuTTY
+
+  KEYNAME "Software\Policies\SimonTatham\PuTTY"
+
+  POLICY "Prohibit remote window title querying"
+    EXPLAIN !!no_remote_qtitle_explain
+    VALUENAME "NoRemoteQTitle"
+    VALUEON  NUMERIC 0
+  END POLICY
+
+  POLICY "SSH protocol version"
+    EXPLAIN !!sshprot_explain
+    PART "SSH protocol negotiation"
+      DROPDOWNLIST REQUIRED
+      VALUENAME "SshProt"
+      ITEMLIST
+	NAME "1 only"     VALUE NUMERIC 0
+	NAME "1, then 2"  VALUE NUMERIC 1
+	NAME "2, then 1"  VALUE NUMERIC 2 DEFAULT
+	NAME "2 only"     VALUE NUMERIC 3
+      END ITEMLIST
+    END PART
+  END POLICY
+
+  POLICY "Blocked ciphers"
+    EXPLAIN !!badcipher_explain
+    PART !!badcipher_label
+      EDITTEXT REQUIRED
+      VALUENAME "BadCiphers"
+      MAXLEN 2047
+    END PART
+    PART !!badcipher_instruction TEXT END PART
+  END POLICY
+
+  POLICY "Prohibit agent forwarding"
+    EXPLAIN !!agentfwd_explain
+    VALUENAME "AgentFwd"
+    VALUEON  NUMERIC 0
+    PART !!agentfwd_instruction TEXT END PART
+  END POLICY
+
+  POLICY "Prohibit DNS canonicalization"
+    EXPLAIN !!trust_dns_canon_explain
+    VALUENAME "TrustDNSCanon"
+    VALUEON  NUMERIC 0
+  END POLICY
+
+END CATEGORY
+;END CATEGORY
+
+[strings]
+Quest="Quest Software"
+PuTTY="PuTTY"
+no_remote_qtitle_explain="PuTTY can optionally provide the xterm service of allowing server applications to find out the local window title.  Note that this feature is a potential security hazard as a malicious application may use this feature to fake keypresses and potentially cause your server-side applications to do things you didn't want.\n\nIf this setting is enabled, PuTTY will prohibit enabling of the service.\n\nIf you disable or do not configure this setting, PuTTY's default is to disable the feature, but a user may enable it through PuTTY's configuration panel.\n\nThis policy only applies to Quest PuTTY version 0.58_q2 and later."
+
+sshprot_explain="This selects whether PuTTY will negotiate SSH protocol version 1 or version 2. Using protocol 1 exposes the connection to known attacks. PuTTY can attempt to use protocol 1 if the server does not offer protocol 2, and vice versa.  If you select '1 only' or '2 only' here, PuTTY will only connect if the server offers the SSH protocol version you have specified.\n\nIf you enable this setting, PuTTY will always negotiate in the order you have selected.\n\nIf you disable or do not configure this setting, PuTTY defaults to '2, then 1', but users may alter this through PuTTY's configuration panel.\n\nThis policy only applies to Quest PuTTY version 0.58_q2 and later."
+
+badcipher_label="Compromised ciphers:"
+badcipher_instruction="Specify a comma-separated list of identifiers, eg: des,3des,aes,blowfish"
+badcipher_explain="This setting specifies what SSH encryption ciphers will be prohibited from use by PuTTY.\n\nCiphers are cryptographic algorithms which, over time, are subject to scrutiny and analysis by the security community. Occasionally, flaws or weaknesses are discovered which render a cipher insecure. Also, the cost to break ciphers in a brute force manner decreases over time until the cipher is considered relatively weak.\n\nIf this setting is enabled, each cipher identified in the comma-separated list will be prohibited from use by PuTTY.\n\nIf this setting is disabled, or not configured, no ciphers will be disabled.\n\nThis policy only applies to Quest PuTTY version 0.58_q2 and later."
+
+agentfwd_label="Agent forwarding"
+agentfwd_explain="PuTTY is able to forward a user's private keys through a helper program, Pageant. A compromised server may obtain a user's private keys through this mechanism and potentially masquerade as them on other systems.\n\nIf this setting is enabled, then PuTTY will prohibit the forward of keys from Pageant.\n\nIf this setting is disabled or not configured, then the user is able to make use of forwarded Pageant keys (which is disabled by default)."
+agentfwd_instruction="Selecting 'enabled' will prohibit users from using Pageant forwarding.\n\nThis policy only applies to Quest PuTTY version 0.58_q2 and later."
+
+trust_dns_canon_explain="When a user enters a target hostname without a domain, PuTTY can query DNS to determine the fully-qualified domain name. An attacker may easily forge a DNS reply causing the PuTTY session to not only connect to a different IP address, but also to appear to correctly authenticate to an Active Directory host.\n\nIf this setting is enabled, then PuTTY will only use the hostname as entered by the user for obtaining a Kerberos ticket. This can cause problems when users have complex DNS domain search rules, or the domain controller does not have sufficiently servicePrincipalName attribute aliases. DNS will still be used but only to obtain an IP address.\n\nIf this setting is disabled or not configured, then the user will be able to make their own decision of trust.\n\nThis policy only applies to Quest PuTTY version 0.59_q1 and later."

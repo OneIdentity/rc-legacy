@@ -1,0 +1,101 @@
+
+Quest Software changes to PuTTY
+
+0.60_q1
+ - Merged with PuTTY 0.60
+ - bug 284: Fallback when gssapi auth fails locally
+ - bug 297: -ng option now disables GSSKEX as well as gssapi-with-mic
+ - bug 298: Wrong behaviour for applying policy on window title querying
+
+0.59_q1
+ - Merged with PuTTY 0.59b
+ - Moved GSSAPI options into its own tab (no longer all fits in Auth tab)
+ - plink now exits on key mismatch when console is hidden (bug 218/vbug 4913)
+ - plink centres dialogs on primary screen instead of console window
+ - New option -limit for pscp bandwidth limiting (bug 218)
+ - Only display GSSAPI SPN when trusting DNS or in verbose mode
+ - All plink errors shown as message boxes in GUI mode (bugs 227, 218)
+ - Switch to CHM/HtmlHelp support; updated documentation
+ - Support long messages in -use_vintela_gui* dialog boxes
+ - Make -auto_store_key_in_cache work with -batch (bug 233)
+ - New options -no_in/-no_out for plinkw
+
+0.58_q3 (unreleased)
+ - Added 'Trust DNS' configuration option; defaults to off (bug 196)
+ - Corrected Web site URL under Start menu  (bug 183)
+
+0.58_q2
+ - About box points at Resource Central web site (bug 179)
+ - Add support for Group Policy (bug 103)
+ - Change package name to Quest-PuTTY. Install under Quest Software
+ - Don't hang when GSSAPI init fails for non-joined hosts (vbug 6349)
+ - Don't append current realm to canonical SPN (vbug 6350)
+ - Fix unknown GSSKEX DH group hang (vbug 6378)
+ - Don't display error dialog boxes unless batch mode (bug 15)
+ - Non-console plinkw.exe: no more flashing dos boxes (bug 27)
+ - Support gss-keyex authentication (BuckH, bug 40)
+ - UI improvements for username and GSSAPI settings (bug 125)
+ - Documentation improvements
+ - Bounds check when constructing SPN
+ - Uninstaller runs 'putty -cleanup-during-uninstall'
+
+0.58vrc0.2.1.4
+ - Bug fix: GSS key re-exchange problem (vbug 5513)
+ - Reset busy cursor after key exchange failure
+ - Changed Vintela to Quest in licence texts
+ - Use scrub function instead of memset to erase temporary password fields
+ - Check that first GSS token can be generated before enabling GSS KEX
+ - Improved error checking, error messages
+ - Installer signed with Quest Software certificate 
+
+0.58vrc0.2.0.105
+ - Installer overhaul
+ - Password windows are centered (J Burns)
+ - Corrected logic that determines short prompt (J Burns)
+ - Dialog incorrectly echoed password text (J Burns)
+ - Check for '@' at end of realm sometimes returned by SSPI
+ - Improved logging; SSPI code review/tidy; memset tightening
+ - Changed Vintela to Quest in licence texts 
+
+0.58vrc0.2.0.68
+ - Wise installer minor improvements
+ - Success/failure of delegation detected and logged
+ - Strict mutual auth checked after gss-kex
+ - Help file improvements
+ - Key-exchange config list length increased to stop scrollbar flicker
+ - Default key-exchange list has all GSSAPI algorithms at the top
+ - Support for null host key algorithm during gss-kex
+ - Graceful exit when gss-kex fails, instead of crash
+ - GUI plink password dialog used only when password prompt is short 
+
+0.58vrc0.2.0.61
+ - GSSAPI key exchange support (gss-kex)
+ - Improved wording in the configuration dialogs
+ - GUI plink dialog implementation rewritten for new framework
+ - Build system improved for latest MinGW tools 
+
+0.58vrc0.2.0.2
+ - Merged VMX putty 0.57 code with PuTTY 0.58
+ - Removed unnecessary buffer code
+ - Configuration UI improvements
+ - Removed memory leaks
+ - Human-readable strings for GSSAPI/SSPI errors
+ - Improved support for gssapi-with-mic error tokens and messages
+ - Configuration option for using system-supplied username
+ - Allow blank usernames with gssapi-with-mic (allowed in draft standard)
+ - Correct string bug where GSSAPI auth would fail 1 in 14 times
+ - Documentation improvements 
+
+0.57vrc0.1.1
+ - Backport bug fix: the "1 in 14" GSSAPI failure
+ - Use improved installer 
+
+0.57vrc0.1.0
+ - Merge with upstream PuTTY 0.57 (security fixes) 
+
+0.56vrc0.1
+ - Initial import of VMX PuTTY sources (GSSAPI-with-mic and plink-GUI)
+ - Default to setting username from system username 
+
+
+

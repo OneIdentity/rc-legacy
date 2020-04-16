@@ -1,0 +1,42 @@
+# $Vintela: Makefile.wix,v 1.1 2005/08/01 06:02:57 davidl Exp $
+
+MSI=putty
+SRCS=putty.wxs putty-ui.wxs putty-cpt.wxs
+OBJS=$(SRCS:.wxs=.wixobj)
+CANDLE=$(WIXDIR)candle.exe
+LIGHT=$(WIXDIR)light.exe
+srcdir?=
+VPATH = $(srcdir).:.
+RM ?=	del
+
+IBDIR=	    $(srcdir)instbin
+DEPFILES=   website.url putty.exe plink.exe pscp.exe psftp.exe \
+	    pageant.exe puttygen.exe ../doc/PuTTY.chm \
+	    $(IBDIR)/Banner.bmp $(IBDIR)/Complete.ico $(IBDIR)/Custom.ico \
+	    $(IBDIR)/Dialog.bmp $(IBDIR)/Exclam.ico $(IBDIR)/Info.ico \
+	    $(IBDIR)/Licence.rtf $(IBDIR)/New.ico $(IBDIR)/Remove.ico \
+	    $(IBDIR)/Repair.ico $(IBDIR)/Typical.ico $(IBDIR)/Up.ico 
+
+VERSION ?= unknown
+MSIVERSION ?= 0.0.0.0
+WFLAGS= -dVERSION="$(VERSION)" -dMSIVERSION="$(MSIVERSION)" -dsrcdir="$(srcdir)"
+
+.SUFFIXES: .wxs .wixobj
+
+all: $(MSI).msi
+
+$(MSI).msi: $(OBJS) $(DEPFILES)
+	$(LIGHT) -nologo -out $@ $(OBJS)
+
+.wxs.wixobj:
+	$(CANDLE) -nologo $(WFLAGS) -out $@ $^
+
+clean:
+	$(RM) $(MSI).msi $(OBJS)
+
+install: $(MSI).msi
+	$(RM) install.log
+	msiexec -i $(MSI).msi -l*v install.log
+
+uninstall:
+	msiexec -x $(MSI).msi
