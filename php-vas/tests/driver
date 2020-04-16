@@ -1,0 +1,8 @@
+#!/bin/sh
+
+php -dsafe_mode=0 \
+    ${INCPATH+-dinclude_path="$INCPATH"} \
+    ${EXTDIR+-dextension_dir="$EXTDIR"} \
+    -dauto_prepend_file="$0.php" \
+    ${1+"$@"}
+

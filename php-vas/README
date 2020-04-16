@@ -1,0 +1,112 @@
+php-vas: Vintela Authentication Services API for PHP
+
+Summary
+-------
+This PHP module provides access to the VAS API.
+Please see http://rc.vintela.com/topics/php-vas/ for more information
+about this package.
+
+
+Authors
+-------
+Daniel Kerns
+Russell Bateman
+David Leonard
+
+
+License
+-------
+Please see the file LICENSE in this directory.
+
+
+Requirements
+------------
+To use the module, you will need VAS 3.0 client libraries or later.
+
+To compile the source code you will need
+    PHP SDK (php-devel or php-dev)
+    VAS SDK (vasdev)
+    a C compiler and related toolchain
+    make
+
+For development, you will also need
+    autotools (i.e. autoconf, automake)
+    doxygen
+
+You will need to install the PHP SDK including phpize. You may find that you
+need autoconf 2.59 and automake 1.9.
+
+
+Supported versions of PHP
+-------------------------
+PHP-VAS has been built with both php4 and php5, but most development and
+testing has proceeded on php4.
+
+
+Note on VAS SDK requirement
+---------------------------
+The VAS SDK installation leaves headers on /opt/quest/include,
+    in particular, vas.h, vas_gss.h and vas_ldap.h. It also places
+    libvas.so on /opt/quest/lib--required to build the PHP-VAS
+    extension, the module referenced from your PHP program that
+    gives you access to VAS APIs.
+
+
+Installing into a web server
+----------------------------
+If your platform does not come with a standard installation of PHP,
+please run the vas-php-setup script.
+
+
+Building
+--------
+If your distribution contains the file 'configure', then simply run
+
+    configure
+    make
+    make check
+    make package
+
+If you have checked out the sources from subversion, then first generate the
+configure script by first running
+
+    sh bootstrap.sh
+
+
+Debugging notes
+---------------
+
+* Segmentation faults are usually caused by symbol collisions with other
+     modules.
+
+* Add this line to the PHP script so that errors are logged:
+     error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
+
+* To ctag the bindings implementation in extension/vasapi.c:
+        cd extension ; ctags -R <path-to-PHP-headers>
+     For example:
+        cd extension ; ctags -R /usr/local/include/php
+
+* To test the suite run through by make check, correct (to your environment)
+     the variables test/test.php: $username, $password, $adminusername,
+     $adminpassword, $searchbase, $groupname, $principal, $userupn and
+     $computername (at least).
+
+Known issues
+------------
+
+* All of the vas.h APIs are supported although they are not completely tested.
+
+* Of the vas_gss.h APIs, only vas_gss_initialize, vas_gss_acquire_cred,
+  vas_gss_auth are implemented.
+
+* None of the krb5 or ldap APIs are implemented yet.
+  Implementing these is pretty easy, just not done yet.
+
+* The VAS libraries are not thread safe. Locking needs to be put in place
+  to accommodate that.
+
+* A test suite needs to be brought online.
+
+* The high-level API needs more work.
+  Need to write a couple of sample applications to see if it makes sense.
