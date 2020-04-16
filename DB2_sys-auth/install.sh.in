@@ -1,0 +1,167 @@
+#!/bin/sh
+# (c) 2007 Quest Software, Inc. All rights reserved.
+
+# Uncomment for debug info.
+# set -x
+
+if [ -z "$1" -o -n "$3" ] ; then
+	echo "Usage: $0 <Instance owner, i.e. db2inst1> [PAM]"
+	exit 1
+fi
+
+if [ "`id | sed 's/uid=\([0-9]*\).*/\1/'`" -ne 0 ] ; then
+    echo "Must be root to run."
+    exit 1
+fi
+PATH=/bin:/usr/bin:/sbin:/usr/sbin:/usr/local/bin:$PATH
+
+INSTANCEHOME="`ksh -c \"echo ~${1}\"`"
+PLUGINPATH32="${INSTANCEHOME}/sqllib/security32/plugin"
+PLUGINPATH64="${INSTANCEHOME}/sqllib/security64/plugin"
+LIBFILE=sys-auth.so
+LIBFILE32=sys-auth32.so.@VERSION@
+LIBFILE64=sys-auth64.so.@VERSION@
+AUTHFILE=sys-auth
+CHPWFILE=sys-chpw
+NSSFILE=sys-nss
+
+if [ ! -f ${LIBFILE32} ] ; then
+	echo "Library ${LIBFILE32} not found!"
+	exit 1
+fi
+
+if [ -f ${LIBFILE64} ] ; then
+    TYPE=64
+else 
+    TYPE=32
+fi
+
+if [ "$2" != "PAM" -a -n "$2" ] ; then
+	echo "Second argument can only be PAM."
+	exit 1
+fi
+
+if [ "`uname -s`" = "AIX" -a ! "$2" = "PAM" ]; then 
+    AUTH=lamAuth
+    CHPW=lamChPw
+    USED=LAM
+else
+    AUTH=pamAuth
+    CHPW=pamChPw
+    USED=PAM
+fi
+
+if [ ! -x "${AUTH}" ] ; then
+	echo "Auth program ${AUTH} not found."
+	exit 1
+fi
+
+if [ ! -x "${CHPW}" ] ; then
+	echo "Password change program ${CHPW} not found."
+	exit 1
+fi
+
+if [ ! -d ${PLUGINPATH32} -a ! -d ${PLUGINPATH64} ] ;  then
+        echo "Directory $PLUGINPATH32 or $PLUGINPATH64 not found!"
+        echo "Do you have the right name for an instance owner?"
+        exit 1
+fi
+
+su - $1 -c db2level | egrep "DB2 v8|DB2 v9.1" >/dev/null
+if [ $? -eq 0 ] ; then
+        echo ""
+        echo "ERROR: Instance version is not DB2 v9.5+, this plugin will not install"
+        echo ""
+        echo "Please download and use the 3.0.0.5 version of this plugin ( available from http://rc.quest.com/topics/db2_sys-auth, follow the 'Other DB2_sys-auth releases' link )" 
+        echo ""
+        echo "Without a signal handler, this plugin could crash v8.2/v9.1 instances and should only be used in v9.5+ instances( which requires having no signal handler )"
+        echo ""
+        exit 1
+fi
+
+if [ -d ${PLUGINPATH32} ] ; then
+    rm -f ${PLUGINPATH32}/server/${LIBFILE}
+    rm -f ${PLUGINPATH32}/client/${LIBFILE}
+    rm -f ${PLUGINPATH32}/group/${LIBFILE}
+    rm -f ${PLUGINPATH32}/${AUTHFILE}
+    rm -f ${PLUGINPATH32}/${NSSFILE}
+    rm -f ${PLUGINPATH32}/${CHPWFILE}
+# Clean up old files/links as well.
+    rm -f ${PLUGINPATH32}/*/${LIBFILE32}
+
+    cp ${LIBFILE32} ${PLUGINPATH32}/${LIBFILE32}
+    if [ -d ${PLUGINPATH32}/server ] ; then
+        ln -s ${PLUGINPATH32}/${LIBFILE32} ${PLUGINPATH32}/server/${LIBFILE}
+    fi    
+    ln -s ${PLUGINPATH32}/${LIBFILE32} ${PLUGINPATH32}/client/${LIBFILE}
+    ln -s ${PLUGINPATH32}/${LIBFILE32} ${PLUGINPATH32}/group/${LIBFILE}
+    cp ${AUTH} ${PLUGINPATH32}/${AUTHFILE}
+    cp ${NSSFILE} ${PLUGINPATH32}/${NSSFILE}
+    cp ${CHPW} ${PLUGINPATH32}/${CHPWFILE}
+    chown ${1} ${PLUGINPATH32}/${LIBFILE32}
+    chmod 0555 ${PLUGINPATH32}/${LIBFILE32}
+    chown root ${PLUGINPATH32}/${AUTHFILE} 
+    chmod 4555 ${PLUGINPATH32}/${AUTHFILE} 
+    chown root ${PLUGINPATH32}/${CHPWFILE} 
+    chmod 4555 ${PLUGINPATH32}/${CHPWFILE} 
+    chown root ${PLUGINPATH32}/${NSSFILE} 
+    chmod 4555 ${PLUGINPATH32}/${NSSFILE} 
+    ITYPE=32
+fi
+
+if [ "${TYPE}" = "64" ] ; then
+	rm -f ${PLUGINPATH64}/server/${LIBFILE}
+	rm -f ${PLUGINPATH64}/client/${LIBFILE}
+	rm -f ${PLUGINPATH64}/group/${LIBFILE}
+	rm -f ${PLUGINPATH64}/${AUTHFILE}
+	rm -f ${PLUGINPATH64}/${NSSFILE}
+	rm -f ${PLUGINPATH64}/${CHPWFILE}
+    # Clean up old files as well.
+    rm -f ${PLUGINPATH64}/*/${LIBFILE64}
+	
+	cp ${LIBFILE64} ${PLUGINPATH64}/${LIBFILE64}
+    ln -s ${PLUGINPATH64}/${LIBFILE64} ${PLUGINPATH64}/server/${LIBFILE}
+    ln -s ${PLUGINPATH64}/${LIBFILE64} ${PLUGINPATH64}/client/${LIBFILE}
+    ln -s ${PLUGINPATH64}/${LIBFILE64} ${PLUGINPATH64}/group/${LIBFILE}
+	cp ${AUTH} ${PLUGINPATH64}/${AUTHFILE}
+	cp ${NSSFILE} ${PLUGINPATH64}/${NSSFILE}
+	cp ${CHPW} ${PLUGINPATH64}/${CHPWFILE}
+	chown ${1} ${PLUGINPATH64}/${LIBFILE64}
+	chmod 0555 ${PLUGINPATH64}/${LIBFILE64}
+	chown root ${PLUGINPATH64}/${AUTHFILE} 
+	chmod 4555 ${PLUGINPATH64}/${AUTHFILE} 
+	chown root ${PLUGINPATH64}/${CHPWFILE} 
+	chmod 4555 ${PLUGINPATH64}/${CHPWFILE} 
+	chown root ${PLUGINPATH64}/${NSSFILE} 
+	chmod 4555 ${PLUGINPATH64}/${NSSFILE} 
+    if [ -z "$ITYPE" ] ; then
+        ITYPE=64
+    else
+        ITYPE="32/64"
+    fi
+fi
+
+if [ -d /etc/pam.d -a ! -f /etc/pam.d/sys-auth ] ; then
+    if [ -f /etc/pam.d/sshd ] ; then
+        cp /etc/pam.d/sshd /etc/pam.d/sys-auth
+    elif [ -f /etc/pam.d/login ] ; then
+        cp /etc/pam.d/login /etc/pam.d/sys-auth
+    else    
+        echo "Unable to guess at a pam config to use, please set up /etc/pam.d/sys-auth as needed"
+    fi
+    if [ -f /etc/pam.d/sys-auth ] ; then
+        chmod 644 /etc/pam.d/sys-auth
+    fi    
+fi    
+
+echo ""
+echo "The <$ITYPE>-bit $USED Quest DB2 System Auth plugin is now installed."
+echo ""
+echo "As the instance owner, run the 3 following commands:"
+echo ""
+echo "db2 update dbm cfg using SRVCON_PW_PLUGIN sys-auth"
+echo "db2 update dbm cfg using GROUP_PLUGIN sys-auth"
+echo "db2 update dbm cfg using CLNT_PW_PLUGIN sys-auth"
+echo ""
+echo "Then restart the instance to start using the Quest DB2 System Auth plugin."
+echo ""

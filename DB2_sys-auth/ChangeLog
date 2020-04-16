@@ -1,0 +1,289 @@
+4-21-06: Moving to a configure/make/make dist setup. 
+
+5-25-06: Quite a few changes. 
+Fixed a Solaris seg-fault when debug level was 3 or higher.
+Now a sys-auth.conf in the users homedir takes precedence.
+The plug-in will read its logging level every minute for changes.
+
+5-30-06: Not sure where I lost the changes at, but put back in some fixes. 
+When accessed in client auth mode from an AD machine, the username
+included @<short domain> which wasn't recognized by the system. Fixed.
+
+When accessed cross-instance (not sure how, somehow tables are linked),
+certain things are bypassed, and a get groups happens on the upper
+cased name, which would fail. Explicitly lower that name.
+
+5-30-06: Made all internal functions name-safe. Seen where if the authentication
+through db2sysc, there is possible a name collision against an internal 
+DB2 function checkUser, that doesn't return what the plugin is expecting, 
+making users appear to have failed when they shouldn't.  
+
+
+06-05-06: Moving to a versioning of the library, tracked in the syslog output. 
+Now changelog will work off the version.
+
+1.0.0:
+* Remove the func_start() from PluginTerminate, as the instance is not always valid
+  when called.
+* Log the version number.
+* More debugging around the check_user function.
+
+1.0.1: 
+* Move the check_user function inside the CheckPassword Function.
+* Name-safe ALL functions, even those derived from the example code this came from so long ago. 
+* Now on AIX a combination of getgrset and getgrent is returned for group memberships. This 
+  allows a combination of VAS and local groups to be used for VAS users. 
+* Add more testing, this time for Groups. Modify test.conf with a group the user is a member of,
+  and a group he is not a member of.   
+* Added test for the sys-auth executable before running, fixes pipe errors during the tests in
+  an incomplete enviroment.
+* Better handling of authentication when DB2INSTANCE is not set, as during testing.   
+
+1.0.2 (06-25-06):
+* Add an explicit getuserattr from VAS for user information, this allows users who stradle both VAS
+  and another system, like LDAP, to get complete group info. AIX only. 
+* Added a check for the group name so only unique ones are returned. This will add a little overhead to
+  authentications, should not be noticable unless a user is in multiple systems and has many group 
+  overlaps, at which point it might add a few seconds to just the auth, as DB2 will store the group 
+  membership info for the duration of the connection. AIX only.
+
+1.0.3 (07-14-06):
+* Add a memory check to some function calls. 
+* Only lower the username during the check_password function if the original name wasn't found. 
+* Remove the use of the DB2DEFAULTUSER env variable. This was a carry-over from the base code
+  sample used, only UID should be considered for determining who the user is. If the user
+  is to be different from the current user, then change the processes effective UID. 
+* Use the effective UID when in the db2secGetDefaultLoginContext function instead of the 
+  normal UID ( geteuid() vs. getuid() ).
+
+1.0.4 (07-14-06):
+* Thanks to IBM support, re-wrote the get?uid() to trigger off the useridType field.
+
+1.0.5 (07-17-06):
+* Revert old behavior of assuming ENOENT for errno == 0 when getpwnam fails. 
+  This is likely from pthreads putting errno in a differnt namespace, so the 
+  errno the plugin reads isn't the one set, making it return UNKNOWNERROR
+  instead of BADUSER. The UNKNOWNERROR makes quite a few things complain. 
+
+1.0.6 (07-18-06):
+* Added an upgrade.sh script that can be run by the instance owner
+  to replace the libraries. 
+* Added the function char *vas_db2_plugin_get_version() to the
+  sys-auth library, modified it to build with the version number, 
+  install/upgrade now use it, and added tests for the version.
+* Changed the memory test size to 11K, to put it at an odd allocation
+  to differentiate it from other allocs.
+
+1.0.7 (10-25-06):
+* Some fixes for minor issues found in code review. 
+* Added a Troubleshooting document.
+* Added some specific debugging for a Stored Procedure issue.
+
+1.0.8 (10-26-06):
+* Refactor groups_for_user function to need no additional getpwnam calls, 
+  instead storing the users pgid from the user_check to test group 
+  membership with.
+* Found the cause of the issue mentioned in 1.0.7. The SP had a grant 
+  on a non-existent user, and the code was returning the wrong error
+  code. Due to losing errno between functions, returned UNKNOWN_ERROR
+  instead of BAD_USER. Fixed.
+
+1.0.9 (11-1-06):
+* Add an explicite lower to the check_user function. This fixes 
+  grants on non-VAS users, as they come through upper-cased, 
+  making the getpwnam not match. 
+
+1.0.10 (11-21-06):
+* Add 64-bit linux.     
+
+1.0.11 (12-1-06):
+* Added s390x Linux ( zSeries OS )
+     
+1.0.12 (12-11-06):
+* Fixed s390x Linux. For unknown reason gcc wasn't setting __64BIT__ macro, 
+  so some structure member sizes were off, leading to DB2 rejecting the plugin.  
+
+1.0.13 ( 1-23-07 ):
+* Added HP Itanium builds. Seperated into HPUX_9000 and HPUX_IA64 packages.    
+* Better named the various packages.
+* Made sure all OSes get __64BIT__ set if 64-bit, that macro is only guaranteed on AIX
+  it seems.
+
+1.0.14 ( 1-24-07 ):
+* Final set of coverity fixes, mostly in the test code.     
+* 100% code complete test_all, and various fringe cases. 42 tests all told.
+* Added case insensitive group membership search. Fixes issue with control/access groups
+  and VAS users whos names are uppercased. 
+* Moved to sym links for the libraris. This makes telling what version is 
+  installed much easier. 
+
+1.1.0.1 ( 2007_04_06 ):
+* Added support for DAS users. Thanks to help from IBM in figuring this out.
+* Made the versioning 4-digit.
+* Fixed a non-portable usage of grep in the install script.  
+* Increment to 1.1 due to DAS support.
+
+1.1.0.2 ( 2007_05_02 ):
+* Use a thread-safe errno.
+* Never return UNKNOWNERROR for user/group work.
+
+1.2.0.1 - 1.2.0.6 ( 2007_06_03 )
+* Support password changing. 
+* Handle local lamAuth file when doing tests if the pamAuth wasn't found.
+* Various fixes for an issue running db2cc on AIX, still an open issue. 
+  ( After some time the process starts getting error 3 back from getpwnam/
+    getpwuid calls that previously worked ( same info ). )
+  * Main fix: If a given uid/name is not found, running setauthdb( NULL, NULL )
+    and try again.  
+
+1.2.0.7 ( 2007_06_22 )
+* Now explicitly lowercase group names, this fixes running a grant without
+  specifying user or group.
+
+1.2.0.8 ( 2007_06_24 )
+* Correct the return code from the DoesAuthIDExist function.    
+
+1.2.0.9 ( 2007_07_13 )
+* Add group resolution when the user is in an LDAP LAM module.     
+
+2.0.0.1 ( 2008_03_04 )
+* Change the auth method to match the bit-ness of the OS. No more
+  pamAuth32/pamAuth64 except as an intermedeary step. 
+* Work on password change code, setuid stuff needs to be right
+  to trigger a proper change instead of set, but still have 
+  permission to change afterwords. 
+* Initial work to fix bug 460, detect if a user has an expired password.  
+* More tests around changing password ( now that it works ).
+
+2.0.0.2 ( 2008_03_07 )
+* Change password code looks solid on Linux Pam, tests in place.    
+* Fixed an issue where when password was expired, using LAM it was re-set to
+  the same old password.
+
+2.0.0.3 ( 2008_03_08 )
+* Hopefully done. Lots of focus on PAM interaction, expired password and such. 
+* Passwords are not as easy on AIX 5.1, removing that OS for now. If needed 
+  please let me know through Quest Support or the RC forums. 
+* The authenticating service name has changed to sys-auth, since the auth method
+  now matches the OS. Meanign on 64-bit Linux, its automatically 64-bit, most 
+  everywhere else is 32-bit. So any sys-auth32/sys-auth64 pam entries need to
+  be changed to sys-auth.
+
+2.0.0.4 ( 2008_04_25 )
+* Clean up the LAM code for passwords, works now for local and VAS users.
+* Include the AIX 5.1 machine again in the packaging.
+
+2.0.0.5 ( 2008_04_28 )
+* On AIX ( LAM ), deny users who are locked out. ( apparently authenticate()
+  just tells you the password is good, and is unrelated to the account actually
+  being allowed to log into the system, so using loginrestrictions() as well ).
+
+2.0.0.6 ( 2008_07_28 )
+* Change the configure slightly for the new HP IA64 machine setup to the 64-bit
+  library is built. 
+
+2.0.0.7 ( 2008_08_06 )
+* Modify the root detection and base shell used in the install script.    
+
+2.0.0.8 ( 2008_08_07 )
+* Modify the install_das script for the new non-bitness auth helper.
+
+2.0.0.9 ( 2008_08_15 )
+* Modified the dist package to include properly named PAM files. (without bit)
+* Fixed a bad bug where if there was not authenticaiton file it returned
+  automatic success. 
+
+3.0.0.1 ( 2008_10_12 )
+* New binary, sys-nss. sys-auth now forks and calls it for any NSS related query
+  so any issues ( memory, loaded libraries, setauth, etc ) with the DB2 agent 
+  process doesn't interfere with the ability of the plugin to query for NSS
+  information.
+  
+3.0.0.2 ( 2008_10_21 )
+* Auth/ChPw should now handle upper cased names.
+
+3.0.0.3 ( 2008_11_16 )
+* Better handling of when the user's group memberships exceed the DB2 buffer 
+  limit. ( Could segfault previous, should properly truncate now ). NOTE: if a 
+  user is member of more groups then fits in the DB2 provided buffer, they could
+  be missing needed group memberships. 
+* Removed the upgrade script, it can't handle moving between 2.X and 3.X due to 
+  new binaries, force a re-install each time.
+
+3.0.0.4 ( 2008_12_17 )
+* Debug for waitpid failures, trying to track down a heavy use issue where 
+  who_am_i returns failure when it worked, due to waitpid failing. 
+
+3.0.0.5 ( 2008_12_17 )
+* Ok, something else can reap the out-call children, so handle that.   
+
+3.0.0.6 ( 2008_12_19 )
+* Install scripts and INSTALL work, should be easier to read/use now.
+
+3.0.0.7 ( 2009_02_18 )
+* The AIX LDAP module accepts upper-cased versions of the user's name, but
+  fails to return their group membership. this leads to failures when access
+  is granted to group membership, and the group was not the pgid for the user.
+  Fixed. 
+
+3.0.0.8 - 3.0.0.14 ( 2009_02_24 )
+* Various debug builds trying to track down an EBADF error. Timing issue with
+  file descriptors. 
+
+3.0.0.15 ( 2009_02_26 )
+* Fixed fd timing issue.
+* Removed signal handlers as per IBM recommendation. 
+* Fixed an issue seen in testing on sles9ppc where with many group memberships, 
+  ( right at the DB2 line length limit ) processing them could trigger a
+  segfault. 
+* Added back a message at level 2 that lists a user's group memberships.  
+
+3.0.0.16 ( 2009_03_05 )
+* install_das.sh didn't work, fixed. 
+* fixed install.sh and install_das to work on Solaris with its more restrictive
+  sh. ( echo ~<username> doesn't return the user's homedir in sh on Solaris ).
+
+3.0.0.17 ( 2009_03_09 )  
+* Added a check so this doesn't install on v9.1 or v8.2 since they don't
+  actually handle not having a signal handler like v9.5 requires. 
+
+3.0.0.18 ( 2009_03_25 )
+* Fixed the MAJOR issue where when run under v9.5 any password worked.     
+
+3.0.0.19 ( 2009_03_26
+* While changing password, the plugin could log a message about a failed close
+  action. This has been fixed.
+* Use instance owner, not db2inst1 when checking DB2 level.  
+
+3.0.0.20 ( 2009_04_02 )
+* When kicking off out-calls, close any open file handles.
+
+3.0.0.21 ( 2009_04_12 )
+Bug 672
+* Use getgrouplist on Linux, allows compatability when winbind is set to not 
+  participate in getgrent iterations.
+
+3.0.0.22 ( 2009_05_01 )
+* Removed some sleep statements from previous debugging. 
+* For Linux, only do the getgrouplist. ( no getgrent )
+
+3.0.0.23 ( 2009_05_01 )
+* Added a slight sleep ( usleep of 10ms ) for my sanity.
+
+3.0.0.24 ( 2009_05_01 )
+* Bug with getgroupslist when user only had pgid group. Fixed.
+
+3.0.0.25 ( 2009_05_05 )
+* Use syscall for read, on Linux x86_64 it seems after time to use the pthread
+  read() instead of the libc read(), and then hangs. 
+
+3.0.0.26 ( 2009_05_06 )
+* Remove the read change from previous build, it was unneeded.
+* Re-work out-calls so only async-signal-safe functions are called between 
+  the fork and execl() of an out-call. 
+* Re-do the logging system. Seems to be the root of the latest issue. Now, if 
+  debug-level is set to 2 or higher, then all debug goes to /tmp/sys-auth.debug
+  Otherwise no information is logged to that file. Syslog is no longer used. 
+
+3.0.0.27 ( 2009_05_06 )
+* Missed one message, in the outcall_check_user code. Removed.

@@ -1,0 +1,72 @@
+#!/usr/bin/expect -f
+# (c) 2007 Quest Software, Inc. All rights reserved.
+set prompt "(%|#|\\$|>)( |\\t)*$"
+set main_box "sethe.vintela.com"
+set timeout 60
+set backup_server "sellswor@10.5.33.31"
+set backup_dir "tmp"
+set version "@VERSION@"
+
+proc prep { } {
+    global spawn_id prompt main_box backup_server backup_dir version
+    runOn $backup_server "cd $backup_dir && if test -f DB2_sys-auth.tar.gz ; then cp DB2_sys-auth.tar.gz DB2_sys-auth.bak.$version.`date +%Y-%m-%d_%H-%M-%S` ; fi"
+    runOn $main_box "rm -rf ~/binaries/*"
+    spawn bash
+    send "./bootstrap.sh ; make distclean; cd .. ; tar -cvzf DB2_sys-auth.tar.gz DB2_sys-auth/* && scp DB2_sys-auth.tar.gz $backup_server:$backup_dir/\r" 
+    eat
+    send "exit\r"
+    expect EOF
+}
+
+proc runOn { hostname cmd } {
+    connect $hostname
+    send "$cmd ; exit\r"    
+    expect -timeout 120 EOF
+}
+
+proc connect { hostname } {
+    global spawn_id prompt
+    spawn ssh $hostname    
+    eat
+}    
+
+proc finish { } {
+    global spawn_id prompt main_box backup_server backup_dir
+    runOn $main_box "cd ~/binaries && tar -cvf DB2_sys-auth.tar * && scp DB2_sys-auth.tar $backup_server:$backup_dir/"
+}
+
+proc makeOn { hostname } {
+    global spawn_id prompt main_box backup_server backup_dir
+    runOn $hostname "rm -rf DB2_make && mkdir DB2_make && cd DB2_make && scp $backup_server:$backup_dir/DB2_sys-auth.tar.gz . && gunzip DB2_sys-auth.tar.gz && mkdir DB2 && cd DB2 && tar -xvf ../DB2_sys-auth.tar && cd DB2_sys-auth && ./configure && make dist && rm -rf test3.conf && make check && scp DB2_sys-auth_* $main_box\:binaries/. && cd && rm -rf DB2_make"
+}
+
+proc eat { } {
+    global spawn_id prompt
+    expect {
+        -timeout 60
+        "yes/no" {
+            send "yes\r"
+            exp_continue
+        }
+        -re $prompt {
+            expect *
+        }
+        EOF {
+            return
+        }
+        "assword" {
+            return
+        }
+    }
+}
+
+prep
+makeOn vasaix51.vintela.com
+makeOn vasaix53.vintela.com
+makeOn vasx86.vintela.com
+makeOn vasx8664.vintela.com
+makeOn vashpux.vintela.com
+makeOn vashpuxia64.vintela.com
+makeOn vassol8.vintela.com
+makeOn 10.4.23.115
+finish

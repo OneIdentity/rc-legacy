@@ -1,0 +1,84 @@
+# Create a database, named testdb
+db2 create database testdb
+
+# List all databases in the instance.
+db2 list database directory
+db2 list db directory
+
+# Create a sample DB
+db2sampl
+
+# Get the management configuration.
+db2 get dbm cfg
+
+# Set a dbm item
+db2 update dbm cfg using <Entry> <Value>
+
+# Get level info, like fixpack (patch) level, and 32 or 64-bit instance.
+db2level
+
+# Well duh, connect to a DB.
+db2 connect to <DATABASE>
+
+# Connect to a DB as a given user, will be prompted for the password.
+db2 connect to <DATABASE> user <username>
+
+# Connect to a DB as a given user, using the given password.
+db2 connect to <DATABASE> user <USERNAME> using <PASSWORD>
+
+# Not sure specifically what all this does, but it at least does an un-connect so you can run db2stop
+db2 terminate 
+
+# List DBs you are connected to.
+db2 list active databases
+
+
+# steps that did fail
+db2 active database <db>
+db2 list applications
+db2stop force
+
+# Start the instance.
+db2start
+
+# Stop the instance.
+db2stop
+
+# Really stop the instance, even if you have open connections.
+db2stop force
+
+# Change admin group for a DB.
+db2 update dbm cfg using sysadm_group <groupname>
+
+#Increase the debug level
+db2 update dbm cfg using DIAGLEVEL 4
+
+# Normal debug level
+db2 update dbm cfg using DIAGLEVEL 3
+
+INSTHOME is the variable the db2 command uses to find the instance.
+If any use sets that, and sources the instance owners .profile, they can start using db2 commands.
+
+
+db2 update dbm cfg using SRVCON_PW_PLUGIN sys-auth
+db2 update dbm cfg using GROUP_PLUGIN sys-auth
+db2 update dbm cfg using CLNT_PW_PLUGIN sys-auth
+
+
+For the DB2 connection at the database level, you will want to revoke
+connect from public then grant it to specific groups.
+db2 connect to database
+db2 revoke connect on database from public
+db2 grant connect on database to group
+
+
+DAS commands:
+Restart DAS:
+db2admin stop
+db2admin start
+
+Print out setting:
+db2 get admin cfg
+
+Run time:
+db2pd -

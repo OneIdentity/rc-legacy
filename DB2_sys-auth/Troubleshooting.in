@@ -1,0 +1,39 @@
+Troubleshooting the VAS DB2 Plugin.
+
+If login/groups is failing, for either local users once the plug-in is installed, or VAS users, do the following:
+
+Set up debug for the plugin:
+The plugin reads the file sys-auth.conf from the instance owner's home directory first, and if that doesn't exist, /etc/sys-auth.conf.
+The setting is 'debug-level = X', with X being a number of 0 to 4. 
+Values:
+0/1: No debug. 
+2+:  All debug. 
+
+( This is because of a change in the system, I didn't want someone who set it to 1 ( default previously ) to now get ALL debug. )
+
+If there is no value, or no file,  will be treated as a 0. 
+
+To set the debug level for an instance owned by db2inst1 to 3:
+echo "debug-level = 3" >> ~db2inst1/sys-auth.conf
+( The parser will use the first matching line )
+
+This value should be read by the plug-in on a one-minute tick, so restarting the instance is not required to change the debug level. 
+
+At this point, the plug-in should be logging DB activity. This can be verified by tailing the log file.
+tail -f /tmp/sys-auth.debug
+( When someone accesses the database in a way that involves the plugin, it should be logged here ) 
+
+That file is generated directly by the plugin, syslog is no longer used.     
+
+Once verified it is logging, go through the steps to demonstrate the issue being investigated. 
+Make sure to mark the exact time of the failure. If the DB instance is busy, this will help make sure the right section of the log is examined. 
+
+Copy off the log file at that point, and send it into Quest Support with:
+1) Version of the plugin ( should be in the logs, or this output: ls -laR ~<instance owner>/sqllib/security64/plugin )
+2) Explain the steps used to reproduce the issue.
+3) The parts being used, like any 3rd party applications involved. 
+4) DB2 version and level ( mainly, db2level output ). 
+5) The user/group involved with the issue.
+6) Time the issue occured.
+7) Any other facts relevent to the issue.
+
