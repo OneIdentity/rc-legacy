@@ -1,6 +1,9 @@
 # Resource Central Legacy Code
 Location of legacy resource central code that is no longer being actively developed by One Identity
 
+* [Authentication test tools](README.md#authentication-test-tools)
+* [CoolKey](README.md#cool-key)
+
 
 # [Authentication test tools](#authentication-test-tools)
 This is a package of tools useful for testing the various authentication aspects of Quest Authentication Services (QAS) for Unix, Windows and Java platforms.
