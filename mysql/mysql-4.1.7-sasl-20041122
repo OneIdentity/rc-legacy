@@ -1,0 +1,398 @@
+diff -ur orig/mysql-4.1.7/acinclude.m4 mysql-4.1.7/acinclude.m4
+--- orig/mysql-4.1.7/acinclude.m4	2004-10-23 17:28:43.000000000 +1000
++++ mysql-4.1.7/acinclude.m4	2004-11-21 23:01:40.000000000 +1000
+@@ -1872,3 +1872,17 @@
+ 
+ dnl ---------------------------------------------------------------------------
+ 
++AC_DEFUN([MYSQL_CHECK_SASL],[
++  AC_ARG_WITH([sasl],
++              [  --with-sasl=[DIR]       Include SASL support],
++              [sasl="$withval"],
++              [sasl=yes])
++  if test "$sasl" != "no"
++  then
++     AC_CHECK_LIB([sasl2],[sasl_server_init], [
++	AC_DEFINE([HAVE_SASL],[1],[SASL])
++	LIBS="$LIBS -lsasl2"
++	NON_THREADED_CLIENT_LIBS="$NON_THREADED_CLIENT_LIBS -lsasl2"
++     ])
++  fi
++])
+diff -ur orig/mysql-4.1.7/BUILD/SETUP.sh mysql-4.1.7/BUILD/SETUP.sh
+--- orig/mysql-4.1.7/BUILD/SETUP.sh	2004-10-23 17:28:44.000000000 +1000
++++ mysql-4.1.7/BUILD/SETUP.sh	2004-11-21 22:19:31.000000000 +1000
+@@ -56,6 +56,7 @@
+ base_cxxflags="-felide-constructors -fno-exceptions -fno-rtti"
+ 
+ base_configs="--prefix=/usr/local/mysql --enable-assembler --with-extra-charsets=complex --enable-thread-safe-client --with-readline"
++base_configs="$base_configs --without-docs"
+ static_link="--with-mysqld-ldflags=-all-static --with-client-ldflags=-all-static"
+ alpha_configs=""	# Not used yet
+ pentium_configs=""
+diff -ur orig/mysql-4.1.7/configure.in mysql-4.1.7/configure.in
+--- orig/mysql-4.1.7/configure.in	2004-10-23 17:28:46.000000000 +1000
++++ mysql-4.1.7/configure.in	2004-11-21 21:36:35.000000000 +1000
+@@ -2258,6 +2258,7 @@
+ MYSQL_CHECK_MYSQLFS
+ MYSQL_CHECK_VIO
+ MYSQL_CHECK_OPENSSL
++MYSQL_CHECK_SASL
+ 
+ libmysqld_dirs=
+ if test "$with_embedded_server" = "yes"
+diff -ur orig/mysql-4.1.7/sql/mysqld.cc mysql-4.1.7/sql/mysqld.cc
+--- orig/mysql-4.1.7/sql/mysqld.cc	2004-10-23 17:28:43.000000000 +1000
++++ mysql-4.1.7/sql/mysqld.cc	2004-11-22 01:08:15.000000000 +1000
+@@ -41,6 +41,10 @@
+ #include <ft_global.h>
+ #include <errmsg.h>
+ 
++#ifdef HAVE_SASL
++#include <sasl/sasl.h>
++#endif
++
+ #define mysqld_charset &my_charset_latin1
+ 
+ #ifndef DBUG_OFF
+@@ -2686,6 +2690,20 @@
+ 
+   init_max_user_conn();
+   init_update_queries();
++#ifdef HAVE_SASL
++  {
++      static sasl_callback_t callbacks[] = {
++	  { SASL_CB_LIST_END, NULL, NULL }
++      };
++      int result;
++
++      if ((result = sasl_server_init(callbacks, "mysqld")) != SASL_OK) {
++	  sql_print_error(sasl_errstring(result, NULL, NULL));
++	  sql_print_error("Can't init SASL");
++	  unireg_abort(1);
++      }
++  }
++#endif
+   DBUG_RETURN(0);
+ }
+ 
+diff -ur orig/mysql-4.1.7/sql/sql_acl.h mysql-4.1.7/sql/sql_acl.h
+--- orig/mysql-4.1.7/sql/sql_acl.h	2004-10-23 17:28:44.000000000 +1000
++++ mysql-4.1.7/sql/sql_acl.h	2004-11-21 22:03:37.000000000 +1000
+@@ -121,6 +121,7 @@
+   uint8 salt_len;        // 0 - no password, 4 - 3.20, 8 - 3.23, 20 - 4.1.1 
+   enum SSL_type ssl_type;
+   const char *ssl_cipher, *x509_issuer, *x509_subject;
++  const char *sasl_mech;	// NULL if SASL not used
+ };
+ 
+ 
+diff -ur orig/mysql-4.1.7/sql/sql_parse.cc mysql-4.1.7/sql/sql_parse.cc
+--- orig/mysql-4.1.7/sql/sql_parse.cc	2004-10-23 17:28:43.000000000 +1000
++++ mysql-4.1.7/sql/sql_parse.cc	2004-11-22 07:41:23.000000000 +1000
+@@ -26,6 +26,10 @@
+ #include "ha_innodb.h"
+ #endif
+ 
++#ifdef HAVE_SASL
++#include <sasl/sasl.h>
++#endif
++
+ #ifdef HAVE_OPENSSL
+ /*
+   Without SSL the handshake consists of one packet. This packet
+@@ -655,6 +659,9 @@
+ {
+   uint connect_errors= 0;
+   NET *net= &thd->net;
++#ifdef HAVE_SASL
++  int use_sasl = 0;
++#endif
+ 
+   DBUG_PRINT("info",
+              ("New connection received on %s", vio_description(net->vio)));
+@@ -745,6 +752,9 @@
+     end[2]=(char) default_charset_info->number;
+     int2store(end+3, thd->server_status);
+     bzero(end+5, 13);
++#ifdef HAVE_SASL
++    end[5] |= 0x01;  /* Non-standard: indicates that SASL is available */
++#endif
+     end+= 18;
+     /* write scramble tail */
+     end= strmake(end, thd->scramble + SCRAMBLE_LENGTH_323, 
+@@ -811,6 +821,9 @@
+ 	thd->variables.character_set_client;
+     }
+     thd->update_charset();
++#ifdef HAVE_SASL
++    use_sasl = end[5] & 0x01; 
++#endif
+     end= (char*) net->read_pos+32;
+   }
+   else
+@@ -851,6 +864,92 @@
+   }
+ #endif
+ 
++#ifdef HAVE_SASL
++  if (use_sasl) {
++      sasl_conn_t *conn;
++      const char *mechs;
++      unsigned int mechlen;
++      int result;
++      const char *out;
++      unsigned int outlen;
++
++      result = sasl_server_new("mysql",
++	NULL, /* localhost */
++	NULL, /* realm */
++	NULL, NULL, /* IP Address information strings */
++	NULL, /* Callbacks supported only for this connection */
++	0,   /* Flags */
++	&conn);
++      if (result != SASL_OK) {
++	 sasl_error:
++	 out = conn ? sasl_errdetail(conn) : NULL;
++	 DBUG_PRINT("info",("SASL: %s (%s)", sasl_errstring(result, NULL, NULL),
++	 	out ? out : "null" ));
++         return(ER_HANDSHAKE_ERROR);
++      }
++      result = sasl_listmech(conn, NULL, "", " ", ".", 
++	      &mechs, &mechlen, NULL);
++      if (result != SASL_OK)
++	  goto sasl_error;
++      DBUG_PRINT("info", ("SASL: mechs: %.*s", mechlen, mechs));
++
++      /* Send 'C' {mechlist} '.' */
++      if (net_write_command(net, 'C', "", 0, mechs, mechlen))
++          return(ER_HANDSHAKE_ERROR);
++
++      /* Receive {mechlen} {haveout} {mechanism} '.' [{datalen}] */
++      if ((pkt_len = my_net_read(net)) == packet_error || pkt_len < 3)
++          return(ER_HANDSHAKE_ERROR);
++      mechlen = net->read_pos[0];
++      if (mechlen + 3 > pkt_len || net->read_pos[2 + mechlen] != '.')
++          return(ER_HANDSHAKE_ERROR);
++      net->read_pos[2 + mechlen] = '\0';
++      DBUG_PRINT("info", ("SASL: client mech: %s", net->read_pos + 2));
++      result = sasl_server_start(conn, (const char *)net->read_pos + 2, 
++      	net->read_pos[1] ? (const char *)net->read_pos + mechlen + 3 : NULL,
++      	net->read_pos[1] ? pkt_len - (mechlen + 3) : 0, 
++	&out, &outlen);
++      while (result != SASL_OK) {
++	  if (result != SASL_CONTINUE) {
++	      const char *errtxt = sasl_errdetail(conn);
++	      DBUG_PRINT("info", ("SASL: fail: %s", errtxt));
++	      if (net_write_command(net, 'F', "", 0, errtxt, 
++			  errtxt == NULL ? 0 : strlen(errtxt)))
++		return(ER_HANDSHAKE_ERROR);
++	      use_sasl = 0;
++	      goto sasl_done;
++	  }
++	  if (net_write_command(net, '+', "", 0, out, outlen))
++	    return(ER_HANDSHAKE_ERROR);
++	  if ((pkt_len = my_net_read(net)) == packet_error)
++	    return(ER_HANDSHAKE_ERROR);
++	  result = sasl_server_step(conn, (const char *)net->read_pos, pkt_len,
++		  &out, &outlen);
++      }
++      DBUG_PRINT("info", ("SASL: client authenticated"));
++      if (net_write_command(net, 'A', "", 0, out, outlen))
++		return(ER_HANDSHAKE_ERROR);
++
++      /* At this point, SASL authentication is complete */
++      /* XXX add a vio layer for sasl */
++      /* XXX use sasl_getprop to get user@realm */
++      {
++	const char *auth_user = NULL;
++	const char *auth_realm = NULL;
++	const char *auth_mech = NULL;
++	sasl_getprop(conn, SASL_USERNAME, (const void **)&auth_user);
++	sasl_getprop(conn, SASL_DEFUSERREALM, (const void **)&auth_realm);
++	sasl_getprop(conn, SASL_MECHNAME, (const void **)&auth_mech);
++	DBUG_PRINT("info", ("SASL: authenticated user=%s realm=%s mech=%s",
++		  auth_user ? auth_user : "<null>",
++		  auth_realm ? auth_realm : "<null>",
++		  auth_mech ? auth_mech : "<null>"));
++      }
++
++sasl_done: ;
++  }
++#endif /* HAVE_SASL */
++
+   if (end >= (char*) net->read_pos+ pkt_len +2)
+   {
+     inc_host_errors(&thd->remote.sin_addr);
+diff -ur orig/mysql-4.1.7/sql-common/client.c mysql-4.1.7/sql-common/client.c
+--- orig/mysql-4.1.7/sql-common/client.c	2004-10-23 17:28:43.000000000 +1000
++++ mysql-4.1.7/sql-common/client.c	2004-11-22 08:07:52.000000000 +1000
+@@ -117,6 +117,10 @@
+ #include "client_settings.h"
+ #include <sql_common.h>
+ 
++#ifdef HAVE_SASL
++#include <sasl/sasl.h>
++#endif
++
+ uint		mysql_port=0;
+ char		*mysql_unix_port= 0;
+ const char	*unknown_sqlstate= "HY000";
+@@ -1531,6 +1535,9 @@
+ #ifdef HAVE_SYS_UN_H
+   struct	sockaddr_un UNIXaddr;
+ #endif
++#ifdef HAVE_SASL
++  int           use_sasl = 0;
++#endif
+ 
+   init_sigpipe_variables
+   DBUG_ENTER("mysql_real_connect");
+@@ -1823,6 +1830,9 @@
+     /* New protocol with 16 bytes to describe server characteristics */
+     mysql->server_language=end[2];
+     mysql->server_status=uint2korr(end+3);
++#if HAVE_SASL
++    use_sasl = end[5] & 0x01;
++#endif /* HAVE_SASL */
+   }
+   end+= 18;
+   if (pkt_length >= (uint) (end + SCRAMBLE_LENGTH - SCRAMBLE_LENGTH_323 + 1 - 
+@@ -1935,6 +1945,10 @@
+     int4store(buff+4, net->max_packet_size);
+     buff[8]= (char) mysql->charset->number;
+     bzero(buff+9, 32-9);
++#if HAVE_SASL
++    if (use_sasl)
++	buff[9] |= 0x01;
++#endif
+     end= buff+32;
+   }
+   else
+@@ -1980,6 +1994,126 @@
+   }
+ #endif /* HAVE_OPENSSL */
+ 
++#ifdef HAVE_SASL
++  if (use_sasl)
++  {
++    sasl_conn_t *conn = NULL;
++    unsigned int pkt_len;
++    int result;
++    sasl_interact_t *client_interact = NULL;
++    const char *out, *mechusing;
++    unsigned int outlen;
++    static sasl_callback_t callbacks[] = {
++	{ SASL_CB_LIST_END, NULL, NULL }
++    };
++
++    if ((result = sasl_client_init(NULL)) != SASL_OK)
++	goto sasl_error;
++    DBUG_PRINT("info",("SASL: host=%s", host ? host : "(null)"));
++    /* Initialise SASL */
++    if ((result = sasl_client_new("mysql", host ? host : "localhost",
++	    NULL, NULL, NULL, 0, &conn)) != SASL_OK)
++    {
++  sasl_error:
++      out = conn ? sasl_errdetail(conn) : NULL;
++      sprintf(net->last_error, "SASL error: %s",
++	      out ? out : sasl_errstring(result, NULL, NULL));
++      DBUG_PRINT("info",("SASL: %s (%s)", 
++	    sasl_errstring(result, NULL, NULL),
++	    out ? out : "null" ));
++      set_mysql_error(mysql, CR_UNKNOWN_ERROR, unknown_sqlstate);
++      goto error;
++    }
++
++    /* Flush the client response packet */
++    if (my_net_write(net,buff,(uint) (end-buff)) || net_flush(net))
++    {
++      set_mysql_error(mysql, CR_SERVER_LOST, unknown_sqlstate);
++      goto error;
++    }
++
++    /* Receive 'C' {mechlist} '.' */
++    if ((pkt_len = net_safe_read(mysql)) == packet_error)
++      goto error;
++    if (pkt_len == 0 || net->read_pos[0] != 'C' 
++	    || net->read_pos[pkt_len - 1] != '.') {
++      set_mysql_error(mysql, CR_MALFORMED_PACKET, unknown_sqlstate);
++      goto error;
++    }
++    net->read_pos[pkt_len - 1] = '\0';
++
++    DBUG_PRINT("info",("SASL: server mechs: %s", net->read_pos + 1));
++
++    /* Ask SASL to select a mechanism */
++    do {
++	result = sasl_client_start(conn, net->read_pos + 1, &client_interact,
++	    &out, &outlen, &mechusing);
++        if (result == SASL_INTERACT) {
++	    /* XXX TBD */
++	}
++    } while (result == SASL_INTERACT);
++    if (result != SASL_CONTINUE)
++	goto sasl_error;
++
++    DBUG_PRINT("info",("SASL: using mech %s", mechusing));
++
++    /* Send: {mechlen} {haveout} {mechanism} '.' [{out}]} */
++    buff[0] = strlen(mechusing);
++    buff[1] = out != NULL;
++    pkt_len = 2;
++    memcpy(buff + pkt_len, mechusing, buff[0]); pkt_len += buff[0];
++    buff[pkt_len] = '.'; pkt_len++;
++    if (out) {
++	memcpy(buff + pkt_len, out, outlen); pkt_len += outlen;
++    }
++    if (my_net_write(net, out, outlen) || net_flush(net)) {
++      set_mysql_error(mysql, CR_SERVER_LOST, unknown_sqlstate);
++      goto error;
++    }
++
++    /* Enter SASL negotiation loop while command byte is '+' */
++    if ((pkt_len = net_safe_read(mysql)) == packet_error)
++      goto error;
++    while (net->read_pos[0] == '+') {
++	do {
++	    result = sasl_client_step(conn, net->read_pos + 1,
++		    pkt_len - 1, &client_interact, &out, &outlen);
++	    if (result == SASL_INTERACT) {
++		/* XXX TBD */
++	    }
++	} while (result == SASL_INTERACT || result == SASL_CONTINUE);
++	if (result != SASL_OK)
++	    goto sasl_error;
++	if (my_net_write(net, out, outlen) || net_flush(net)) {
++	  set_mysql_error(mysql, CR_SERVER_LOST, unknown_sqlstate);
++	  goto error;
++	}
++	if ((pkt_len = net_safe_read(mysql)) == packet_error)
++	  goto error;
++    }
++    if (net->read_pos[0] == 'F') { /* Failed */
++        DBUG_PRINT("info",("SASL: fail (%.*s)", pkt_len - 1, net->read_pos[1]));
++	use_sasl = 0;
++	goto sasl_done;
++    }
++    if (net->read_pos[0] != 'A') {
++      set_mysql_error(mysql, CR_MALFORMED_PACKET, unknown_sqlstate);
++      goto error;
++    }
++    result = sasl_client_step(conn, net->read_pos + 1,
++	    pkt_len - 1, &client_interact, &out, &outlen);
++    if (result != SASL_OK)
++	goto sasl_error;
++    DBUG_PRINT("info",("SASL: authenticated"));
++
++    /* At this point, SASL authentication is complete */
++    /* XXX add a vio layer for sasl */
++
++sasl_done: ;
++    end = buff;
++  }
++#endif /* HAVE_SASL */
++
+   DBUG_PRINT("info",("Server version = '%s'  capabilites: %lu  status: %u  client_flag: %lu",
+ 		     mysql->server_version,mysql->server_capabilities,
+ 		     mysql->server_status, client_flag));
