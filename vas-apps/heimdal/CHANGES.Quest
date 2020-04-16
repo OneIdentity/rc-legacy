@@ -1,0 +1,61 @@
+krbd-apps (0.7.2q7) UNRELEASED
+
+  * Renamed to Kerberized Apps.
+  * Fixed bug #304: FTP interoperation with non-VAS-enabled ftp servers.
+  * Documented the PAM service name in ftpd(8).
+
+ -- Ted Percival <ted.percival@quest.com>  Tue, 17 Jul 2007 13:13:14 +1000
+
+vas-apps (0.7.2q6)
+
+  * Fixed bug #86: Delegated credentials disappear with multiple FTP sessions.
+  * Fixed bug #164: FTPD truncates usernames to 31 characters.
+  * Fixed bug #35: FTP server fails to establish active connection.
+
+ -- Ted Percival <ted.percival@quest.com>  Fri,  1 Dec 2006 17:59:42 +1000
+
+vas-apps (0.7.2q5)
+
+  * Fixed bug #149: Does not work with VAS 3.1.
+  * Fixed bug #160: Installs unnecessary files.
+  * Fixed `make dist` missing files.
+
+ -- Ted Percival <ted.percival@quest.com>  Wed, 15 Nov 2006 14:45:09 +1000
+
+vas-apps (0.7.2q4)
+  
+  * telnetd: Enable (fix) encryption.
+  * telnet: Don't force a key type for krb5 auth.
+
+ -- Ted Percival <ted.percival@quest.com>  Mon, 29 May 2006 15:32:58 +1000
+
+vas-apps (0.7.2q3)
+
+  * Changelog entry missing in 0.7.2q3 release.
+  * Add LAM support on AIX.
+
+ -- Ted Percival <ted.percival@quest.com>  Mon, 29 May 2006 15:32:58 +1000
+
+vas-apps (0.7.2q2)
+  * This release is not functionally different from 0.7.2q1.
+  * Build fixes
+    - Add some ifdefs to fix compilation errors with strict compilers
+    (r66,68).
+    - Un-inline two functions to avoid what appears to be an HPUX compiler bug
+    (r67).
+
+ -- Ted Percival <ted.percival@quest.com>  Tue,  2 May 2006 17:18:45 +1000
+
+vas-apps (0.7.2q1)
+
+  * telnet: Disable encryption -- it seems broken (r21).
+  * ftp: Don't prompt for username when using GSSAPI authentication
+         (r26,27).
+  * ftp: Document -K and --no-gss-delegate options (r28).
+  * ftp: Fix bug where active-mode transfers failed on Linux (r31).
+  * ftp: Execute the system's login command instead of a non-existent
+         one (r34).
+  * Add PAM checks for rshd and ftpd (r55).
+  * Use autoconf to determine the location of `login` (r57).
+
+ -- Ted Percival <ted.percival@quest.com>  Thu, 30 Mar 2006 15:37:35 +1000

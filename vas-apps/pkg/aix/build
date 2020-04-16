@@ -1,0 +1,150 @@
+#! /bin/sh
+set -ex
+
+# AIX packages are crazy. This doc tells you pretty much everything you
+# need to know. My advice: don't forget the .al files!
+# http://publib.boulder.ibm.com/infocenter/pseries/v5r3/index.jsp?topic=/com.ibm.aix.doc/aixprggd/genprogc/pkging_sw4_install.htm
+
+. ../build.config
+
+SCRIPTDIR=$(dirname $(pwd)/$0)
+
+WORKDIR=/var/tmp/krbd-apps
+OUTPUTDIR=$WORKDIR/output
+BUILDDIR=$WORKDIR/build
+PKGDIR=$PKGDIR/aix
+PREFIX=/opt/quest # must begin with a slash
+VAS_DEP_VERSION=3.0.1.3
+
+CC='/usr/local/bin/ccache /usr/bin/gcc'
+
+sudo rm -rf $WORKDIR
+
+mkdir -p $WORKDIR $OUTPUTDIR $BUILDDIR $PKGDIR
+
+## FUNCTION DEFS
+
+# Pass a file containing a list of files
+filesizes () {
+	test $# -ne 1 && exit 1
+
+	for i in `cat $1`; do
+	    if test -d $OUTPUTDIR$PREFIX/$i; then
+		echo testing $PREFIX/$i >&2
+		if test `ls -l $OUTPUTDIR$PREFIX/$i | grep ^d | wc -l` -eq 0; then
+		    echo $PREFIX/$i is a bottom level dir >&2
+		    echo "$PREFIX/$i	$(du -k $OUTPUTDIR$PREFIX/$i | cut -f1)"
+		fi
+	    fi
+	done
+}
+
+# unpack
+cd $BUILDDIR
+gunzip -c $SCRIPTDIR/../*.tar.gz | tar -xf -
+
+# configure
+cd $NAME-$VERSION
+./configure -C --prefix=$OUTPUTDIR$PREFIX --sysconfdir=$OUTPUTDIR/etc/opt/quest --mandir=$OUTPUTDIR$PREFIX/man
+
+# build
+make
+
+# install
+sudo make install
+
+# PACKAGING FOO!
+cd $OUTPUTDIR
+
+# create inventory files and move files to dest-pkg dir
+rm *.inventory lpp_name *.al || true
+rm -rf pkg || true
+mkdir pkg # all files in this dir will be packaged
+
+echo "./lpp_name" | tee krbd-apps.clients.al > krbd-apps.servers.al
+
+for inputfile in clients servers; do
+    for i in `cat $SCRIPTDIR/$inputfile.files`; do
+	ii=$PREFIX/$i
+	$SCRIPTDIR/inventory.sh ".$ii" >> krbd-apps.$inputfile.inventory
+	if [ -d ".$ii" ]; then
+	    mkdir -p pkg$ii
+	else
+	    ln ".$ii" pkg$ii
+	fi
+
+	echo ".$ii" >> krbd-apps.$inputfile.al
+    done
+done
+
+# start writing the lpp_name file
+# not using a coreq on vasclnts because its filesets have AIX version
+# numbers in them, and installp doesn't recognise a dependency on
+# vasclnts | vasclnt as being satisfied
+cat <<EOF > lpp_name
+4 R I krbd-apps {
+krbd-apps.servers $BASE_VERSION.$RELEASE 1 N U en_AU Kerberized Apps servers - ftpd, rshd, telnetd
+[
+%
+EOF
+
+# determine file sizes
+filesizes $SCRIPTDIR/servers.files >> lpp_name
+
+cat <<EOF >> lpp_name
+%
+]
+krbd-apps.clients $BASE_VERSION.$RELEASE 1 N U en_AU Kerberized Apps clients - ftp, rsh, rcp, telnet
+[
+%
+EOF
+
+filesizes $SCRIPTDIR/clients.files >> lpp_name
+
+cat <<EOF >> lpp_name
+%
+]
+
+}
+EOF
+
+# make liblpp.a control file
+rm liblpp.a || true
+cp $BUILDDIR/$NAME-$VERSION/LICENCE.Quest lpp.copyright
+ar rc liblpp.a *.inventory *.al lpp.copyright
+
+# copy all the metainfo files to the pkg dir
+ln lpp_name pkg
+mkdir -p pkg/usr/lpp/krbd-apps
+ln liblpp.a pkg/usr/lpp/krbd-apps
+
+# create a master file list for the package
+rm -f filelist || true
+touch filelist
+echo ./lpp_name >> filelist
+echo ./usr/lpp/krbd-apps/liblpp.a >> filelist
+cat $SCRIPTDIR/clients.files >  filelist.real
+cat $SCRIPTDIR/servers.files >> filelist.real
+mv filelist.real filelist.real.sed_dash_i
+sed -e "s!^!.$PREFIX/!" filelist.real.sed_dash_i > filelist.real
+sort -u filelist.real >> filelist
+rm filelist.real*
+
+# create the package (bff) file
+echo "Packing these files..."
+cat filelist
+echo
+
+(
+	cd pkg
+	backup -i -f - < $OUTPUTDIR/filelist > $OUTPUTDIR/$NAME-$VERSION-$BUILDNO.bff
+)
+
+# copy to safe place
+cp $OUTPUTDIR/$NAME-$VERSION-$BUILDNO.bff $PKGDIR
+
+# clean up
+cd $SCRIPTDIR
+sudo rm -rf $BUILDDIR $OUTPUTDIR
+
+exit 0

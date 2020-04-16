@@ -1,0 +1,74 @@
+#! /bin/sh
+set -ex
+. ../build.config
+
+PSTAMP=`hostname``date +'%Y%m%d%H%M%S'`
+ARCH=`uname -p`
+if [ `uname -r` = "5.6" ]; then
+    ARCH="${ARCH}26"
+fi
+PKGVERSION="${VERSION}-${BUILDNO}"
+SCRIPTDIR=`pwd`
+SCRIPTDIR=`dirname ${SCRIPTDIR}/$0`
+WORKDIR=/var/tmp/krbd-apps
+BUILDDIR=$WORKDIR/build
+# OUTPUTDIR _must_ be the same as the real dir specified in the Prototype files
+OUTPUTDIR=$WORKDIR/output
+PACKAGES_DEST="/data/rc/builds/krbd-apps/solaris.${ARCH}"
+CC=/usr/local/bin/gcc
+PATH=/usr/local/bin:$PATH
+export CC PATH
+
+pkginfo_create() {
+    if [ $# -ne 2 ]; then
+	echo 'Wrong number of arguments to pkginfo_create()'
+	return 1
+    fi
+
+    sed \
+	    -e "s/@PSTAMP@/${PSTAMP}/" \
+	    -e "s/@ARCH@/${ARCH}/" \
+	    -e "s/@VERSION@/${PKGVERSION}/" \
+	    $1 > $2
+}
+
+sudo rm -rf $WORKDIR
+
+## Begin work
+mkdir -p ${BUILDDIR} ${OUTPUTDIR}
+cd ${BUILDDIR}
+
+gunzip -c "${SCRIPTDIR}/../${NAME}-${VERSION}.tar.gz" | tar -xf -
+cd ${NAME}-${VERSION}
+
+./configure -C --prefix=/opt/quest --mandir=\${prefix}/man
+make
+make install DESTDIR="$OUTPUTDIR"
+
+cd ${SCRIPTDIR}
+test -f pkginfo && rm pkginfo
+
+## Servers
+pkginfo_create ${SCRIPTDIR}/pkginfo.servers.in pkginfo
+#cp depend.servers "${OUTPUTDIR}/depend"
+
+pkgmk -o -r "${OUTPUTDIR}" -d /var/tmp -f "${SCRIPTDIR}/Prototype.servers"
+
+## Clients
+pkginfo_create ${SCRIPTDIR}/pkginfo.clients.in pkginfo
+#cp depend.clients "${OUTPUTDIR}/depend"
+
+pkgmk -o -r "${OUTPUTDIR}" -d /var/tmp -f "${SCRIPTDIR}/Prototype.clients"
+
+cd /var/tmp
+echo "QSFTkac" | pkgtrans -os . ./QSFTkac.$PKGVERSION.$ARCH.pkg
+echo "QSFTkas" | pkgtrans -os . ./QSFTkas.$PKGVERSION.$ARCH.pkg
+
+test -d "${PACKAGES_DEST}" || mkdir "${PACKAGES_DEST}"
+cp QSFTka*.${PKGVERSION}.${ARCH}.pkg ${PACKAGES_DEST}
+
+echo "Build complete, cleaning up..."
+cd "${SCRIPTDIR}"
+
+test "x${OUTPUTDIR}" = "x/" || rm -rf ${OUTPUTDIR}
+test "x${BUILDDIR}" = "x/" || rm -rf ${BUILDDIR}

@@ -1,0 +1,49 @@
+#! /bin/sh
+set -ex
+
+SCRIPTDIR=`pwd`
+SCRIPTDIR=`dirname ${SCRIPTDIR}/$0`
+
+. ../build.config
+
+CC='/usr/local/bin/ccache /usr/bin/cc'
+CFLAGS="$CFLAGS +DAportable"
+export CC CFLAGS
+BUILDDIR=/var/tmp/krbd-apps/build
+DESTDIR=/var/tmp/krbd-apps/output
+PKGDIR="$PKGDIR/hpux"
+PREFIX=/opt/quest
+
+mkdir -p "$BUILDDIR" "$DESTDIR" || true
+
+sed \
+	-e "s#@dest@#${DESTDIR}#g" \
+	-e "s/@NAME@/${NAME}/g" \
+	-e "s/@LONG_NAME@/${LONG_NAME}/g" \
+	-e "s/@VERSION@/${VERSION}-${BUILDNO}/g" \
+	< krbd-apps.psf.in > $BUILDDIR/krbd-apps.psf
+
+# decompress
+cd "$BUILDDIR"
+gunzip -c "$SCRIPTDIR/../$NAME-$VERSION.tar.gz" | tar xf -
+
+# configure
+cd "$NAME-$VERSION"
+./configure -C --prefix=$DESTDIR --mandir=$DESTDIR/man
+
+# build
+make
+
+# install
+make install
+
+# package
+VERSION=${VERSION}-${BUILDNO}
+/usr/local/bin/sudo /usr/sbin/swpackage -s $BUILDDIR/krbd-apps.psf -x run_as_superuser=false -x media_type=tape @ $DESTDIR/$NAME-$VERSION.depot
+
+test -d $PKGDIR || mkdir -p $PKGDIR
+cp $DESTDIR/$NAME-$VERSION.depot $PKGDIR
+
+# cleanup
+cd $SCRIPTDIR
+rm -rf "$BUILDDIR" "$DESTDIR"

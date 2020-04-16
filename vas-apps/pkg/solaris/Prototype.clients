@@ -1,0 +1,13 @@
+i pkginfo
+d none /opt 0755 root bin
+d none /opt/quest 0755 root bin
+d none /opt/quest/man 0755 root bin
+d none /opt/quest/man/man1 0755 root bin
+f none /opt/quest/man/man1/rsh.1 0644 root bin
+f none /opt/quest/man/man1/telnet.1 0644 root bin
+f none /opt/quest/man/man1/ftp.1 0644 root bin
+d none /opt/quest/bin 0755 root bin
+f none /opt/quest/bin/rsh 0755 root bin
+f none /opt/quest/bin/rcp 0755 root bin
+f none /opt/quest/bin/telnet 0755 root bin
+f none /opt/quest/bin/ftp 0755 root bin

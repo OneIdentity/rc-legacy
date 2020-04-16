@@ -1,0 +1,35 @@
+#! /bin/sh
+set -ex
+
+if [ `id -u` -ne 0 ]; then
+	echo "This script must be run as root (or similar). Current user is `id -un`."
+	exit 1;
+fi
+
+CURDIR=`dirname $0`
+cd $CURDIR
+
+. ../build.config
+
+if [ -f /etc/debian_version ]; then
+	RPMDIR=/usr/src/rpm
+else
+	if [ -f /etc/redhat-release ]; then
+		RPMDIR=/usr/src/redhat
+	else
+		if [ -f /etc/SuSE-release ]; then
+			RPMDIR=/usr/src/packages
+		else
+			echo "Unknown platform, can't set RPMDIR"
+			exit 1
+		fi
+	fi
+fi
+
+cp ../$NAME-$VERSION.tar.gz $RPMDIR/SOURCES
+
+sed -e "s/@\[VERSION]/$VERSION/g" \
+    -e "s/@\[BUILDNO]/$BUILDNO/g" < krbd-apps.spec.in > krbd-apps.spec
+
+# TODO: Include archive signing
+rpmbuild --timecheck 3600 --buildroot /var/tmp/build-krbd_apps/buildroot -ba krbd-apps.spec

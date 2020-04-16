@@ -1,0 +1,51 @@
+WARNING
+=======
+
+These applications are obsolete, all their functionality is available in
+OpenSSH. OpenSSH improves on the security, features and performance of
+these applications. We strongly recommend that you use OpenSSH instead of
+Kerberized Apps.
+
+
+RUNNING
+=======
+
+All the daemons (ftpd, rshd, telnetd) are designed to be run with [x]inetd.
+They also have "-i" flags which makes them bind their own sockets but usually
+only for a single connection, after which they exit.
+
+Each command has a manpage which has further information on invoking it.
+
+
+CAVEATS
+=======
+
+The following caveats apply to the current release of Quest Kerberized apps.
+
+RSH
+   Users should be aware that an encrypted rsh connection does _not_ encrypt
+   the initial command, only the data transferred once the session has been
+   set up.
+
+   rsh should only be used for executing single commands. For an interactive
+   session, use telnet instead.
+
+   The rsh program must be installed setuid root (chmod u+s /opt/quest/bin/rsh)
+   to support old style "privileged port" authentication. We do not install it
+   setuid root by default because it is not necessary for Kerberos 5
+   authentication.
+
+TELNET
+   Encrypted telnet to standard Heimdal/MIT telnet servers will fail if you have
+   arcfour kerberos tickets (see `vastool klist -v`). As of 2006-05,
+   discussions are underway to have this corrected. The symptom of this is
+   garbled output. Encrypted telnet works properly when both the client and
+   server are from this Kerberized Apps release.
+
+
+Project home page: http://rc.quest.com/topics/vas-apps/
+
+Bug tracker: https://bugsrc.quest.com/
+
+Read-only Subversion source repository:
+    http://rc.quest.com/svn/repos/vas-apps/
