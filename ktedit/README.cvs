@@ -1,0 +1,9 @@
+
+After checking out with subversion, bootstrap with the following:
+
+	$ ./autogen.sh
+
+To configure for building against MIT
+	$ sh configure KRB5CONFIG=/usr/kerberos/bin/krb5-config
+or
+	$ sh configure LIBS='-lkrb5 -lcomerr' KRB5CONFIG=/bin/true

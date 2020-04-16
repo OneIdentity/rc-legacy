@@ -1,0 +1,199 @@
+.\" (c) 2007, Quest Software, Inc. All rights reserved.
+.TH KTEDIT 1
+.SH NAME
+ktedit \- Kerberos keytab editor
+.SH SYNOPSIS
+.B ktedit
+[\-de]
+.RI [\-k \ keytab-file ]
+.RI [\-f \ command-file " | " command ]
+.SH DESCRIPTION
+.B ktedit
+makes simple manipulations to a Kerberos keytab file.
+.SH OPTIONS
+.TP
+\-d
+Increments the debugging level.
+.TP
+\-e
+Causes
+.B ktedit
+to exit immediately on error. 
+Only useful with the
+\-f
+option.
+The default behaviour of
+.B ktedit
+is to continue on
+if an error is found in the command input.
+.TP
+.RI \-f \ command-file
+Specifies the file to be used to read commands from.
+.TP
+.RI \-k \ keytab-file
+Specifies
+.I keytab-file
+as the file to edit.
+.TP
+.I command
+A command to immediately execute (see below).
+.SS USAGE
+When
+.B foo
+is invoked on a terminal with neither the
+\-f
+option nor a 
+.I command
+argument,
+it enters an interactive mode, which prompts the user
+with a
+.B ktedit>
+prompt.
+Interactive mode is terminated by sending an end-of-file
+condition (usually achieved by typing Control-D).
+.PP
+.RS
+.B Caution:
+Changes to the keytab file are made immediately.
+No backup of the keytab file is made.
+.RE
+.PP
+If no 
+.I keytab-file
+argument is specified, the default
+keytab is determined by the system and opened.
+.PP
+Some of the commands understood by
+.B ktedit
+involve an "entry-pattern".
+This consists of a
+Kerberos principal name optionally prefixed by a key version
+number and/or a encryption key type. 
+Specifically, an entry-pattern is of the form:
+.PP
+.RS
+.RI [ key-type\fB: [ kvno\fB: ]][ element [ \fB/\fIelement ...]][ \fB@\fIrealm ]
+.RE
+.PP
+The
+.I element
+and 
+.I realm
+parts of an entry-pattern
+may contain shell glob characters 
+(such as
+.RB ' * '
+and
+.RB ' ? ').
+An empty principal pattern matches only the empty principal.
+An omitted
+.I realm
+is replaced by
+the default domain, as determined by the system. 
+Elements match by position.
+.PP
+If the 
+.I key-type
+or 
+.I kvno
+are not specified, they
+are assumed wildcards.
+The
+.I key-type
+may be specified 
+as a string or an integer, or as
+.RB ' * '
+to indicate a wildcard.
+.PP
+Arguments may be quoted with either double or single quotes.
+Single quoted arguments suppress backslash expansion.
+The hash character
+.RB (' # ')
+indicates a line comment. Blank lines and lines consisting
+only of a comment are ignored.
+.PP
+If the
+\-f
+option is given,
+commands are read from the given file, one line at a time.
+.SH COMMANDS
+.PP
+The commands understood by
+.B ktedit
+follow.
+.TP
+.RI \fBcopy\fR\ [ entry-pattern ]\ [ new-principal ]
+Makes a copy of all entries that match
+.I entry-pattern
+by creating a new copy of the entry but replacing the 
+principal part with 
+.IR new-principal .
+Synonyms:
+.B cp
+.TP
+.RI \fBdelete\fR\ [ entry-pattern ]
+Deletes all entries in the keytab that match
+.IR entry-pattern .
+Synonyms:
+.B rm
+.TP
+.B dump
+Writes the contents of a keytab file to standard
+output in a form suitable for text manipulation
+and later consumption by
+.BR undump .
+.IP
+The output begins with a header line, starting with a 
+.RB ' # '
+character that provides a comment description of the keytab.
+Each following lines is a key entry in the form of a principal name.
+The elements of the line are, in
+order, the principal name, the key version number,
+the key type, and then the hex representation of the 
+key in square brackets, optionally containing 
+colons for readability.
+The elements of the line are separated by non-escaped whitespace. 
+Only the principal name may contain escaped whitespace.
+.TP
+.RI \fBhelp\fR\ [ command ]
+Provides short help information about the command with name
+.IR command .
+If no
+.I command
+is given, all commands are listed.
+Synonyms:
+.B ?
+.TP
+.RI \fBlist\fR\ [-l]\ [ entry-pattern ]
+Sends to standard output a list of all entries that match
+.IR entry-pattern .
+If no
+.I entry-pattern
+is given, all entries are listed.
+If the
+\-l
+option is provided, more information about each entry (including its key block) 
+is printed.
+Synonyms:
+.B ls
+.TP
+.BR undump \ [-r]
+Reads the text output of
+.B dump
+and writes the entries into the current keytab file.
+Blank lines and lines beginning with 
+.RB ' # '
+are ignored.
+.IP
+The
+\-r
+option causes
+all the previous entries in the keytab (if any)
+to be deleted before undumping; i.e. replacement.
+.TP
+.B version
+Prints the version of
+.B ktedit
+to standard output.
+.SH AUTHOR
+David Leonard, Quest Software, Inc.
