@@ -1,0 +1,32 @@
+# An example configuration file for the PC/SC plugin.
+
+[pcsc]
+
+# The 'library' field represents the pah to the PC/SC library.
+#
+# This field is REQUIRED.
+# 
+# Replace "some-pcsc-library.so" with the path to the PC/SC library.
+library=some-pcsc-library.so
+
+# The 'reader' field represents the name of the reader to be recognized.
+#
+# Sometimes it is necessary to restrict insertion/removal to a specific
+# reader. For example, if there are multiple readers attached to a PC, then
+# it may be necessary to only recognize events on the reader actually used
+# for login. 
+#
+# The reader is specified by its name. The name may be found by examining 
+# the output of the pcscd daemon. For example:
+#
+#   "Axalto USB v3 reader (21120551407653) 00 00"
+#
+# Name matching is case-sensitive. 
+# 
+# This field is OPTIONAL. If it is not specified, then events on any reader
+# shall be recognized.
+#
+# Uncomment the following line and add a valid reader name if only events on 
+# the specified reader should be recognized.
+#
+# reader=
