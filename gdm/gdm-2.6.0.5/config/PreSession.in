@@ -1,0 +1,50 @@
+#!/bin/sh
+#
+# Note that any setup should come before the sessreg command as
+# that must be 'exec'ed for the pid to be correct (sessreg uses the parent
+# pid)
+#
+# Note that output goes into the .xsession-errors file for easy debugging
+#
+PATH="@X_PATH@:$PATH:/bin:/usr/bin"
+
+gdmwhich () {
+  COMMAND="$1"
+  OUTPUT=
+  IFS=:
+  for dir in $PATH
+  do
+    if test -x "$dir/$COMMAND" ; then
+      if test "x$OUTPUT" = "x" ; then
+        OUTPUT="$dir/$COMMAND"
+      fi
+    fi
+  done
+  unset IFS
+  echo "$OUTPUT"
+}
+
+XSETROOT=`gdmwhich xsetroot`
+if [ "x$XSETROOT" != "x" ] ; then
+	# Try to snarf the BackgroundColor from the config file
+	BACKCOLOR=`grep '^BackgroundColor' @EXPANDED_SYSCONFDIR@/gdm/gdm.conf | sed 's/^.*=\(.*\)$/\1/'`
+	if [ "x$BACKCOLOR" = "x" ]; then
+		BACKCOLOR="#76848F"
+	fi
+	"$XSETROOT" -cursor_name left_ptr -solid "$BACKCOLOR"
+fi
+
+
+SESSREG=`gdmwhich sessreg`
+if [ "x$SESSREG" != "x" ] ; then
+	# some output for easy debugging
+	echo "$0: Registering your session with wtmp and utmp"
+	echo "$0: running: $SESSREG -a -w /var/log/wtmp -u /var/run/utmp -x \"$X_SERVERS\" -h \"$REMOTE_HOST\" -l \"$DISPLAY\" \"$USER\""
+
+	exec "$SESSREG" -a -w /var/log/wtmp -u /var/run/utmp -x "$X_SERVERS" -h "$REMOTE_HOST" -l "$DISPLAY" "$USER"
+	# this is not reached
+fi
+
+# some output for easy debugging
+echo "$0: could not find the sessreg utility, cannot update wtmp and utmp"
+exit 0

@@ -1,0 +1,5432 @@
+# Copyright (C) 2002 Free Software Foundation, Inc.
+# This file is distributed under the same license as the gdm2 package.
+# pclouds <pclouds@vnlinux.org>, 2002-2004.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: gdm2 VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2004-09-14 15:41-0700\n"
+"PO-Revision-Date: 2004-06-25 05:09+0700\n"
+"Last-Translator: pclouds <pclouds@vnlinux.org>\n"
+"Language-Team: GnomeVI <gnomevi-list@lists.sourceforge.net>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: config/CDE.desktop.in.h:1
+msgid "CDE"
+msgstr "CDE"
+
+#: config/CDE.desktop.in.h:2
+msgid "This session logs you into CDE"
+msgstr "Phiên làm việc này đăng nhập bạn vào CDE"
+
+#: config/default.desktop.in.h:1
+msgid "Default System Session"
+msgstr "Phiên làm việc hệ thống mặc định"
+
+#: config/default.desktop.in.h:2
+msgid "This is the default system session"
+msgstr "Đây là phiên làm việc hệ thống mặc định"
+
+#. DON\'T CHANGE THIS BY HAND! CHANGE THE SCRIPT THIS IS GENERATED
+#. ALWAYS ADD A CHANGELOG OR I WILL PERSONALLY KICK YOUR ASS!
+#: config/gettextfoo.h:3
+msgid ""
+"I cannot start the X server (your graphical interface).  It is likely that "
+"it is not set up correctly.  You will need to log in on a console and rerun "
+"the X configuration program.  Then restart GDM."
+msgstr ""
+"Không thể khởi động X server (giao diện đồ họa). Có lẽ các thông số không "
+"đúng. Bạn cần đăng nhập trong console và thực hiện trình cấu hình X Window. "
+"Sau đó khởi động lại GDM."
+
+#: config/gettextfoo.h:4
+msgid ""
+"Would you like me to try to run the X configuration program?  Note that you "
+"will need the root password for this."
+msgstr ""
+"Bạn có muốn thử thực hiện trình cấu hình X Window? Chú ý là bạn sẽ cần mật "
+"khẩu root để thực hiện điều này."
+
+#: config/gettextfoo.h:5
+msgid "Please type in the root (privileged user) password."
+msgstr "Vui lòng nhập mật khẩu root (người dùng ưu tiên)."
+
+#: config/gettextfoo.h:6
+msgid "I will now try to restart the X server again."
+msgstr "Sẽ thử khởi động lại X server."
+
+#: config/gettextfoo.h:7
+msgid ""
+"I will disable this X server for now.  Restart GDM when it is configured "
+"correctly."
+msgstr "Sẽ tắt X Server ngay bây giờ. Hãy khởi động GDM khi đã cấu hình xong."
+
+#: config/gettextfoo.h:8
+msgid ""
+"I cannot start the X server (your graphical interface).  It is likely that "
+"it is not set up correctly.  Would you like to view the X server output to "
+"diagnose the problem?"
+msgstr ""
+"Không thể khởi động X server. Có lẽ các thông số cấu hình không đúng. Bạn có "
+"muốn xem các thông tin do X server cung cấp để giải quyết vấn đề?"
+
+#: config/gettextfoo.h:9
+msgid "Would you like to view the detailed X server output as well?"
+msgstr "Bạn có muốn xem chi tiết kết quả của X server không?"
+
+#: config/gettextfoo.h:10
+msgid ""
+"I cannot start the X server (your graphical interface).  It seems that the "
+"pointer device (your mouse) is not set up correctly.  Would you like to view "
+"the X server output to diagnose the problem?"
+msgstr ""
+"Không thể khởi động X server. Có lẽ thiết bị trỏ (con chuột) không được cấu "
+"hình đúng. Bạn có muốn xem các thông tin X server cung cấp để giải quyết vấn "
+"đề?"
+
+#: config/gettextfoo.h:11 config/gettextfoo.h:12
+msgid ""
+"Would you like me to try to run the mouse configuration program?  Note that "
+"you will need the root password for this."
+msgstr ""
+"Bạn có muốn thử thực hiện trình cấu hình chuột? Chú ý rằng bạn sẽ cần mật "
+"khẩu root để thực hiện điều này."
+
+#: config/gettextfoo.h:13
+msgid ""
+"This is the failsafe xterm session.  Windows now have focus only if you have "
+"your cursor above them.  To get out of this mode type 'exit' in the window "
+"in the upper left corner"
+msgstr ""
+"Đây là phiên làm việc xterm dự phòng. Các cửa sổ sẽ có focus chỉ khi bạn di "
+"chuyển con trỏ trên chúng. Để thoát hỏi chế độ này, hãy nhập 'exit' vào cửa "
+"sổ bên trái, góc trên"
+
+#: config/gettextfoo.h:14
+msgid ""
+"I could not start your session and so I have started the failsafe xterm "
+"session.  Windows now have focus only if you have your cursor above them.  "
+"To get out of this mode type 'exit' in the window in the upper left corner"
+msgstr ""
+"Không thể khởi động phiên làm việc của bạn, vì thế khởi động phiên làm việc "
+"xterm dự phòng. Đây là phiên làm việc xterm dự phòng. Các cửa sổ sẽ có focus "
+"chỉ khi bạn di chuyển con trỏ trên chúng. Để thoát hỏi chế độ này, hãy nhập "
+"'exit' vào cửa sổ bên trái, góc trên"
+
+#: config/gnome.desktop.in.h:1
+msgid "GNOME"
+msgstr "GNOME"
+
+#: config/gnome.desktop.in.h:2
+msgid "This session logs you into GNOME"
+msgstr "Phiên làm việc này đăng nhập bạn vào GNOME"
+
+#: daemon/auth.c:66
+#, c-format
+msgid "%s: Could not write new authorization entry: %s"
+msgstr "%s: Không thể ghi mục xác thực mới: %s"
+
+#: daemon/auth.c:69
+#, c-format
+msgid "%s: Could not write new authorization entry.  Possibly out of diskspace"
+msgstr "%s: Không thể ghi mục xác thực mới. Có lẽ do hết đĩa"
+
+#: daemon/auth.c:74
+#, c-format
+msgid ""
+"GDM could not write a new authorization entry to disk.  Possibly out of "
+"diskspace.%s%s"
+msgstr "GDM không thể ghi mục xác thực mới vào đĩa. Có lẽ do hết đĩa.%s%s"
+
+#: daemon/auth.c:204
+#, c-format
+msgid "%s: Could not make new cookie file in %s"
+msgstr "%s: Không thể tạo tập tin cookie mới trong %s"
+
+#: daemon/auth.c:228 daemon/auth.c:245 daemon/auth.c:879
+#, c-format
+msgid "%s: Cannot safely open %s"
+msgstr "%s: Không thể mở %s một cách an toàn"
+
+#. Really no need to clean up here - this process is a goner anyway
+#: daemon/auth.c:677 daemon/auth.c:717
+#, c-format
+msgid "%s: Could not open cookie file %s"
+msgstr "%s: Không thể mở tập tin cookie %s"
+
+#: daemon/auth.c:698
+#, c-format
+msgid "%s: Could not lock cookie file %s"
+msgstr "%s: Không thể khóa tập tin cookie %s"
+
+#: daemon/auth.c:748 daemon/auth.c:770
+#, c-format
+msgid "%s: Could not write cookie"
+msgstr "%s: Không thể ghi cookie"
+
+#: daemon/auth.c:855
+#, c-format
+msgid "%s: Ignoring suspiciously looking cookie file %s"
+msgstr "%s: Bỏ qua tập tin cookie đáng ngờ %s"
+
+#: daemon/auth.c:898 daemon/gdm.c:2291
+#, c-format
+msgid "Can't write to %s: %s"
+msgstr "Không thể ghi vào %s: %s"
+
+#. This means we have no clue what's happening,
+#. * it's not X server crashing as we would have
+#. * cought that elsewhere.  Things are just
+#. * not working out, so tell the user.
+#. * However this may have been caused by a malicious local user
+#. * zapping the display repeatedly, that shouldn't cause gdm
+#. * to stop working completely so just wait for 2 minutes,
+#. * that should give people ample time to stop gdm if needed,
+#. * or just wait for the stupid malicious user to get bored
+#. * and go away
+#: daemon/display.c:114
+#, c-format
+msgid ""
+"The display server has been shut down about 6 times in the last 90 seconds, "
+"it is likely that something bad is going on.  I will wait for 2 minutes "
+"before trying again on display %s."
+msgstr ""
+"Máy chủ hiển thị đã tắt khoảng 6 lần trong 90 giây vừa rồi, có lẽ có gì đó "
+"rất xấu đang xảy ra. Sẽ đợi khoảng 2 phút trước khi thử lại trên display %s."
+
+#: daemon/display.c:260
+#, c-format
+msgid "%s: Cannot create pipe"
+msgstr "%s: Không thể tạo ống dẫn."
+
+#: daemon/display.c:336
+#, c-format
+msgid "%s: Failed forking gdm slave process for %s"
+msgstr "%s: Lỗi tạo tiến trình con gdm cho %s"
+
+#: daemon/errorgui.c:356
+#, c-format
+msgid "%s not a regular file!\n"
+msgstr "%s không phải là tập tin bình thường!\n"
+
+#: daemon/errorgui.c:373
+msgid ""
+"\n"
+"... File too long to display ...\n"
+msgstr ""
+"\n"
+"... Tập tin quá dài để hiển thị ...\n"
+
+#: daemon/errorgui.c:382
+#, c-format
+msgid "%s could not be opened"
+msgstr "không thể mở %s"
+
+#: daemon/errorgui.c:494 daemon/errorgui.c:635 daemon/errorgui.c:743
+#: daemon/errorgui.c:861
+#, c-format
+msgid "%s: Cannot fork to display error/info box"
+msgstr "%s: Không thể tạo tiến trình để hiển thị hộp thoại lỗi/thông tin"
+
+#: daemon/filecheck.c:64
+#, c-format
+msgid "%s: Directory %s does not exist."
+msgstr "%s: Thư mục %s không tồn tại."
+
+#: daemon/filecheck.c:76 daemon/filecheck.c:118 daemon/filecheck.c:180
+#, c-format
+msgid "%s: %s is not owned by uid %d."
+msgstr "%1$s: Người dùng có uid %3$d không sở hữu %2$s."
+
+#: daemon/filecheck.c:82 daemon/filecheck.c:125
+#, c-format
+msgid "%s: %s is writable by group."
+msgstr "%s: %s cho phép nhóm có quyền ghi."
+
+#: daemon/filecheck.c:88
+#, c-format
+msgid "%s: %s is writable by other."
+msgstr "%s: %s cho phép những người khác có quyền ghi."
+
+#: daemon/filecheck.c:103 daemon/filecheck.c:168
+#, c-format
+msgid "%s: %s does not exist but must exist."
+msgstr "%s: %s không tồn tại nhưng lẽ ra phải tồn tại."
+
+#: daemon/filecheck.c:111 daemon/filecheck.c:174
+#, c-format
+msgid "%s: %s is not a regular file."
+msgstr "%s: %s không phải là file bình thường."
+
+#: daemon/filecheck.c:132
+#, c-format
+msgid "%s: %s is writable by group/other."
+msgstr "%s: %s cho phép nhóm/những người khác có quyền ghi."
+
+#: daemon/filecheck.c:139 daemon/filecheck.c:192
+#, c-format
+msgid "%s: %s is bigger than sysadmin specified maximum file size."
+msgstr "%s: %s lớn hơn kích thước tối đa sysadmin cho phép."
+
+#: daemon/gdm-net.c:271
+#, c-format
+msgid "%s: Could not make socket"
+msgstr "%s: Không thể tạo socket"
+
+#: daemon/gdm-net.c:302
+#, c-format
+msgid "%s: Could not bind socket"
+msgstr "%s: Không thể bind socket"
+
+#: daemon/gdm-net.c:388
+#, c-format
+msgid "%s: Could not make FIFO"
+msgstr "%s: Không thể tạo FIFO"
+
+#: daemon/gdm-net.c:396
+#, c-format
+msgid "%s: Could not open FIFO"
+msgstr "%s: Không thể mở FIFO"
+
+#: daemon/gdm.c:248
+#, c-format
+msgid ""
+"Server Authorization directory (daemon/ServAuthDir) is set to %s but this "
+"does not exist. Please correct gdm configuration %s and restart gdm."
+msgstr ""
+"Thư mục Server Authorization (xác nhận server - daemon/ServAuthDir) là %s "
+"nhưng nó không tồn tại. Vui lòng hiệu chỉnh cấu hình gdn %s và khởi động lại "
+"gdm."
+
+#: daemon/gdm.c:257
+#, c-format
+msgid "%s: Authdir %s does not exist. Aborting."
+msgstr "%s: Thư mục Authdir %s không tồn tại. Ngừng hoạt động."
+
+#: daemon/gdm.c:262
+#, c-format
+msgid ""
+"Server Authorization directory (daemon/ServAuthDir) is set to %s but this is "
+"not a directory. Please correct gdm configuration %s and restart gdm."
+msgstr ""
+"Thư mục Server Authorization (xác nhận server - daemon/ServAuthDir) là %s "
+"nhưng nó không phải là một thư mục. Vui lòng hiệu chỉnh cấu hình gdn %s và "
+"khởi động lại gdm."
+
+#: daemon/gdm.c:271
+#, c-format
+msgid "%s: Authdir %s is not a directory. Aborting."
+msgstr "%s: Thư mục Authdir %s không phải là một thư mục. Ngừng hoạt động."
+
+#: daemon/gdm.c:284
+#, c-format
+msgid ""
+"%s: Logdir %s does not exist or isn't a directory.  Using ServAuthDir %s."
+msgstr ""
+"%s: Logdir %s không tồn tại hoặc không phải là thư mục.  Dùng ServAuthDir %s."
+
+#: daemon/gdm.c:313 gui/gdmlogin.c:650 gui/greeter/greeter.c:105
+#, c-format
+msgid "%s: No configuration file: %s. Using defaults."
+msgstr "%s: Không có tập tin cấu hình: %s. Dùng cấu hình mặc định."
+
+#: daemon/gdm.c:364
+#, c-format
+msgid "%s: BaseXsession empty, using %s/gdm/Xsession"
+msgstr "%s: BaseXsession rỗng, dùng %s/gdm/Xsession"
+
+#: daemon/gdm.c:408
+#, c-format
+msgid "%s: Standard X server not found, trying alternatives"
+msgstr "%s: Không tìm thấy X Server chuẩn, dùng cái thay thế"
+
+#: daemon/gdm.c:440
+#, c-format
+msgid "%s: XDMCP was enabled while there is no XDMCP support, turning it off"
+msgstr "%s: XDMCP được bật trong khi không có hỗ trợ XDMCP. Tắt XDMCP"
+
+#: daemon/gdm.c:453
+#, c-format
+msgid "%s: Root cannot be autologged in, turing off automatic login"
+msgstr "%s: Root không thể đăng nhập tự động. Tắt chức năng tự động đăng nhập"
+
+#: daemon/gdm.c:466
+#, c-format
+msgid "%s: Root cannot be autologged in, turing off timed login"
+msgstr ""
+"%s: Root thể không thể đăng nhập tự động. Tắt chức năng đăng nhập định thời"
+
+#: daemon/gdm.c:472
+#, c-format
+msgid "%s: TimedLoginDelay less than 5, so I will just use 5."
+msgstr "%s: TimedLoginDelay nhỏ hơn 5. Chỉnh lại bằng 5."
+
+#: daemon/gdm.c:482
+#, c-format
+msgid "%s: No greeter specified."
+msgstr "%s: Chưa xác định trình chào mừng."
+
+#: daemon/gdm.c:485
+#, c-format
+msgid "%s: No remote greeter specified."
+msgstr "%s: Chưa xác định trình chào mừng từ xa."
+
+#: daemon/gdm.c:489
+#, c-format
+msgid "%s: No sessions directory specified."
+msgstr "%s: Chưa xác định thư mục phiên làm việc."
+
+#: daemon/gdm.c:514
+#, c-format
+msgid "%s: Empty server command, using standard one."
+msgstr "%s: Không có lệnh server. Dùng lệnh chuẩn."
+
+#: daemon/gdm.c:557
+#, c-format
+msgid "%s: Display number %d in use!  I will use %d"
+msgstr "%s: Số hiệu display %d đang được dùng! Dùng số %d"
+
+#: daemon/gdm.c:576
+#, c-format
+msgid "%s: Invalid server line in config file. Ignoring!"
+msgstr "%s: Dòng server trong tập tin cấu hình không hợp lệ. Bỏ qua!"
+
+#: daemon/gdm.c:587 daemon/gdm.c:628
+#, c-format
+msgid "%s: XDMCP disabled and no local servers defined. Aborting!"
+msgstr "%s: XDMCP đã tắt mà lại không tìm thấy server cục bộ. Ngừng hoạt động!"
+
+#. start
+#. server uid
+#: daemon/gdm.c:605
+#, c-format
+msgid ""
+"%s: XDMCP disabled and no local servers defined. Adding %s on :%d to allow "
+"configuration!"
+msgstr ""
+"%s: XDMCP đã tắt mà lại không tìm thấy server cục bộ nào. Thêm %s vào :%d để "
+"cho phép cấu hình!"
+
+#: daemon/gdm.c:620
+#, c-format
+msgid ""
+"XDMCP is disabled and gdm cannot find any local server to start.  Aborting!  "
+"Please correct the configuration %s and restart gdm."
+msgstr ""
+"XDMCP đã tắt mà gdm lại không tìm thấy server cục bộ nào để khởi động. Ngừng "
+"hoạt động! Vui lòng xem lại cấu hình %s và khởi động lại gdm."
+
+#: daemon/gdm.c:642
+#, c-format
+msgid ""
+"The gdm user does not exist. Please correct gdm configuration %s and restart "
+"gdm."
+msgstr ""
+"Người dùng gdm không tồn tại. Vui lòng hiệu chỉnh cấu hình gdm %s và khởi "
+"động lại gdm."
+
+#: daemon/gdm.c:649
+#, c-format
+msgid "%s: Can't find the gdm user (%s). Aborting!"
+msgstr "%s: Không thể tìm thấy người dùng gdm (%s). Ngừng hoạt động!"
+
+#: daemon/gdm.c:656
+#, c-format
+msgid ""
+"The gdm user is set to be root, but this is not allowed since it can pose a "
+"security risk.  Please correct gdm configuration %s and restart gdm."
+msgstr ""
+"Người dùng gdm là root, nhưng root không được phép làm người dùng gdm để "
+"tránh rủi ro bảo mật. Vui lòng hiệu chỉnh cấu hình gdm %s và khởi động lại "
+"gdm."
+
+#: daemon/gdm.c:664
+#, c-format
+msgid "%s: The gdm user should not be root. Aborting!"
+msgstr "%s: Người dùng gdm không thể là root. Ngừng hoạt động!"
+
+#: daemon/gdm.c:671
+#, c-format
+msgid ""
+"The gdm group does not exist. Please correct gdm configuration %s and "
+"restart gdm."
+msgstr ""
+"Nhóm gdm không tồn tại. Vui lòng hiệu chỉnh cấu hình gdm %s và khởi động lại "
+"gdm."
+
+#: daemon/gdm.c:678
+#, c-format
+msgid "%s: Can't find the gdm group (%s). Aborting!"
+msgstr "%s: Không thể tìm thấy nhóm gdm (%s). Ngừng hoạt động!"
+
+#: daemon/gdm.c:685
+#, c-format
+msgid ""
+"The gdm group is set to be root, but this is not allowed since it can pose a "
+"security risk. Please correct gdm configuration %s and restart gdm."
+msgstr ""
+"Nhóm gdm là root, nhưng root không được phép là nhóm gdm để tránh rủi ro bảo "
+"mật. Vui lòng hiệu chỉnh cấu hình gdm %s và khởi động lại gdm."
+
+#: daemon/gdm.c:693
+#, c-format
+msgid "%s: The gdm group should not be root. Aborting!"
+msgstr "%s: Nhóm gdm không thể là root. Ngừng hoạt động!"
+
+#: daemon/gdm.c:708
+#, c-format
+msgid "%s: Greeter not found or can't be executed by the gdm user"
+msgstr ""
+"%s: Không tìm thấy trình chào mừng, hoặc người dùng gdm không thể thực hiện "
+"trình chào mừng"
+
+#: daemon/gdm.c:715
+#, c-format
+msgid "%s: Remote greeter not found or can't be executed by the gdm user"
+msgstr ""
+"%s: Không tìm thấy trình chào mừng từ xa, hoặc người dùng gdm không thể thực "
+"hiện trình chào mừng"
+
+#: daemon/gdm.c:726
+#, c-format
+msgid "%s: Chooser not found or it can't be executed by the gdm user"
+msgstr ""
+"%s: Không tìm thấy bộ chọn lựa, hoặc người dùng gdm không thể thực hiện bộ "
+"chọn lựa"
+
+#: daemon/gdm.c:735
+msgid "No daemon/ServAuthDir specified in the configuration file"
+msgstr "Không tìm thấy thông số daemon/ServAuthDir trong tập tin cấu hình"
+
+#: daemon/gdm.c:737
+#, c-format
+msgid "%s: No daemon/ServAuthDir specified."
+msgstr "%s: Chưa xác định daemon/ServAuthDir."
+
+#: daemon/gdm.c:761
+#, c-format
+msgid ""
+"Server Authorization directory (daemon/ServAuthDir) is set to %s but is not "
+"owned by user %s and group %s. Please correct the ownership or gdm "
+"configuration %s and restart gdm."
+msgstr ""
+"Thư mục Server Authorization (xác nhận server - daemon/ServAuthDir) là %s "
+"nhưng không được sở hữu bởi người dùng %s và nhóm %s. Vui lòng hiệu chỉnh "
+"cấu hình gdn %s và khởi động lại gdm."
+
+#: daemon/gdm.c:772
+#, c-format
+msgid "%s: Authdir %s is not owned by user %s, group %s. Aborting."
+msgstr ""
+"%s: Thư mục Authdir %s không được sở hũu bởi người dùng %s, nhóm %s. Ngừng "
+"hoạt động."
+
+#: daemon/gdm.c:778
+#, c-format
+msgid ""
+"Server Authorization directory (daemon/ServAuthDir) is set to %s but has the "
+"wrong permissions, it should have permissions of %o. Please correct the "
+"permissions or the gdm configuration %s and restart gdm."
+msgstr ""
+"Thư mục Server Authorization (xác nhận server - daemon/ServAuthDir) là %s "
+"nhưng quyền truy nhập của nó không đúng, quyền truy nhập nên là %o. Vui lòng "
+"hiệu chỉnh cấu hình gdn %s và khởi động lại gdm."
+
+#: daemon/gdm.c:789
+#, c-format
+msgid "%s: Authdir %s has wrong permissions %o. Should be %o. Aborting."
+msgstr ""
+"%s: Thư mục Authdir %s có quyền truy nhập %o không đúng. Nên là %o. Ngừng "
+"hoạt động."
+
+#. FIXME: how to handle this?
+#: daemon/gdm.c:845 daemon/gdm.c:853 daemon/gdm.c:2073 daemon/gdm.c:2081
+#, c-format
+msgid "Cannot write PID file %s, possibly out of diskspace.  Error: %s\n"
+msgstr "Không thể ghi tập tin PID %s, có thể do hết đĩa. Lỗi: %s\n"
+
+#: daemon/gdm.c:847 daemon/gdm.c:855 daemon/gdm.c:2075 daemon/gdm.c:2083
+#, c-format
+msgid "Cannot write PID file %s, possibly out of diskspace.  Error: %s"
+msgstr "Không thể ghi tập tin PID %s, có thể do hết đĩa. Lỗi: %s"
+
+#: daemon/gdm.c:865
+#, c-format
+msgid "%s: fork() failed!"
+msgstr "%s: lỗi fork()!"
+
+#. should never happen
+#: daemon/gdm.c:868 daemon/slave.c:3437
+#, c-format
+msgid "%s: setsid() failed: %s!"
+msgstr "%s: lỗi setsid(): %s!"
+
+#: daemon/gdm.c:1038
+#, c-format
+msgid "%s: Trying failsafe X server %s"
+msgstr "%s: Thử dùng Máy chủ X Dự phòng %s"
+
+#: daemon/gdm.c:1056
+#, c-format
+msgid "%s: Running the XKeepsCrashing script"
+msgstr "%s: Đang chạy script XKeepsCrashing"
+
+#: daemon/gdm.c:1176
+msgid ""
+"I cannot start the X server (your graphical interface).  It is likely that "
+"it is not set up correctly. You will need to log in on a console and rerun "
+"the X configuration program.  Then restart GDM."
+msgstr ""
+"Không thể khởi động X server. Có lẽ thông số cấu hình sai. Bạn nên đăng nhập "
+"vào console và thực hiện trình cấu hình X Window. Sau đó khởi động lại GDM."
+
+#. else {
+#. * At this point .... screw the user, we don't know how to
+#. * talk to him.  He's on some 'l33t system anyway, so syslog
+#. * reading will do him good
+#. * }
+#: daemon/gdm.c:1188
+#, c-format
+msgid ""
+"Failed to start X server several times in a short time period; disabling "
+"display %s"
+msgstr ""
+"Lỗi khi khởi động X server vài lần trong khoảng thời gian ngắn; tắt display %"
+"s"
+
+#: daemon/gdm.c:1196 daemon/gdm.c:2794
+msgid "Master suspending..."
+msgstr "Master tạm dừng hoạt động..."
+
+#: daemon/gdm.c:1250
+#, c-format
+msgid "System is rebooting, please wait ..."
+msgstr "Hệ thống đang khởi động lại, vui lòng chờ ..."
+
+#: daemon/gdm.c:1252
+#, c-format
+msgid "System is shutting down, please wait ..."
+msgstr "Hệ thống đang tắt, vui lòng chờ ..."
+
+#: daemon/gdm.c:1263
+msgid "Master halting..."
+msgstr "Master ngừng hoạt động..."
+
+#: daemon/gdm.c:1276
+#, c-format
+msgid "%s: Halt failed: %s"
+msgstr "%s: Lỗi Halt: %s"
+
+#: daemon/gdm.c:1285
+msgid "Master rebooting..."
+msgstr "Master Khởi động lại..."
+
+#: daemon/gdm.c:1298
+#, c-format
+msgid "%s: Reboot failed: %s"
+msgstr "%s: Lỗi khởi động lại: %s"
+
+#: daemon/gdm.c:1396
+#, c-format
+msgid "Reboot or Halt request when there is no system menu from display %s"
+msgstr ""
+"Yêu cầu khởi động lại hoặc ngắt máy khi không có menu hệ thống trên display %"
+"s"
+
+#: daemon/gdm.c:1405
+#, c-format
+msgid "Restart, Reboot or Halt request from a non-local display %s"
+msgstr "Khởi động lại, Khởi động máy lại, hoặc Ngắt máy từ display từ xa %s"
+
+#. Bury this display for good
+#: daemon/gdm.c:1471
+#, c-format
+msgid "%s: Aborting display %s"
+msgstr "%s: Dừng hoạt động display %s"
+
+#: daemon/gdm.c:1622
+msgid "GDM restarting ..."
+msgstr "Đang khởi động lại GDM ..."
+
+#: daemon/gdm.c:1626
+msgid "Failed to restart self"
+msgstr "Lỗi khi khởi động lại"
+
+#. FIXME: note that this could mean out of memory
+#: daemon/gdm.c:1700
+msgid "main daemon: Got SIGABRT, something went very wrong. Going down!"
+msgstr ""
+"daemon chính: Nhận được SIGABRT, vài thứ đang trở nên rất xấu. Going dówn"
+
+#: daemon/gdm.c:1859
+msgid "Do not fork into the background"
+msgstr "Không thể chuyển qua chế độ nền"
+
+#: daemon/gdm.c:1861
+msgid "No console (local) servers to be run"
+msgstr "Không có máy chủ console (cục bộ) để chạy"
+
+#: daemon/gdm.c:1863
+msgid "Preserve LD_* variables"
+msgstr "Bảo toàn các biến LD_*"
+
+#: daemon/gdm.c:1865
+msgid "Print GDM version"
+msgstr "In phiên bản GDM"
+
+#: daemon/gdm.c:1867
+msgid "Start the first X server but then halt until we get a GO in the fifo"
+msgstr ""
+"Khởi động máy chủ X đầu tiên, sau đó ngừng cho tới khi có GO trong FIFO"
+
+#: daemon/gdm.c:1988 gui/gdmchooser.c:2057
+#, c-format
+msgid ""
+"Error on option %s: %s.\n"
+"Run '%s --help' to see a full list of available command line options.\n"
+msgstr ""
+"Lỗi với tùy chọn %s: %s.\n"
+"Hãy chạy '%s --help' để xem danh sách đầy đủ các tùy chọn dòng lệnh sẵn có.\n"
+
+#: daemon/gdm.c:2011
+msgid "Only root wants to run gdm\n"
+msgstr "Chỉ có root có thể chạy gdm\n"
+
+#: daemon/gdm.c:2027 daemon/gdm.c:2031 daemon/gdm.c:2106 daemon/gdm.c:2110
+#: daemon/gdm.c:2114 daemon/gdm.c:2118 daemon/gdm.c:2128 daemon/gdm.c:2134
+#: daemon/gdm.c:2145 daemon/misc.c:1648 daemon/misc.c:1652 daemon/misc.c:1656
+#: daemon/misc.c:1663 daemon/misc.c:1667 daemon/misc.c:1671
+#: daemon/server.c:521 daemon/server.c:534 daemon/slave.c:811
+#: daemon/slave.c:825 daemon/slave.c:835 daemon/slave.c:845 daemon/slave.c:857
+#: gui/gdmchooser.c:1936 gui/gdmchooser.c:1939 gui/gdmchooser.c:1942
+#: gui/gdmlogin.c:3958 gui/gdmlogin.c:3966 gui/gdmlogin.c:3969
+#: gui/greeter/greeter.c:1085 gui/greeter/greeter.c:1093
+#: gui/greeter/greeter.c:1096
+#, c-format
+msgid "%s: Error setting up %s signal handler: %s"
+msgstr "%s: Lỗi khi thiết lập trình xử lý tín hiệu %s: %s"
+
+#: daemon/gdm.c:2055
+msgid "gdm already running. Aborting!"
+msgstr "GDM đã chạy rồi. Dừng!"
+
+#: daemon/gdm.c:2154
+#, c-format
+msgid "%s: Error setting up CHLD signal handler"
+msgstr "%s: Lỗi khi thiết lập trình xử lý tín hiệu CHLD"
+
+#: daemon/gdm.c:2260
+#, c-format
+msgid "Can't open %s for writing"
+msgstr "Không thể mở %s để ghi"
+
+#: daemon/gdm.c:3527 daemon/gdm.c:3546
+#, fuzzy
+msgid "FLEXI_XSERVER request denied: Not authenticated"
+msgstr "Truy vấn yêu cầu vt bị từ chối: Không thể xác thực"
+
+#. Don't print the name to syslog as it might be
+#. * long and dangerous
+#: daemon/gdm.c:3564
+msgid "Unknown server type requested, using standard server."
+msgstr "Yêu cầu kiểu server lạ, dùng server chuẩn."
+
+#: daemon/gdm.c:3568
+#, c-format
+msgid ""
+"Requested server %s not allowed to be used for flexible servers, using "
+"standard server."
+msgstr ""
+"Server được yêu cầu %s không thể được dùng như là flexible server, dùng "
+"server chuẩn."
+
+#: daemon/gdm.c:3690
+#, fuzzy
+msgid "QUERY_LOGOUT_ACTION request denied: Not authenticated"
+msgstr "Truy vấn yêu cầu vt bị từ chối: Không thể xác thực"
+
+#: daemon/gdm.c:3748 daemon/gdm.c:3803
+#, fuzzy
+msgid "SET_LOGOUT_ACTION request denied: Not authenticated"
+msgstr "Truy vấn yêu cầu vt bị từ chối: Không thể xác thực"
+
+#: daemon/gdm.c:3848 daemon/gdm.c:3875
+#, fuzzy
+msgid "QUERY_VT request denied: Not authenticated"
+msgstr "Truy vấn yêu cầu vt bị từ chối: Không thể xác thực"
+
+#. Translators, don't translate the 'y' and 'n'
+#: daemon/misc.c:652
+msgid "y = Yes or n = No? >"
+msgstr "y = Đúng hoặc n = Sai? >"
+
+#: daemon/misc.c:1016
+#, c-format
+msgid "%s: Cannot get local addresses!"
+msgstr "%s: Không thể lấy địa chỉ cục bộ!"
+
+#: daemon/misc.c:1168
+#, c-format
+msgid "Could not setgid %d. Aborting."
+msgstr "Không thể setgid %d. Dừng."
+
+#: daemon/misc.c:1173
+#, c-format
+msgid "initgroups() failed for %s. Aborting."
+msgstr "lỗi initgroups() cho %s. Dừng."
+
+#: daemon/misc.c:1410 daemon/misc.c:1424
+#, c-format
+msgid "%s: Error setting signal %d to %s"
+msgstr "%s: Lỗi khi thiết lập tín hiệu %d thành %s"
+
+#: daemon/misc.c:2317
+#, c-format
+msgid ""
+"Last login:\n"
+"%s"
+msgstr ""
+"Lần đăng nhập cuối:\n"
+"%s"
+
+#: daemon/server.c:160
+msgid "Can not start fallback console"
+msgstr "Không thể khởi động console dự phòng"
+
+#: daemon/server.c:341
+#, c-format
+msgid ""
+"There already appears to be an X server running on display %s.  Should I try "
+"another display number?  If you answer no, I will attempt to start the "
+"server on %s again.%s"
+msgstr ""
+"Đã có một X server đang chạy trên display %s. Nên thử một số hiệu display "
+"khác? Nếu không thì sẽ khởi động server trên %s một lần nữa. %s"
+
+#: daemon/server.c:348
+msgid ""
+"  (You can change consoles by pressing Ctrl-Alt plus a function key, such as "
+"Ctrl-Alt-F7 to go to console 7.  X servers usually run on consoles 7 and "
+"higher.)"
+msgstr ""
+"(Bạn có thể chuyển qua console bằng cách nhấn tổ hợp phím Ctrl-Alt kèm theo "
+"một phím chức năng, ví dụ Ctrl-Alt-F7 sẽ chuyển sang console 7. X server "
+"thường chạy trên console 7 hoặc cao hơn.)"
+
+#: daemon/server.c:394
+#, c-format
+msgid "Display '%s' cannot be opened by Xnest"
+msgstr "Xnest không thể mở display '%s'"
+
+#: daemon/server.c:425
+#, c-format
+msgid "Display %s is busy. There is another X server running already."
+msgstr "Display %s đang bận. Có một X server khác đang chạy."
+
+#: daemon/server.c:509
+#, c-format
+msgid "%s: Error opening a pipe: %s"
+msgstr "%s: Lỗi khi mở ống dẫn: %s"
+
+#. Send X too busy
+#: daemon/server.c:794
+#, c-format
+msgid "%s: Cannot find a free display number"
+msgstr "%s: Không thể tìm thấy một số hiệu display có thể dùng."
+
+#: daemon/server.c:821
+#, c-format
+msgid "%s: Display %s busy.  Trying another display number."
+msgstr "%s: Display %s đang bận. Đang thử một số hiệu display khác."
+
+#: daemon/server.c:916
+#, c-format
+msgid "Invalid server command '%s'"
+msgstr "Lệnh server '%s' không hợp lệ"
+
+#: daemon/server.c:921
+#, c-format
+msgid "Server name '%s' not found, using standard server"
+msgstr "Không tìm thấy server tên '%s', dùng server mặc định"
+
+#: daemon/server.c:1098
+#, c-format
+msgid "%s: Could not open logfile for display %s!"
+msgstr "%s: Không thể mở logfile cho display %s!"
+
+#: daemon/server.c:1110 daemon/server.c:1116 daemon/server.c:1121
+#, c-format
+msgid "%s: Error setting %s to %s"
+msgstr "%s: Lỗi thiết lập %s thành %s"
+
+#: daemon/server.c:1158
+#, c-format
+msgid "%s: Empty server command for display %s"
+msgstr "%s: Không có lệnh server cho display %s"
+
+#: daemon/server.c:1172
+#, c-format
+msgid "%s: Server was to be spawned by uid %d but that user doesn't exist"
+msgstr ""
+"%s: Server được thực hiện bởi người dùng có uid %d nhưng người dùng này "
+"không tồn tại"
+
+#: daemon/server.c:1187 daemon/slave.c:2500 daemon/slave.c:2978
+#, c-format
+msgid "%s: Couldn't set groupid to %d"
+msgstr "%s: Không thể thiết lập groupid thành %d"
+
+#: daemon/server.c:1193 daemon/slave.c:2505 daemon/slave.c:2983
+#, c-format
+msgid "%s: initgroups() failed for %s"
+msgstr "%s: lỗi initgroups() cho %s"
+
+#: daemon/server.c:1199 daemon/slave.c:2510 daemon/slave.c:2988
+#, c-format
+msgid "%s: Couldn't set userid to %d"
+msgstr "%s: Không thể thiết lập userid thành %d"
+
+#: daemon/server.c:1206
+#, c-format
+msgid "%s: Couldn't set groupid to 0"
+msgstr "%s: Không thể thiết lập groupid bằng 0"
+
+#: daemon/server.c:1223
+#, c-format
+msgid "%s: Xserver not found: %s"
+msgstr "%s: Không tìm thấy Xserver: %s"
+
+#: daemon/server.c:1231
+#, c-format
+msgid "%s: Can't fork Xserver process!"
+msgstr "%s: Không thể nhân đôi tiến trình Xserver!"
+
+#: daemon/slave.c:307
+msgid "Can't set EGID to user GID"
+msgstr "Không thể đặt EGID cho GID người dùng"
+
+#: daemon/slave.c:315
+msgid "Can't set EUID to user UID"
+msgstr "Không thể đặt EUID cho UID người dùng"
+
+#: daemon/slave.c:1120
+msgid "Log in anyway"
+msgstr "Đăng nhập bằng mọi giá"
+
+#: daemon/slave.c:1122
+msgid ""
+"You are already logged in.  You can log in anyway, return to your previous "
+"login session, or abort this login"
+msgstr ""
+"Bạn đã đăng nhập rồi. Bạn có thể đăng nhập bằng mọi giá, trở về đăng nhập "
+"trước, hoặc hủy bỏ đăng nhập này."
+
+#: daemon/slave.c:1126
+msgid "Return to previous login"
+msgstr "Trở về đăng nhập trước"
+
+#: daemon/slave.c:1127 daemon/slave.c:1133
+msgid "Abort login"
+msgstr "Hủy bỏ đăng nhập"
+
+#: daemon/slave.c:1130
+msgid "You are already logged in.  You can log in anyway or abort this login"
+msgstr ""
+"Bạn đã đăng nhập rồi. Bạn có thể đăng nhập bằng mọi giá, hoặc hủy bỏ đăng "
+"nhập này."
+
+#: daemon/slave.c:1221
+msgid ""
+"I could not start the X\n"
+"server (your graphical environment)\n"
+"due to some internal error.\n"
+"Please contact your system administrator\n"
+"or check your syslog to diagnose.\n"
+"In the meantime this display will be\n"
+"disabled.  Please restart gdm when\n"
+"the problem is corrected."
+msgstr ""
+"Không thể khởi động X\n"
+"server do nguyên nhân bên trong.\n"
+"Vui lòng liên hệ quản trị hệ thống của bạn\n"
+"hoặc kiểm tra syslog để chẩn đoán lỗi.\n"
+"Bây giờ display này sẽ bị tắt. Vui lòng khởi\n"
+"động lại gdm khi đã giải quyết xong vấn đề."
+
+#: daemon/slave.c:1470
+#, c-format
+msgid "%s: cannot fork"
+msgstr "%s: không thể fork"
+
+#: daemon/slave.c:1517
+#, c-format
+msgid "%s: cannot open display %s"
+msgstr "%s: không thể mở display %s"
+
+#: daemon/slave.c:1668
+msgid ""
+"Could not execute the configuration program.  Make sure it's path is set "
+"correctly in the configuration file.  I will attempt to start it from the "
+"default location."
+msgstr ""
+"Không thể thực hiện trình cấu hình. Hãy bảo đảm rằng đường dẫn trong tập tin "
+"cấu hình vẫn đúng. Sẽ thử khởi động với đường dẫn mặc định."
+
+#: daemon/slave.c:1682
+msgid ""
+"Could not execute the configuration program.  Make sure it's path is set "
+"correctly in the configuration file."
+msgstr ""
+"Không thể thực hiện trình cấu hình. Hãy bảo đảm là đường dẫn trong tập tin "
+"cấu hình vẫn đúng."
+
+#: daemon/slave.c:1812
+msgid ""
+"Enter the root password\n"
+"to run the configuration."
+msgstr ""
+"Nhập mật khẩu root\n"
+"để chạy trình cấu hình."
+
+#: daemon/slave.c:2454 daemon/slave.c:2459
+#, c-format
+msgid "%s: Can't init pipe to gdmgreeter"
+msgstr "%s: Không thể khởi động ống dẫn tới gdmgreeter"
+
+#: daemon/slave.c:2582
+msgid ""
+"No servers were defined in the configuration file and XDMCP was disabled.  "
+"This can only be a configuration error.  So I have started a single server "
+"for you.  You should log in and fix the configuration.  Note that automatic "
+"and timed logins are disabled now."
+msgstr ""
+"Không thấy server nào trong tập tin cấu hình mà XDMCP lại bị tắt. Chỉ có thể "
+"do lỗi cấu hình. Vì thế nên sẽ khởi động một server đơn cho bạn. Bạn nên "
+"đăng nhập và sửa lại cấu hình. Chú ý là tính năng đăng nhập tự động và đăng "
+"nhập sẽ bị tắt."
+
+#: daemon/slave.c:2596
+msgid ""
+"I could not start the regular X server (your graphical environment) and so "
+"this is a failsafe X server.  You should log in and properly configure the X "
+"server."
+msgstr ""
+"Không thể khởi động X server bình thường vì thế đây là Máy chủ X Dự phòng. "
+"Bạn nên đăng nhập và cấu hình lại X server."
+
+#: daemon/slave.c:2605
+#, c-format
+msgid ""
+"The specified display number was busy, so this server was started on display "
+"%s."
+msgstr ""
+"Số hiệu display được yêu cầu đang bận, vì thế server được khởi động trên "
+"display %s."
+
+#: daemon/slave.c:2625
+msgid ""
+"The greeter program appears to be crashing.\n"
+"I will attempt to use a different one."
+msgstr ""
+"Trình chào mừng có vẻ đã hỏng.\n"
+"Sẽ thử dùng chương trình khác."
+
+#. Something went wrong
+#: daemon/slave.c:2646
+#, c-format
+msgid "%s: Cannot start greeter with gtk modules: %s. Trying without modules"
+msgstr ""
+"%s: Không thể khởi động trình chào mừng với module gtk: %s. Đang thử lại "
+"không dùng module"
+
+#: daemon/slave.c:2653
+#, c-format
+msgid "%s: Cannot start greeter trying default: %s"
+msgstr "%s: Không thể khởi động trình chào mừng. Thử dùng trình mặc định: %s"
+
+#: daemon/slave.c:2665
+msgid ""
+"Cannot start the greeter program, you will not be able to log in.  This "
+"display will be disabled.  Try logging in by other means and editing the "
+"configuration file"
+msgstr ""
+"Không thể khởi động trình chào mừng, bạn sẽ không thể đăng nhập. Display này "
+"sẽ bị tắt. Hãy thữ đăng nhập bằng cách khác và sửa lại tập tin cấu hình"
+
+#. If no greeter we really have to disable the display
+#: daemon/slave.c:2672
+#, c-format
+msgid "%s: Error starting greeter on display %s"
+msgstr "%s: Lỗi khi khởi động trình chào mừng trên display %s"
+
+#: daemon/slave.c:2676
+#, c-format
+msgid "%s: Can't fork gdmgreeter process"
+msgstr "%s: Không thể nhân đôi tiến trình gdmgreeter"
+
+#: daemon/slave.c:2761
+#, c-format
+msgid "%s: Can't open fifo!"
+msgstr "%s: Không thể mở fifo!"
+
+#: daemon/slave.c:2937
+#, c-format
+msgid "%s: Can't init pipe to gdmchooser"
+msgstr "%s: Không thể khởi động ống dẫn tới gdmchooser"
+
+#: daemon/slave.c:3035
+msgid ""
+"Cannot start the chooser program, you will probably not be able to log in.  "
+"Please contact the system administrator."
+msgstr ""
+"Không thể khởi động trình chọn lựa, bạn sẽ không thể đăng nhập được. Vui "
+"lòng liên hệ quản trị hệ thống."
+
+#: daemon/slave.c:3039
+#, c-format
+msgid "%s: Error starting chooser on display %s"
+msgstr "%s: Lỗi khởi động trình chào mừng trên display %s"
+
+#: daemon/slave.c:3042
+#, c-format
+msgid "%s: Can't fork gdmchooser process"
+msgstr "%s: Không thể nhân đôi tiến trình gdmchooser"
+
+#: daemon/slave.c:3338
+#, c-format
+msgid "%s: Could not open ~/.xsession-errors"
+msgstr "%s: Không thể mở ~/.xsession-errors"
+
+#: daemon/slave.c:3474
+#, c-format
+msgid "%s: Execution of PreSession script returned > 0. Aborting."
+msgstr "%s: Sự thực hiện script PreSession trả về giả trị > 0. Ngừng."
+
+#: daemon/slave.c:3503
+#, c-format
+msgid "Language %s does not exist, using %s"
+msgstr "Ngôn ngữ %s không tồn tại, hãy dùng %s"
+
+#: daemon/slave.c:3504
+msgid "System default"
+msgstr "Mặc định hệ thống"
+
+#: daemon/slave.c:3520
+#, c-format
+msgid "%s: Could not setup environment for %s. Aborting."
+msgstr "%s: Không thể thiết lập biến môi trường cho %s. Dừng."
+
+#: daemon/slave.c:3567
+#, c-format
+msgid "%s: setusercontext() failed for %s. Aborting."
+msgstr "%s: lỗi setusercontext() cho %s. Dừng."
+
+#: daemon/slave.c:3573
+#, c-format
+msgid "%s: Could not become %s. Aborting."
+msgstr "%s: Không thể trở thành %s. Dừng."
+
+#: daemon/slave.c:3636
+#, c-format
+msgid "%s: No Exec line in the session file: %s, starting failsafe GNOME"
+msgstr ""
+"%s: Không tìm thấy dòng Exec trong tập tin phiên làm việc: %s khởi động "
+"GNOME dự phòng"
+
+#: daemon/slave.c:3642
+msgid ""
+"The session you selected does not look valid.  I will run the GNOME failsafe "
+"session for you."
+msgstr ""
+"Phiên làm việc bạn chọn không hợp lệ. Sẽ chạy phiên làm việc GNOME dự phòng "
+"cho bạn."
+
+#: daemon/slave.c:3656
+#, c-format
+msgid ""
+"%s: Cannot find or run the base Xsession script, will try GNOME failsafe"
+msgstr ""
+"%s: Không thể tìm hoặc chạy script Xsession cơ bản, đang thử dùng GNOME dự "
+"phòng"
+
+#: daemon/slave.c:3662
+msgid ""
+"Cannot find or run the base session script, will try the GNOME failsafe "
+"session for you."
+msgstr ""
+"Không thể tìm hoặc chạy script Xsession cơ bản, đang thử dùng GNOME dự phòng."
+
+#. yaikes
+#: daemon/slave.c:3677
+#, c-format
+msgid "%s: gnome-session not found for a failsafe GNOME session, trying xterm"
+msgstr ""
+"%s: Không tìm thấy gnome-session để thực hiện phiên làm việc GNOME dự phòng, "
+"thử dùng xterm"
+
+#: daemon/slave.c:3682
+msgid ""
+"Could not find the GNOME installation, will try running the \"Failsafe xterm"
+"\" session."
+msgstr ""
+"Không thể tìm thấy bản cài đặt GNOME, thử thực hiện phiên làm việc \"xterm "
+"dự phòng\"."
+
+#: daemon/slave.c:3690
+msgid ""
+"This is the Failsafe Gnome session.  You will be logged into the 'Default' "
+"session of Gnome with no startup scripts run.  This is only to fix problems "
+"in your installation."
+msgstr ""
+"Đây là Phiên làm việc Gnome dự phòng. Bạn đã đăng nhập vào phiên làm việc "
+"'Mặc định' của Gnome và không có script khởi động. Chế độ này chỉ được dùng "
+"để sửa lỗi trong bản cài đặt của bạn."
+
+#: daemon/slave.c:3705
+msgid "Cannot find \"xterm\" to start a failsafe session."
+msgstr "Không thể tìm thấy \"xterm\" để khởi động phiên làm việc dự phòng."
+
+#: daemon/slave.c:3718
+msgid ""
+"This is the Failsafe xterm session.  You will be logged into a terminal "
+"console so that you may fix your system if you cannot log in any other way.  "
+"To exit the terminal emulator, type 'exit' and an enter into the window."
+msgstr ""
+"Đây là Phiên làm việc xterm dự phòng. Bạn đã đăng nhập vào terminal console "
+"để có thể sửa lỗi trên hệ thống của bạn khi bạn không còn có thể đăng nhập "
+"theo cách khác. Để thoát khỏi bộ giả lập terminal này, hãy gõ 'exit' và nhấn "
+"enter để vào cửa sổ."
+
+#: daemon/slave.c:3745
+#, c-format
+msgid "%s: User not allowed to log in"
+msgstr "%s: Người dùng không được phép đăng nhập"
+
+#: daemon/slave.c:3748
+msgid "The system administrator has disabled your account."
+msgstr "Quản trị hệ thống đã vô hiệu hóa account của bạn."
+
+#: daemon/slave.c:3777
+msgid "Error! Unable to set executable context."
+msgstr "Lỗi! Không thể đặt ngữ cảnh thực thi."
+
+#. will go to .xsession-errors
+#: daemon/slave.c:3785 daemon/slave.c:3790
+#, c-format
+msgid "%s: Could not exec %s %s %s"
+msgstr "%s: Không thể thực hiện %s %s %s"
+
+#. we can't really be any more specific
+#: daemon/slave.c:3801
+msgid "Cannot start the session due to some internal error."
+msgstr "Không thể khởi động phiên làm việc vì lỗi nội tại."
+
+#: daemon/slave.c:3855
+#, c-format
+msgid "%s: User passed auth but getpwnam(%s) failed!"
+msgstr "%s: Người dùng đã chuyển auth nhưng getpwnam(%s) thất bại!"
+
+#: daemon/slave.c:3869
+#, c-format
+msgid "%s: Execution of PostLogin script returned > 0. Aborting."
+msgstr "%s: Sự thực hiện script PostLogin trả về giả trị > 0. Dừng."
+
+#: daemon/slave.c:3878
+#, c-format
+msgid ""
+"Your home directory is listed as:\n"
+"'%s'\n"
+"but it does not appear to exist.  Do you want to log in with the / (root) "
+"directory as your home directory?\n"
+"\n"
+"It is unlikely anything will work unless you use a failsafe session."
+msgstr ""
+"Thư mục nhà của bạn là: \n"
+"'%s'\n"
+"nhưng nó không tồn tại. Bạn có muốn đăng nhập với thư mục root là thư mục "
+"nhà của bạn?\n"
+"\n"
+"Có lẽ sẽ không hoạt động được trừ khi bạn đang dùng phiên làm việc dự phòng."
+
+#: daemon/slave.c:3886
+#, c-format
+msgid "%s: Home directory for %s: '%s' does not exist!"
+msgstr "%s: Thư mục nhà của %s: '%s' không tồn tại!"
+
+#: daemon/slave.c:4063
+msgid ""
+"GDM could not write to your authorization file.  This could mean that you "
+"are out of disk space or that your home directory could not be opened for "
+"writing.  In any case, it is not possible to log in.  Please contact your "
+"system administrator"
+msgstr ""
+"GDM không thể ghi vào tập tin xác thực của bạn. Có lẽ là do hết đĩa hoặc "
+"không thể mở thư mục home để ghi. Trong mọi trường hợp đều không thể đăng "
+"nhập. Vui lòng liên hệ với quản trị hệ thống của bạn."
+
+#: daemon/slave.c:4139
+#, c-format
+msgid "%s: Error forking user session"
+msgstr "%s: Lỗi khi nhân đôi phiên làm việc của người dùng"
+
+#: daemon/slave.c:4220
+msgid ""
+"Your session only lasted less than 10 seconds.  If you have not logged out "
+"yourself, this could mean that there is some installation problem or that "
+"you may be out of diskspace.  Try logging in with one of the failsafe "
+"sessions to see if you can fix this problem."
+msgstr ""
+"Phiên làm việc của bạn lần cuối cùng kéo dài ít hơn 10 giây. Nếu bạn không "
+"tự đăng xuất, điều này nghĩa là có vài vấn đề về cài đặt hoặc bạn đã hết "
+"đĩa. Hãy thử đăng nhập vào một phiên làm việc dự phòng để xem có giải quyết "
+"được vấn đề hay không."
+
+#: daemon/slave.c:4228
+msgid "View details (~/.xsession-errors file)"
+msgstr "Xem chi tiết (tập tin ~/.xsession-errors)"
+
+#: daemon/slave.c:4372
+msgid "GDM detected a shutdown or reboot in progress."
+msgstr "GDM xác định máy đang trong quá trình tắt hoặc khởi động lại."
+
+#: daemon/slave.c:4466
+#, c-format
+msgid "Ping to %s failed, whacking display!"
+msgstr "Ping tới %s thất bại, whacking display!"
+
+#: daemon/slave.c:4752
+#, c-format
+msgid "%s: Fatal X error - Restarting %s"
+msgstr "%s: Lỗi X nghiêm trọng. Khởi động lại %s"
+
+#: daemon/slave.c:4846
+msgid ""
+"Login sound requested on non-local display or the play software cannot be "
+"run or the sound does not exist"
+msgstr ""
+"Âm thanh đăng nhập được yêu cầu trên display ở xa hoặc phần mềm phát âm "
+"không chạy hoặc không có âm thanh đó"
+
+#: daemon/slave.c:5201
+#, c-format
+msgid "%s: Failed starting: %s"
+msgstr "%s: Lỗi khởi động: %s"
+
+#: daemon/slave.c:5209 daemon/slave.c:5348
+#, c-format
+msgid "%s: Can't fork script process!"
+msgstr "%s: Không thể nhân đôi tiến trình!"
+
+#: daemon/slave.c:5303
+#, c-format
+msgid "%s: Failed creating pipe"
+msgstr "%s: Lỗi tạo ống dẫn"
+
+#: daemon/slave.c:5342
+#, c-format
+msgid "%s: Failed executing: %s"
+msgstr "%s: Lỗi thực thi: %s"
+
+#: daemon/verify-crypt.c:75 daemon/verify-pam.c:1030 daemon/verify-shadow.c:76
+msgid ""
+"\n"
+"Incorrect username or password.  Letters must be typed in the correct case."
+msgstr ""
+"\n"
+"Tên người dùng sai hoặc mật khẩu sai. Các ký tự phải được gõ chính xác, phân "
+"biệt chữ hoa,thường."
+
+#: daemon/verify-crypt.c:80 daemon/verify-pam.c:1040 daemon/verify-shadow.c:81
+msgid "Please make sure the Caps Lock key is not enabled."
+msgstr "Vui lòng đảm bảo không bật phím Caps Lock."
+
+#. I think I'll add the buttons next to this
+#: daemon/verify-crypt.c:127 daemon/verify-pam.c:439
+#: daemon/verify-shadow.c:126 gui/gdmlogin.c:3069
+msgid "Please enter your username"
+msgstr "Nhập tên người dùng của bạn"
+
+#. login: is whacked always translate to Username:
+#: daemon/verify-crypt.c:128 daemon/verify-pam.c:339 daemon/verify-pam.c:340
+#: daemon/verify-pam.c:341 daemon/verify-pam.c:426 daemon/verify-pam.c:785
+#: daemon/verify-shadow.c:127 gui/gdmlogin.c:1073 gui/gdmlogin.c:1087
+#: gui/gdmlogin.c:1873 gui/gdmlogin.c:2372 gui/greeter/greeter.c:281
+#: gui/greeter/greeter_parser.c:1061
+msgid "Username:"
+msgstr "Tên người dùng:"
+
+#: daemon/verify-crypt.c:166 daemon/verify-pam.c:342 daemon/verify-pam.c:343
+#: daemon/verify-pam.c:487 daemon/verify-shadow.c:184 gui/gdmlogin.c:1905
+msgid "Password:"
+msgstr "Mật khẩu:"
+
+#: daemon/verify-crypt.c:184 daemon/verify-crypt.c:198
+#: daemon/verify-shadow.c:202 daemon/verify-shadow.c:216
+#, c-format
+msgid "Couldn't authenticate user \"%s\""
+msgstr "Không thể xác thực người dùng \"%s\""
+
+#: daemon/verify-crypt.c:211 daemon/verify-pam.c:881
+#: daemon/verify-shadow.c:229
+#, c-format
+msgid "Root login disallowed on display '%s'"
+msgstr "Không được quyền đăng nhập root trên display '%s'"
+
+#: daemon/verify-crypt.c:213 daemon/verify-shadow.c:231
+msgid "The system administrator is not allowed to login from this screen"
+msgstr "Quản trị hệ thống không được phép đăng nhập vào màn hình này"
+
+#: daemon/verify-crypt.c:229 daemon/verify-crypt.c:253
+#: daemon/verify-shadow.c:247 daemon/verify-shadow.c:271
+#, c-format
+msgid "User %s not allowed to log in"
+msgstr "Người dùng %s không được phép đăng nhập"
+
+#: daemon/verify-crypt.c:231 daemon/verify-crypt.c:255 daemon/verify-pam.c:927
+#: daemon/verify-pam.c:1211 daemon/verify-shadow.c:249
+#: daemon/verify-shadow.c:273
+msgid ""
+"\n"
+"The system administrator has disabled your account."
+msgstr ""
+"\n"
+"Quản trị hệ thống đã vô hiệu hóa account của bạ."
+
+#: daemon/verify-crypt.c:278 daemon/verify-crypt.c:416 daemon/verify-pam.c:945
+#: daemon/verify-pam.c:1228 daemon/verify-shadow.c:296
+#: daemon/verify-shadow.c:434
+#, c-format
+msgid "Cannot set user group for %s"
+msgstr "Không thể thiết lập nhóm người dùng cho %s"
+
+#: daemon/verify-crypt.c:280 daemon/verify-crypt.c:419 daemon/verify-pam.c:947
+#: daemon/verify-pam.c:1231 daemon/verify-shadow.c:298
+#: daemon/verify-shadow.c:437
+msgid ""
+"\n"
+"Cannot set your user group, you will not be able to log in, please contact "
+"your system administrator."
+msgstr ""
+"\n"
+"Không thể thiết lập nhóm người dùng của bạn, bạn không thể đăng nhập, vui "
+"lòng liên hệ quản trị hệ thống."
+
+#: daemon/verify-crypt.c:291 daemon/verify-crypt.c:364
+#: daemon/verify-shadow.c:309 daemon/verify-shadow.c:383
+#, c-format
+msgid "Password of %s has expired"
+msgstr "Mật khẩu của %s đã quá hạn"
+
+#: daemon/verify-crypt.c:293 daemon/verify-shadow.c:311
+msgid ""
+"You are required to change your password.\n"
+"Please choose a new one."
+msgstr ""
+"Bạn được yêu cầu thay đổi mật khẩu của bạn.\n"
+"Vui lòng chọn mật khẩu mới."
+
+#: daemon/verify-crypt.c:304 daemon/verify-shadow.c:322
+msgid ""
+"\n"
+"Cannot change your password, you will not be able to log in, please try "
+"again later or contact your system administrator."
+msgstr ""
+"\n"
+"Không thể thay đổi mật khẩu, bạn không thể đăng nhập, vui lòng thử lại hoặc "
+"liên hệ quản trị hệ thống."
+
+#: daemon/verify-crypt.c:347 daemon/verify-crypt.c:355
+#: daemon/verify-shadow.c:366 daemon/verify-shadow.c:374
+msgid ""
+"Your password has been changed but you may have to change it again, please "
+"try again later or contact your system administrator."
+msgstr ""
+"Mật khẩu của bạn đã được thay đổi nhưng có thể cần phải thay đổi lần nữa, "
+"vui lòng thử lại lát nữa hoặc liên hệ quản trị hệ thống."
+
+#: daemon/verify-crypt.c:366 daemon/verify-shadow.c:385
+msgid ""
+"Your password has expired.\n"
+"Only a system administrator can now change it"
+msgstr ""
+"Mật khẩu của bạn đã hết hạn.\n"
+"Chỉ có quản trị hệ thống có thể thay đổi nó"
+
+#: daemon/verify-crypt.c:373 daemon/verify-shadow.c:392
+msgid "Internal error on passwdexpired"
+msgstr "Lỗi nội tại passwdexpired"
+
+#: daemon/verify-crypt.c:375 daemon/verify-shadow.c:394
+msgid ""
+"An internal error occured, you will not be able to log in.\n"
+"Please try again later or contact your system administrator."
+msgstr ""
+"Phát hiện lỗi nội tại, bạn sẽ không thể đăng nhập.\n"
+"Vui lòng thử lại chốc nữa hoặc liên lạc với quản trị hệ thống."
+
+#: daemon/verify-crypt.c:411 daemon/verify-shadow.c:429
+#, c-format
+msgid "Cannot get passwd structure for %s"
+msgstr "Không thể lấy cấu trúc passwd cho %s"
+
+#: daemon/verify-pam.c:344
+msgid "You are required to change your password immediately (password aged)"
+msgstr "Bạn được yêu cầu thay đổi mật khẩu ngay tức thì (hết hạn mật khẩu)"
+
+#: daemon/verify-pam.c:345
+msgid "You are required to change your password immediately (root enforced)"
+msgstr "Bạn được yêu cầu thay đổi mật khẩu ngay tức thì (root ép buộc)"
+
+#: daemon/verify-pam.c:346
+msgid "Your account has expired; please contact your system administrator"
+msgstr "Tài khoản của bạn đã hết hạn: vui lòng liên lạc với quản trị hệ thống"
+
+#: daemon/verify-pam.c:347
+msgid "No password supplied"
+msgstr "Chưa cung cấp mật khẩu"
+
+#: daemon/verify-pam.c:348
+msgid "Password unchanged"
+msgstr "Không đổi mật khẩu"
+
+#: daemon/verify-pam.c:349
+msgid "Can not get username"
+msgstr "Không thể lấy tên người dùng"
+
+#: daemon/verify-pam.c:350
+msgid "Retype new UNIX password:"
+msgstr "Gõ lại mật khẩu UNIX mới:"
+
+#: daemon/verify-pam.c:351
+msgid "Enter new UNIX password:"
+msgstr "Nhập mật khẩu UNIX mới:"
+
+#: daemon/verify-pam.c:352
+msgid "(current) UNIX password:"
+msgstr "Mật khẩu UNIX (hiện thời):"
+
+#: daemon/verify-pam.c:353
+msgid "Error while changing NIS password."
+msgstr "Lỗi thay đổi mật khẩu NIS."
+
+#: daemon/verify-pam.c:354
+msgid "You must choose a longer password"
+msgstr "Bạn phải chọn mật khẩu dài hơn"
+
+#: daemon/verify-pam.c:355
+msgid "Password has been already used. Choose another."
+msgstr "Mật khẩu đã được dùng rồi. Hãy chọn cái khác."
+
+#: daemon/verify-pam.c:356
+msgid "You must wait longer to change your password"
+msgstr "Bạn phải chờ lâu hơn để thay đổi mật khẩu của bạn"
+
+#: daemon/verify-pam.c:357
+msgid "Sorry, passwords do not match"
+msgstr "Rất tiếc, mật khẩu không khớp"
+
+#: daemon/verify-pam.c:651
+msgid "Cannot setup pam handle with null display"
+msgstr "Không thể cài đặt bộ xử lý PAM với đăng nhập rỗng và/hoặc display"
+
+#: daemon/verify-pam.c:668
+#, c-format
+msgid "Unable to establish service %s: %s\n"
+msgstr "Không thể thiết lập dịch vụ %s: %s\n"
+
+#: daemon/verify-pam.c:681
+#, c-format
+msgid "Can't set PAM_TTY=%s"
+msgstr "Không thể gán PAM_TTY=%s"
+
+#: daemon/verify-pam.c:691
+#, c-format
+msgid "Can't set PAM_RHOST=%s"
+msgstr "Không thể gán PAM_RHOST=%s"
+
+#. #endif
+#. PAM_FAIL_DELAY
+#. is not really an auth problem, but it will
+#. pretty much look as such, it shouldn't really
+#. happen
+#: daemon/verify-pam.c:838 daemon/verify-pam.c:856 daemon/verify-pam.c:1150
+#: daemon/verify-pam.c:1162
+msgid "Couldn't authenticate user"
+msgstr "Không thể xác thực người dùng"
+
+#: daemon/verify-pam.c:884
+msgid ""
+"\n"
+"The system administrator is not allowed to login from this screen"
+msgstr ""
+"\n"
+"Quản trị hệ thống không được phép đăng nhập vào màn hình này"
+
+#: daemon/verify-pam.c:908 daemon/verify-pam.c:1192
+#, c-format
+msgid "Authentication token change failed for user %s"
+msgstr "Quá trình xác thực thay đổi token thất bại cho người dùng %s"
+
+#: daemon/verify-pam.c:910 daemon/verify-pam.c:1195
+msgid ""
+"\n"
+"The change of the authentication token failed. Please try again later or "
+"contact the system administrator."
+msgstr ""
+"\n"
+"Sự thay đổi của xác thực token thất bại. Vui lòng thử lại hoặc liên hệ quản "
+"trị hệ thống."
+
+#: daemon/verify-pam.c:925 daemon/verify-pam.c:1208
+#, c-format
+msgid "User %s no longer permitted to access the system"
+msgstr "Người dùng %s không còn được phép truy cập hệ thống"
+
+#: daemon/verify-pam.c:931 daemon/verify-pam.c:1214
+#, c-format
+msgid "User %s not permitted to gain access at this time"
+msgstr "Người dùng %s không được phép truy cập vào lúc này"
+
+#: daemon/verify-pam.c:933
+msgid ""
+"\n"
+"The system administrator has disabled access to the system temporarily."
+msgstr ""
+"\n"
+"Quản trị hệ thống đã vô hiệu hóa truy cập hệ thống tạm thời."
+
+#: daemon/verify-pam.c:938 daemon/verify-pam.c:1221
+#, c-format
+msgid "Couldn't set acct. mgmt for %s"
+msgstr "Không thể thiết lập acct. mgmt cho %s"
+
+#: daemon/verify-pam.c:966 daemon/verify-pam.c:1251
+#, c-format
+msgid "Couldn't set credentials for %s"
+msgstr "Không thể thiết lập giấy ủy nhiệm cho %s"
+
+#: daemon/verify-pam.c:980 daemon/verify-pam.c:1266
+#, c-format
+msgid "Couldn't open session for %s"
+msgstr "Không thể mở phiên làm việc cho %s"
+
+#: daemon/verify-pam.c:1034
+msgid ""
+"\n"
+"Authentication failed.  Letters must be typed in the correct case."
+msgstr ""
+"\n"
+"Xác thực thất bại. Các ký tự phải được gõ đúng chữ hoa/chữ thường."
+
+#: daemon/verify-pam.c:1050 daemon/verify-pam.c:1153 daemon/verify-pam.c:1165
+msgid "Authentication failed"
+msgstr "Quá trình xác thực thất bại."
+
+#: daemon/verify-pam.c:1119
+msgid "Automatic login"
+msgstr "Tự động đăng nhập"
+
+#: daemon/verify-pam.c:1217
+msgid ""
+"\n"
+"The system administrator has disabled your access to the system temporary."
+msgstr ""
+"\n"
+"Quản trị hệ thống đã vô hiệu hóa tạm thời quyền truy cập hệ thống của bạn."
+
+#: daemon/verify-pam.c:1420 daemon/verify-pam.c:1422
+msgid "Can't find PAM configuration for gdm."
+msgstr "Không thể tìm thấy cấu hình PAM cho GDM."
+
+#: daemon/xdmcp.c:369
+#, c-format
+msgid "%s: Could not get server hostname: %s!"
+msgstr "%s: Không thể lấy tên máy chủ server: %s!"
+
+#: daemon/xdmcp.c:394
+#, c-format
+msgid "%s: Could not create socket!"
+msgstr "%s: Không thể tạo socket!"
+
+#: daemon/xdmcp.c:487
+#, c-format
+msgid "%s: Could not bind to XDMCP socket!"
+msgstr "%s: Không thể bind XDMCP socket!"
+
+#: daemon/xdmcp.c:559
+#, c-format
+msgid "%s: Could not create XDMCP buffer!"
+msgstr "%s: Không thể tạo vùng đệm XDMCP!"
+
+#: daemon/xdmcp.c:565
+#, c-format
+msgid "%s: Could not read XDMCP header!"
+msgstr "%s: Không thể đọc header XDMCP!"
+
+#: daemon/xdmcp.c:572
+#, c-format
+msgid "%s: Incorrect XDMCP version!"
+msgstr "%s: Phiên bản XDMCP không đúng!"
+
+#: daemon/xdmcp.c:652 daemon/xdmcp.c:659
+#, c-format
+msgid "%s: Unknown opcode from host %s"
+msgstr "%s: Mã lạ từ máy %s"
+
+#: daemon/xdmcp.c:693 daemon/xdmcp.c:1138
+#, c-format
+msgid "%s: Could not extract authlist from packet"
+msgstr "%s: Không thể trích lấy authlist từ gói tin"
+
+#: daemon/xdmcp.c:709 daemon/xdmcp.c:1158
+#, c-format
+msgid "%s: Error in checksum"
+msgstr "%s: Lỗi checksum"
+
+#: daemon/xdmcp.c:1121
+#, c-format
+msgid "%s: Could not read display address"
+msgstr "%s: Không thể đọc địa chỉ display"
+
+#: daemon/xdmcp.c:1129
+#, c-format
+msgid "%s: Could not read display port number"
+msgstr "%s: Không tìm thấy số hiệu cổng display"
+
+#: daemon/xdmcp.c:1169 daemon/xdmcp.c:1193
+#, c-format
+msgid "%s: Bad address"
+msgstr "%s: Địa chỉ sai"
+
+#: daemon/xdmcp.c:1352 daemon/xdmcp.c:1359
+#, c-format
+msgid "Denied XDMCP query from host %s"
+msgstr "Truy vấn XDMCP bị từ chối từ máy chủ %s"
+
+#: daemon/xdmcp.c:1585 daemon/xdmcp.c:1592
+#, c-format
+msgid "%s: Got REQUEST from banned host %s"
+msgstr "%s: Nhận được REQUEST từ máy bị cấm %s"
+
+#: daemon/xdmcp.c:1604 daemon/xdmcp.c:1980 daemon/xdmcp.c:2390
+#, c-format
+msgid "%s: Could not read Display Number"
+msgstr "%s: Không thể đọc Số hiệu Display"
+
+#: daemon/xdmcp.c:1611
+#, c-format
+msgid "%s: Could not read Connection Type"
+msgstr "%s: Không thể đọc kiểu kết nối"
+
+#: daemon/xdmcp.c:1618
+#, c-format
+msgid "%s: Could not read Client Address"
+msgstr "%s: Không thể đọc địa chỉ Client"
+
+#: daemon/xdmcp.c:1626
+#, c-format
+msgid "%s: Could not read Authentication Names"
+msgstr "%s: Không thể đọc Tên xác thực"
+
+#: daemon/xdmcp.c:1635
+#, c-format
+msgid "%s: Could not read Authentication Data"
+msgstr "%s: Không thể đọc dữ liệu xác thực"
+
+#: daemon/xdmcp.c:1645
+#, c-format
+msgid "%s: Could not read Authorization List"
+msgstr "%s: Không thể đọc Danh sách Xác thực"
+
+#: daemon/xdmcp.c:1662
+#, c-format
+msgid "%s: Could not read Manufacturer ID"
+msgstr "%s: Không thể đọc ID Nhà sản xuất"
+
+#: daemon/xdmcp.c:1688 daemon/xdmcp.c:1695
+#, c-format
+msgid "%s: Failed checksum from %s"
+msgstr "%s: Lỗi checksum từ %s"
+
+#: daemon/xdmcp.c:1956 daemon/xdmcp.c:1963
+#, c-format
+msgid "%s: Got Manage from banned host %s"
+msgstr "%s: Nhận được Manage từ máy bị cấm %s"
+
+#: daemon/xdmcp.c:1973 daemon/xdmcp.c:2397
+#, c-format
+msgid "%s: Could not read Session ID"
+msgstr "%s: Không thể đọc Session ID"
+
+#: daemon/xdmcp.c:1987
+#, c-format
+msgid "%s: Could not read Display Class"
+msgstr "%s: Không thể đọc Display Class"
+
+#: daemon/xdmcp.c:2108 daemon/xdmcp.c:2115 daemon/xdmcp.c:2127
+#: daemon/xdmcp.c:2237 daemon/xdmcp.c:2244 daemon/xdmcp.c:2256
+#, c-format
+msgid "%s: Could not read address"
+msgstr "%s: Không thể đọc địa chỉ"
+
+#: daemon/xdmcp.c:2367 daemon/xdmcp.c:2381
+#, c-format
+msgid "%s: Got KEEPALIVE from banned host %s"
+msgstr "%s: Nhận được KEEPALIVE từ máy bị cấm %s"
+
+#: daemon/xdmcp.c:2690 daemon/xdmcp.c:2697 daemon/xdmcp.c:2703
+#, c-format
+msgid "%s: No XDMCP support"
+msgstr "%s: Không hỗ trợ XDMCP"
+
+#: gui/gdmXnestchooser.c:166 gui/gdmXnestchooser.c:173
+msgid "Xnest command line"
+msgstr "Lệnh Xnest"
+
+#: gui/gdmXnestchooser.c:166 gui/gdmXnestchooser.c:173
+msgid "STRING"
+msgstr "CHUỖI"
+
+#: gui/gdmXnestchooser.c:167 gui/gdmXnestchooser.c:174
+msgid "Extra options for Xnest"
+msgstr "Tùy chọn bổ sung cho Xnest"
+
+#: gui/gdmXnestchooser.c:167 gui/gdmXnestchooser.c:174
+msgid "OPTIONS"
+msgstr "TÙY CHỌN"
+
+#: gui/gdmXnestchooser.c:168 gui/gdmXnestchooser.c:178
+msgid "Run in background"
+msgstr "Chạy đằng sau"
+
+#: gui/gdmXnestchooser.c:175
+msgid "Just run Xnest, no query (no chooser)"
+msgstr "Chỉ chạy Xnest, không truy vấn (không trình chọn lựa)"
+
+#: gui/gdmXnestchooser.c:176
+msgid "Do direct query instead of indirect (chooser)"
+msgstr "Thực hiện truy vấn trực tiếp thay vì gián tiếp (trình chọn lựa)"
+
+#: gui/gdmXnestchooser.c:177
+msgid "Run broadcast instead of indirect (chooser)"
+msgstr "Chạy broadcast thay vì gián tiếp (bộ chọn lựa)"
+
+#: gui/gdmXnestchooser.c:179
+msgid "Don't check for running gdm"
+msgstr "Không kiểm tra GDM có đang chạy hay không"
+
+#. markup
+#: gui/gdmXnestchooser.c:521
+msgid "Xnest doesn't exist."
+msgstr "Xnest không tồn tại."
+
+#: gui/gdmXnestchooser.c:523
+msgid "Please ask your system administrator to install it."
+msgstr "Vui lòng yêu cầu quản trị hệ thống cài đặt nó."
+
+#. markup
+#: gui/gdmXnestchooser.c:549
+msgid "Indirect XDMCP is not enabled"
+msgstr "XDMCP gián giếp không được bật"
+
+#: gui/gdmXnestchooser.c:551 gui/gdmXnestchooser.c:572
+msgid ""
+"Please ask your system administrator to enable it in the GDM configurator "
+"program."
+msgstr "Vui lòng yêu cầu quản trị hệ thống bật nó trong trình cấu hình GDM."
+
+#. markup
+#: gui/gdmXnestchooser.c:570
+msgid "XDMCP is not enabled"
+msgstr "XDMCP chưa được bật"
+
+#. markup
+#: gui/gdmXnestchooser.c:604
+msgid "GDM is not running"
+msgstr "GDM chưa chạy"
+
+#: gui/gdmXnestchooser.c:606
+msgid "Please ask your system administrator to start it."
+msgstr "Vui lòng yêu cầu quản trị hệ thống khởi động nó."
+
+#. markup
+#: gui/gdmXnestchooser.c:623
+msgid "Could not find a free display number"
+msgstr "Không tìm thấy số hiệu display dùng được"
+
+#.
+#. * Translatable strings file generated by Glade.
+#. * Add this file to your project's POTFILES.in.
+#. * DO NOT compile it as part of your application.
+#.
+#: gui/gdmchooser-strings.c:7 gui/gdmchooser.glade.h:5
+msgid "GDM Host Chooser"
+msgstr "Bộ chọn máy chủ GDM"
+
+#: gui/gdmchooser-strings.c:8 gui/gdmchooser.glade.h:6
+msgid "How to use this application"
+msgstr "Dùng ứng dụng này thế nào"
+
+#: gui/gdmchooser-strings.c:9 gui/gdmchooser.glade.h:8
+msgid "Probe the network"
+msgstr "Thăm dò mạng"
+
+#: gui/gdmchooser-strings.c:10 gui/gdmchooser.glade.h:4
+msgid "Exit the application"
+msgstr "Thoát khỏi ứng dụng"
+
+#: gui/gdmchooser-strings.c:11 gui/gdmchooser.glade.h:7
+msgid "Open a session to the selected host"
+msgstr "Mở một phiên làm việc tới máy chủ được chọn"
+
+#: gui/gdmchooser-strings.c:12 gui/gdmchooser.glade.h:3
+msgid "C_onnect"
+msgstr "_Kết nối"
+
+#: gui/gdmchooser-strings.c:13 gui/gdmchooser.glade.h:10
+msgid "Status"
+msgstr "Trạng thái"
+
+#: gui/gdmchooser-strings.c:14 gui/gdmchooser.glade.h:2
+msgid "A_dd host: "
+msgstr "_Thêm máy: "
+
+#. EOF
+#: gui/gdmchooser-strings.c:15 gui/gdmchooser.glade.h:1
+#: gui/gdmsetup-strings.c:19 gui/gdmsetup-strings.c:21
+#: gui/gdmsetup-strings.c:26 gui/gdmsetup-strings.c:32
+#: gui/gdmsetup-strings.c:37 gui/gdmsetup-strings.c:47
+#: gui/gdmsetup-strings.c:85 gui/gdmsetup.glade.h:2
+msgid "*"
+msgstr "*"
+
+#: gui/gdmchooser-strings.c:16 gui/gdmchooser.glade.h:9
+msgid "Query and add this host to the above list"
+msgstr "Truy vấn và thêm máy vào danh sách trên"
+
+#: gui/gdmchooser-strings.c:17 gui/gdmchooser.glade.h:11
+msgid "_Add"
+msgstr "T_hêm"
+
+#: gui/gdmchooser.c:80
+msgid "Please wait: scanning local network..."
+msgstr "Vui lòng chờ: đang quét mạng nội bộ..."
+
+#: gui/gdmchooser.c:81
+msgid "No serving hosts were found."
+msgstr "Không tìm thấy máy chủ dịch vụ."
+
+#: gui/gdmchooser.c:82
+msgid "Choose a ho_st to connect to:"
+msgstr "Hãy chọn một máy để nối vào:"
+
+#. markup
+#: gui/gdmchooser.c:659
+msgid "Cannot connect to remote server"
+msgstr "Không thể kết nối máy ở xa"
+
+#: gui/gdmchooser.c:660
+#, c-format
+msgid ""
+"The host \"%s\" is not willing to support a login session right now.  Please "
+"try again later."
+msgstr ""
+"Máy \"%s\" ngay bây giờ không sẵn sàng hỗ trợ phiên đăng nhập. Vui lòng thử "
+"lại chốc nữa."
+
+#. markup
+#: gui/gdmchooser.c:1284
+msgid "Did not receive response from server"
+msgstr "Không nhận được hồi âm từ máy chủ"
+
+#: gui/gdmchooser.c:1285
+#, c-format
+msgid ""
+"Did not receive any response from host \"%s\" in %d seconds.  Perhaps the "
+"host is not turned on, or is not willing to support a login session right "
+"now.  Please try again later."
+msgstr ""
+"Không nhận được bất kỳ hồi đáp nào từ máy \"%s\" trong %d giây. Có lẽ máy đó "
+"chưa được bật, hoặc chưa sẵn sàng hỗ trợ đăng nhập. Vui lòng thử lại sau."
+
+#: gui/gdmchooser.c:1391
+msgid "Cannot find host"
+msgstr "Không tìm thấy máy"
+
+#: gui/gdmchooser.c:1392
+#, c-format
+msgid "I cannot find the host \"%s\", perhaps you have mistyped it."
+msgstr "Không thể tìm thấy máy \"%s\", có lẽ bạn gõ sai tên."
+
+#: gui/gdmchooser.c:1678
+msgid ""
+"The main area of this application shows the hosts on the local network that "
+"have \"XDMCP\" enabled. This allows users to login remotely to other "
+"machines as if they were logged on using the console.\n"
+"\n"
+"You can rescan the network for new hosts by clicking \"Refresh\".  When you "
+"have selected a host click \"Connect\" to open a session to that machine."
+msgstr ""
+"Phần chính của ứng dụng hiển thị các máy chủ trên mạng nội bộ mà có bật "
+"\"XDMCP\". Nó cho phép các người dùng đăng nhập từ xa vào các máy khác như "
+"thể họ đăng nhập bằng console.\n"
+"\n"
+"Bạn có thể quét lại mạng để phát hiện các máy chủ mới bằng cách nhấn nút "
+"'Quét lại'. Khi bạn chọn một máy, nhấn \"Kết nối\" để mở một phiên làm việc "
+"tới máy đó."
+
+#: gui/gdmchooser.c:1725
+#, c-format
+msgid "Can't open default host icon: %s"
+msgstr "Không thể mở biểu tượng máy chủ mặc định: %s"
+
+#: gui/gdmchooser.c:1950 gui/gdmlogin.c:3977 gui/gdmlogin.c:3984
+#: gui/greeter/greeter.c:1104 gui/greeter/greeter.c:1111
+msgid "Could not set signal mask!"
+msgstr "Không thể thiết lập mặt nạ tín hiệu!"
+
+#: gui/gdmchooser.c:1956
+msgid "Socket for xdm communication"
+msgstr "Socket cho liên lạc xdm"
+
+#: gui/gdmchooser.c:1956
+msgid "SOCKET"
+msgstr "SOCKET"
+
+#: gui/gdmchooser.c:1959
+msgid "Client address to return in response to xdm"
+msgstr "Địa chỉ client để trả lời XDM"
+
+#: gui/gdmchooser.c:1959
+msgid "ADDRESS"
+msgstr "ĐỊA CHỈ"
+
+#: gui/gdmchooser.c:1962
+msgid "Connection type to return in response to xdm"
+msgstr "Loại kết nối để trả lời XDM"
+
+#: gui/gdmchooser.c:1962
+msgid "TYPE"
+msgstr "KIỂU"
+
+#. markup
+#: gui/gdmchooser.c:2091
+msgid "Cannot run chooser"
+msgstr "Không thể chạy bộ chọn lựa"
+
+#: gui/gdmchooser.c:2092
+#, c-format
+msgid ""
+"The chooser version (%s) does not match the daemon version (%s).  You have "
+"probably just upgraded gdm.  Please restart the gdm daemon or reboot the "
+"computer."
+msgstr ""
+"Phiên bản bộ chọn lựa (%s) không khớp với phiên bản daemon (%s). Bạn nên "
+"nâng cấp GDM. Vui lòng khởi động lại GDM daemon hoặc khởi động lại máy."
+
+#. markup
+#: gui/gdmcomm.c:405 gui/gdmphotosetup.c:70
+msgid "GDM (The GNOME Display Manager) is not running."
+msgstr "GDM (Trình quản lý Display GNOME) chưa chạy."
+
+#: gui/gdmcomm.c:408 gui/gdmphotosetup.c:73
+msgid ""
+"You might in fact be using a different display manager, such as KDM (KDE "
+"Display Manager) or xdm."
+msgstr ""
+"Bạn thật ra có thể đang dùng trình quản lý display khác, như KDE (Trình quản "
+"lý Display KDE) hoặc xdm."
+
+#: gui/gdmcomm.c:411 gui/gdmphotosetup.c:76
+msgid ""
+"If you still wish to use this feature, either start GDM yourself or ask your "
+"system administrator to start GDM."
+msgstr ""
+"Nếu bạn vẫn muốn dùng tính năng này, hãy tự khởi động GDM, hoặc yêu cầu quản "
+"trị hệ thống khởi động GDM."
+
+#. markup
+#: gui/gdmcomm.c:433 gui/gdmflexiserver.c:697
+msgid "Cannot communicate with GDM (The GNOME Display Manager)"
+msgstr "Không thể liên lạc với GDM (Trình quản lý Display GNOME)"
+
+#: gui/gdmcomm.c:436 gui/gdmflexiserver.c:700
+msgid "Perhaps you have an old version of GDM running."
+msgstr "Có lẽ bạn đang chạy một phiên bản GDM cũ."
+
+#: gui/gdmcomm.c:453 gui/gdmcomm.c:456
+msgid "Cannot communicate with gdm, perhaps you have an old version running."
+msgstr "Không thể liên lạc với GDM, có lẽ bạn đang chạy một phiên bản cũ."
+
+#: gui/gdmcomm.c:459
+msgid "The allowed limit of flexible X servers reached."
+msgstr "Đã tiến tới giới hạn số flexible X server."
+
+#: gui/gdmcomm.c:461
+msgid "There were errors trying to start the X server."
+msgstr "Xảy ra lỗi khi cố thử khởi động X server."
+
+#: gui/gdmcomm.c:463
+msgid "The X server failed.  Perhaps it is not configured well."
+msgstr "X server bị lỗi. Có lẽ do cấu hình sai."
+
+#: gui/gdmcomm.c:466
+msgid "Too many X sessions running."
+msgstr "Quá nhiều X session đang chạy."
+
+#: gui/gdmcomm.c:468
+msgid ""
+"The nested X server (Xnest) cannot connect to your current X server.  You "
+"may be missing an X authorization file."
+msgstr ""
+"X server con không thể kết nối với X server hiện thời. Có thể do thiếu tập "
+"tin xác thực."
+
+#: gui/gdmcomm.c:473
+msgid ""
+"The nested X server (Xnest) is not available, or gdm is badly configured.\n"
+"Please install the Xnest package in order to use the nested login."
+msgstr ""
+"X server con (Xnest) không sẵn sàng, hoặc gdm được cấu hình sai.\n"
+"Vui lòng cài đặt gói phần mềm Xnest để dùng đăng nhập lồng nhau."
+
+#: gui/gdmcomm.c:478
+msgid ""
+"The X server is not available, it is likely that gdm is badly configured."
+msgstr "X server không sẵn sàng, có thể do GDM được cấu hình sai."
+
+#: gui/gdmcomm.c:482
+msgid ""
+"Trying to set an unknown logout action, or trying to set a logout action "
+"which is not available."
+msgstr ""
+"Đang thử thiết lập hành động đăng xuất lạ, hoặc thử thiết lập hành động đăng "
+"xuất không sẵn sàng."
+
+#: gui/gdmcomm.c:485
+msgid "Virtual terminals not supported."
+msgstr "Không hỗ trợ terminal ảo."
+
+#: gui/gdmcomm.c:487
+msgid "Trying to change to an invalid virtual terminal number."
+msgstr "Đang thử thay đổi số terminal ảo không hợp lệ."
+
+#: gui/gdmcomm.c:489
+msgid "Trying to update an unsupported configuration key."
+msgstr "Đang thử cập nhật khóa cấu hình chưa được hỗ trợ."
+
+#: gui/gdmcomm.c:491
+msgid ""
+"You do not seem to have authentication needed be for this operation.  "
+"Perhaps your .Xauthority file is not set up correctly."
+msgstr ""
+"Có lẽ không cần xác thực để thực hiện thao tác này. Có lẽ tập tin .Xautority "
+"của bạn không được thiết lập đúng."
+
+#: gui/gdmcomm.c:495
+msgid "Too many messages were sent to gdm and it hung upon us."
+msgstr ""
+"Quá nhiều thông báo được gởi đến gdm và nó bị treo vì những thông báo này."
+
+#: gui/gdmcomm.c:498
+msgid "Unknown error occured."
+msgstr "Xảy ra lỗi lạ."
+
+#: gui/gdmflexiserver-xnest.desktop.in.h:1
+msgid "Log in as another user inside a nested window"
+msgstr "Đăng nhập với tên người dùng khác trong một cửa sổ con"
+
+#: gui/gdmflexiserver-xnest.desktop.in.h:2
+msgid "New Login in a Nested Window"
+msgstr "Đăng nhập mới trong cửa sổ lồng nhau"
+
+#. markup
+#: gui/gdmflexiserver.c:100
+msgid "Cannot change display"
+msgstr "Không thể thay đổi display"
+
+#: gui/gdmflexiserver.c:177
+msgid "Nobody"
+msgstr "Không ai cả"
+
+#: gui/gdmflexiserver.c:212
+#, c-format
+msgid "Display %s on virtual terminal %d"
+msgstr "Display %s trên terminal ảo %d"
+
+#: gui/gdmflexiserver.c:217
+#, c-format
+msgid "Nested display %s on virtual terminal %d"
+msgstr "Display lồng %s trên terminal ảo %d"
+
+#: gui/gdmflexiserver.c:247 gui/gdmlogin.c:2917
+#: gui/greeter/greeter_item_ulist.c:449
+msgid "Username"
+msgstr "Tên người dùng"
+
+#: gui/gdmflexiserver.c:256
+msgid "Display"
+msgstr "Display"
+
+#: gui/gdmflexiserver.c:310
+msgid "Open Displays"
+msgstr "Mở Display"
+
+#. parent
+#. flags
+#: gui/gdmflexiserver.c:313
+msgid "_Open New Display"
+msgstr "_Mở Display mới"
+
+#: gui/gdmflexiserver.c:315
+msgid "Change to _Existing Display"
+msgstr "Đổi sang _Display đã có"
+
+#: gui/gdmflexiserver.c:323
+msgid ""
+"There are some displays already open.  You can select one from the list "
+"below or open a new one."
+msgstr ""
+"Có vài display đã mở rồi. Bạn có thể chọn từ danh sách bên dưới hoặc mở cái "
+"mới."
+
+#: gui/gdmflexiserver.c:390 gui/gdmflexiserver.c:785
+msgid "Can't lock screen"
+msgstr "Không thể khóa màn hình"
+
+#: gui/gdmflexiserver.c:393 gui/gdmflexiserver.c:788
+msgid "Can't disable xscreensaver display hacks"
+msgstr "Không thể tắt xscreensaver display hack"
+
+#: gui/gdmflexiserver.c:548
+msgid "Choose server"
+msgstr "Chọn server"
+
+#: gui/gdmflexiserver.c:559
+msgid "Choose the X server to start"
+msgstr "Chọn server khởi động"
+
+#: gui/gdmflexiserver.c:565
+msgid "Standard server"
+msgstr "Server chuẩn"
+
+#: gui/gdmflexiserver.c:632
+msgid "Send the specified protocol command to gdm"
+msgstr "Gửi lệnh giao thức xác định tới GDN"
+
+#: gui/gdmflexiserver.c:632
+msgid "COMMAND"
+msgstr "LỆNH"
+
+#: gui/gdmflexiserver.c:633
+msgid "Xnest mode"
+msgstr "Chế độ Xnest"
+
+#: gui/gdmflexiserver.c:634
+msgid "Do not lock current screen"
+msgstr "Không khóa màn hình hiện thời"
+
+#: gui/gdmflexiserver.c:635
+msgid "Debugging output"
+msgstr "Ngõ ra debug"
+
+#: gui/gdmflexiserver.c:636
+msgid "Authenticate before running --command"
+msgstr "Xác thực trước khi chạy --command"
+
+#. markup
+#: gui/gdmflexiserver.c:725
+msgid "You do not seem to have the authentication needed for this operation"
+msgstr "Bạn dường như không có xác thực để thực hiện thao tác này"
+
+#: gui/gdmflexiserver.c:729
+msgid "Perhaps your .Xauthority file is not set up correctly."
+msgstr "Có lẽ tập tin .Xautority của bạn không được thiết lập đúng."
+
+#. markup
+#: gui/gdmflexiserver.c:753
+msgid "You do not seem to be logged in on the console"
+msgstr "Hình như bạn chưa đăng nhập vào console"
+
+#: gui/gdmflexiserver.c:756
+msgid "Starting a new login only works correctly on the console."
+msgstr "Khởi động đăng nhập mới chỉ làm việc đúng trên console."
+
+#. markup
+#: gui/gdmflexiserver.c:803
+msgid "Cannot start new display"
+msgstr "Không thể khởi động display mới"
+
+#: gui/gdmflexiserver.desktop.in.h:1
+msgid "Log in as another user without logging out"
+msgstr "Đăng nhập với tên người dùng khác mà không cần đăng xuất"
+
+#: gui/gdmflexiserver.desktop.in.h:2
+msgid "New Login"
+msgstr "Đăng nhập mới"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:53
+msgid "A-M|Albanian"
+msgstr "A-M|Tiếng Albani"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:55
+msgid "A-M|Amharic"
+msgstr "A-M|Amharic"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:57
+msgid "A-M|Arabic (Egypt)"
+msgstr "A-M|Ả Rập (Ai Cập)"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:59
+msgid "A-M|Arabic (Lebanon)"
+msgstr "A-M|Ả Rập (Lebanon)"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:61
+#, fuzzy
+msgid "A-M|Armenian"
+msgstr "A-M|Tiếng Albani"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:63
+msgid "A-M|Azerbaijani"
+msgstr "A-M|Azerbaijani"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:65
+msgid "A-M|Basque"
+msgstr "A-M|Basque"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:67
+msgid "A-M|Belarusian"
+msgstr "A-M|Belarusian"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:69
+msgid "A-M|Bengali"
+msgstr "A-M|Bengali"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:71
+msgid "A-M|Bengali (India)"
+msgstr "A-M|Bengali (India)"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:73
+msgid "A-M|Bulgarian"
+msgstr "A-M|Bungari"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:75
+msgid "A-M|Bosnian"
+msgstr "A-M|Bosnian"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:77
+msgid "A-M|Catalan"
+msgstr "A-M|Catalan"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:79
+msgid "A-M|Chinese (simplified)"
+msgstr "A-M|Trung Hoa (simplified)"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:81
+msgid "A-M|Chinese (traditional)"
+msgstr "A-M|Trung Hoa (traditional)"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:83
+msgid "A-M|Croatian"
+msgstr "A-M|Croatia"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:85
+msgid "A-M|Czech"
+msgstr "A-M|Séc"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:87
+msgid "A-M|Danish"
+msgstr "A-M|Đan Mạch"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:89
+msgid "A-M|Dutch"
+msgstr "A-M|Hà Lan"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:91
+msgid "A-M|English"
+msgstr "A-M|Anh"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:93
+#, fuzzy
+msgid "A-M|English (USA)"
+msgstr "A-M|Anh"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:95
+#, fuzzy
+msgid "A-M|English (Australia)"
+msgstr "A-M|Anh (Úc)"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:97
+#, fuzzy
+msgid "A-M|English (UK)"
+msgstr "A-M|Anh"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:99
+#, fuzzy
+msgid "A-M|English (Canada)"
+msgstr "A-M|Anh (Canada)"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:101
+msgid "A-M|English (Ireland)"
+msgstr "A-M|Anh (Ai len)"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:103
+#, fuzzy
+msgid "A-M|English (Denmark)"
+msgstr "A-M|Anh (Ai len)"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:105
+msgid "A-M|Estonian"
+msgstr "A-M|Estonia"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:107
+msgid "A-M|Finnish"
+msgstr "A-M|Phần Lan"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:109
+msgid "A-M|French"
+msgstr "A-M|Pháp"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:111
+#, fuzzy
+msgid "A-M|French (Belgium)"
+msgstr "A-M|Pháp"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:113
+#, fuzzy
+msgid "A-M|French (Switzerland)"
+msgstr "A-M|Anh (Ai len)"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:115
+msgid "A-M|Galician"
+msgstr "A-M|Galician"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:117
+msgid "A-M|German"
+msgstr "A-M|Đức"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:119
+#, fuzzy
+msgid "A-M|German (Austria)"
+msgstr "A-M|Anh (Úc)"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:121
+msgid "A-M|German (Switzerland)"
+msgstr ""
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:123
+msgid "A-M|Greek"
+msgstr "A-M|Hy Lạp"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:125
+msgid "A-M|Gujarati"
+msgstr "A-M|Gujarati"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:127 gui/gdmlanguages.c:129
+msgid "A-M|Hebrew"
+msgstr "A-M|Do Thái"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:131
+msgid "A-M|Hindi"
+msgstr "A-M|Hindi"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:133
+msgid "A-M|Hungarian"
+msgstr "A-M|Hungari"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:135
+msgid "A-M|Icelandic"
+msgstr "A-M|Icelandic"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:137
+msgid "A-M|Indonesian"
+msgstr "A-M|Indonesian"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:139
+msgid "A-M|Interlingua"
+msgstr "A-M|Interlingua"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:141
+msgid "A-M|Irish"
+msgstr "A-M|Irish"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:143
+msgid "A-M|Italian"
+msgstr "A-M|Ý"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:145
+msgid "A-M|Japanese"
+msgstr "A-M|Nhật"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:147
+msgid "A-M|Kannada"
+msgstr "A-M|Kannada"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:149
+msgid "A-M|Korean"
+msgstr "A-M|Hàn Quốc"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:151
+msgid "A-M|Latvian"
+msgstr "A-M|Latvia"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:153
+msgid "A-M|Lithuanian"
+msgstr "A-M|Lithuania"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:155
+msgid "A-M|Macedonian"
+msgstr "A-M|Macedonia"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:157
+msgid "A-M|Malay"
+msgstr "A-M|Mã Lai"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:159
+msgid "A-M|Malayalam"
+msgstr "A-M|Malayalam"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:161
+msgid "A-M|Marathi"
+msgstr "A-M|Marathi"
+
+#. Note translate the A-M to the A-M you used in the group label
+#: gui/gdmlanguages.c:163
+msgid "A-M|Mongolian"
+msgstr "A-M|Mongolian"
+
+#. Note translate the N-Z to the N-Z you used in the group label
+#: gui/gdmlanguages.c:165
+msgid "N-Z|Norwegian (bokmal)"
+msgstr "N-Z|Na Uy (bokmal)"
+
+#. Note translate the N-Z to the N-Z you used in the group label
+#: gui/gdmlanguages.c:167
+msgid "N-Z|Norwegian (nynorsk)"
+msgstr "N-Z|Na Uy (nynorsk)"
+
+#. Note translate the N-Z to the N-Z you used in the group label
+#: gui/gdmlanguages.c:169
+msgid "N-Z|Oriya"
+msgstr "N-Z|Oriya"
+
+#. Note translate the N-Z to the N-Z you used in the group label
+#: gui/gdmlanguages.c:171
+msgid "N-Z|Panjabi"
+msgstr "N-Z|Panjabi"
+
+#. Note translate the N-Z to the N-Z you used in the group label
+#: gui/gdmlanguages.c:173
+msgid "N-Z|Persian"
+msgstr "N-Z|Persian"
+
+#. Note translate the N-Z to the N-Z you used in the group label
+#: gui/gdmlanguages.c:175
+msgid "N-Z|Polish"
+msgstr "N-Z|Ba Lan"
+
+#. Note translate the N-Z to the N-Z you used in the group label
+#: gui/gdmlanguages.c:177
+msgid "N-Z|Portuguese"
+msgstr "N-Z|Bồ Đào Nha"
+
+#. Note translate the N-Z to the N-Z you used in the group label
+#: gui/gdmlanguages.c:179
+msgid "N-Z|Portuguese (Brazilian)"
+msgstr "N-Z|Bồ Đào Nha (Brazil)"
+
+#. Note translate the N-Z to the N-Z you used in the group label
+#: gui/gdmlanguages.c:181
+msgid "N-Z|Romanian"
+msgstr "N-Z|Rumani"
+
+#. Note translate the N-Z to the N-Z you used in the group label
+#: gui/gdmlanguages.c:183
+msgid "N-Z|Russian"
+msgstr "N-Z|Nga"
+
+#. Note translate the N-Z to the N-Z you used in the group label
+#: gui/gdmlanguages.c:185 gui/gdmlanguages.c:187
+msgid "N-Z|Serbian"
+msgstr "N-Z|Serbian"
+
+#. Note translate the N-Z to the N-Z you used in the group label
+#: gui/gdmlanguages.c:189
+msgid "N-Z|Serbian (Latin)"
+msgstr "N-Z|Serbian (Latin)"
+
+#. Note translate the N-Z to the N-Z you used in the group label
+#: gui/gdmlanguages.c:191
+msgid "N-Z|Serbian (Jekavian)"
+msgstr "N-Z|Serbian (Jekavian)"
+
+#. Note translate the N-Z to the N-Z you used in the group label
+#: gui/gdmlanguages.c:193
+msgid "N-Z|Slovak"
+msgstr "N-Z|Slovak"
+
+#. Note translate the N-Z to the N-Z you used in the group label
+#: gui/gdmlanguages.c:195
+msgid "N-Z|Slovenian"
+msgstr "N-Z|Slovenia"
+
+#. Note translate the N-Z to the N-Z you used in the group label
+#: gui/gdmlanguages.c:197
+msgid "N-Z|Spanish"
+msgstr "N-Z|Tây Ban Nha"
+
+#. Note translate the N-Z to the N-Z you used in the group label
+#: gui/gdmlanguages.c:199
+msgid "N-Z|Spanish (Mexico)"
+msgstr "N-Z|Tây Ban Nha (Mexico)"
+
+#. Note translate the N-Z to the N-Z you used in the group label
+#: gui/gdmlanguages.c:201
+msgid "N-Z|Swedish"
+msgstr "N-Z|Thụy Điển"
+
+#. Note translate the N-Z to the N-Z you used in the group label
+#: gui/gdmlanguages.c:203
+msgid "N-Z|Swedish (Finland)"
+msgstr "N-Z|Thụy Điển (Phần Lan)"
+
+#. Note translate the N-Z to the N-Z you used in the group label
+#: gui/gdmlanguages.c:205
+msgid "N-Z|Tamil"
+msgstr "N-Z|Tamil"
+
+#. Note translate the N-Z to the N-Z you used in the group label
+#: gui/gdmlanguages.c:207
+msgid "N-Z|Telugu"
+msgstr "N-Z|Telugu"
+
+#. Note translate the N-Z to the N-Z you used in the group label
+#: gui/gdmlanguages.c:209
+msgid "N-Z|Thai"
+msgstr "N-Z|Thái"
+
+#. Note translate the N-Z to the N-Z you used in the group label
+#: gui/gdmlanguages.c:211
+msgid "N-Z|Turkish"
+msgstr "N-Z|Thổ Nhĩ Kỳ"
+
+#. Note translate the N-Z to the N-Z you used in the group label
+#: gui/gdmlanguages.c:213
+msgid "N-Z|Ukrainian"
+msgstr "N-Z|Ukraina"
+
+#. Note translate the N-Z to the N-Z you used in the group label
+#: gui/gdmlanguages.c:215
+msgid "N-Z|Vietnamese"
+msgstr "N-Z|Việt Nam"
+
+#. Note translate the N-Z to the N-Z you used in the group label
+#: gui/gdmlanguages.c:217
+msgid "N-Z|Walloon"
+msgstr "N-Z|Walloon"
+
+#. Note translate the N-Z to the N-Z you used in the group label
+#: gui/gdmlanguages.c:219
+msgid "N-Z|Welsh"
+msgstr "N-Z|Welsh"
+
+#. Note translate the N-Z to the N-Z you used in the group label
+#: gui/gdmlanguages.c:221
+msgid "N-Z|Yiddish"
+msgstr "N-Z|Yiddish"
+
+#. This is the POSIX/C locale for english, should really be in Other
+#: gui/gdmlanguages.c:223
+msgid "Other|POSIX/C English"
+msgstr "Khác| Tiếng Anh POSIX/C"
+
+#. This should be the same as in the front of the language strings
+#. * else the languages will appear in the "Other" submenu
+#: gui/gdmlanguages.c:419
+msgid "A-M"
+msgstr "A-M"
+
+#. This should be the same as in the front of the language strings
+#. * else the languages will appear in the "Other" submenu
+#: gui/gdmlanguages.c:427
+msgid "N-Z"
+msgstr "N-Z"
+
+#: gui/gdmlogin.c:222 gui/greeter/greeter_parser.c:1047
+#, c-format
+msgid "User %s will login in %d seconds"
+msgstr "Người dùng %s sẽ đăng nhập trong vòng %d giây"
+
+#: gui/gdmlogin.c:447
+#, c-format
+msgid "%s: String too long!"
+msgstr "%s: Chuỗi quá dài!"
+
+#: gui/gdmlogin.c:449
+#, c-format
+msgid "%sWelcome to %s%s"
+msgstr "%sChào mừng đến %s%s"
+
+#. markup
+#: gui/gdmlogin.c:537
+msgid "Could not fork a new process!"
+msgstr "Không thể tạo tiến trình mới!"
+
+#: gui/gdmlogin.c:539
+msgid "You likely won't be able to log in either."
+msgstr "Bạn có lẽ không thể đăng nhập được."
+
+#: gui/gdmlogin.c:583 gui/greeter/greeter_system.c:45
+msgid "Are you sure you want to reboot the machine?"
+msgstr "Bạn có muốn khởi động máy?"
+
+#. markup
+#: gui/gdmlogin.c:585 gui/gdmlogin.c:2781 gui/greeter/greeter_parser.c:1027
+#: gui/greeter/greeter_system.c:47 gui/greeter/greeter_system.c:168
+msgid "_Reboot"
+msgstr "_Khởi động máy"
+
+#: gui/gdmlogin.c:597 gui/greeter/greeter_system.c:58
+msgid "Are you sure you want to shut down the machine?"
+msgstr "Bạn có muốn tắt máy?"
+
+#. markup
+#: gui/gdmlogin.c:599 gui/gdmlogin.c:2794 gui/greeter/greeter_parser.c:1017
+#: gui/greeter/greeter_system.c:60 gui/greeter/greeter_system.c:180
+msgid "Shut _Down"
+msgstr "_Tắt máy"
+
+#: gui/gdmlogin.c:619 gui/greeter/greeter_system.c:70
+msgid "Are you sure you want to suspend the machine?"
+msgstr "Bạn có muốn tạm dừng máy?"
+
+#. markup
+#: gui/gdmlogin.c:621 gui/gdmlogin.c:2808 gui/greeter/greeter_system.c:72
+msgid "_Suspend"
+msgstr "Tạm _dừng máy"
+
+#: gui/gdmlogin.c:685 gui/gdmlogin.c:3752 gui/greeter/greeter.c:164
+#: gui/greeter/greeter.c:858
+msgid "Welcome"
+msgstr "Chào mừng"
+
+#: gui/gdmlogin.c:688 gui/gdmlogin.c:3755 gui/greeter/greeter.c:167
+#: gui/greeter/greeter.c:861
+#, c-format
+msgid "Welcome to %n"
+msgstr "Chào mừng dùng %n"
+
+#: gui/gdmlogin.c:736 gui/greeter/greeter.c:192
+msgid "TimedLoginDelay was less than 5.  I'll just use 5."
+msgstr "TimedLoginDelay nhỏ hơn 5. Chỉnh lại bằng 5."
+
+#: gui/gdmlogin.c:854 gui/greeter/greeter_session.c:119
+#, c-format
+msgid ""
+"Your preferred session type %s is not installed on this machine.\n"
+"Do you wish to make %s the default for future sessions?"
+msgstr ""
+"Kiểu phiên làm việc ưa thích %s của bạn không được cài đặt trên máy này.\n"
+"Bạn có muốn dùng %s như là kiểu phiên làm việc mặt định?"
+
+#. markup
+#: gui/gdmlogin.c:860 gui/gdmlogin.c:887 gui/gdmlogin.c:965
+#: gui/greeter/greeter_action_language.c:143 gui/greeter/greeter_session.c:125
+#: gui/greeter/greeter_session.c:155
+msgid "Make _Default"
+msgstr "Làm _Mặc định"
+
+#: gui/gdmlogin.c:860 gui/greeter/greeter_session.c:125
+msgid "Just _Log In"
+msgstr "_Chỉ đăng nhập"
+
+#. never_encoding
+#. no_group
+#. untranslated
+#. markup
+#: gui/gdmlogin.c:879 gui/gdmlogin.c:959
+#: gui/greeter/greeter_action_language.c:137 gui/greeter/greeter_session.c:147
+#, c-format
+msgid ""
+"You have chosen %s for this session, but your default setting is %s.\n"
+"Do you wish to make %s the default for future sessions?"
+msgstr ""
+"Bạn đã chọn %s cho phiên làm việc này, nhưng thông số mặc định là %s.\n"
+"Bạn có muốn dùng %s làm mặc định không?"
+
+#: gui/gdmlogin.c:887 gui/gdmlogin.c:965
+#: gui/greeter/greeter_action_language.c:143 gui/greeter/greeter_session.c:155
+msgid "Just For _This Session"
+msgstr "_Chỉ với Phiên làm việc này"
+
+#: gui/gdmlogin.c:897 gui/greeter/greeter_session.c:168
+#, c-format
+msgid ""
+"You have chosen %s for this session.\n"
+"If you wish to make %s the default for future sessions,\n"
+"run the 'switchdesk' utility\n"
+"(System->Desktop Switching Tool from the panel menu)."
+msgstr ""
+"Bạn đã chọn %s cho phiên làm việc này.\n"
+"Nếu bạn có muốn dùng %s làm mặc định,\n"
+"chạy tiện ích 'switchdesk'\n"
+"(Hệ thống->Công cụ chuyển Desktop từ menu)."
+
+#: gui/gdmlogin.c:941 gui/gdmlogin.c:950
+#: gui/greeter/greeter_action_language.c:53
+#: gui/greeter/greeter_action_language.c:121
+#: gui/greeter/greeter_action_language.c:129
+msgid "System Default"
+msgstr "Mặc định hệ thống"
+
+#: gui/gdmlogin.c:1074 gui/gdmlogin.c:1088 gui/gdmlogin.c:1875
+#: gui/gdmlogin.c:2373 gui/gdmlogin.c:3023
+msgid "_Username:"
+msgstr "Tên _người dùng:"
+
+#: gui/gdmlogin.c:1146
+#, c-format
+msgid "%s session selected"
+msgstr "Phiên làm việc %s được chọn"
+
+#: gui/gdmlogin.c:1172 gui/gdmlogin.c:1482 gui/greeter/greeter_session.c:271
+msgid "_Last"
+msgstr "_Cuối cùng"
+
+#: gui/gdmlogin.c:1183 gui/greeter/greeter_session.c:277
+msgid "Log in using the session that you have used last time you logged in"
+msgstr "Đăng nhập dùng phiên làm việc mà bạn dùng trước đây"
+
+#: gui/gdmlogin.c:1194 gui/greeter/greeter_session.c:264
+msgid "Failsafe Gnome"
+msgstr "Gnome Dự phòng"
+
+#: gui/gdmlogin.c:1195 gui/greeter/greeter_session.c:265
+msgid "Failsafe xterm"
+msgstr "Xterm Dự phòng"
+
+#: gui/gdmlogin.c:1344 gui/greeter/greeter_session.c:429
+#, c-format
+msgid "%s: Session directory %s not found!"
+msgstr "%s: Không tìm thấy thư mục phiên làm việc %s!"
+
+#: gui/gdmlogin.c:1350 gui/greeter/greeter_session.c:437
+msgid "Yaikes, nothing found in the session directory."
+msgstr "Không có gì trong thư mục phiên làm việc."
+
+#: gui/gdmlogin.c:1361 gui/greeter/greeter_session.c:449
+msgid "Failsafe _Gnome"
+msgstr "_Gnome Dự phòng"
+
+#: gui/gdmlogin.c:1363 gui/greeter/greeter_session.c:451
+msgid ""
+"This is a failsafe session that will log you into GNOME.  No startup scripts "
+"will be read and it is only to be used when you can't log in otherwise.  "
+"GNOME will use the 'Default' session."
+msgstr ""
+"Đây là phiên làm việc dự phòng bạn dùng để đăng nhập vào GNOME, không thực "
+"hiện các script khởi động. Chỉ được dùng khi bạn không thể đăng nhập bằng "
+"cách khác. GNOME sẽ dùng phiên làm việc 'Mặc định'."
+
+#: gui/gdmlogin.c:1386 gui/greeter/greeter_session.c:473
+msgid "Failsafe _Terminal"
+msgstr "_Terminal Dự phòng"
+
+#: gui/gdmlogin.c:1388 gui/greeter/greeter_session.c:475
+msgid ""
+"This is a failsafe session that will log you into a terminal.  No startup "
+"scripts will be read and it is only to be used when you can't log in "
+"otherwise.  To exit the terminal, type 'exit'."
+msgstr ""
+"Đây là phiên làm việc dự phòng được dùng để đăng nhập vào terminal. Không có "
+"script khởi động nào được thực hiện. Chỉ dùng phiên làm việc này khi bạn "
+"không thể đăng nhập bằng cách khác. Để thoát khỏi terminal, gõ 'exit'."
+
+#: gui/gdmlogin.c:1409 gui/greeter/greeter_session.c:495
+msgid "No default session link found. Using Failsafe GNOME.\n"
+msgstr ""
+"Không tìm thấy liên kết phiên làm việc mặc định. Dùng GNOME Dự phòng.\n"
+
+#. never_encoding
+#. no_group
+#. untranslated
+#. makrup
+#: gui/gdmlogin.c:1453
+#, c-format
+msgid "%s language selected"
+msgstr "Ngôn ngữ %s được chọn"
+
+#: gui/gdmlogin.c:1493
+msgid "Log in using the language that you have used last time you logged in"
+msgstr "Đăng nhập dùng ngôn ngữ mà bạn đã dùng trước đây"
+
+#: gui/gdmlogin.c:1497
+msgid "_System Default"
+msgstr "_Mặc định hệ thống"
+
+#: gui/gdmlogin.c:1508
+msgid "Log in using the default system language"
+msgstr "Đăng nhập dùng ngôn ngữ hệ thống mặc định"
+
+#: gui/gdmlogin.c:1528
+msgid "_Other"
+msgstr "_Khác"
+
+#: gui/gdmlogin.c:1906
+msgid "_Password:"
+msgstr "_Mật khẩu:"
+
+#. markup
+#. translators:  This is a nice and evil eggie text, translate
+#. * to your favourite currency
+#: gui/gdmlogin.c:2130 gui/greeter/greeter.c:434
+msgid "Please insert 25 cents to log in."
+msgstr "Vui lòng bỏ 25 đồng để đăng nhập."
+
+#: gui/gdmlogin.c:2381
+msgid "Doubleclick on the user to log in"
+msgstr "Nhấp đúp lên người dùng để đăng nhập"
+
+#: gui/gdmlogin.c:2506
+msgid "GNOME Desktop Manager"
+msgstr "Trình quản lý desktop GNOME (GDM)"
+
+#: gui/gdmlogin.c:2532 gui/greeter/greeter_item.c:139
+msgid "%a %b %d, %H:%M"
+msgstr "%d %a %b, %H:%M"
+
+#: gui/gdmlogin.c:2534 gui/greeter/greeter_item.c:143
+#, fuzzy
+msgid "%a %b %d, %l:%M %p"
+msgstr "%d %a %b, %I:%M %p"
+
+#: gui/gdmlogin.c:2583
+msgid "Finger"
+msgstr "Finger"
+
+#: gui/gdmlogin.c:2689
+msgid "GDM Login"
+msgstr "Đăng nhập"
+
+#: gui/gdmlogin.c:2732 gui/greeter/greeter_parser.c:997
+msgid "_Session"
+msgstr "_Phiên làm việc"
+
+#: gui/gdmlogin.c:2739 gui/greeter/greeter_parser.c:992
+msgid "_Language"
+msgstr "N_gôn ngữ"
+
+#: gui/gdmlogin.c:2751 gui/greeter/greeter_system.c:134
+msgid "_XDMCP Chooser..."
+msgstr "Bộ chọn _XDMCP..."
+
+#: gui/gdmlogin.c:2758 gui/greeter/greeter_system.c:141
+#: gui/greeter/greeter_system.c:331
+msgid ""
+"Run an XDMCP chooser which will allow you to log into available remote "
+"machines, if there are any."
+msgstr "Chạy Bộ chọn XDMCP, cho phép bạn đăng nhập vào máy từ xa, nếu có."
+
+#: gui/gdmlogin.c:2767 gui/greeter/greeter_system.c:149
+msgid "_Configure Login Manager..."
+msgstr "_Cấu hình Bộ quản lý Đăng nhập..."
+
+#: gui/gdmlogin.c:2774 gui/greeter/greeter_system.c:156
+#: gui/greeter/greeter_system.c:351
+msgid ""
+"Configure GDM (this login manager). This will require the root password."
+msgstr "Cấu hình GDM. Sẽ phải cần mật khẩu root."
+
+#: gui/gdmlogin.c:2788 gui/greeter/greeter_system.c:175
+msgid "Reboot your computer"
+msgstr "Khởi động máy"
+
+#: gui/gdmlogin.c:2801 gui/greeter/greeter_system.c:187
+msgid "Shut down the system so that you may safely turn off the computer."
+msgstr "Tắt hệ thống để có thể tắt máy an toàn."
+
+#: gui/gdmlogin.c:2815 gui/greeter/greeter_system.c:200
+msgid "Suspend your computer"
+msgstr "Tạm dừng máy"
+
+#: gui/gdmlogin.c:2821 gui/greeter/greeter_parser.c:1002
+msgid "_Actions"
+msgstr "_Hành động"
+
+#: gui/gdmlogin.c:2830
+msgid "_Theme"
+msgstr "_Sắc thái"
+
+#: gui/gdmlogin.c:2841 gui/greeter/greeter_canvas_item.c:146
+#: gui/greeter/greeter_parser.c:1012
+msgid "_Quit"
+msgstr "T_hoát"
+
+#: gui/gdmlogin.c:2843 gui/greeter/greeter_canvas_item.c:148
+#: gui/greeter/greeter_parser.c:1007
+msgid "D_isconnect"
+msgstr "N_gắt kết nối"
+
+#: gui/gdmlogin.c:2910 gui/greeter/greeter_item_ulist.c:442
+msgid "Icon"
+msgstr "Biểu tượng"
+
+#: gui/gdmlogin.c:3391
+#, c-format
+msgid "Can't open DefaultImage: %s. Suspending face browser!"
+msgstr "Không thể mở DefaultImage: %s. Ngừng tính trình duyệt chân dung!"
+
+#: gui/gdmlogin.c:3413 gui/gdmsetup.c:569 gui/greeter/greeter_item_ulist.c:297
+msgid "Too many users to list here..."
+msgstr "Quá nhiều người dùng để liệt kê ở đây..."
+
+#. markup
+#: gui/gdmlogin.c:3831 gui/gdmlogin.c:3862 gui/gdmlogin.c:3906
+#: gui/greeter/greeter.c:637 gui/greeter/greeter.c:668
+#: gui/greeter/greeter.c:713
+msgid "Cannot start the greeter"
+msgstr "Không thể khởi động trình chào mừng"
+
+#: gui/gdmlogin.c:3832 gui/gdmlogin.c:3863
+#, c-format
+msgid ""
+"The greeter version (%s) does not match the daemon version.  You have "
+"probably just upgraded gdm.  Please restart the gdm daemon or reboot the "
+"computer."
+msgstr ""
+"Phiên bản của trình chào mừng (%s) không khớp với phiên bản daemon. Có lẽ "
+"bạn vừa nâng cấp GDM. Vui lòng khởi động lại daemon GDM hoặc khởi động lại "
+"máy."
+
+#: gui/gdmlogin.c:3869 gui/gdmlogin.c:3915 gui/greeter/greeter.c:675
+#: gui/greeter/greeter.c:722
+msgid "Reboot"
+msgstr "Khởi động máy"
+
+#: gui/gdmlogin.c:3907
+#, c-format
+msgid ""
+"The greeter version (%s) does not match the daemon version (%s).  You have "
+"probably just upgraded gdm.  Please restart the gdm daemon or reboot the "
+"computer."
+msgstr ""
+"Phiên bản trình chào mừng (%s) không khớp với phiên bản daemon (%s). Có lẽ "
+"bạn cần nâng cấp gdm. Vui lòng khởi động lại daemon gdm hoặc khởi động lại "
+"máy tính."
+
+#: gui/gdmlogin.c:3913 gui/greeter/greeter.c:720
+msgid "Restart"
+msgstr "Khởi động lại"
+
+#. markup
+#: gui/gdmlogin.c:4099 gui/greeter/greeter.c:1335
+msgid "Session directory is missing"
+msgstr "Thiếu thư mục phiên làm việc"
+
+#: gui/gdmlogin.c:4101 gui/greeter/greeter.c:1337
+msgid ""
+"Your session directory is missing or empty!  There are two available "
+"sessions you can use, but you should log in and correct the gdm "
+"configuration."
+msgstr ""
+"Thiếu thư mục phiên làm việc hoặc thư mục phiên làm việc rỗng! Có hai phiên "
+"làm việc có thể dùng, nhưng bạn nên đăng nhập và sửa lại cấu hình GDM."
+
+#. markup
+#: gui/gdmlogin.c:4125 gui/greeter/greeter.c:1362
+msgid "Configuration is not correct"
+msgstr "Cấu hình không đúng"
+
+#: gui/gdmlogin.c:4127 gui/greeter/greeter.c:1364
+msgid ""
+"The configuration file contains an invalid command line for the login "
+"dialog, and thus I ran the default command.  Please fix your configuration."
+msgstr ""
+"Tập tin cấu hình chứa lệnh cho hộp thoại đăng nhập sai, vậy nên sẽ chạy lệnh "
+"mặc định. Vui lòng sửa lại cấu hình."
+
+#. markup
+#: gui/gdmlogin.c:4152 gui/greeter/greeter.c:1391
+msgid "No configuration was found"
+msgstr "Không tìm thấy cấu hình"
+
+#: gui/gdmlogin.c:4154 gui/greeter/greeter.c:1393
+msgid ""
+"The configuration was not found.  GDM is using defaults to run this "
+"session.  You should log in and create a configuration file with the GDM "
+"configuration program."
+msgstr ""
+"Không có cấu hình. GDM đang dùng cấu hình mặc định để chạy phiên làm việc "
+"này. Bạn nên đăng nhập và tạo tập tin cấu hình cho GDM."
+
+#. markup
+#: gui/gdmphotosetup.c:144
+msgid "The face browser is not configured"
+msgstr "Trình duyệt chân dung chưa được cấu hình"
+
+#: gui/gdmphotosetup.c:147
+msgid ""
+"The face browser is not configured in the GDM configuration.  Please ask "
+"your system administrator to enable it in the GDM configurator program."
+msgstr ""
+"Trình duyệt chân dung không được cấu hình, vui lòng yêu cầu quản trị hệ "
+"thống bật tính năng này trong trình cấu hình GDM."
+
+#: gui/gdmphotosetup.c:157 gui/gdmphotosetup.desktop.in.h:2
+msgid "Login Photo"
+msgstr "Ảnh đăng nhập"
+
+#: gui/gdmphotosetup.c:167
+msgid "Select a photograph to show in the facebrowser:"
+msgstr "Chọn ảnh để hiển thị trong trình duyệt chân dung:"
+
+#: gui/gdmphotosetup.c:172
+msgid "Browse"
+msgstr "Duyệt"
+
+#. markup
+#: gui/gdmphotosetup.c:206
+msgid "No picture selected."
+msgstr "Chưa chọn."
+
+#. markup
+#: gui/gdmphotosetup.c:217
+msgid "Picture is too large"
+msgstr "Hình quá lớn"
+
+#: gui/gdmphotosetup.c:218
+#, c-format
+msgid ""
+"The system administrator disallowed pictures larger than %d bytes to show in "
+"the face browser"
+msgstr ""
+"Ảnh quá lớn và quản trị hệ thống không cho phép ảnh lớn hơn %d byte khi hiển "
+"thị trong trình duyệt chân dung"
+
+#. markup
+#: gui/gdmphotosetup.c:245 gui/gdmphotosetup.c:267
+msgid "Cannot open file"
+msgstr "Không thể mở tập tin"
+
+#: gui/gdmphotosetup.c:246
+#, c-format
+msgid ""
+"File %s cannot be open for reading\n"
+"Error: %s"
+msgstr ""
+"Không thể mở tập tin %s để đọc.\n"
+"Lỗi: %s"
+
+#: gui/gdmphotosetup.c:268
+#, c-format
+msgid ""
+"File %s cannot be open for writing\n"
+"Error: %s"
+msgstr ""
+"Không thể mở tập tin %s để ghi\n"
+"Lỗi: %s"
+
+#: gui/gdmphotosetup.desktop.in.h:1
+msgid ""
+"Change the picture that will show in the GDM (login manager) face browser"
+msgstr "Thay đổi ảnh dùng để hiển thị trong trình duyệt chân dung GDM"
+
+#.
+#. * Translatable strings file generated by Glade.
+#. * Add this file to your project's POTFILES.in.
+#. * DO NOT compile it as part of your application.
+#.
+#: gui/gdmsetup-strings.c:7 gui/gdmsetup.desktop.in.h:2
+#: gui/gdmsetup.glade.h:26
+msgid "Login Screen Setup"
+msgstr "Thiết lập màn hình đăng nhập"
+
+#: gui/gdmsetup-strings.c:8 gui/gdmsetup.glade.h:22
+msgid "Greeter"
+msgstr "trình chào mừng"
+
+#: gui/gdmsetup-strings.c:9 gui/gdmsetup-strings.c:24
+#: gui/gdmsetup-strings.c:29 gui/gdmsetup-strings.c:36
+#: gui/gdmsetup-strings.c:39 gui/gdmsetup-strings.c:42
+#: gui/gdmsetup-strings.c:65 gui/gdmsetup-strings.c:71
+#: gui/gdmsetup-strings.c:73 gui/gdmsetup-strings.c:79
+#: gui/gdmsetup-strings.c:82 gui/gdmsetup-strings.c:90 gui/gdmsetup.glade.h:1
+msgid "    "
+msgstr "    "
+
+#: gui/gdmsetup-strings.c:10 gui/gdmsetup.glade.h:24
+msgid "L_ocal: "
+msgstr "_Cục bộ: "
+
+#: gui/gdmsetup-strings.c:11 gui/gdmsetup.glade.h:66
+msgid "_Remote: "
+msgstr "Từ _xa: "
+
+#: gui/gdmsetup-strings.c:12 gui/gdmsetup.glade.h:70
+msgid "_Welcome string: "
+msgstr "Thông điệp _chào mừng: "
+
+#: gui/gdmsetup-strings.c:13 gui/gdmsetup.glade.h:43
+msgid "Re_mote welcome string: "
+msgstr "Thông điệp _chào mừng từ xa: "
+
+#: gui/gdmsetup-strings.c:14 gui/gdmsetup-strings.c:16
+#: gui/gdmsetup-strings.c:51 gui/gdmsetup.c:969 gui/gdmsetup.glade.h:50
+msgid "Standard greeter"
+msgstr "trình chào mừng chuẩn"
+
+#: gui/gdmsetup-strings.c:15 gui/gdmsetup-strings.c:17
+#: gui/gdmsetup-strings.c:63 gui/gdmsetup.c:971 gui/gdmsetup.glade.h:21
+msgid "Graphical greeter"
+msgstr "trình chào mừng đồ họa"
+
+#: gui/gdmsetup-strings.c:18 gui/gdmsetup.glade.h:52
+#, no-c-format
+msgid ""
+"String to be shown in the greeter as welcome.  You can insert %n in here and "
+"it will be replaced by the name of your computer."
+msgstr ""
+"Chuỗi sẽ được hiển thị trong trình chào mừng như thông báo chào đón. Bạn có "
+"thể chèn %s vào trong và nó sẽ được thay bằng tên máy tính của bạn."
+
+#: gui/gdmsetup-strings.c:20 gui/gdmsetup.glade.h:54
+#, no-c-format
+msgid ""
+"String to be shown in the greeter for people logging in remotely with "
+"XDMCP.  You can insert %n in here and it will be replaced by the name of "
+"your computer."
+msgstr ""
+"Chuỗi sẽ được hiển thị trong trình chào mừng cho người đăng nhập từ xa bằng "
+"XDMCP. Bạn có thể chèn %s vào trong và nó sẽ được thay bằng tên máy tính của "
+"bạn."
+
+#: gui/gdmsetup-strings.c:22 gui/gdmsetup.glade.h:10
+msgid "Always use 24 hour cloc_k format"
+msgstr "Luôn dùng dạng 24h"
+
+#: gui/gdmsetup-strings.c:23 gui/gdmsetup.glade.h:12
+msgid "Automatic Login"
+msgstr "Đăng nhập Tự động"
+
+#: gui/gdmsetup-strings.c:25 gui/gdmsetup.glade.h:58
+msgid "_Automatic login username:"
+msgstr "Tên người _dùng tự động đăng nhập:"
+
+#: gui/gdmsetup-strings.c:27 gui/gdmsetup.glade.h:63
+msgid "_Login a user automatically on first bootup"
+msgstr "_Tự động đăng nhập cho người dùng khi khởi động"
+
+#: gui/gdmsetup-strings.c:28 gui/gdmsetup.glade.h:55
+msgid "Timed Login"
+msgstr "Đăng nhập định thời"
+
+#: gui/gdmsetup-strings.c:30 gui/gdmsetup.glade.h:56
+msgid "Timed login us_ername:"
+msgstr "Tên người dùng đăng nhập định _thời:"
+
+#: gui/gdmsetup-strings.c:31 gui/gdmsetup.glade.h:68
+msgid "_Seconds before login:"
+msgstr "Số _giây trưới khi đăng nhập:"
+
+#: gui/gdmsetup-strings.c:33 gui/gdmsetup.glade.h:27
+msgid "Login a user automa_tically after a specified number of seconds"
+msgstr "Đăng nhập tự động _sau một khoảng thời gian (giây)"
+
+#: gui/gdmsetup-strings.c:34 gui/gdmsetup.glade.h:20
+msgid "General"
+msgstr "Chung"
+
+#: gui/gdmsetup-strings.c:35 gui/gdmsetup.glade.h:28
+msgid "Logo"
+msgstr "Biểu tượng riêng"
+
+#: gui/gdmsetup-strings.c:38 gui/gdmsetup.glade.h:35
+msgid "Miscellaneous"
+msgstr "Linh tinh"
+
+#: gui/gdmsetup-strings.c:40 gui/gdmsetup.glade.h:47
+msgid "Show choosable user images (_face browser)"
+msgstr "Hiện ảnh người dùng có thể chọn (bật \"Trình duyệt _chân dung\")"
+
+#: gui/gdmsetup-strings.c:41 gui/gdmsetup.glade.h:13
+msgid "Background"
+msgstr "Nền"
+
+#: gui/gdmsetup-strings.c:43 gui/gdmsetup.glade.h:64
+msgid "_No background"
+msgstr "_Không nền"
+
+#: gui/gdmsetup-strings.c:44 gui/gdmsetup.glade.h:61
+msgid "_Image"
+msgstr "Ả_nh"
+
+#: gui/gdmsetup-strings.c:45 gui/gdmsetup.glade.h:14
+msgid "Co_lor"
+msgstr "_Màu sắc"
+
+#: gui/gdmsetup-strings.c:46 gui/gdmsetup.glade.h:67
+msgid "_Scale background image to fit"
+msgstr "_Co dãn ảnh cho vừa"
+
+#: gui/gdmsetup-strings.c:48 gui/gdmsetup.glade.h:65
+msgid "_Only color on remote displays"
+msgstr "_Chỉ dùng màu trên các màn hình ở xa"
+
+#: gui/gdmsetup-strings.c:49 gui/gdmsetup.glade.h:59
+msgid "_Background color: "
+msgstr "Màu _nền: "
+
+#: gui/gdmsetup-strings.c:50 gui/gdmsetup.glade.h:39
+msgid "Pick a color"
+msgstr "Chọn màu"
+
+#: gui/gdmsetup-strings.c:52 gui/gdmsetup.glade.h:42
+msgid "Preview:"
+msgstr "Xem trước:"
+
+#: gui/gdmsetup-strings.c:53 gui/gdmsetup.glade.h:37
+msgid "No screenshot available"
+msgstr "Không có ảnh chụp"
+
+#: gui/gdmsetup-strings.c:54 gui/gdmsetup.glade.h:16
+msgid "Description:"
+msgstr "Mô tả:"
+
+#: gui/gdmsetup-strings.c:55 gui/gdmsetup.glade.h:15
+msgid "Copyright:"
+msgstr "Bản quyền:"
+
+#: gui/gdmsetup-strings.c:56 gui/gdmsetup.glade.h:11
+msgid "Author:"
+msgstr "Tác giả:"
+
+#: gui/gdmsetup-strings.c:57 gui/gdmsetup.glade.h:74
+msgid ""
+"description\n"
+"widget"
+msgstr ""
+"mô tả\n"
+"widget"
+
+#: gui/gdmsetup-strings.c:59 gui/gdmsetup.glade.h:72
+msgid "author"
+msgstr "tác giả"
+
+#: gui/gdmsetup-strings.c:60 gui/gdmsetup.glade.h:73
+msgid "copyright"
+msgstr "bản quyền"
+
+#: gui/gdmsetup-strings.c:61 gui/gdmsetup.glade.h:62
+msgid "_Install new theme"
+msgstr "Cài đặt Sắc thái mới"
+
+#: gui/gdmsetup-strings.c:62 gui/gdmsetup.glade.h:60
+msgid "_Delete theme"
+msgstr "_Xóa Sắc thái"
+
+#: gui/gdmsetup-strings.c:64 gui/gdmsetup-strings.c:78 gui/gdmsetup.glade.h:38
+msgid "Options"
+msgstr "Tùy chọn"
+
+#: gui/gdmsetup-strings.c:66 gui/gdmsetup.glade.h:5
+msgid "Allow _root to login with GDM"
+msgstr "Cho phép _root đăng nhập"
+
+#: gui/gdmsetup-strings.c:67 gui/gdmsetup.glade.h:8
+msgid "Allow root to login r_emotely with GDM"
+msgstr "Cho phép root đăng nhập từ _xa"
+
+#: gui/gdmsetup-strings.c:68 gui/gdmsetup.glade.h:7
+msgid "Allow remote _timed logins"
+msgstr "Cho phép đăng nhập định thời từ _xa"
+
+#: gui/gdmsetup-strings.c:69 gui/gdmsetup.glade.h:48
+msgid ""
+"Show the \"Actions\" menu (formerly known as the \"System\" menu).  If not "
+"set, none of the system commands will be available (this includes reboot, "
+"shutdown, configure, chooser)"
+msgstr ""
+"Hiện menu \"Hành động\" (còn gọi là menu \"Hệ thống\"). Nếu không đặt, sẽ "
+"không có các lệnh hệ thống (như khởi động lại, tắt máy, cấu hình, trình chọn)"
+
+#: gui/gdmsetup-strings.c:70 gui/gdmsetup.glade.h:46
+msgid "Show _actions menu"
+msgstr "Hiện menu _hành động"
+
+#: gui/gdmsetup-strings.c:72 gui/gdmsetup.glade.h:6
+msgid "Allow c_onfiguration from the login screen"
+msgstr "Cho phép _cấu hình từ màn hình đăng nhập"
+
+#: gui/gdmsetup-strings.c:74 gui/gdmsetup.glade.h:4
+msgid "Allo_w running XDMCP chooser from the login screen"
+msgstr "Cho phép _chạy bộ chọn XDMCP từ màn hình đăng nhập"
+
+#: gui/gdmsetup-strings.c:75 gui/gdmsetup.glade.h:9
+msgid ""
+"Always disallow TCP connections to _X server (disables all remote "
+"connections)"
+msgstr "Luôn tắt kết nối TCP đến máy chủ _X (tắt mọi kết nối từ xa)"
+
+#: gui/gdmsetup-strings.c:76 gui/gdmsetup.glade.h:44
+msgid "Retry _delay (seconds) :"
+msgstr "Khoảng đợ_i thử lại (giây):"
+
+#: gui/gdmsetup-strings.c:77 gui/gdmsetup.glade.h:45
+msgid "Security"
+msgstr "Bảo mật"
+
+#: gui/gdmsetup-strings.c:80 gui/gdmsetup.glade.h:19
+msgid "Enable _accessibility modules"
+msgstr "Bật module _truy nhập"
+
+#: gui/gdmsetup-strings.c:81 gui/gdmsetup.glade.h:29
+msgid "Make a _sound when login window is ready"
+msgstr "Phát âm khi cửa sổ đăng nhập _sẵn sàng"
+
+#: gui/gdmsetup-strings.c:83 gui/gdmsetup.glade.h:71
+msgid "acc_sound_file_box"
+msgstr "acc_sound_file_box"
+
+#: gui/gdmsetup-strings.c:84 gui/gdmsetup.glade.h:49
+msgid "Sound _file:"
+msgstr "_Tập tin âm thanh:"
+
+#: gui/gdmsetup-strings.c:86 gui/gdmsetup.glade.h:69
+msgid "_Test sound"
+msgstr "_Thử âm thanh"
+
+#: gui/gdmsetup-strings.c:87 gui/gdmsetup.glade.h:3
+msgid "Accessibility"
+msgstr "Tính năng Hỗ trợ"
+
+#: gui/gdmsetup-strings.c:88 gui/gdmsetup.glade.h:36
+msgid ""
+"No XDMCP support in the binary.  To enable XDMCP support you must recompile "
+"GDM with the XDMCP libraries."
+msgstr ""
+"Không hỗ trợ XDMCP nhị phân. Để bật XDMCP bạn phải biên dịch lại GDM với thư "
+"viện XDMCP."
+
+#: gui/gdmsetup-strings.c:89 gui/gdmsetup.glade.h:18
+msgid "Enable _XDMCP"
+msgstr "Bật _XDMCP"
+
+#: gui/gdmsetup-strings.c:91 gui/gdmsetup.glade.h:23
+msgid "Honour _indirect requests"
+msgstr ""
+
+#: gui/gdmsetup-strings.c:92 gui/gdmsetup.glade.h:25
+msgid "Listen on _UDP port: "
+msgstr "Lắng nghe trên cổng _UDP: "
+
+#: gui/gdmsetup-strings.c:93 gui/gdmsetup.glade.h:31
+msgid "Maximum _pending requests:"
+msgstr "Số yêu cầu bị _hoãn tối đa:"
+
+#: gui/gdmsetup-strings.c:94 gui/gdmsetup.glade.h:30
+msgid "Max p_ending indirect requests:"
+msgstr "Số yêu cầu _gián tiếp tối đa:"
+
+#: gui/gdmsetup-strings.c:95 gui/gdmsetup.glade.h:32
+msgid "Maximum _remote sessions:"
+msgstr "Số phiên làm việc từ _xa tối đa:"
+
+#: gui/gdmsetup-strings.c:96 gui/gdmsetup.glade.h:33
+msgid "Maximum _wait time:"
+msgstr "Thời gian _chờ tối đa:"
+
+#: gui/gdmsetup-strings.c:97 gui/gdmsetup.glade.h:34
+msgid "Maximum indirect w_ait time:"
+msgstr "Thời gian _chờ gián tiếp tối đa:"
+
+#: gui/gdmsetup-strings.c:98 gui/gdmsetup.glade.h:17
+msgid "Displays per _host:"
+msgstr "Số _display trên mỗi máy:"
+
+#: gui/gdmsetup-strings.c:99 gui/gdmsetup.glade.h:40
+msgid "Pin_g interval (seconds):"
+msgstr "Ping _mỗi (phút):"
+
+#: gui/gdmsetup-strings.c:100 gui/gdmsetup.glade.h:41
+msgid "Ping interval (seconds):"
+msgstr "Ping mỗi (phút):"
+
+#: gui/gdmsetup-strings.c:101 gui/gdmsetup.glade.h:57
+msgid "XDMCP"
+msgstr "XDMCP"
+
+#. markup
+#: gui/gdmsetup.c:164
+msgid ""
+"An error occured while trying to contact the login screens.  Not all updates "
+"may have taken effect."
+msgstr ""
+"Lỗi liên lạc với màn hình đăng nhập. Không phải tất cả các cập nhật sẽ có "
+"tác động."
+
+#. markup
+#: gui/gdmsetup.c:487
+msgid ""
+"Autologin or timed login to the superuser (root) account is not allowed."
+msgstr ""
+"Tự động đăng nhập hoặc đăng nhập định thời cho siêu người dùng (root) bị tắt."
+
+#: gui/gdmsetup.c:1756
+msgid "Archive is not of a subdirectory"
+msgstr "Sắc thái không phải là thư mục con"
+
+#: gui/gdmsetup.c:1764
+msgid "Archive is not of a single subdirectory"
+msgstr "Kho lưu không phải là thư mục con duy nhất"
+
+#: gui/gdmsetup.c:1788 gui/gdmsetup.c:1868
+msgid "File not a tar.gz or tar archive"
+msgstr "Tập tin không phải là tar.gz hoặc tar"
+
+#: gui/gdmsetup.c:1790
+msgid "Archive does not include a GdmGreeterTheme.info file"
+msgstr "Kho lưu lưu không chứa tập tin GdmGreeterTheme.info"
+
+#: gui/gdmsetup.c:1812
+msgid "File does not exist"
+msgstr "Tập tin không tồn tại"
+
+#. markup
+#: gui/gdmsetup.c:1926
+msgid "No file selected"
+msgstr "Chưa chọn tập tin"
+
+#. markup
+#: gui/gdmsetup.c:1954
+msgid "Not a theme archive"
+msgstr "Không phải là Kho lưu Sắc thái"
+
+#: gui/gdmsetup.c:1955
+#, c-format
+msgid "Details: %s"
+msgstr "Chi tiết: %s"
+
+#. FIXME: if exists already perhaps we could also have an
+#. * option to change the dir name
+#: gui/gdmsetup.c:1973
+#, c-format
+msgid ""
+"Theme directory '%s' seems to be already installed, install again anyway?"
+msgstr "Thư mục Sắc thái '%s' dường như đã được cài đặt rồi. Cài đặt lại chứ?"
+
+#. markup
+#: gui/gdmsetup.c:2059
+msgid "Some error occured when installing the theme"
+msgstr "Lỗi cài đặt Sắc thái"
+
+#: gui/gdmsetup.c:2105
+msgid "Select new theme archive to install"
+msgstr "Chọn Sắc thái mới cần cài đặt"
+
+#: gui/gdmsetup.c:2109
+msgid "_Install"
+msgstr "_Cài đặt"
+
+#: gui/gdmsetup.c:2173
+#, c-format
+msgid "Do you really wish to remove theme '%s' from the system?"
+msgstr "Bạn có thực sự muốn loại bỏ sắc thái '%s' khỏi hệ thống không?"
+
+#. This is the temporary help dialog
+#: gui/gdmsetup.c:2386
+#, c-format
+msgid ""
+"This configuration window changes settings for the GDM daemon, which is the "
+"graphical login screen for GNOME.  Changes that you make will take effect "
+"immediately.\n"
+"\n"
+"Note that not all configuration options are listed here.  You may want to "
+"edit %s if you cannot find what you are looking for.\n"
+"\n"
+"For complete documentation see the GNOME help browser Under the category "
+"GNOME/System."
+msgstr ""
+"Cửa sổ cấu hình này thay đổi các thiết lập cho GDM daemon, chương trình đăng "
+"nhập đồ họa của GNOME. Các thay đổi sẽ có tác dụng ngay tức thì.\n"
+"\n"
+"Chú ý là không phải mấu tùy chọn cấu hình đều được liệt kê ở đây. Bạn có thể "
+"muốn sửa %s nếu bạn không tìm thấy những gì muốn tìm."
+
+#. markup
+#: gui/gdmsetup.c:2797
+msgid "You must be the superuser (root) to configure GDM."
+msgstr "Bạn phải là siêu người dùng (root) thì mới có thể cấu hình GDM."
+
+#. EOF
+#: gui/gdmsetup.desktop.in.h:1
+msgid "A graphical application for configuring the GNOME Display Manager (GDM)"
+msgstr ""
+"Một ứng dụng đồ họa dùng để cấu hình GDM (Trình quản lý Display của GNOME)"
+
+#: gui/greeter/greeter.c:638 gui/greeter/greeter.c:669
+#, c-format
+msgid ""
+"The greeter version (%s) does not match the daemon version.\n"
+"You have probably just upgraded gdm.\n"
+"Please restart the gdm daemon or reboot the computer."
+msgstr ""
+"Phiên bản của trình chào mừng (%s) không khớp với phiên bản daemon.\n"
+"Có lẽ bạn vừa nâng cấp GDM.\n"
+"Vui lòng khởi động lại daemon GDM hoặc khởi động lại máy."
+
+#: gui/greeter/greeter.c:714
+#, c-format
+msgid ""
+"The greeter version (%s) does not match the daemon version (%s).\n"
+"You have probably just upgraded gdm.\n"
+"Please restart the gdm daemon or reboot the computer."
+msgstr ""
+"Phiên bản trình chào mừng (%s) không khớp với phiên bản daemon (%s).\n"
+"Có lẽ bạn cần nâng cấp gdm.\n"
+"Vui lòng khởi động lại daemon gdm hoặc khởi động lại máy tính."
+
+#: gui/greeter/greeter.c:1173
+#, c-format
+msgid "There was an error loading the theme %s"
+msgstr "Lỗi nạp sắc thái %s"
+
+#. markup
+#: gui/greeter/greeter.c:1226
+msgid "The theme for the graphical greeter is corrupt"
+msgstr "Sắc thái cho trình chào mừng đồ hoạ bị hỏng"
+
+#: gui/greeter/greeter.c:1229
+msgid ""
+"The theme does not contain definition for the username/password entry "
+"element."
+msgstr "Sắc thái này không chứa định nghĩa mục nhập tên người dùng/mật khẩu."
+
+#. markup
+#: gui/greeter/greeter.c:1262
+msgid ""
+"There was an error loading the theme, and the default theme also could not "
+"have been loaded, I will attempt to start the standard greeter"
+msgstr ""
+"Xảy ra lỗi khi đang nạp sắc thái, mà sắc thái mặc định cũng không thể nạp. "
+"Sẽ thử khởi động trình chào mừng mặc định"
+
+#. markup
+#: gui/greeter/greeter.c:1284
+msgid ""
+"I could not start the standard greeter.  This display will abort and you may "
+"have to login another way and fix the installation of gdm"
+msgstr ""
+"Không thể khởi động trình chào mừng mặc định. Display này sẽ bị dừng và bạn "
+"có lẽ phải đăng nhập bằng cách khác và sửa bản cài đặt GDM"
+
+#: gui/greeter/greeter_action_language.c:46
+msgid "Last"
+msgstr "Cuối cùng"
+
+#: gui/greeter/greeter_action_language.c:196
+msgid "Select a language"
+msgstr "Chọn ngôn ngữ"
+
+#: gui/greeter/greeter_action_language.c:215
+msgid "Select a language for your session to use:"
+msgstr "Chọn một ngôn ngữ cho phiên làm việc cần dùng:"
+
+#: gui/greeter/greeter_canvas_item.c:125
+msgid "Select _Language..."
+msgstr "Chọn n_gôn ngữ..."
+
+#: gui/greeter/greeter_canvas_item.c:132
+msgid "Select _Session..."
+msgstr "Chọn _phiên làm việc..."
+
+#: gui/greeter/greeter_canvas_item.c:374
+msgid "Answer questions here and press Enter when done.  For a menu press F10."
+msgstr "Hãy trả lời câu hỏi và nhấn Enter khi xong. Xem menu, nhấn F10."
+
+#: gui/greeter/greeter_item_ulist.c:279
+#, c-format
+msgid "Can't open DefaultImage: %s!"
+msgstr "Không thể mở Ảnh mặc định: %s!"
+
+#: gui/greeter/greeter_item_ulist.c:381
+msgid ""
+"Doubleclick on the user\n"
+"to log in"
+msgstr ""
+"Nhấp đúp vào người dùng\n"
+"để đăng nhập"
+
+#: gui/greeter/greeter_parser.c:1022 gui/greeter/greeter_system.c:193
+msgid "Sus_pend"
+msgstr "Tạm _dừng máy"
+
+#: gui/greeter/greeter_parser.c:1032
+msgid "_XDMCP Chooser"
+msgstr "Trình chọn lựa _XDMCP"
+
+#: gui/greeter/greeter_parser.c:1037
+msgid "_Configure"
+msgstr "_Cấu hình"
+
+#: gui/greeter/greeter_parser.c:1042
+msgid "You've got capslock on!"
+msgstr "Bạn đang bật CapsLock!"
+
+#: gui/greeter/greeter_session.c:247
+msgid "Choose a Session"
+msgstr "Chọn Phiên làm việc"
+
+#: gui/greeter/greeter_system.c:260
+msgid "Choose an Action"
+msgstr "Chọn hành động"
+
+#: gui/greeter/greeter_system.c:282
+msgid "Shut _down the computer"
+msgstr "_Tắt máy"
+
+#: gui/greeter/greeter_system.c:285
+msgid "Shut down your computer so that you may turn it off."
+msgstr "Tắt máy."
+
+#: gui/greeter/greeter_system.c:300
+msgid "_Reboot the computer"
+msgstr "_Khởi động máy"
+
+#: gui/greeter/greeter_system.c:314
+msgid "Sus_pend the computer"
+msgstr "_Tạm dừng máy"
+
+#: gui/greeter/greeter_system.c:328
+msgid "Run _XDMCP chooser"
+msgstr "Chạy Trình chọn _XDMCP"
+
+#: gui/greeter/greeter_system.c:348
+#, fuzzy
+msgid "Confi_gure the login manager"
+msgstr "_Cấu hình trình quản lý đăng nhập"
+
+#: gui/greeter/themes/circles/GdmGreeterTheme.desktop.in.h:1
+msgid "(c) 2002 Bond, James Bond"
+msgstr "(c) 2002 Bond, James Bond"
+
+#: gui/greeter/themes/circles/GdmGreeterTheme.desktop.in.h:2
+msgid "Bond, James Bond"
+msgstr "Bond, James Bond"
+
+#: gui/greeter/themes/circles/GdmGreeterTheme.desktop.in.h:3
+msgid "Circles"
+msgstr "Vòng tròn"
+
+#: gui/greeter/themes/circles/GdmGreeterTheme.desktop.in.h:4
+msgid "Theme with blue circles"
+msgstr "Sắc thái với vòng tròn lục"
+
+#: gui/greeter/themes/happygnome-list/GdmGreeterTheme.desktop.in.h:1
+#: gui/greeter/themes/happygnome/GdmGreeterTheme.desktop.in.h:1
+msgid "(c) 2002 GNOME"
+msgstr "(c) 2002 GNOME"
+
+#: gui/greeter/themes/happygnome-list/GdmGreeterTheme.desktop.in.h:2
+msgid "GNOME Art variation of Circles with a Face Browser"
+msgstr "Biến thể GNOME Art của Vòng tròn với Trình duyệt Chân dung"
+
+#: gui/greeter/themes/happygnome-list/GdmGreeterTheme.desktop.in.h:3
+#: gui/greeter/themes/happygnome/GdmGreeterTheme.desktop.in.h:3
+msgid "GNOME Artists"
+msgstr "Họa sĩ GNOME"
+
+#: gui/greeter/themes/happygnome-list/GdmGreeterTheme.desktop.in.h:4
+msgid "Happy GNOME with Browser"
+msgstr "GNOME hạnh phúc với Trình duyệt"
+
+#: gui/greeter/themes/happygnome/GdmGreeterTheme.desktop.in.h:2
+msgid "GNOME Art variation of Circles"
+msgstr "Biến thể nghệ thuật GNOME của vòng tròn"
+
+#: gui/greeter/themes/happygnome/GdmGreeterTheme.desktop.in.h:4
+msgid "Happy GNOME"
+msgstr "GNOME hạnh phúc"
+
+#: gui/modules/dwellmouselistener.c:579 gui/modules/keymouselistener.c:674
+#, c-format
+msgid ""
+"Error while trying to run (%s)\n"
+"which is linked to (%s)"
+msgstr ""
+"Lỗi thử chạy (%s),\n"
+"được liên kết tới (%s)"
+
+#: utils/gdmaskpass.c:26
+#, c-format
+msgid "gdmaskpass only runs as root\n"
+msgstr "gdmaskpass chỉ chạy với root\n"
+
+#: utils/gdmaskpass.c:42 utils/gdmaskpass.c:48
+#, c-format
+msgid "Authentication failure!\n"
+msgstr "Quá trình xác thực thất bại!\n"
+
+#: vicious-extensions/glade-helper.c:83
+msgid "(memory buffer)"
+msgstr "(vùng đệm bộ nhớ)"
+
+#: vicious-extensions/glade-helper.c:115 vicious-extensions/glade-helper.c:137
+#: vicious-extensions/glade-helper.c:157
+msgid "(memory buffer"
+msgstr "(vùng đệm bộ nhớ"
+
+#. markup
+#: vicious-extensions/glade-helper.c:193 vicious-extensions/glade-helper.c:246
+#: vicious-extensions/glade-helper.c:289
+msgid "Cannot load user interface"
+msgstr "Không thể nạp giao diện người dùng"
+
+#: vicious-extensions/glade-helper.c:194
+#, c-format
+msgid ""
+"An error occured while loading the user interface element %s%s from file %"
+"s.  Possibly the glade interface description was corrupted.  %s cannot "
+"continue and will exit now.  You should check your installation of %s or "
+"reinstall %s."
+msgstr ""
+"Xảy ra lỗi khi nạp %s%s từ tập tin %s. Có lẽ tập tin glade bị hỏng. %s không "
+"thế tiếp tục nên sẽ kết thúc ở đây. Bạn nên kiểm tra lại bản cài đăn %s hoặc "
+"cài đặt lại %s."
+
+#: vicious-extensions/glade-helper.c:210
+#, c-format
+msgid ""
+"Glade file is on crack! Make sure the correct file is installed!\n"
+"file: %s widget: %s"
+msgstr ""
+"Tập tin glade bị hư! Hãy kiểm tra lại xem tập tin này được cài đặt chưa.\n"
+"tập tin: %s ô điều khiển: %s"
+
+#: vicious-extensions/glade-helper.c:247
+#, c-format
+msgid ""
+"An error occured while loading the user interface element %s%s from file %"
+"s.  CList type widget should have %d columns.  Possibly the glade interface "
+"description was corrupted.  %s cannot continue and will exit now.  You "
+"should check your installation of %s or reinstall %s."
+msgstr ""
+"Một lỗi đã xảy ra trong quá trình nạp %s%s từ tập tin %s. Ô điều khiển CList "
+"nên có %d cột. Có lẽ tập tin glade bị hỏng. %s không thể tiếp tục và sẽ kết "
+"ở đây. Bạn nên xem lại bản cài đặt %s hoặc cài lại %s."
+
+#: vicious-extensions/glade-helper.c:265
+#, c-format
+msgid ""
+"Glade file is on crack! Make sure the correct file is installed!\n"
+"file: %s widget: %s expected clist columns: %d"
+msgstr ""
+"Tập tin glade bị hư! Hãy chắc rằng tập tin này đã được cài đặt!\n"
+"tập tin: %s ô điều khiển: %s số cột clist yêu cầu: %d"
+
+#: vicious-extensions/glade-helper.c:290
+#, c-format
+msgid ""
+"An error occured while loading the user interface from file %s.  Possibly "
+"the glade interface description was not found.  %s cannot continue and will "
+"exit now.  You should check your installation of %s or reinstall %s."
+msgstr ""
+"Một lỗi đã xảy ra trong khi nạp tập tin glade %s. Có lẽ tập tin glade bị "
+"hỏng. %s không thể tiếp tục và sẽ kết thúc ở đây. Bạn nên kiểm tra lại bản "
+"cài đặt của %s hoặc cài đặt lại %s."
+
+#: vicious-extensions/glade-helper.c:302
+#, c-format
+msgid "No interface could be loaded, BAD! (file: %s)"
+msgstr "Không thể nạp có giao diện nào cả, tệ quá! (tập tin: %s)"
+
+#: vicious-extensions/ve-nongnome.c:135
+msgid "Too many alias levels for a locale, may indicate a loop"
+msgstr "Quá nhiều mức bí danh cho locale, có thể là bị lặp"
+
+#~ msgid "%s: Can't find the gdm user (%s). Trying 'nobody'!"
+#~ msgstr "%s: Không thể tìm thấy người dùng gdm (%s). Thử dùng 'nobody'!"
+
+#~ msgid "%s: Can't find the gdm group (%s). Trying 'nobody'!"
+#~ msgstr "%s: Không thể tìm thấy nhóm gdm (%s). Thử dùng 'nobody'!"
+
+#~ msgid "Flexible server request denied: Not authenticated"
+#~ msgstr "Yêu cầu flexible server bị từ chối: Không thể xác thực"
+
+#~ msgid "A-M|English (American)"
+#~ msgstr "A-M|Anh (Mỹ)"
+
+#~ msgid "A-M|English (British)"
+#~ msgstr "A-M|Anh (Vương quốc Anh)"
+
+#~ msgid "Shut_down"
+#~ msgstr "_Tắt máy"
+
+#~ msgid "gdm_auth_user_add: Could not open cookie file %s"
+#~ msgstr "gdm_auth_user_add: Không thể mở tập tin cookie %s"
+
+#~ msgid "gdm_auth_user_add: Could not lock cookie file %s"
+#~ msgstr "gdm_auth_user_add: Không thể khóa tập tin cookie %s"
+
+#~ msgid ""
+#~ "Failed to start the display server several times in a short time period; "
+#~ "disabling display %s"
+#~ msgstr ""
+#~ "Lỗi khi khởi động display server nhiều lần trong một khoảng thời gian "
+#~ "ngắn; tắt display %s"
+
+#~ msgid "gdm_failsafe_question: Cannot fork to display error/info box"
+#~ msgstr ""
+#~ "gdm_failsafe_question: Không thể tạo tiến trình để hiển thị lỗi/hộp thoại "
+#~ "thông tin"
+
+#~ msgid "gdm_child_action: Reboot failed: %s"
+#~ msgstr "gdm_child_action: Lỗi khởi động máy: %s"
+
+#~ msgid "gdm_child_action: Halt failed: %s"
+#~ msgstr "gdm_child_action: Lỗi chấm dứt hoạt động: %s"
+
+#~ msgid "gdm_child_action: Suspend failed: %s"
+#~ msgstr "gdm_child_actin: Lỗi tạm dừng hoạt động: %s"
+
+#~ msgid "%s: Error setting up TERM signal handler"
+#~ msgstr "%s: Lỗi khi thiết lập trình xử lý tín hiệu TERM"
+
+#~ msgid "%s: Error setting up INT signal handler"
+#~ msgstr "%s: Lỗi khi thiết lập trình xử lý tín hiệu INT"
+
+#~ msgid "%s: Error setting up HUP signal handler"
+#~ msgstr "%s: Lỗi khi thiết lập trình xử lý tín hiệu HUP"
+
+#~ msgid "%s: Error setting up USR1 signal handler"
+#~ msgstr "%s: Lỗi khi thiết lập trình xử lý tín hiệu USR1"
+
+#~ msgid "%s: Error setting up CHLD signal handler: %s"
+#~ msgstr "%s: Lỗi khi thiết lập trình xử lý tín hiệu CHLD: %s"
+
+#~ msgid "%s: Error setting up ALRM signal handler: %s"
+#~ msgstr "%s: Lỗi khi thiết lập trình xử lý tín hiệu ALRM: %s"
+
+#~ msgid "gdm_server_spawn: Error setting USR1 to SIG_IGN"
+#~ msgstr "gdm_server_spawn: Lỗi thiết lập USR1 thành SIG_IGN"
+
+#~ msgid "gdm_server_spawn: Error setting TTIN to SIG_IGN"
+#~ msgstr "gdm_server_spawn: Lỗi thiết lập TTIN thành SIG_IGN"
+
+#~ msgid "gdm_server_spawn: Error setting TTOU to SIG_IGN"
+#~ msgstr "gdm_server_spawn: Lỗi thiết lập TTOU thành SIG_IGN"
+
+#~ msgid "gdm_server_spawn: Error setting HUP to SIG_DFL"
+#~ msgstr "gdm_server_spawn: Lỗi thiết lập HUP thành SIG_IGN"
+
+#~ msgid "gdm_server_spawn: Error setting TERM to SIG_DFL"
+#~ msgstr "gdm_server_spawn: Lỗi thiết lập TERM thành SIG_IGN"
+
+#~ msgid "gdm_server_spawn: Can't fork Xserver process!"
+#~ msgstr "gdm_server_spawn: Không thể nhân đôi tiến trình Xserver"
+
+#~ msgid "%s: Error setting up TERM/INT signal handler: %s"
+#~ msgstr "%s: Lỗi khi thiết lập trình xử lý tín hiệu TERM/INT: %s"
+
+#~ msgid "focus_first_x_window: cannot fork"
+#~ msgstr "focus_firset_x_window: không thể nhân đôi tiến trình"
+
+#~ msgid "gdm_slave_wait_for_login: No login/Bad login"
+#~ msgstr "gdm_slave_wait_for_login: Không có login hoặc login bị hỏng"
+
+#~ msgid "gdm_slave_chooser: Can't init pipe to gdmchooser"
+#~ msgstr "gdm_slave_chooser: Không thể khởi động ống dẫn tới gdmchooser"
+
+#~ msgid "gdm_slave_chooser: Error starting chooser on display %s"
+#~ msgstr "gdm_slave_chooser: Lỗi khi khởi động trình chọn lựa trên display %s"
+
+#~ msgid "gdm_slave_chooser: Can't fork gdmchooser process"
+#~ msgstr "gdm_slave_chooser: Không thể nhân đôi tiến trình gdmchooser"
+
+#~ msgid "gdm_slave_session_start: Could not become %s. Aborting."
+#~ msgstr "gdm_slave_session_start: Không thể trở thành %s. Dừng."
+
+#~ msgid "Running %s for %s on %s"
+#~ msgstr "Đang chạy %s cho %s trên %s"
+
+#~ msgid "gdm_slave_session_start: User not allowed to log in"
+#~ msgstr "gdm_slave_session_start: Người dùng không được quyền đăng nhập"
+
+#~ msgid ""
+#~ "The system administrator has\n"
+#~ "disabled your account."
+#~ msgstr "Quản trị hệ thống đã vô hiệu hóa account này."
+
+#~ msgid "gdm_slave_session_start: Could not find/run session `%s'"
+#~ msgstr ""
+#~ "gdm_slave_session_start: Không thể tìm/thực hiện phiên làm việc `%s'"
+
+#~ msgid ""
+#~ "Cannot start the session, most likely the\n"
+#~ "session does not exist.  Please select from\n"
+#~ "the list of available sessions in the login\n"
+#~ "dialog window."
+#~ msgstr ""
+#~ "Không thể khởi động session, hầu hết session \n"
+#~ "không tồn tại. Vui lòng chọn từ danh sách\n"
+#~ "các session còn dùng được trong hộp thoại \n"
+#~ "đăng nhập."
+
+#~ msgid "gdm_slave_session_start: Could not start session `%s'"
+#~ msgstr "gdm_slave_session_start: Không thể khởi động session `%s'"
+
+#~ msgid ""
+#~ "Cannot start your shell.  It could be that the\n"
+#~ "system administrator has disabled your login.\n"
+#~ "It could also indicate an error with your account.\n"
+#~ msgstr ""
+#~ "Không thể khởi động shell. Có lẽ quản trị hệ thống đã\n"
+#~ "vô hiệu hóa quá trình đăng nhập của bạn. Ngoài ra nó chỉ\n"
+#~ "ra rằng có lỗi trong account của bạn.\n"
+
+#~ msgid "gdm_slave_exec_script: Can't fork script process!"
+#~ msgstr "gdm_slave_exec_script: Không thể nhân đôi tiến trình script!"
+
+#~ msgid "gdm_parse_enriched_login: Failed creating pipe"
+#~ msgstr "gdm_parse_enriched_login: Lỗi tạo ống dẫn"
+
+#~ msgid "gdm_parse_enriched_login: Can't fork script process!"
+#~ msgstr "gdm_parse_enriched_login: Không thể nhân đôi tiến trình script!"
+
+#~ msgid "Can't find /etc/pam.d/%s!"
+#~ msgstr "Không thể tìm thấy /etc/pam.d/%s!"
+
+#~ msgid "Can't set PAM_RUSER=%s"
+#~ msgstr "Không thể gán PAM_RUSER=%s"
+
+#~ msgid ""
+#~ "\n"
+#~ "Incorrect username or password. Letters must be typed in the correct "
+#~ "case. Please make sure the Caps Lock key is not enabled."
+#~ msgstr ""
+#~ "\n"
+#~ "Sai tên người dùng hoặc mật khẩu. Các ký tự phải phân biệt chữ hoa, chữ "
+#~ "thường. Vui lòng kiểm tra xem phím Caps Lock có bật hay không."
+
+#~ msgid "gdm_xdmcp_init: Could not get server hostname: %s!"
+#~ msgstr "gdm_xdmcp_init: Không thể lấy tên máy chủ server: %s!"
+
+#~ msgid "gdm_xdmcp_init: Could not create socket!"
+#~ msgstr "gdm_xdmcp_init: Không thể tạo socket!"
+
+#~ msgid "gdm_xdmcp_init: Could not bind to XDMCP socket!"
+#~ msgstr "gdm_xdmcp_init: Không thể nối với XDMCP socket!"
+
+#~ msgid "gdm_xdmcp_handle_forward_query: Could not read display address"
+#~ msgstr "gdm_xdmcp_handle_forward_query: Không thể đọc địa chỉ display"
+
+#~ msgid "gdm_xdmcp_handle_forward_query: Could not read display port number"
+#~ msgstr ""
+#~ "gdm_xdmcp_handle_forward_query: Không thể trích lấy authlist từ gói tin"
+
+#~ msgid ""
+#~ "gdm_xdmcp_handle_forward_query: Could not extract authlist from packet"
+#~ msgstr "gdm_xdmcp_handle_forward_query: Không thể trích authlist từ gói tin"
+
+#~ msgid "gdm_xdmcp_handle_forward_query: Error in checksum"
+#~ msgstr "gdm_xdmcp_handle_forward_query: Lỗi checksum"
+
+#~ msgid "gdm_xdmcp_handle_forward_query: Bad address"
+#~ msgstr "gdm_xdmcp_handle_forward_query: Địa chỉ sai"
+
+#~ msgid "gdm_xdmcp_handle_request: Could not read Client Address"
+#~ msgstr "gdm_xdmcp_handle_request: Không thể đọc địa chỉ Client"
+
+#~ msgid "gdm_xdmcp_handle_request: Could not read Manufacturer ID"
+#~ msgstr "gdm_xdmcp_handle_request: Không thể đọc mã ID của nhà sản xuất"
+
+#~ msgid "gdm_xdmcp_handle_manage: Could not read Session ID"
+#~ msgstr "gdm_xdmcp_handle_manage: Không thể đọc mã ID của session"
+
+#~ msgid "gdm_xdmcp_handle_manage: Could not read Display Number"
+#~ msgstr "gdm_xdmcp_handle_manage: Không thể đọc Số hiệu Display"
+
+#~ msgid "gdm_xdmcp_handle_manage: Could not read Display Class"
+#~ msgstr "gdm_xdmcp_handle_manage: Không thể đọc Display Class"
+
+#~ msgid "gdm_xdmcp_handle_keepalive: Could not read Display Number"
+#~ msgstr "gdm_xdmcp_handle_keepalive: Không thể đọc Số hiệu Display"
+
+#~ msgid "gdm_xdmcp_handle_keepalive: Could not read Session ID"
+#~ msgstr "gdm_xdmcp_handle_keepalive: Không thể đọc mã ID của session"
+
+#~ msgid "gdm_xdmcp_init: No XDMCP support"
+#~ msgstr "gdm_xdmcp_init: Không hỗ trợ XDMCP"
+
+#~ msgid "gdm_xdmcp_run: No XDMCP support"
+#~ msgstr "gdm_xdmcp_run: Không hỗ trợ XDMCP"
+
+#~ msgid ""
+#~ "The main area of this application shows the hosts on the local network "
+#~ "that have \"XDMCP\" enabled. This allows users to login remotely to other "
+#~ "machines as if they were logged on using the console.\n"
+#~ "\n"
+#~ "You can rescan the network for new hosts by clicking \"Refresh\". When "
+#~ "you have selected a host click \"Connect\" to open a session to that "
+#~ "machine."
+#~ msgstr ""
+#~ "Phần chính của ứng dụng hiển thị các máy chủ trên mạng nội bộ mà có bật "
+#~ "\"XDMCP\". Nó cho phép các người dùng đăng nhập từ xa vào các máy khác "
+#~ "như thể họ đăng nhập bằng console.\n"
+#~ "\n"
+#~ "Bạn có thể quét lại mạng để phát hiện các máy chủ mới bằng cách nhấn nút "
+#~ "'Cập nhật'. Khi bạn chọn một máy, nhấn \"Kết nối\" để mở một session tới "
+#~ "máy đó."
+
+#~ msgid "Information"
+#~ msgstr "Thông tin"
+
+#~ msgid "gdm_signals_init: Error setting up HUP signal handler"
+#~ msgstr "gdm_signals_init: Lỗi khi thiết lập bộ xử lý tín hiệu HUP"
+
+#~ msgid "gdm_signals_init: Error setting up INT signal handler"
+#~ msgstr "gdm_signals_init: Lỗi khi thiết lập bộ xử lý tín hiệu INT"
+
+#~ msgid "gdm_signals_init: Error setting up TERM signal handler"
+#~ msgstr "gdm_signals_init: Lỗi khi thiết lập bộ xử lý tín hiệu TERM"
+
+#~ msgid "AnotherLevel"
+#~ msgstr "Mức khác"
+
+#~ msgid "Failsafe"
+#~ msgstr "Dự phòng"
+
+#~ msgid "Gnome"
+#~ msgstr "Gnome"
+
+#~ msgid "XSession"
+#~ msgstr "XSession"
+
+#~ msgid "Gnome Chooser"
+#~ msgstr "Trình chọn lựa"
+
+#~ msgid ""
+#~ "Doubleclick here to un-iconify the login window, so that you may log in."
+#~ msgstr ""
+#~ "Nhấn đúp vào đây để mở cửa sổ đăng nhập, như thế bạn có thể đăng nhập."
+
+#~ msgid "gdm_login_parse_config: No configuration file: %s. Using defaults."
+#~ msgstr ""
+#~ "gdm_login_parse_config: Không có tập tin cấu hình: %s. Dùng cấu hình mặc "
+#~ "định."
+
+#~ msgid "gdm_login_session_init: Session script directory not found!"
+#~ msgstr "gdm_login_session_init: Không có thư mục session script!"
+
+#~ msgid ""
+#~ "This session will log you directly into GNOME, into your current session."
+#~ msgstr ""
+#~ "Session này sẽ đăng nhập trực tiếp vào GNOME, vào session hiện thời của "
+#~ "bạn."
+
+#~ msgid ""
+#~ "This session will log you into GNOME and it will let you choose which one "
+#~ "of the GNOME sessions you want to use."
+#~ msgstr ""
+#~ "Session này sẽ đăng nhập vào GNOME và cho phép chọn một trong các session "
+#~ "của GNOME mà bạn muốn dùng"
+
+#~ msgid "Create new session"
+#~ msgstr "Tạo session"
+
+#~ msgid "Name: "
+#~ msgstr "Tên: "
+
+#~ msgid "Remember this setting"
+#~ msgstr "Ghi nhớ thông số"
+
+#~ msgid "Can't open icon file: %s. Suspending iconify feature!"
+#~ msgstr "Không thể mở tập tin icon: %s. Ngừng tính năng thu nhỏ!"
+
+#~ msgid "Iconify the login window"
+#~ msgstr "Thu nhỏ cửa sổ đăng nhập"
+
+#~ msgid "_Reboot..."
+#~ msgstr "_Khởi động máy..."
+
+#~ msgid "S_ystem"
+#~ msgstr "_Hệ thống"
+
+#~ msgid "main: Error setting up HUP signal handler"
+#~ msgstr "main: Lỗi thiết lập trình xử lý tín hiệu HUP"
+
+#~ msgid "main: Error setting up INT signal handler"
+#~ msgstr "main: Lỗi thiết lập trình xử lý tín hiệu INT"
+
+#~ msgid "main: Error setting up TERM signal handler"
+#~ msgstr "main: Lỗi thiết lập trình xử lý tín hiệu TERM"
+
+#~ msgid "Select a photo"
+#~ msgstr "Chọn ảnh"
+
+#~ msgid "GDM Setup"
+#~ msgstr "Thiết lập GDM"
+
+#~ msgid "Welcome string: "
+#~ msgstr "Thông điệp chào mừng: "
+
+#~ msgid "<b>Author:</b>"
+#~ msgstr "<b>Tác giả:</b>"
+
+#~ msgid "GDM Configurator"
+#~ msgstr "Trình cấu hình GDM"
+
+#~ msgid "greeter_parse_config: No configuration file: %s. Using defaults."
+#~ msgstr ""
+#~ "greeter_parse_config: Không có tập tin cấu hình: %s. Dùng cấu hình mặc "
+#~ "định."
+
+#~ msgid "main: Error setting up CHLD signal handler"
+#~ msgstr "main: Lỗi thiết lập trình xử lý tín hiệu CHLD"
+
+#~ msgid "<b>Copyright:</b>"
+#~ msgstr "<b>Bản quyền:</b>"
+
+#~ msgid "Disconnect"
+#~ msgstr "Ngắt kết nối"
+
+#~ msgid "Option"
+#~ msgstr "Tùy chọn"
+
+#~ msgid "Quit"
+#~ msgstr "Thoát"
+
+#~ msgid "System"
+#~ msgstr "Hệ thống"
+
+#~ msgid "gdm_chooser_parse_config: No configuration file: %s. Aborting."
+#~ msgstr "gdm_chooser_parse_config: Không có tập tin cấu hình: %s. Dừng."
+
+#~ msgid "A-M|American English"
+#~ msgstr "A-M|Anh (theo Mỹ)"
+
+#~ msgid "A-M|British English"
+#~ msgstr "A-M|Anh (theo Anh Quốc)"
+
+#~ msgid "N-Z|Brazilian Portuguese"
+#~ msgstr "N-Z|Brazil"
+
+#~ msgid "Catalan"
+#~ msgstr "Catalan"
+
+#~ msgid "Chinese (simplified)"
+#~ msgstr "Tiếng Hoa (giản thể)"
+
+#~ msgid "Chinese (traditional)"
+#~ msgstr "Tiếng Hoa (phồn thể)"
+
+#~ msgid "Croatian"
+#~ msgstr "Croatia"
+
+#~ msgid "Czech"
+#~ msgstr "Séc"
+
+#~ msgid "Danish"
+#~ msgstr "Đan Mạch"
+
+#~ msgid "Dutch"
+#~ msgstr "Hà Lan"
+
+#~ msgid "English"
+#~ msgstr "Anh"
+
+#~ msgid "American English"
+#~ msgstr "Mỹ"
+
+#~ msgid "British English"
+#~ msgstr "Anh"
+
+#~ msgid "Estonian"
+#~ msgstr "Estonia"
+
+#~ msgid "Finnish"
+#~ msgstr "Phần Lan"
+
+#~ msgid "French"
+#~ msgstr "Pháp"
+
+#~ msgid "Galician"
+#~ msgstr "Galicia"
+
+#~ msgid "German"
+#~ msgstr "Đức"
+
+#~ msgid "Greek"
+#~ msgstr "Hy Lạp"
+
+#~ msgid "Hebrew"
+#~ msgstr "Do Thái"
+
+#~ msgid "Hungarian"
+#~ msgstr "Hungari"
+
+#~ msgid "Icelandic"
+#~ msgstr "Icelandic"
+
+#~ msgid "Italian"
+#~ msgstr "Ý"
+
+#~ msgid "Japanese"
+#~ msgstr "Nhật"
+
+#~ msgid "Korean"
+#~ msgstr "Hàn Quốc"
+
+#~ msgid "Lithuanian"
+#~ msgstr "Lithuania"
+
+#~ msgid "Norwegian (bokmal)"
+#~ msgstr "Na Uy (bokmal)"
+
+#~ msgid "Norwegian (nynorsk)"
+#~ msgstr "Na Uy (nynorsk)"
+
+#~ msgid "Polish"
+#~ msgstr "Ba Lan"
+
+#~ msgid "Portuguese"
+#~ msgstr "Bồ Đào Nha"
+
+#~ msgid "Brazilian Portuguese"
+#~ msgstr "Braxin"
+
+#~ msgid "Romanian"
+#~ msgstr "Rumani"
+
+#~ msgid "Russian"
+#~ msgstr "Nga"
+
+#~ msgid "Slovak"
+#~ msgstr "Slovak"
+
+#~ msgid "Slovenian"
+#~ msgstr "Slovenia"
+
+#~ msgid "Spanish"
+#~ msgstr "Tây Ban Nha"
+
+#~ msgid "Swedish"
+#~ msgstr "Thụy Điển"
+
+#~ msgid "Turkish"
+#~ msgstr "Thổ Nhĩ Ký"
+
+#~ msgid "%s: Could not get address from hostname!"
+#~ msgstr "%s: Không thể lấy địa chỉ từ tên máy chủ!"
+
+#~ msgid "gdm_slave_session_start: Authentication completed. Whacking greeter"
+#~ msgstr ""
+#~ "gdm_slave_session_start: Quá trình xác thực hoàn tất. Whacking greeter"
+
+#~ msgid "Basic"
+#~ msgstr "Cơ bản"
+
+#~ msgid "Expert"
+#~ msgstr "Chuyên gia"
+
+#~ msgid ""
+#~ "This panel displays the basic options for configuring GDM.\n"
+#~ "\n"
+#~ "If you need finer detail, select 'Expert' or 'System' from the list above,"
+#~ "which will display some of the more complex options of GDM that rarely "
+#~ "need to be changed."
+#~ msgstr ""
+#~ "Panel này hiển thị các tùy chọn cơ bản để cấu hình GDM.\n"
+#~ "\n"
+#~ "Nếu bạn cần thông tin cao cấp hơn, hay chọn mục 'Chuyên gia' hoặc 'Hệ "
+#~ "thống' từ danh sách trên. Những mục đó sẽ hiển thị các tùy chọn phức tạp "
+#~ "hơn và hiếm khi cần thay đổi."
+
+#~ msgid ""
+#~ "This panel displays the more advanced options of GDM.\n"
+#~ "\n"
+#~ "Be sure to take care when manipulating the security options, or you could "
+#~ "be vulnerable to attackers.\n"
+#~ "\n"
+#~ "Choose \"System\" to change fundamental options in GDM."
+#~ msgstr ""
+#~ "Khung này hiển thị nhiều tùy chọn nâng cao hơn.\n"
+#~ "\n"
+#~ "Hãy chắc chắn bạn rất cẩn thẩn khi thay đổi các tùy chọn liên quan đến "
+#~ "bảo mật, nếu không bạn sẽ tạo ra các điểm yếu và dễ bị tấn công.\n"
+#~ "\n"
+#~ "Chọn \"Hệ thống\" để thay đổi các tùy chọn cơ bản của GDM."
+
+#~ msgid ""
+#~ "This panel displays GDM's fundamental system settings.\n"
+#~ "\n"
+#~ "You should only change these paths if you really know what you are doing, "
+#~ "as an incorrect setup could stop your machine from booting properly.\n"
+#~ "\n"
+#~ "Choose \"Basic\" if you just want to change your machine's login "
+#~ "appearance."
+#~ msgstr ""
+#~ "Khung này hiển thị các thiết lập hệ thống cơ bản của GDM.\n"
+#~ "\n"
+#~ "Bạn chỉ có thể thay đổi những đường dẫn này nếu bạn thất sự biết rõ bạn "
+#~ "đang làm gì, vì một thiết lập sai sẽ làm cho máy bạn khởi động không "
+#~ "được.\n"
+#~ "\n"
+#~ "Chọn \"Cơ bản\" nếu bạn chỉ muốn thay đổi diện mạo của quá trình đăng nhập"
+
+#~ msgid ""
+#~ "The glade ui description file doesn't seem to contain the\n"
+#~ "widget \"%s\". Unfortunately I cannot continue.\n"
+#~ "Please check your installation."
+#~ msgstr ""
+#~ "Tập tin glade không chứa ô điều khiển \"%s\". \n"
+#~ "Không thể tiếp tục chương trình.\n"
+#~ "Vui lòng kiểm tra lại bản cài đặt."
+
+#~ msgid ""
+#~ "Cannot find the glade interface description\n"
+#~ "file, cannot run gdmconfig.\n"
+#~ "Please check your installation and the\n"
+#~ "location of the gdmconfig.glade2 file."
+#~ msgstr ""
+#~ "Không thể tìm thấy tập tin glade \n"
+#~ "nên không thể chạy gdmconfig.\n"
+#~ "Vui lòng kiểm tra lại bản cài đặt\n"
+#~ "và vị trí tập tin gdmconfig.glade2"
+
+#~ msgid ""
+#~ "Cannot find the gdmconfigurator widget in\n"
+#~ "the glade interface description file\n"
+#~ "Please check your installation."
+#~ msgstr ""
+#~ "Không thể tìm thấy ô điều khiển gdmconfigurator\n"
+#~ "trong tập tin glade. Vul lòng kiểm tra lại bản\n"
+#~ "cài đặt."
+
+#~ msgid ""
+#~ "The configuration file: %s\n"
+#~ "does not exist! Using default values."
+#~ msgstr ""
+#~ "Tập tin cấu hình không tồn tại: %s\n"
+#~ "Dùng giá trị mặc định."
+
+#~ msgid "Error reading session script!"
+#~ msgstr "Lỗi khi đọc script session!"
+
+#~ msgid "Error reading this session script"
+#~ msgstr "Lỗi khi đọc script session này"
+
+#~ msgid "Yes"
+#~ msgstr "Đúng"
+
+#~ msgid "No"
+#~ msgstr "Sai"
+
+#~ msgid "gdm_config_parse_most: Invalid server line in config file. Ignoring!"
+#~ msgstr ""
+#~ "gdm_config_parse_most: Dòng server trong tập tin cấu hình không hợp lệ. "
+#~ "Bỏ qua!"
+
+#~ msgid ""
+#~ "The applied settings cannot take effect until gdm\n"
+#~ "is restarted or your computer is rebooted.\n"
+#~ "You can restart GDM when all sessions are\n"
+#~ "closed (when all users log out) or you can\n"
+#~ "restart GDM now (which will kill all current\n"
+#~ "sessions)"
+#~ msgstr ""
+#~ "Các thiết lập được áp dụng chưa thể có tác dụng\n"
+#~ "tới khi nào GDM khởi động lại hoặc khởi động\n"
+#~ "lại máy tính. Bạn có thể khởi động lại GDM khi\n"
+#~ "mọi session đều kết thúc (khi mọi người dùng\n"
+#~ "đều thoát) hoặc bạn có thể khởi động GDM ngay\n"
+#~ "bây giờ (và sẽ chấm dứt hoạt động của mọi session)"
+
+#~ msgid "Restart after logout"
+#~ msgstr "Khởi động lại sau khi đăng xuất"
+
+#~ msgid "Restart now"
+#~ msgstr "Khởi động lại ngay"
+
+#~ msgid ""
+#~ "Are you sure you wish to restart GDM\n"
+#~ "now and lose any unsaved data?"
+#~ msgstr ""
+#~ "Bạn có muốn khởi động lại GDM ngay bây giờ \n"
+#~ "và sẽ đánh mất tất cả dữ liệu chưa được lưu?"
+
+#~ msgid ""
+#~ "The greeter settings will take effect the next time\n"
+#~ "it is displayed.  The rest of the settings will not\n"
+#~ "take effect until gdm is restarted or the computer is\n"
+#~ "rebooted"
+#~ msgstr ""
+#~ "Các thiết lập chào hỏi sẽ có tác dụng ngay lần xuất hiện sau.\n"
+#~ "Phần còn lại của các thiết lập sẽ chưa có tác dụng tới khi \n"
+#~ "nào GDM được khởi động lại hoặc khởi động lại máy tính."
+
+#~ msgid ""
+#~ "You have not defined any local servers.\n"
+#~ "Usually this is not a good idea unless you\n"
+#~ "are sure you do not want users to be able to\n"
+#~ "log in with the graphical interface on the\n"
+#~ "local console and only use the XDMCP service.\n"
+#~ "\n"
+#~ "Are you sure you wish to apply these settings?"
+#~ msgstr ""
+#~ "Bạn chưa định nghĩa bất kỳ server nội bộ nào.\n"
+#~ "Thường thì điều này không hay trừ khi bạn chắc\n"
+#~ "là bạn không muốn những người dùng có thể \n"
+#~ "đăng nhập vào giao diện đồ họa trên console \n"
+#~ "nội bộ và chỉ dùng dịch vụ XDMCP.\n"
+#~ "\n"
+#~ "Bạn có muốn áp dụng những thiết lập này?"
+
+#~ msgid ""
+#~ "\n"
+#~ "Could not delete session %s\n"
+#~ "   Error: %s"
+#~ msgstr ""
+#~ "\n"
+#~ "Không thể xóa session %s\n"
+#~ "   Lỗi: %s"
+
+#~ msgid ""
+#~ "\n"
+#~ "Could not remove session %s\n"
+#~ "   Error: %s"
+#~ msgstr ""
+#~ "\n"
+#~ "Không thể loại bỏ session %s\n"
+#~ "    Lỗi: %s"
+
+#~ msgid ""
+#~ "\n"
+#~ "Could not write session %s\n"
+#~ "   Error: %s"
+#~ msgstr ""
+#~ "\n"
+#~ "Không thể ghi session %s\n"
+#~ "   Lỗi: %s"
+
+#~ msgid ""
+#~ "\n"
+#~ "Could not write contents to session %s\n"
+#~ "   Error: %s"
+#~ msgstr ""
+#~ "\n"
+#~ "Không thể ghi nội dung của session %s\n"
+#~ "   Lỗi: %s"
+
+#~ msgid ""
+#~ "\n"
+#~ "Could not unlink old default session\n"
+#~ "   Error: %s"
+#~ msgstr ""
+#~ "\n"
+#~ "Không thể xóa session mặc định cũ\n"
+#~ "   Lỗi: %s"
+
+#~ msgid ""
+#~ "\n"
+#~ "Could not find a suitable name for the default session link"
+#~ msgstr ""
+#~ "\n"
+#~ "Không thể tìm thấy tên thích hợp cho liên kết session mặc định"
+
+#~ msgid ""
+#~ "\n"
+#~ "Could not link new default session\n"
+#~ "   Error: %s"
+#~ msgstr ""
+#~ "\n"
+#~ "Không thể liên kết với session mặc định mới\n"
+#~ "   Lỗi: %s"
+
+#~ msgid ""
+#~ "There were errors writing changes to the session files.\n"
+#~ "The configuration may not be completely saved.\n"
+#~ msgstr ""
+#~ "Xảy ra lỗi khi ghi các thay đổi của session lên tập tin.\n"
+#~ "Tập tin cấu hình có thể không được lưu hoàn chỉnh.\n"
+
+#~ msgid ""
+#~ "This will destroy any changes made in this session.\n"
+#~ "Are you sure you want to do this?"
+#~ msgstr ""
+#~ "Việc này sẽ hủy toàn bộ thay đổi trong session.\n"
+#~ "Bạn có muốn thực hiện việc này?"
+
+#~ msgid ""
+#~ "This will destroy any changes made in the configuration.\n"
+#~ "Are you sure you want to do this?"
+#~ msgstr ""
+#~ "Bạn sẽ hủy toàn bộ các thay đổi trong cấu hình.\n"
+#~ "Bạn có muốn thực hiện việc này?"
+
+#~ msgid "A command line must start with a forward slash ('/')"
+#~ msgstr "Dòng lệnh phải bắt đầu với ký tự '/'"
+
+#~ msgid "A descriptive server name must be supplied"
+#~ msgstr "Phần tên mô tả server phải được cung cấp"
+
+#~ msgid "A session name must be unique and not empty"
+#~ msgstr "Tên session phải là duy nhất và khác rỗng"
+
+#~ msgid "Enter a name for the new session"
+#~ msgstr "Nhập tên của session mới"
+
+#~ msgid ""
+#~ "You have modified the sessions directory.\n"
+#~ "Your session changes will still get written\n"
+#~ "to the old directory however, until you reload\n"
+#~ "the configuration dialog again."
+#~ msgstr ""
+#~ "Bạn đã thay đổi thư mục session. Tuy nhiên \n"
+#~ "các thay đổi trong session của bạn sẽ vẫn được\n"
+#~ "ghi vào trong thư mục cũ tới khi bạn nạp lại\n"
+#~ "hộp thoại cấu hình."
+
+#~ msgid "GDM Configuration Utility"
+#~ msgstr "Tiện ích cấu hình GDM"
+
+#~ msgid "Revert to settings in the configuration file"
+#~ msgstr "Hoàn nguyên trở lại các thiết lập ban đầu trong tập tin cấu hình"
+
+#~ msgid "Revert settings"
+#~ msgstr "Hoàn nguyên các thiết lập"
+
+#~ msgid "Revert to settings that were shipped with your system"
+#~ msgstr "Hoàn nguyên các thiết lập như khi ban đầu trên hệ thống"
+
+#~ msgid "Revert to Factory Settings"
+#~ msgstr "Hoàn nguyên trở lại thiết lập của nhà sản xuất"
+
+#~ msgid "Apply the current changes"
+#~ msgstr "Áp dụng các thay đổi"
+
+#~ msgid "Apply"
+#~ msgstr "Áp dụng"
+
+#~ msgid " "
+#~ msgstr " "
+
+#~ msgid "basic_settings"
+#~ msgstr "basic_settings"
+
+#~ msgid "General Appearance"
+#~ msgstr "Diện mạo chung"
+
+#~ msgid "Select a logo to be displayed during login"
+#~ msgstr "Chọn biểu tượng được hiển thị trong suốt quá trình đăng nhập"
+
+#~ msgid "Minimised Icon: "
+#~ msgstr "Biểu tượng thu nhỏ: "
+
+#~ msgid "Select a GTK+ theme file (gtkrc)"
+#~ msgstr "Chọn tập tin Sắc thái GTK+ (gtkrc)"
+
+#~ msgid ""
+#~ "This is the GTK+ RC file that describes the theme that the login window "
+#~ "should use"
+#~ msgstr "Đây là tập tin GTK+ RC mô tả sắc thái cửa sổ đăng nhập nên dùng"
+
+#~ msgid "Gtk+ RC file: "
+#~ msgstr "Tập tin Gtk+ RC: "
+
+#~ msgid "Login appearance"
+#~ msgstr "Diện mạo đăng nhập"
+
+#~ msgid "Greeter Look and Feel"
+#~ msgstr "Diện mạo trình chào mừng"
+
+#~ msgid ""
+#~ "Show the \"System\" menu.  This has the shutdown, reboot and "
+#~ "configuration items"
+#~ msgstr ""
+#~ "Hiện menu \"Hệ thống\". Menu này chứa lệnh Tắt máy, Khởi động máy và Cấu "
+#~ "hình"
+
+#~ msgid "Show the 'system' menu, (for reboot, shutdown etc.)"
+#~ msgstr "Hiện menu 'Hệ thống' (để tắt máy, khởi động lại...)"
+
+#~ msgid ""
+#~ "If the user fails to authenticate himself the login window should Quiver "
+#~ "to indicate failure"
+#~ msgstr ""
+#~ "Nếu người dùng thất bại khi xác thực, cửa sổ đăng nhập nên rung nhẹ để "
+#~ "thể hiện sự thất bại"
+
+#~ msgid "Quiver on failure"
+#~ msgstr "Rung nhẹ khi thất bại"
+
+#~ msgid ""
+#~ "Show the title bar on the login window.  If this is off the user won't be "
+#~ "able to move nor iconify the login window"
+#~ msgstr ""
+#~ "Hiện thanh tựa đề trên cửa sổ đăng nhập. Nếu tắt tùy chọn này, người dùng "
+#~ "sẽ không thể di chuyển hoặc thu nhỏ cửa sổ đăng nhập."
+
+#~ msgid "Show title bar on login window"
+#~ msgstr "Hiện thanh tựa đề trên cửa sổ đăng nhập"
+
+#~ msgid "%n"
+#~ msgstr "%n"
+
+#~ msgid "This is %n"
+#~ msgstr "Đây là %n"
+
+#~ msgid "The welcome message displayed on the login window"
+#~ msgstr "Thông điệp chào mừng được hiển thị trên cửa sổ đăng nhập"
+
+#~ msgid "Default font: "
+#~ msgstr "Phông mặc định: "
+
+#~ msgid "The font to use on the welcome message"
+#~ msgstr "Phông dùng trong thông điệp chào mừng"
+
+#~ msgid "Pick a Font"
+#~ msgstr "Chọn Phông"
+
+#~ msgid "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz"
+#~ msgstr "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz"
+
+#~ msgid "Extras"
+#~ msgstr "Mở rộng"
+
+#~ msgid "Default locale: "
+#~ msgstr "Locale mặc định: "
+
+#~ msgid "ca_ES"
+#~ msgstr "ca_ES"
+
+#~ msgid "cs_CZ"
+#~ msgstr "cs_CZ"
+
+#~ msgid "hr_HR"
+#~ msgstr "hr_HR"
+
+#~ msgid "da_DK"
+#~ msgstr "da_DK"
+
+#~ msgid "de_DE"
+#~ msgstr "de_DE"
+
+#~ msgid "nl_NL"
+#~ msgstr "nl_NL"
+
+#~ msgid "en_US"
+#~ msgstr "en_US"
+
+#~ msgid "en_UK"
+#~ msgstr "en_UK"
+
+#~ msgid "et_EE"
+#~ msgstr "et_EE"
+
+#~ msgid "fi_FI"
+#~ msgstr "fi_FI"
+
+#~ msgid "fr_FR"
+#~ msgstr "fr_FR"
+
+#~ msgid "gl_ES"
+#~ msgstr "gl_ES"
+
+#~ msgid "el_GR"
+#~ msgstr "el_GR"
+
+#~ msgid "iw_IL"
+#~ msgstr "iw_IL"
+
+#~ msgid "hu_HU"
+#~ msgstr "hu_HU"
+
+#~ msgid "is_IS"
+#~ msgstr "is_IS"
+
+#~ msgid "it_IT"
+#~ msgstr "it_IT"
+
+#~ msgid "ja_JP"
+#~ msgstr "ja_JP"
+
+#~ msgid "ko_KR"
+#~ msgstr "ko_KR"
+
+#~ msgid "lt_LT"
+#~ msgstr "lt_LT"
+
+#~ msgid "nn_NO"
+#~ msgstr "nn_NO"
+
+#~ msgid "no_NO"
+#~ msgstr "no_NO"
+
+#~ msgid "pl_PL"
+#~ msgstr "pl_PL"
+
+#~ msgid "pt_PT"
+#~ msgstr "pt_PT"
+
+#~ msgid "pt_BR"
+#~ msgstr "pt_BR"
+
+#~ msgid "ro_RO"
+#~ msgstr "ro_RO"
+
+#~ msgid "ru_RU"
+#~ msgstr "ru_RU"
+
+#~ msgid "sk_SK"
+#~ msgstr "sk_SK"
+
+#~ msgid "sl_SI"
+#~ msgstr "sl_SI"
+
+#~ msgid "es_ES"
+#~ msgstr "es_ES"
+
+#~ msgid "sv_SE"
+#~ msgstr "sv_SE"
+
+#~ msgid "tr_TR"
+#~ msgstr "tr_TR"
+
+#~ msgid "zh_CN"
+#~ msgstr "zh_CN"
+
+#~ msgid "zh_TW"
+#~ msgstr "zh_TW"
+
+#~ msgid ""
+#~ "This is the locale that GDM uses when it cannot find what the system "
+#~ "locale is set to.  This should be in the standard format such as \"en_US"
+#~ "\" for American English or \"cs_CZ\" for Czech"
+#~ msgstr ""
+#~ "Đây là locale mà GDM dùng khi không có locale hệ thống nào được thiết "
+#~ "lập. Locale nên ở dạng chuẩn như \"en_US\" (Tiếng Mỹ) hoặc \"cs_CZ"
+#~ "\" (tiếng CH Séc)"
+
+#~ msgid ""
+#~ "Always use the 24 hour format for the clock in the greeter, even if the "
+#~ "norm for the current locale is 12 hour"
+#~ msgstr ""
+#~ "Luôn dùng dạng thức thời gian 24h cho đồng hồ của trình chào mừng, ngay "
+#~ "cả nếu\n"
+#~ "locale hiện thời quy định là dạng 12h"
+
+#~ msgid "Position"
+#~ msgstr "Vị trí"
+
+#~ msgid "Set the initial position of the login window to the values below"
+#~ msgstr "Thiết lập vị trí ban đầu của cửa sổ đăng nhập bằng giá trị ở dưới"
+
+#~ msgid "Manually set position"
+#~ msgstr "Gán vị trí thủ công"
+
+#~ msgid "Do note allow the user to drag the login window around"
+#~ msgstr "Không cho phép người dùng kéo cửa sổ đăng nhập đi chỗ khác"
+
+#~ msgid "Lock position"
+#~ msgstr "Cố định vị trí"
+
+#~ msgid "X position: "
+#~ msgstr "Toạ độ X: "
+
+#~ msgid "Y position: "
+#~ msgstr "Tọa độ Y: "
+
+#~ msgid "Xinerama screen: "
+#~ msgstr "Màn hình Xinerama: "
+
+#~ msgid ""
+#~ "If you have xinerama multi display setup which screen should the login "
+#~ "window appear on.  0 will usually do just fine."
+#~ msgstr ""
+#~ "Nếu bạn thiết lập mult-display (Xinerama), tùy chọn cho biết cửa sổ đăng "
+#~ "nhập nên xuất hiện trên mành hình nào. Khuyến khích giá trị 0."
+
+#~ msgid "Login behaviour"
+#~ msgstr "Hành vi đăng nhập"
+
+#~ msgid "Face browser"
+#~ msgstr "Duyệt chân dung"
+
+#~ msgid ""
+#~ "Show a browser of user face images. The users can put their picture in ~/."
+#~ "gnome/photo"
+#~ msgstr ""
+#~ "Hiện trình duyệt, duyệt các ảnh dùng làm chân dung. Người dùng có thể "
+#~ "thêm ảnh của người dùng vào trong thư mục ~/."
+
+#~ msgid "Default face image: "
+#~ msgstr "Ảnh chân dung mặc định: "
+
+#~ msgid "Global faces directory: "
+#~ msgstr "Thư mục chân dung chung: "
+
+#~ msgid "Maximum face width: "
+#~ msgstr "Chiều rộng chân dung tối đa: "
+
+#~ msgid "Choose the directory to search for faces"
+#~ msgstr "Chọn thư mục tìm chân dung"
+
+#~ msgid "Maximum face height: "
+#~ msgstr "Chiều cao chân dung tối đa: "
+
+#~ msgid "Exclude these users: "
+#~ msgstr "Loại trừ người dùng: "
+
+#~ msgid "A comma separated list of users to exclude from the face browser."
+#~ msgstr ""
+#~ "Danh sách cách nhau bởi dấu phẩy tên những người dùng bị loại trừ khỏi "
+#~ "trình duyệt chân dung."
+
+#~ msgid "Background type: "
+#~ msgstr "Kiểu nền: "
+
+#~ msgid "The background should be the standard background"
+#~ msgstr "Dùng nền chuẩn"
+
+#~ msgid "None"
+#~ msgstr "Không"
+
+#~ msgid "The background should be an image"
+#~ msgstr "Nền là ảnh"
+
+#~ msgid "The background should be a color"
+#~ msgstr "Nền là màu sắc"
+
+#~ msgid ""
+#~ "Scale background image to fit the entire screen. If this is not set then "
+#~ "the image will be tiled on the background."
+#~ msgstr ""
+#~ "Phóng to/thu nhỏ ảnh nền cho vừa màn hình. Nếu không chọn tùy chọn này, "
+#~ "ảnh sẽ được lát đều trên nền"
+
+#~ msgid "The color to use on the background"
+#~ msgstr "Màu dùng làm nền"
+
+#~ msgid "Background image:"
+#~ msgstr "Ảnh nền: "
+
+#~ msgid "On remote login screens only set color to reduce network traffic"
+#~ msgstr "Đối với đăng nhập từ xa, chỉ thiết lập màu nền để giảm tải cho mạng"
+
+#~ msgid "Background program"
+#~ msgstr "Chương trình nền"
+
+#~ msgid "Background program: "
+#~ msgstr "Chương trình nền: "
+
+#~ msgid "Select a file containing Locale information"
+#~ msgstr "Chọn một tập tin chứa thông tin Locale"
+
+#~ msgid "The program to run in the background of the login."
+#~ msgstr "Chương trình cần chạy đằng sau quá trình đăng nhập."
+
+#~ msgid "Automatic login: "
+#~ msgstr "Tự động đăng nhập: "
+
+#~ msgid "Seconds before login: "
+#~ msgstr "Số giây trưới khi đăng nhập: "
+
+#~ msgid "expert"
+#~ msgstr "chuyên gia"
+
+#~ msgid "Allow logging in as root (administrator) user."
+#~ msgstr "Cho phép root (administrator) đăng nhập."
+
+#~ msgid ""
+#~ "Allow logging in as root (administrator) user from a remote host using "
+#~ "GDM.  This is only relevant if you enable the XDMCP protocol."
+#~ msgstr ""
+#~ "Cho phép root (administrator) đăng nhập từ máy chủ ở xa. Chỉ có giá trị "
+#~ "nếu bạn bật dịch vụ XDMCP ."
+
+#~ msgid ""
+#~ "Allow logging in using the timed from a remote host using GDM.  This is "
+#~ "only relevant if you enable the XDMCP protocol.  Note that this is "
+#~ "insecure since remote hosts can gain access to this computer without the "
+#~ "use of a password, so be careful."
+#~ msgstr ""
+#~ "Cho phép đăng nhập tự động sau một khoảng thời gian chờ đối với các máy "
+#~ "chủ ở xa. Chỉ có giá trị nếu bật dịch vụ XDMCP. Chú ý rằng đây là một "
+#~ "tính năng không an toàn vì máy chủ ở xa có thể truy cập vào máy tính này "
+#~ "mà không cần mật khẩu. Vì vậy hãy cẩn thận."
+
+#~ msgid ""
+#~ "Determines whether GDM should kill X clients started by the init scripts "
+#~ "when the user logs in."
+#~ msgstr ""
+#~ "GDM có nên kết thúc các X client trước khi thực hiện các script init khi "
+#~ "người dùng đăng nhập hay không."
+
+#~ msgid "Kill 'init' clients"
+#~ msgstr "Kết thúc các client 'init'"
+
+#~ msgid "Should GDM print authentication errors in the greeter"
+#~ msgstr "GDM nên in lỗi xác thực trong trình chào mừng không"
+
+#~ msgid "Select how relaxed permissions are"
+#~ msgstr "Chọn quyền truy cập khi rảnh"
+
+#~ msgid "Permissions: "
+#~ msgstr "Quyền truy cập: "
+
+#~ msgid "Allow world writable files and directories"
+#~ msgstr "Cho phép mọi người có quyền ghi tập tin và thư mục"
+
+#~ msgid "World writable"
+#~ msgstr "Ghi thoải mái"
+
+#~ msgid "Allow group writable files and directories"
+#~ msgstr "Cho phép nhóm có quyền ghi tập tin và thư mục"
+
+#~ msgid "Group writable"
+#~ msgstr "Quyền ghi nhóm"
+
+#~ msgid "Only accept user owned files and directories"
+#~ msgstr "Chỉ chấp nhận người dùng sở hữu tập tin và thu mục"
+
+#~ msgid "Paranoia"
+#~ msgstr "Hoang tưởng"
+
+#~ msgid "Authorization Details"
+#~ msgstr "Chi tiết quá trình xác thực"
+
+#~ msgid "GDM runs as this user: "
+#~ msgstr "GDM chạy như người dùng: "
+
+#~ msgid "User 'auth' directory: "
+#~ msgstr "Thư mục 'auth' của người dùng: "
+
+#~ msgid "User 'auth' file: "
+#~ msgstr "Tập tin 'auth' của người dùng: "
+
+#~ msgid "GDM runs as this group: "
+#~ msgstr "GDM chạy như nhóm: "
+
+#~ msgid "Limits"
+#~ msgstr "Giới hạn"
+
+#~ msgid ""
+#~ "The number of seconds before a login is allowed after an unsuccesful try."
+#~ msgstr "Số giây trước khi được phép đăng nhập sau lần đăng nhập không thành"
+
+#~ msgid ""
+#~ "The maximum size of a file that gdm will attempt to read.  This is for "
+#~ "files that are read into memory and so you don't want users \"attacking\" "
+#~ "gdm by having large files."
+#~ msgstr ""
+#~ "Kích thước tập tin tối đa mà GDM cố đọc. Tùy chọn này dành do những tập "
+#~ "tin được đọc vào bộ nhớ và vì thế bạn không muốn người dùng \"tấn công\" "
+#~ "GDM bằng cách nạp tập tin cực lớn."
+
+#~ msgid "Retry delay: "
+#~ msgstr "Khoảng đợi trước khi thử lại: "
+
+#~ msgid "Maximum user file length: "
+#~ msgstr "Kích thước tập tin tối đa: "
+
+#~ msgid "Maximum session file length: "
+#~ msgstr "Kích thước tập tin session tối đa: "
+
+#~ msgid ""
+#~ "The session file is read in a way where a higher limit is still ok.  That "
+#~ "is it is never stored in memory."
+#~ msgstr ""
+#~ "Tập tin session được đọc vào bộ nhớ có một giới hạn cao hơn. Nhờ thế nó "
+#~ "không bao giờ được lưu trong bộ nhớ."
+
+#~ msgid "Enable XDMCP, a protocol to allow others to log in remotely"
+#~ msgstr "Bật XDMCP, một giao thức cho phép người dùng đăng nhập từ xa"
+
+#~ msgid "Connection Settings"
+#~ msgstr "Thông số kết nối"
+
+#~ msgid "Maximum indirect wait time: "
+#~ msgstr "Thời gian chờ gián tiếp tối đa: "
+
+#~ msgid "Maximum wait time: "
+#~ msgstr "Thời gian chờ tối đa: "
+
+#~ msgid "Maximum remote sessions: "
+#~ msgstr "Số session từ xa tối đa: "
+
+#~ msgid "Max pending indirect requests: "
+#~ msgstr "Số yêu cầu gián tiếp bị hoãn tối đa: "
+
+#~ msgid "Maximum pending requests: "
+#~ msgstr "Số yêu cầu bị hoãn tối đa: "
+
+#~ msgid ""
+#~ "Interval in minutes in which to ping the server.  If the server doesn't "
+#~ "respond in this many minutes (that is before the next time we ping it) "
+#~ "the display will be terminated."
+#~ msgstr ""
+#~ "Khoảng thời gian (theo phút) thực hiện lệnh ping server. Nếu server không "
+#~ "trả lời, display sẽ tự kết thúc."
+
+#~ msgid ""
+#~ "The script to run when the server sends a WILLING response to a QUERY.  "
+#~ "If this is empty or does not exist, the standard message with the system "
+#~ "ID is sent.  Only the first line of output from this script is read."
+#~ msgstr ""
+#~ "Script dùng để chạy khi server gửi tín hiệu WILLING để trả lời QUERY. Nếu "
+#~ "không có script này, thông điệp chuẩn đi kèm với mã ID hệ thống sẽ được "
+#~ "gửi. Chỉ dòng đầu tiên của đầu ra từ script này được dùng."
+
+#~ msgid ""
+#~ "Maximum displays per single host.  You can use this to prevent attacks by "
+#~ "hogging all the possible displays.  Does not apply to local connections."
+#~ msgstr ""
+#~ "Số display tối đa trên mỗi máy chủ. Bạn có thể tránh bị tấn công bằng "
+#~ "cách giảm số display có thể dùng. Không áp dụng cho các kết nối nội bộ."
+
+#~ msgid "Servers"
+#~ msgstr "Server"
+
+#~ msgid "Name"
+#~ msgstr "Tên"
+
+#~ msgid "Command"
+#~ msgstr "Lệnh"
+
+#~ msgid "Add server"
+#~ msgstr "Thêm server"
+
+#~ msgid "Edit server"
+#~ msgstr "Hiệu chỉnh server"
+
+#~ msgid "Static Servers (servers to always run)"
+#~ msgstr "Server tĩnh (luôn chạy)"
+
+#~ msgid "No."
+#~ msgstr "Không."
+
+#~ msgid "Server"
+#~ msgstr "Server"
+
+#~ msgid "Extra arguments"
+#~ msgstr "Thông số bổ sung"
+
+#~ msgid ""
+#~ "Instead of reinitializing running servers when a user logs out.  Always "
+#~ "kill and then start the server again."
+#~ msgstr ""
+#~ "Thay vì tái khởi tạo thông số các server đang chạy khi người dùng thoát. "
+#~ "Luôn luôn kết thúc server, sau đó chạy lại."
+
+#~ msgid "Always restart X servers"
+#~ msgstr "Luôn khởi động lại X server"
+
+#~ msgid "Xnest server: "
+#~ msgstr "Server Xnest: "
+
+#~ msgid "Maximum number of flexible servers: "
+#~ msgstr "Số flexible server tối đa: "
+
+#~ msgid ""
+#~ "The Xnest server.  This is a server that can run inside another server, "
+#~ "used for the flexible nested login."
+#~ msgstr ""
+#~ "Server Xnest. Đây là server có thể chay trong một server khác, được dùng "
+#~ "trong các quá trình đăng nhập lồng nhau."
+
+#~ msgid "Standard X server: "
+#~ msgstr "X server chuẩn: "
+
+#~ msgid "This is the standard X server to run when we are not told otherwise."
+#~ msgstr "X server chuẩn cần chạy khi không còn cách nào khác."
+
+#~ msgid "Script to run when X is crashing: "
+#~ msgstr "Script cần chạy khi X Window đổ vỡ: "
+
+#~ msgid ""
+#~ "A script to run when the X server keeps crashing and the failsafe X "
+#~ "server is either empty or also didn't take.  This will run an X setup "
+#~ "program defined below."
+#~ msgstr ""
+#~ "Script được chạy khi X server đổ vỡ và không có failsafe X server, hoặc "
+#~ "không thể chạy failsafe X server. Script này sẽ chạy chương trình cấu "
+#~ "hình X Window được định nghĩa bên dưới"
+
+#~ msgid "Failsafe X server:"
+#~ msgstr "Failsafe X server:"
+
+#~ msgid ""
+#~ "An X server binary to run if the standard one keeps crashing.  If this "
+#~ "fails the script below will be run."
+#~ msgstr ""
+#~ "X server được dùng khi server chuẩn đổ vỡ. Nếu X server này không chạy, "
+#~ "script dưới đây sẽ được dùng."
+
+#~ msgid "X-server setup"
+#~ msgstr "Trình cấu hình X server"
+
+#~ msgid "Select a directory to be used for system-wide session scripts"
+#~ msgstr "Chọn một thư mục được dùng để lưu các session script cấp hệ thống"
+
+#~ msgid "Available Sessions"
+#~ msgstr "Session sẵn sàng"
+
+#~ msgid ""
+#~ "Show the Gnome Chooser session, if a session named 'Gnome' is present"
+#~ msgstr "Hiện session Gnome Chooser, nếu session tên là Gnome tồn tại"
+
+#~ msgid "Show the Gnome failsafe session"
+#~ msgstr "Hiện Gnome failsafe session"
+
+#~ msgid "Gnome Failsafe"
+#~ msgstr "Gnome Failsafe"
+
+#~ msgid "Show the Xterm failsafe session"
+#~ msgstr "Hiện Xterm failsafe session"
+
+#~ msgid "Xterm Failsafe"
+#~ msgstr "Xterm Failsafe"
+
+#~ msgid "Add session"
+#~ msgstr "Thêm session"
+
+#~ msgid "Remove session"
+#~ msgstr "Loại bỏ session"
+
+#~ msgid "Selected session name: "
+#~ msgstr "Session được chọn: "
+
+#~ msgid ""
+#~ "The exact script details of a session\n"
+#~ "will appear here when you select\n"
+#~ "one from the list on the left.\n"
+#~ msgstr ""
+#~ "Chi tiết về script của session sẽ được ghi vào đây khi bạn chọn từ danh "
+#~ "sách bên trái.\n"
+
+#~ msgid "Login sessions"
+#~ msgstr "Session đăng nhập"
+
+#~ msgid "Appearance"
+#~ msgstr "Diện mạo"
+
+#~ msgid "Directory for host images: "
+#~ msgstr "Thư mục chứa ảnh máy chủ: "
+
+#~ msgid "Default host image:"
+#~ msgstr "Ảnh máy chủ mặc định:"
+
+#~ msgid "Refresh"
+#~ msgstr "Cập nhật"
+
+#~ msgid "Scan every 'x' seconds: "
+#~ msgstr "Quét mỗi 'x' giây: "
+
+#~ msgid "Hosts"
+#~ msgstr "Máy chủ"
+
+#~ msgid "Send a query to the local network and list all servers that respond"
+#~ msgstr ""
+#~ "Gởi truy vấn tới mạng cục bộ và lấy danh sách tất cả server sẵn sàng"
+
+#~ msgid "Broadcast query"
+#~ msgstr "Truy vấn toàn mạng"
+
+#~ msgid ""
+#~ "Comma separated list of hostnames to list in the chooser (in addition to "
+#~ "the broadcast above)"
+#~ msgstr ""
+#~ "Danh sách tên máy chủ cách nhau bởi dấu chấm phẩy trong trình chọn lựa "
+#~ "(cộng thêm với broadcast ở trên)"
+
+#~ msgid "Debugging"
+#~ msgstr "Debugging"
+
+#~ msgid ""
+#~ "Enable debugging output to be printed into the syslog.  Useful for "
+#~ "tracking down problems.  But not so useful for normal usage as it can "
+#~ "fill up your logs very quickly."
+#~ msgstr ""
+#~ "Đầu ra debug sẽ được ghi vào syslog. Hữu dùng để tìm lỗi. Nhưng không hữu "
+#~ "dụng đối với người dùng bình thường vì nó ghi đầy trong log rất mau."
+
+#~ msgid "Enable debugging output"
+#~ msgstr "Bật xuất thông tin debug"
+
+#~ msgid "system_setup"
+#~ msgstr "system_setup"
+
+#~ msgid "Greeter command: "
+#~ msgstr "Lệnh của trình chào mừng: "
+
+#~ msgid "Halt command: "
+#~ msgstr "Lệnh dừng máy: "
+
+#~ msgid "Reboot command: "
+#~ msgstr "Lệnh khởi động máy: "
+
+#~ msgid "Configurator command: "
+#~ msgstr "Lệnh cấu hình máy: "
+
+#~ msgid "Suspend command: "
+#~ msgstr "Lệnh tạm ngưng hoạt động máy: "
+
+#~ msgid "Directories"
+#~ msgstr "Thư mục"
+
+#~ msgid "PRE session scripts directory: "
+#~ msgstr "Thư mục chứa PRE session script: "
+
+#~ msgid "POST session scripts directory: "
+#~ msgstr "Thư mục chứa POST session script: "
+
+#~ msgid "Logging directory: "
+#~ msgstr "Thư mục log: "
+
+#~ msgid "Display initialization directory: "
+#~ msgstr "Thư mục khởi động: "
+
+#~ msgid "PID file: "
+#~ msgstr "Tập tin PID: "
+
+#~ msgid "Paths"
+#~ msgstr "Đường dẫn"
+
+#~ msgid "Default $PATH: "
+#~ msgstr "$PATH mặc định: "
+
+#~ msgid "Root $PATH: "
+#~ msgstr "$PATH gốc: "
+
+#~ msgid "Localization"
+#~ msgstr "Bản địa hóa"
+
+#~ msgid "Locale file: "
+#~ msgstr "Tập tin Locale: "
+
+#~ msgid "Environment"
+#~ msgstr "Môi trường"
+
+#~ msgid "(C) 2001 Lee Mallabone"
+#~ msgstr "(C) 2001 Lee Mallabone"
+
+#~ msgid ""
+#~ "Configure the GNOME Display Manager.\n"
+#~ "Please submit any bugs or feature requests at http://bugzilla.gnome.org "
+#~ "under the `gdm' product."
+#~ msgstr ""
+#~ "Cấu hình GDM.\n"
+#~ "Vui lòng gửi bất cứ lỗi hay đề nghị nào tới http://bugzilla.gnome.org với "
+#~ "product là `gdm'."
+
+#~ msgid "label273"
+#~ msgstr "label273"
+
+#~ msgid "Extra arguments:"
+#~ msgstr "Thông số mở rộng:"
+
+#~ msgid "Custom command line:"
+#~ msgstr "Thông số riêng:"
+
+#~ msgid "Command line: "
+#~ msgstr "Dòng lệnh: "
+
+#~ msgid "Allow as flexible server"
+#~ msgstr "Dùng như flexible server"
+
+#~ msgid "Make this the default server"
+#~ msgstr "Chọn làm server mặc định"
+
+#~ msgid ""
+#~ "Cannot find the glade interface description\n"
+#~ "file, cannot run gdmchooser.\n"
+#~ "Please check your installation and the\n"
+#~ "location of the gdmchooser.glade2 file."
+#~ msgstr ""
+#~ "Không thể tìm thấy tập tin glade,\n"
+#~ "không thể chạy gdmchooser.\n"
+#~ "Vui lòng kiểm tra bản cài đặt của bạn và vị\n"
+#~ "trí chủa tập tin gdmchooser.glade2."
+
+#~ msgid ""
+#~ "The glade interface description file\n"
+#~ "appears to be corrupted.\n"
+#~ "Please check your installation."
+#~ msgstr ""
+#~ "Có lẽ tập tin glade bị hư.\n"
+#~ "Vui lòng kiểm tra lại bản cài đặt."
+
+#~ msgid "Rescan"
+#~ msgstr "Quét lại"
+
+#~ msgid "Help"
+#~ msgstr "Trợ giúp"
+
+#~ msgid "Most recently queried hosts"
+#~ msgstr "Hầu hết các máy được truy vấn gần đây"
+
+#~ msgid "Setup my GDM Face"
+#~ msgstr "Thiết lập Chân dung GDM của bạn"
+
+#~ msgid "Query logout action request denied: Not authenticated"
+#~ msgstr "Truy vấn Yêu cầu hành động đăng xuất bị từ chối: Không thể xác thực"
+
+#~ msgid "Set logout action request denied: Not authenticated"
+#~ msgstr "Thiết lập cầu hành động đăng xuất bị từ chối: Không thể xác thực"
