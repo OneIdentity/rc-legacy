@@ -1,0 +1,9 @@
+prefix=@prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name:	     Pluggable GSSAPI library
+Description: Pluggable GSSAPIv2 security services library
+Version:     @VERSION@
+Libs:	     -L${libdir} -lpgss
+Cflags:	     -I${includedir}
