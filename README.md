@@ -3,7 +3,7 @@ Location of legacy resource central code that is no longer being actively develo
 
 * [Authentication test tools](README.md#authentication-test-tools)
 * [CoolKey](README.md#cool-key)
-* [GDM Smartcard](README.md#gdm-smartcard)
+* [GDM Smartcard](README.md#gnome-smartcard-login)
 
 # [Authentication test tools](#authentication-test-tools)
 This is a package of tools useful for testing the various authentication aspects of Quest Authentication Services (QAS) for Unix, Windows and Java platforms.
@@ -35,7 +35,7 @@ Future releases of CoolKey from Red Hat should include this fix.
 ## Installation Instructions
 Installation of coolkey requires the pcsc-lite package. Under Red Hat Enterprise Linux this is available from Red Hat through the "Red Hat Certificate System" channel.
 
-# [Gnome Smartcard Login](#gdm-smartcard)
+# [Gnome Smartcard Login](#gnome-smartcard-login)
 [GDM](http://www.gnome.org/projects/gdm/) is a graphical login program for Linux. Typically, it allows login via username and password.
 
 Login using a smartcard is possible, but there is currently no automatic detection of smartcard insertion and removal. Intuitively, a user would expect that if a smartcard is inserted while a "Username:" prompt is displayed, then GDM would recognize the insertion and (eventually) the user would be asked for a PIN. Similarly, a user would expect that if a smartcard is removed while a "PIN:" prompt is displayed, then GDM would cancel the PIN request and restart the login process.
