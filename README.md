@@ -1,6 +1,7 @@
 # Resource Central Legacy Code
 Location of legacy resource central code that is no longer being actively developed by One Identity
 
+The follow projects are considered Experimental:
 * [Authentication test tools](README.md#authentication-test-tools)
 * [CoolKey](README.md#cool-key)
 * [GDM Smartcard](README.md#gnome-smartcard-login)
@@ -9,8 +10,13 @@ Location of legacy resource central code that is no longer being actively develo
 * [MySQl with SASL](README.md#mysql-with-sasl)
 * [Pluggable GSSAPI](README.md#pluggable-gssapi)
 * [PHP-VAS](README.md#php-vas)
+* [Subversion with GSSAPI](README.md#subversion-with-gssapi)
+* [xkrenew](README.md#xkrenew)
+* [Quest PuTTY](README.md#quest-putty)
 
 # [Authentication test tools](#authentication-test-tools)
+> [Source](./authtest)
+
 This is a package of tools useful for testing the various authentication aspects of Quest Authentication Services (QAS) for Unix, Windows and Java platforms.
 
 ## Unix tools
@@ -30,7 +36,9 @@ This is a package of tools useful for testing the various authentication aspects
   The JGSS equivalent of the Unix **gss-client** and **gss-server tools**. These tools and documentation can be found in the gssapi/java   directory of the source package. Includes configuration documentation for use with Sun's Kerberos implementation, or [Quest Single       Sign-on for Java (VSJ).](http://www.quest.com/Single-Sign-On-for-Java/)
   
 # [Cool Key](#cool-key)
-CoolKey is an open-source PKCS#11 smartcard library that can recognise CAC (Common Access Card).
+> [Source](./coolkey)
+
+CoolKey is an open-source PKCS#11 smartcard library that can recognize CAC (Common Access Card).
 
 Quest Software provides binary and source packages of the CoolKey 1.1.0 library for Red Hat Enterprise Linux 4 and 5 with fixes that allow it to work with our Quest Authentication Services Smartcard product:
 
@@ -41,6 +49,9 @@ Future releases of CoolKey from Red Hat should include this fix.
 Installation of coolkey requires the pcsc-lite package. Under Red Hat Enterprise Linux this is available from Red Hat through the "Red Hat Certificate System" channel.
 
 # [Gnome Smartcard Login](#gnome-smartcard-login)
+> [gdm-plugins](./gdm-plugins)
+> [gdm 2.6.0.5](./gdm/gdm-2.6.0.5)
+
 [GDM](http://www.gnome.org/projects/gdm/) is a graphical login program for Linux. Typically, it allows login via username and password.
 
 Login using a smartcard is possible, but there is currently no automatic detection of smartcard insertion and removal. Intuitively, a user would expect that if a smartcard is inserted while a "Username:" prompt is displayed, then GDM would recognize the insertion and (eventually) the user would be asked for a PIN. Similarly, a user would expect that if a smartcard is removed while a "PIN:" prompt is displayed, then GDM would cancel the PIN request and restart the login process.
@@ -84,11 +95,14 @@ After installing the quest-gdm and gdm-plugins packages, you will need to do the
     (or, alternatively, hit ctrl-alt-backspace)
 
 # [gvasjoin](#gvasjoin)
-gvasjoin is a Gtk+ program that wraps vastool to experiment with GUI tools for Active Directory integration. It needs Glade 2 to compile.
-  [gvasjoin-0.1.tar.gz](../../releases/tag/gvasjoin-0.1)
+> [gvasjoin-0.1.tar.gz](./gvasjoin/gvasjoin-0.1.tar.gz)
 
+gvasjoin is a Gtk+ program that wraps vastool to experiment with GUI tools for Active Directory integration. It needs Glade 2 to compile.
+  
 
 # [ktedit](#ktedit)
+> [Source](./ktedit)
+
 **Note:** *ktedit* has been superceded by _**vastool ktutil**_ and  _**ktutil**_ commands, available since Quest Authentication Services 3.1.
 
 *ktedit* is a small tool for editing keytab files.
@@ -125,6 +139,7 @@ You may need the vasdev package installed to build ktedit.
 > This harmless message arises in earlier versions of Quest Authentication Services because the addition of the DES-MD5 cipher was not given an internal name. Instead, ktedit will display the cipher type in its numeric form (3). You can safely ignore this message
 
 # [MySQL with SASL](#mysql-with-sasl)
+> [mysql-4.17-sasl.patch](./mysql/mysql-4.1.7-sasl-20041122)
 
 This is an experiment to add SASL authentication, security and authorization to the MySQL wire protocol. It is in a very alpha stage. It may even turn into gssapi only to fix principal name meanings.
 
@@ -223,6 +238,8 @@ GRANT ALL PRIVILEGES ON test.* TO 'user'@'realm' REQUIRE GSSAPI;
 Such user ACLs are stored in class ACL_USER in *sql/sql_acl.h*, and make use of the SSL_type enum defined in *include/violite.h*
 
 # [Pluggable GSSAPI](#pluggable-gssapi)
+> [Source](./pgssapi)
+
 PGSSAPI allows administrators to selectively plug vendor GSSAPI libraries into applications, without having to re-compile the application each time.
 ## What problem is this solving?
 Security software such as Kerberos usually implement the standard Generic Security Services Application Programming Interface (GSSAPI) which is a high-level security interface independent of any particular security system. This is great for application writers because their product's design is not tied to any one particular security system.
@@ -246,6 +263,8 @@ Both. PGSSAPI was developed for two common use-cases:
 In the event that both the system and the application use PGSSAPI, then PGSSAPI will happily nest.
 
 # [php-vas](#php-vas)
+> [Source](./php-vas)
+
 This project is in alpha status. The following information indicates both existing and planned functionality.
 
 *php-vas* is a connector between [PHP](http://www.php.net/), a popular web development platform, and [Quest Authentication Services (QAS)](http://www.quest.com/Authentication-Services/). *php-vas* provides a PHP interface to the Quest Authentication Services developer API that lets you build web applications that use Microsoft's Active Directory for authentication, and for querying and management of enterprise user, computer and service information.
@@ -273,3 +292,37 @@ The php-vas bindings and their source code are licensed freely for use and modif
 
 ## Other resources
 Active Directory, LDAP and PHP programming threads on [DevShed™ Forums](http://forums.devshed.com/forumdisplay.php?f=76)
+
+# [Subversion with GSSAPI](#subversion-with-gssapi)
+> [Subversion-gssapi patch](./svn-gssapi/subversion-gssapi.patch-20050329)
+
+This project is about adding GSSAPI authentication and security into SVN protocol used by subversion. The patch is currently based on subversion-1.0.9.
+
+# [xkrenew](#xkrenew)
+> [xkrenew-1.0.tar.gz](xkrenew/xkrenew-1.0.tar.gz)
+
+Handy X tool that automatically renews kerberos tickets in your credential cache and shows the status of your tickets in a tooltip.
+
+## See also
+* KDE [kredentials](http://people.csail.mit.edu/noahm/kredentials/)
+* Red Hat's [gnome-kerberos](http://www.redhat.com/docs/manuals/linux/RHL-9-Manual/ref-guide/s1-kerberos-server.html)
+
+# [Quest PuTTY](#quest-putty)
+> [Source](./putty)
+
+Quest PuTTY is a derivative of [Simon Tatham's PuTTY](http://www.chiark.greenend.org.uk/~sgtatham/putty/), an open-source Secure Shell (SSH) client for Microsoft Windows. It includes:
+
+* PuTTY - easy-to-use terminal emulation client
+* plink - a command-line session and tunnelling tool
+* psftp - the secure file transfer tool
+* pscp - an OpenSSH-compatible secure copy tool
+Quest have extended PuTTY with the following features:
+
+## Active Directory (GSSAPI Kerberos) single sign-on
+Quest PuTTY uses the user's login credentials to automatically authenticate against a GSSAPI-enabled SSH server such as OpenSSH. Specifically, the credentials are obtained from the Microsoft Kerberos [SSPI](http://msdn.microsoft.com/library/en-us/secauthn/security/sspi.asp), and exchanged using the [GSSKEX, gssapi-with-mic and gss-keyex mechanisms.](http://www.ietf.org/rfc/rfc4462.txt)
+## Group Policy control
+Quest PuTTY configuration defaults can be changed using group policy, and some configuration options can be limited or locked by group policy.
+
+A source code patch file is provided with each release that contains all the modifications made to the corresponding PuTTY source revision. These modifications are licensed under a Berkeley-style open source license.
+
+> **NOTE:** The functionality that was provided by Quest Software's PuTTY packages have now been included in the latest releases of [PuTTY](http://www.chiark.greenend.org.uk/~sgtatham/putty/download.html), making Quest PuTTY obsolete.
