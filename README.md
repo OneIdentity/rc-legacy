@@ -8,6 +8,7 @@ Location of legacy resource central code that is no longer being actively develo
 * [ktedit](README.md#ktedit)
 * [MySQl with SASL](README.md#mysql-with-sasl)
 * [Pluggable GSSAPI](README.md#pluggable-gssapi)
+* [PHP-VAS](README.md#php-vas)
 
 # [Authentication test tools](#authentication-test-tools)
 This is a package of tools useful for testing the various authentication aspects of Quest Authentication Services (QAS) for Unix, Windows and Java platforms.
@@ -123,7 +124,8 @@ You may need the vasdev package installed to build ktedit.
 > **Warning: krb5_keytype_to_string: Program lacks support for key type**
 > This harmless message arises in earlier versions of Quest Authentication Services because the addition of the DES-MD5 cipher was not given an internal name. Instead, ktedit will display the cipher type in its numeric form (3). You can safely ignore this message
 
-### [MySQL with SASL](#mysql-with-sasl)
+# [MySQL with SASL](#mysql-with-sasl)
+
 This is an experiment to add SASL authentication, security and authorization to the MySQL wire protocol. It is in a very alpha stage. It may even turn into gssapi only to fix principal name meanings.
 
 ## Notes on kerberizing MySQL
@@ -243,3 +245,31 @@ Both. PGSSAPI was developed for two common use-cases:
 * As a system-provided, dynamically-linked library under the control of the system administrator, with configuration integrated into the operating system platform.
 In the event that both the system and the application use PGSSAPI, then PGSSAPI will happily nest.
 
+# [php-vas](#php-vas)
+This project is in alpha status. The following information indicates both existing and planned functionality.
+
+*php-vas* is a connector between [PHP](http://www.php.net/), a popular web development platform, and [Quest Authentication Services (QAS)](http://www.quest.com/Authentication-Services/). *php-vas* provides a PHP interface to the Quest Authentication Services developer API that lets you build web applications that use Microsoft's Active Directory for authentication, and for querying and management of enterprise user, computer and service information.
+
+## Supported platforms
+*php-vas* is supported on all platforms that support both PHP 4 (or later) and Quest Authentication Services 3.0 (or later). These include, but are not limited to, Linux, Solaris, HP-UX and AIX.
+
+## Documentation
+Documentation for these bindings is found in .php source files used by [doxygen](http://www.stack.nl/~dimitri/doxygen/index.html). These files are included in the full php-vas source download below as well as in preformatted form for both HTML and manpage use in the documentation tarball if you cannot or do not wish to install doxygen and build the documentation yourself.
+
+## Requirements
+You will need the following:
+
+* Some familiarity with building Linux/Unix software
+* [PHP](http://www.php.net/downloads.php) and its SDK (often installed on Linux as *php-devel* or *php-dev*)
+* Quest Authentication Services SDK (found on the Quest Authentication Services installation CD under the SDK directory)
+* A 'C' compiler and related toolchain (gcc, make, etc.)
+* [doxygen](http://www.stack.nl/~dimitri/doxygen/download.html#latestsrc) (optional)
+* GNU auto tools (autoconf, automake) (optional)
+
+The most important tool is *phpize*, found in the PHP SDK. More detailed information can found in the [README](./php-vas/README) file in the php-vas source package.
+
+## Licensing
+The php-vas bindings and their source code are licensed freely for use and modification. However, most of the module's functionality derives from [Quest Authentication Services](http://www.quest.com/Authentication-Services/), which requires separate, per-user licensing.
+
+## Other resources
+Active Directory, LDAP and PHP programming threads on [DevShed™ Forums](http://forums.devshed.com/forumdisplay.php?f=76)
