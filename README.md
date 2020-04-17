@@ -4,6 +4,8 @@ Location of legacy resource central code that is no longer being actively develo
 * [Authentication test tools](README.md#authentication-test-tools)
 * [CoolKey](README.md#cool-key)
 * [GDM Smartcard](README.md#gnome-smartcard-login)
+* [gvasjoin](README.md#gvasjoin)
+* [ktedit](README.md#ktedit)
 
 # [Authentication test tools](#authentication-test-tools)
 This is a package of tools useful for testing the various authentication aspects of Quest Authentication Services (QAS) for Unix, Windows and Java platforms.
@@ -45,7 +47,7 @@ Quest has modified GDM so that smartcard insertion and deletion are recognized. 
 ### [quest-gdm](./gdm/gdm-2.6.0.5)
 A modified version of GDM that allows for the loading of a "PAM prompt plugin". The plugin is activated whenever PAM requests a prompt (such as "Username:" or "PIN:") during authentication. The normal prompt is still displayed, but the plugin may perform internal communication with the GDM process that simulates user entry at that prompt. For architectural reasons, no plugins are provided with this version of GDM.
 
-### [gdm-plugins](./gdm-plugins)
+### [quest-gdm-plugins](./gdm-plugins)
 A collection of PAM prompt plugins for the modified version of GDM above, which monitor smartcard events. Two plugins are provided: a plugin based on the [PKCS#11 interface](http://www.rsasecurity.com/rsalabs/node.asp?id=2133), and a plugin based on the [PC/SC interface](http://pcsclite.alioth.debian.org/pcsc-lite/). The PKCS#11 plugin is considered more stable and should be used with PAM applications that use PKCS#11 to communicate with the smartcard (such as the PAM smartcard module provided with [Quest Authentication Services (QAS)](http://www.quest.com/Authentication-Services/)). The PC/SC plugin is experimental and should not be used with PAM applications that use PKCS#11.
 
 ## Installation Instructions
@@ -77,3 +79,44 @@ After installing the quest-gdm and gdm-plugins packages, you will need to do the
     # /usr/sbin/gdm-restart
     ```
     (or, alternatively, hit ctrl-alt-backspace)
+
+# [gvasjoin](#gvasjoin)
+gvasjoin is a Gtk+ program that wraps vastool to experiment with GUI tools for Active Directory integration. It needs Glade 2 to compile.
+  [gvasjoin-0.1.tar.gz](../../releases/tag/gvasjoin-0.1)
+
+
+# [ktedit](#ktedit)
+**Note:** *ktedit* has been superceded by _**vastool ktutil**_ and  _**ktutil**_ commands, available since Quest Authentication Services 3.1.
+
+*ktedit* is a small tool for editing keytab files.
+
+*ktedit* grew out of my need to scriptably change principal names associated with keys, so it has functions to do that. It has some of the functionality of ktutil, and vastool ktlist. A unique feature is the copy command.
+
+The tool is provided here because it can come in handy when creating service principal aliases.
+
+## Usage
+Follows is a brief synopsis of the useful commands in ktedit-1.1. They are also described in more detail in its manual page.
+
+__copy *key-pattern new-principal*__
+    Duplicates keytab entries, replacing their principal name. Useful for manually creating aliases.
+  
+__delete *key-pattern*__
+  Deletes entries.
+  
+__dump__
+  Dumps keytab in text form, suitable for undump
+  
+__list__
+  Prints keytab contents
+  
+__undump [-r]__
+  Appends or replaces a keytab with keys read from a text stream
+
+## Compiling
+If you are on a system with rpm, you can build ktedit directly using rpmbuild -tb. Otherwise, unpack the source distribution, run configure and then make.
+
+You may need the vasdev package installed to build ktedit.
+
+## Known issues
+> **Warning: krb5_keytype_to_string: Program lacks support for key type**
+> This harmless message arises in earlier versions of Quest Authentication Services because the addition of the DES-MD5 cipher was not given an internal name. Instead, ktedit will display the cipher type in its numeric form (3). You can safely ignore this message
