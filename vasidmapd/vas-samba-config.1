@@ -1,0 +1,62 @@
+.\" (c) 2017, Quest Software, Inc. All rights reserved.
+.TH VAS-SAMBA-CONFIG 1
+.SH NAME
+vas-samba-config \- Configures Samba to interoperate with VAS
+.SH SYNOPSIS
+.B vas-samba-config
+[\-dfnqV]
+.RI [\-s\  smb.conf ]
+.RI [\-S\  samba-prefix ]
+.SH DESCRIPTION
+The
+.B vas-samba-config
+script configures Samba and VAS for authentication and SID identity
+alignment with
+.BR vasidmapd .
+.SS OPTIONS
+.TP
+.RI \-d
+Debug.
+Information useful for development is displayed while the script runs.
+.TP
+.RI \-f
+Force.
+The script will assume the default answers to questions without prompting.
+.TP
+.RI \-n
+No-restart servers.
+Normally,
+.B vas-samba-config
+will cause the Samba server to be restarted after it is reconfigured.
+Specifying this flag will prevent this behaviour.
+.TP
+.RI \-q
+Quiet.
+Suppresses informational messages.
+.TP
+.RI \-s\  smb.conf
+Specifies the location of the smb.conf file to configure.
+If not supplied,
+.B vas-samba-config
+uses the default configuration file from the discovered
+.B smbd
+binary.
+.TP
+.RI \-S\  samba-prefix
+The path prefix used to locate the
+.B smbd
+server executable, namely
+.IR samba-prefix /smbd.
+If not specified, then
+.B vas-samba-config
+searches in likely places.
+.TP
+.RI \-V
+Version.
+The script prints its version number and immediately exits.
+.SH "SEE ALSO"
+vastool(1),
+smb.conf(5),
+.I http://rc.quest.com/topics/vasidmap/
+.SH AUTHORS
+Quest Software, Inc.

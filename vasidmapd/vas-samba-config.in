@@ -1,0 +1,646 @@
+#!/bin/sh
+# (c) 2017 Quest Software, Inc. All rights reserved.
+
+. "@pkgdatadir@/vasidmap-common.sh"
+
+PWDCHGCONF="@sysconfdir@/vas-set-samba-password.conf"
+PWDCHGSCRIPT="@libexecdir@/vas-set-samba-password"
+
+DEBUG=false
+QUIET=false
+
+FORCE=false	    # -f option
+RESTART_SAMBA=true  # -n option
+
+# Prints usage info to stdout
+usage () {
+    cat <<ZOMG
+Usage: $0 [-dfhnqV] [-s <config-file>] [-S <samba-prefix>]
+  -d    Enable extra debug output
+  -f    Force defaults instead of prompting interactively
+  -h    Print this help
+  -n    Don't restart Samba after modifying its configuration
+  -q    Quiet mode (fewer informational messages)
+  -s <file>
+        Location of the Samba configuration file (smb.conf)
+  -S <prefix>
+        Samba installation prefix (eg. /usr or /opt/quest)
+  -V    Print version number
+ZOMG
+}
+
+# Process command line arguments
+opterr=false
+samba_prefix=
+samba_configfile=
+while test $# -gt 0; do
+    case "$1" in
+	-d) DEBUG=true; shift;;
+	-f) FORCE=true; shift;;
+	-h) usage; exit 0;;
+	-n) RESTART_SAMBA=false; shift;;
+	-q) QUIET=true; shift;;
+	-s) samba_configfile="$2"; shift; shift;;
+	-S) samba_prefix="$2"; shift; shift;;
+	-V) echo "@VERSION@"; exit 0;;
+	--) shift; break;;
+	-*) echo "Unknown option '$1'" >&2; shift; opterr=true;;
+	*)  break;;
+    esac
+done
+if test $# -ne 0; then	    # Expect no extra arguments
+    opterr=true
+fi
+if $opterr; then	    # Show usage on option error
+    usage >&2
+    exit 1
+fi
+
+if test -n "$samba_prefix"; then
+    smbd=$samba_prefix/sbin/smbd
+else
+    smbd=`search_for_smbd`
+    case $smbd in
+	*/sbin/smbd) samba_prefix=`echo $smbd | sed -e 's,/sbin/smbd$,,'`;;
+	*)           samba_prefix=/usr;;
+    esac
+fi
+
+debug_echo "using smbd at $smbd"
+test -n "$smbd" || 
+    die "Cannot find a working smbd. Please use the '-S prefix' option."
+detect_samba_settings "$smbd" "$samba_configfile" || die_cat <<-.
+	Cannot obtain settings from samba server $smbd
+	or from configuration file $samba_configfile
+	Please check these files or specify different configuration
+	with the -s and -S options to this script.
+.
+
+have_winbind=false
+have_vasidmap=false
+winbindd_running=false
+vasidmapd_running=false
+
+test -x "$samba_prefix/sbin/winbindd" && have_winbind=true
+debug_echo "have_winbind = $have_winbind"
+
+if ${have_winbind}; then
+  if ps -ef | grep -v "grep" | grep "${samba_prefix}/sbin/winbindd" > /dev/null
+  then
+   winbindd_running=true
+  fi
+  debug_echo "winbind was running = $winbindd_running"
+fi
+
+test -x "$VASIDMAPD" && have_vasidmap=true
+debug_echo "have_vasidmap = $have_vasidmap"
+
+if ${have_vasidmap}; then
+  if ps -ef | grep -v "grep" | grep "${VASIDMAPD}" > /dev/null
+  then
+     vasidmapd_running=true
+  fi
+  debug_echo "vasidmapd was running = ${vasidmapd_running}"
+fi
+
+
+with_ads_support=false
+if [ `$samba_prefix/sbin/smbd -b | grep WITH_ADS | wc -l` -ge "1" ]; then
+  with_ads_support=true
+fi
+  debug_echo "with_ads_support = $with_ads_support"
+
+
+test $with_ads_support = "false" && die_cat <<-.
+        ERROR: Samba does not appear to support kerberos.
+        Please validate that your version of samba supports
+        kerberos by checking the build settings on smbd by
+        running $samba_prefix/sbin/smbd -b and looking for
+        WITH_ADS under the "--with Options" or "Build Options"
+        sections.
+.
+
+
+##########################
+#          MAIN          #
+##########################
+
+verbose_echo "Checking for VAS..."
+detect_vas || die "Cannot find VAS installed"
+
+is_lt $VAS_VERSION 3 &&
+    die "Requires VAS version 3 or later (current VAS version is $VAS_VERSION)"
+
+# Warn if version of Samba is older than 3.3.16
+if is_lt $SAMBA_VERSION 3.3.16; then
+            cat <<-.
+
+    *** WARNING: Samba version is older than 3.3.16 ***
+        Samba versions older than 3.3.16 are known to have
+        issues working with Windows 2008 domain controllers.
+
+.
+fi
+
+# First of all check if we are joined
+$VASTOOL -u host/ auth -S host/ > /dev/null || die_cat <<-.
+	ERROR: The machine does not appear to be joined to any domain
+	or this script is not being run as root.
+	Please verify the machine is correctly joined and then re-run
+	$0 to complete the installation
+	and configuration of both SAMBA and VAS.
+.
+
+#Gather configuration data
+# Find the REALM
+DOMAIN=`$VASTOOL -u host/ info domain`
+test -n "$DOMAIN" || die_cat <<-.
+        ERROR: Unable to determine the current domain (realm).
+	Is this machine properly joined to the domain?
+.
+REALM=`echo "$DOMAIN" | tr '[a-z]' '[A-Z]'`
+
+# Find the pre-Windows 2000 Domain Name (Workgroup)
+WORKGROUP=`joined_domain_netbios_name -u host/` || die_cat <<-.
+        ERROR: Unable to determine the domain's pre-Windows 2000 name.
+	Is this machine properly joined to the domain?
+.
+
+test -f "$SAMBA_CONFIGFILE" || die_cat <<-.
+	ERROR: $SAMBA_CONFIGFILE is missing.
+	Please verify that the Samba package is installed.
+.
+
+TODAY=`date +"%Y%m%d"`
+
+######################
+# Samba service control
+
+
+
+#-- bug 254: this may need updating when porting
+# These are really just wild guesses; sometimes there are
+# separate init scripts for smbd, nmbd, winbindd.
+detect_opsys
+case $OPSYS in
+	HP-UX)  initdir=/sbin/init.d   SAMBASVC=samba ;;
+	SunOS)  if [ -x /usr/bin/svcs ]; then
+                initdir=SMF
+            else
+                initdir=/etc/init.d
+            fi
+            SAMBASVC=samba
+            WINBINDSVC=winbind ;;
+	AIX)    initdir=SRC            SAMBASVC=samba ;;
+    Linux)  if [ -x /lib/init/upstart-job -a -e /etc/init/vasidmapd.conf ] && ! chrooted; then
+	          initdir=SERVICE
+	          SAMBASVC=smbd
+	        else
+	          initdir=/etc/init.d
+	          SAMBASVC=samba
+		    fi;;
+        *)  initdir=/etc/init.d    SAMBASVC=samba ;;  # Linux!
+esac
+
+# If we're using Quest Samba, use the samba-quest service group
+if test x"$smbd" = x"/opt/quest/sbin/smbd"; then
+    SAMBASVC=samba-quest
+fi
+
+#-- stops a service
+stopsvc () {
+    if [ $initdir = SRC ]; then
+	  stopsrc -s $1
+    elif [ $initdir = SMF ]; then
+      svcadm disable $1
+	elif [ $initdir = SERVICE ]; then
+      service $1 stop
+    else
+	  test -x $initdir/$1 && $initdir/$1 stop
+    fi
+}
+
+#-- starts a service
+startsvc () {
+    if [ $initdir = SRC ]; then
+	  startsrc -s $1
+    elif [ $initdir = SMF ]; then
+      svcadm enable $1
+    elif [ $initdir = SERVICE ]; then
+      service $1 start
+    else
+	  test -x $initdir/$1 && $initdir/$1 start
+    fi
+}
+
+##########################
+# Modify smb.conf 
+
+verbose_echo "Checking $SAMBA_CONFIGFILE..."
+
+CONFMOD=/tmp/confmod$$.tmp
+NEWTEXT=/tmp/newtext$$.tmp
+
+#Must do this before calling any check_* function
+cp "$SAMBA_CONFIGFILE" "$CONFMOD"
+: >$NEWTEXT
+
+PAMOPT=undefined
+if $FORCE; then
+    PAMOPT=no
+elif check_parm "obey pam restrictions" "$CONFMOD"; then
+    debug_echo "'obey pam restrictions' is already in place"
+else
+    cat <<-.
+
+      Samba can use PAM for user access control. This works
+      by calling the PAM account and session stacks whenever
+      a Samba share is mounted. Please make sure that pam
+      is configured for Samba if enabling this option.
+.
+    yesorno "Enable 'obey pam restrictions' option?" no \
+	&& PAMOPT=yes || PAMOPT=no
+fi
+debug_echo "PAMOPT=$PAMOPT"
+
+check_and_fix_add () { check_and_fix "$1" "$2" "$3" || echo "$1 = $2" >> $4; }
+
+# The following are Samba 3.0 parameters
+check_and_fix_add "workgroup" "$WORKGROUP"	    "$CONFMOD" $NEWTEXT
+check_and_fix_add "realm" "$REALM"		    "$CONFMOD" $NEWTEXT 
+check_and_fix_add "security" "ads"		    "$CONFMOD" $NEWTEXT
+check_parm "use spnego" "$CONFMOD" &&
+    check_and_fix_add "use spnego" "yes"	    "$CONFMOD" $NEWTEXT
+check_and_fix_add "domain master" "no"		    "$CONFMOD" $NEWTEXT
+check_and_fix_add "domain logons" "no"		    "$CONFMOD" $NEWTEXT
+check_and_fix_add "machine password timeout" "0"    "$CONFMOD" $NEWTEXT
+test "$PAMOPT" = "yes" &&
+    check_and_fix_add "obey pam restrictions" "yes" "$CONFMOD" $NEWTEXT
+
+
+if is_lt $SAMBA_VERSION 3.4.0; then
+  check_and_fix_add "use kerberos keytab" "yes"	    "$CONFMOD" $NEWTEXT
+else
+  # The following are Samba 3.4 parameters
+  check_and_rename "use kerberos keytab" "kerberos method"  "$CONFMOD"
+  check_and_fix_add "kerberos method" "dedicated keytab"    "$CONFMOD" $NEWTEXT
+  check_and_fix_add "dedicated keytab file" "$VAS_KEYTAB"   "$CONFMOD" $NEWTEXT
+fi
+
+#check_parm "username map script" && cat <<-. >&2
+#	Warning: username map script is OK only in VAS Unix Personality Mode
+#.
+
+if ! $FORCE && $have_winbind && $have_vasidmap; then
+    if yesorno "Configure winbind to use vasidmapd for id mapping" no; then
+        check_and_fix_add "winbind nested groups" "no"	    "$CONFMOD" $NEWTEXT
+        # Attach vasidmap as an idmap backend for winbind
+        check_and_fix_add "ldap admin dn" "CN=VasIdmapAdmin" "$CONFMOD" $NEWTEXT
+
+# In Samba 3.6 the idmap system was re-written and idmap uid, gid, and backend were depricated 
+# in favor of 
+# idmap config <domain> : backend
+# idmap config <domain> : range
+# The defaults for smb now would look like:
+# idmap config * : backend = tdb
+# idmap config * : range = 10000-20000
+#
+# Because of <domain> we should only update the wildcard and possibliy the BUILTIN domain 
+# configs for idmap.
+#
+
+        idmap_domain="*"
+
+        if is_lt $SAMBA_VERSION 3.6.0; then
+          check_and_fix_add "idmap backend" "ldap:ldap://localhost" "$CONFMOD" $NEWTEXT
+          check_parm "idmap uid" "$CONFMOD" ||
+            check_and_fix_add "idmap uid" "1-2147483647"	     "$CONFMOD" $NEWTEXT
+          check_parm "idmap gid" "$CONFMOD" ||
+           check_and_fix_add "idmap gid" "1-2147483647"	     "$CONFMOD" $NEWTEXT
+        else
+          check_and_remove "idmap gid" "$CONFMOD"
+          check_and_remove "idmap backend" "$CONFMOD"
+
+          check_parm "idmap config BUILTIN : backend" "$CONFMOD" ||
+            check_and_fix_add "idmap config BUILTIN : backend" "tdb" "$CONFMOD" $NEWTEXT
+
+          check_parm "idmap config BUILTIN : range" "$CONFMOD" ||
+            check_and_fix_add "idmap config BUILTIN : range" "1-1000" "$CONFMOD" $NEWTEXT
+
+          check_and_fix_add "idmap config $idmap_domain : backend" "ldap" "$CONFMOD" $NEWTEXT
+
+          check_and_rename "idmap uid" "idmap config $idmap_domain : range" "$CONFMOD"
+          check_parm "idmap config $idmap_domain : range" "$CONFMOD" ||
+            check_and_fix_add "idmap config $idmap_domain : range" "1-2147483647" "$CONFMOD" $NEWTEXT
+
+          check_parm "idmap config $idmap_domain : ldap_url" "$CONFMOD" ||
+            check_and_fix_add "idmap config $idmap_domain : ldap_url" "ldap://localhost/" "$CONFMOD" $NEWTEXT
+        fi
+
+        if is_lt $SAMBA_VERSION 3.0.25; then
+         check_and_fix_add "idmap expire time" "300"	     "$CONFMOD" $NEWTEXT
+        else
+          check_and_rename "idmap expire time" "idmap cache time" "$CONFMOD"
+          check_and_rename "idmap negative time" "idmap negative cache time" "$CONFMOD"
+        fi
+    fi
+fi
+
+check_parm "netbios name" "$CONFMOD" && cat <<-.
+
+	*** WARNING: netbios name parameter found ***
+	   The 'netbios name' parameter in $SAMBA_CONFIGFILE
+	   may cause problems with Kerberos authentication.
+
+.
+
+# Possible insert scenarios assuming there is something to insert
+#
+# 1. [global] section exists, [share] exists: Should insert right above first [share]
+# 2. [global] section exists, [share] exists, include stanza exists in [global] section: Should insert right above first include stanza
+# 3. [global] section exists, [share] does not exist, include stanza exists in [global] section: Should insert right above first include stanza
+# 4. [global] section exists, [share] does not exist, include stanza does not exist: Should append to end of file
+# 5. [global] section exists, [share] exists, include stanza exists in the [share] section: Should insert right above first [share]
+# 6. [global] section does not exist, [share] exists: Should insert right above first [share]
+# 7. [global] section does not exist, [share] exists, include stanza exists in [global] section: Should insert right above first include stanza
+# 8. [global] section does not exist, [share] does not exist, include stanza exists: Should insert right above first include stanza
+# 9. [global] section does not exist, [share] does not exist, include stanza does not exist: Should append to end of file
+# 10.[global] section does not exist, [share] exists, include stanza exists in the [share] section: Should insert right above first [share] 
+# ?
+#
+    # Filter should finde exact match of any include =, ignoring whitespace and tabs
+    filter="^[[:blank:]]*include[[:blank:]]*="
+    if test -s "$NEWTEXT"; then
+        SAVEIFS="$IFS"
+        IFS=""
+        INGLOBAL=false
+        INSHARE=false
+        include_found=false
+        # update_conf = true only when we found somewhere to insert the custom cfg
+        update_conf=false
+
+        newtext=`cat $NEWTEXT`
+        include_text=`printf "\n%s\n%s\n%s\n\n" \
+                        "  ;#--- begin options added by vas-samba-config ($TODAY) ---" \
+                        "$newtext" \
+                        "  ;#--- end options added by vas-samba-config ($TODAY) ---"`
+
+        while read ILINE; do
+            if echo "$ILINE" | grep -i "^$SP*\[global\]" >/dev/null; then
+                # Currently unused but perhaps for future purposes I will leave it in.
+                INGLOBAL=true
+            elif [ "x$include_found" = "xfalse" ] && echo "$ILINE" | grep -i "^$SP*\[.*\]" >/dev/null; then
+                INGLOBAL=false
+                INSHARE=true
+                # At this point we found the share and there was no inlclude stanza, we need to insert the custom code right above it and then break the loop
+                echo "$include_text"
+                echo "$ILINE"
+                cat
+                update_conf=true
+                break
+            elif [ "x$INSHARE" = "xfalse" ] && echo "$ILINE" | grep "$filter" >/dev/null; then
+                include_found=true
+                # At this point we are not in a [share] and we found an include stanza. We need to insert the custom code right above it and then break the loop
+                echo "$include_text"
+                echo "$ILINE"
+                cat
+                update_conf=true
+                break
+            fi
+            echo "$ILINE"
+        done < "$CONFMOD" > "$CONFMOD.new"
+        IFS="$SAVEIFS"
+    
+        #Check to see if we completed the whole loop without inserting into a [share], [global] section or above an include stanza
+        if [ "x$update_conf" = "xfalse" ]; then
+            # insert the custom cfg at the end of the file
+            echo "$include_text"
+            echo "$ILINE"
+            update_conf=true
+        fi >> "$CONFMOD.new"
+
+        mv "$CONFMOD.new" "$CONFMOD"
+
+    elif cmp "$CONFMOD" "$SAMBA_CONFIGFILE" >/dev/null 2>&1; then
+        update_conf=false
+        rm -f "$CONFMOD"
+    fi
+    $update_conf && verbose_echo "$SAMBA_CONFIGFILE: update pending"
+    rm -f $NEWTEXT
+
+##########################
+# Modify vas.conf
+
+verbose_echo "Checking $VAS_CONF..."
+
+NEW_VAS_CONF=/tmp/fix$$
+cp $VAS_CONF $NEW_VAS_CONF
+fix_put () {
+    ini_put "$1" "$2" "$3" $NEW_VAS_CONF > $NEW_VAS_CONF.new &&
+	mv $NEW_VAS_CONF.new $NEW_VAS_CONF
+}
+
+case "$VAS_VERSION" in
+  3.0.*|3.1.1.39|3.1.1.4[0123456])
+    # VAS 3.0.x and 3.1.1.39 thru .46 need the make password permanent
+    # because vastool cannot emit a random password
+    fix_put vasd password-change-interval 0
+    vastool_generates_random_password=false
+    ;;
+  *)
+    fix_put vasd password-change-script "$PWDCHGSCRIPT"
+    fix_put vasd password-change-interval "30"
+    vastool_generates_random_password=true
+    ;;
+esac
+
+if cmp $VAS_CONF $NEW_VAS_CONF > /dev/null 2>&1; then
+    update_vas=false
+    rm -f $NEW_VAS_CONF
+else
+    update_vas=true
+fi
+$update_vas && verbose_echo "$VAS_CONF: update pending"
+
+##########################
+# Configure kerberos
+if test x"$smbd" = x"/opt/quest/sbin/smbd"; then
+    verbose_echo "Detected Quest samba, so not configuring krb5.conf"
+    KRB5CHANGE=no
+elif $FORCE; then
+    KRB5CHANGE=yes
+else
+    cat <<-.
+
+	  If Samba was compiled to use system Kerberos support, then
+	  the system Kerberos configuration files should be updated
+	  to use Active Directory's Kerberos servers as discovered
+	  by VAS, and to use VAS's host keytab. 
+
+	  This change will affect other Kerberos-enabled applications.
+.
+    yesorno "Update system Kerberos configuration to use VAS keyfiles?" yes \
+	&& KRB5CHANGE="yes" || KRB5CHANGE="no"
+fi
+test $KRB5CHANGE = yes && 
+    verbose_echo "(krb5.conf update will occur at the end of this script)"
+
+##########################
+# Reset machine secret
+
+if $FORCE; then
+    PWDCHANGE="yes"
+else
+    cat <<-.
+
+	  Samba can support NTLM (non-Kerberos) authentication for users,
+	  but this requires that the local host password be renewed (set to
+	  a new random string) during installation. Renewing the host
+	  password is a normal operation that is performed periodically
+	  by vasd. The local host key can be reset at the end of these
+	  questions.
+.
+    yesorno "Reset the local host key for NTLM support?" yes \
+        && PWDCHANGE="yes" || PWDCHANGE="no"
+fi
+test $PWDCHANGE = yes && 
+    verbose_echo "(Host key reset will occur at the end of this script)"
+
+# Set domain SID
+verbose_echo "Detecting domain SID..."
+DOMSID=`vas_domainsid -u host/` || die_cat <<-.
+	There was a problem obtaining the domain SID from VAS.
+	Please check that VAS is properly configured, and that
+	domain controllers are available.
+.
+verbose_echo "  $DOMSID"
+
+#-- update krb5.conf
+if test "$KRB5CHANGE" = "yes"; then
+    verbose_echo "Configuring system Kerberos (vas-krb5-config) ..."
+    @sbindir@/vas-krb5-config -x 2 \
+	`$DEBUG && echo ' -d'` \
+	`$QUIET && echo ' -q'`
+    ec=$?
+    case $ec in
+	0) : ;;
+	2) KRB5CHANGE="not needed";;
+	*) die "Problem configuring krb5.conf";;
+    esac
+fi
+
+$SAMBA_BINDIR/net -s "$SAMBA_CONFIGFILE" setdomainsid "$DOMSID"
+
+# Configure the change password script
+if is_lt $SAMBA_VERSION 3.0.23; then
+    PWDCHG_METHOD=tdb	# use tdbtool to directly update the secrets.tdb
+else
+    PWDCHG_METHOD=net	# use 'net -i'
+fi
+debug_echo "  password change METHOD = $PWDCHG_METHOD"
+
+# Create a config file for the vas-set-samba-password script
+test -f "$PWDCHGCONF" && mv $PWDCHGCONF $PWDCHGCONF.$TODAY.$$ # back-up
+mkdir -p "@sysconfdir@"
+cat <<-. >"$PWDCHGCONF"
+	# Configured by $0 at $TODAY
+	# for use with $PWDCHGSCRIPT
+	SAMBA_BINDIR='$SAMBA_BINDIR'
+	SAMBA_CONFIGFILE='$SAMBA_CONFIGFILE'
+	METHOD=$PWDCHG_METHOD
+.
+
+# stop the samba and vasidmap services
+verbose_echo "Stopping services..."
+$RESTART_SAMBA && stopsvc $SAMBASVC
+$vasidmapd_running && stopsvc vasidmapd
+$winbindd_running && stopsvc winbind 
+
+# update smb.conf 
+if $update_conf; then
+    mv "$SAMBA_CONFIGFILE" "$SAMBA_CONFIGFILE.$TODAY.$$"
+    cat "$CONFMOD" > "$SAMBA_CONFIGFILE"
+    rm -f "$CONFMOD"
+    verbose_echo "$SAMBA_CONFIGFILE: updated"
+else
+    verbose_echo "$SAMBA_CONFIGFILE: no change required"
+fi
+
+# update vas.conf
+if $update_vas; then
+    backup=$VAS_CONF.$TODAY.$$
+    cp $VAS_CONF $backup
+    verbose_echo "$VAS_CONF: backup $backup"
+    cat $NEW_VAS_CONF > $VAS_CONF
+    verbose_echo "$VAS_CONF: updated"
+    rm -f $NEW_VAS_CONF
+else
+    verbose_echo "$VAS_CONF: no changes required"
+fi
+
+# reset the host key
+if [ "$PWDCHANGE" = "yes" ]; then
+    verbose_echo "Renewing the computer account password..."
+    if $vastool_generates_random_password; then
+	# Generate a new machine secret and set directly.
+	$VASTOOL -u host/ -q passwd -r -o | $PWDCHGSCRIPT 
+    else
+	# Generate a secret key from the hex form of current key material
+	SECRET='X!'`$VASTOOL ktutil list --keys | 
+	    awk 'NR == 4 { print substr($4,0,16); exit }'`
+	# Change the machine password using vastool
+	(echo "$SECRET"; echo "$SECRET") | $VASTOOL -s -u host/ passwd
+	# Set the new machine password in secrets.tdb
+	echo "$SECRET" | $PWDCHGSCRIPT -s "$SAMBA_CONFIGFILE"
+    fi
+    # Test that the password change worked ok
+    verbose_echo "Testing Samba is joined to Active Directory..."
+    verbose_echo "+ $SAMBA_BINDIR/net -s $SAMBA_CONFIGFILE ads testjoin"
+    $SAMBA_BINDIR/net -s "$SAMBA_CONFIGFILE" ads testjoin ||
+	die "Samba not joined: 'net ads testjoin' failed"
+fi
+
+# and restart samba services
+verbose_echo "Restarting services...."
+$vasidmapd_running && startsvc vasidmapd
+$RESTART_SAMBA && startsvc $SAMBASVC
+$winbindd_running && startsvc winbind
+
+if $have_winbind; then
+    : # yay, SID translation will work
+else
+    cat <<-.
+
+	* NOTE: Winbind not found
+
+      AD authentication will still be available to Samba, but access
+      control entries and file ownership will appear to be for local
+      users instead of domain users if AD users are not UNIX enabled.
+      For more information regarding identity mapping in Samba see:
+
+      https://www.samba.org/samba/docs/man/Samba-HOWTO-Collection/idmapper.html
+.
+fi
+
+cat <<-.
+
+	Summary:
+
+      Samba server:          $smbd
+      Samba config:          $SAMBA_CONFIGFILE
+      VAS config:            $VAS_CONF
+      winbind present:       `$have_winbind && echo yes || echo no`
+      vasidmapd present:     `$have_vasidmap && echo yes || echo no`
+
+      smb.conf updated:      `$update_conf && echo yes || echo not needed`
+      vas.conf updated:      `$update_vas && echo yes || echo not needed`
+      krb5.conf updated:     $KRB5CHANGE
+      Host key reset         $PWDCHANGE
+
+      vasidmapd (re)started: `$vasidmapd_running && echo yes || echo not needed`
+      samba (re)started:     `$RESTART_SAMBA && echo yes || echo no`
+      winbind (re)started:   `$winbindd_running && echo yes || echo not needed`
+
+.
+
+exit 0

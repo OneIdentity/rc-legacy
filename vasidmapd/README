@@ -1,0 +1,14 @@
+
+Instructions for building vasidmap from source:
+
+    ./configure
+    make
+    make package
+
+If the 'configure' script doesn't exist, make it using the 'autogen.sh' script.
+
+If 'pp' doesn't understand your system and can't create a package, you can 
+try installing the software directly with:
+
+    make install
+

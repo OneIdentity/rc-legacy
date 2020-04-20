@@ -1,0 +1,144 @@
+1.2.8
+* Respect the -f option when prompting user to configure vasidmap for
+  winbind
+
+1.2.7
+* Check for 1 or more instances of WITH_ADS when determining if Samba
+  has been compiled with ADS support. Bug #854
+* vas-samba-config asks if vasidmapd should be configured. Default is no
+
+1.2.6
+* Remove hard check for VAS in returned pwgrent structure (bug #828)
+* If krb5.conf doesn't exist the vas-krb5-config script now asks
+  the user if they wish to create it. (bug #600)
+
+1.2.5
+* Can now compile with GCC 4.6 and higher (bug #820)
+* Default value for 'obey pam restrictions' is now NO (bug #664)
+* vas-samba-config is now its own package. Vasidmap still contains
+  vas-samba-config as well. The vas-samba-config package can be used
+  when winbind is not needed on the system and will simplfy the samba
+  setup process.
+* Updated vasidmapd usage and man pages on how to correctly enable logging
+  (bug #841)
+* vasidmap-status will not run vasidmapd and vasidmap test when vasidmap
+  is not installed.
+* vasidmapd will ignore a few common well-known-sids. s-1-1-0, s-1-5-2 and
+  s-1-5-11. We will not attempt to find a unix user object for these sids
+  bug #837
+* vas-samba-config uses upstart jobs on Ubuntu to restart smbd,winbind and
+  vasidmapd. (Bug #843)
+
+1.2.4
+* vas-samba-config supports include statements being at the end of the global section. (bug #817)
+* vas-samba-config no longer adds idmap cache time to version of smb.conf newer than 3.3.0 (bug #610)
+* Added pp (polypkg) as part of the vasidmapd package
+* Includes the latest PolyPackage which adds support for debian upstart jobs.
+* vas-samba-config now restarts winbind if daemon is present. This is a best guess as to the location
+  of winbind, may not work in all environments (bug #631)
+* Added vas-samba-config support for Samba 3.6 idmap backend parameters. (bug # 816)
+
+1.2.3
+* vas-samba-config now updates smb.conf even when no other sections exist besides [global] (bug #785)
+* Updated the kinit function in vasidmap-status to work in more scenarios
+* Implemented Unix shell traps, to handle proper cleanup when script is finished running
+* vasidmap-status now cleans up properly after itself (bug #812)
+* Fixed issues on HPUX in vasidmap-status where shell test methods were not being quoted (bug #803)
+* Added/Fixed Solaris SMF support in Polypkg (bug #795)
+* Add ability for Makefile.am to download the latest RC Polypkg if PP is not in the build directory
+* Added ability to run each test group in vasidmap-status as a seperate user
+* Fixed some compilation warnings: "warning: format ‘%ld’ expects type ‘long int’,
+  but argument 4 has type ‘__gid_t’"
+* The vasidmapd pidfile is no longer a hidden file.
+* On AIX the pidfile is stored at /var/opt/quest/vas/ instead of the standard location /var/run/ this
+  is because /var/run/ doesn't exist by default on AIX.
+* Added ability to specify pidfile location for the vasidmapd daemon by using the -P option.
+* vasidmapd logging is controlled by syslog where available.
+* updated usage for vasidmapd
+* Daemon will recreate pid file if it is removed. Checks every 30 seconds
+* Added the compile flag -Wl,-brtl so we run-time link to libvas.  This fixes a segfault in vasidmap
+  on Aix when ran against QAS that is shipped with a different libvas version. (bug #818)
+
+1.2.2
+* Close connecitons that are idle for more then 5 minutes. 
+* vasidmap-status now runs LDAP tests against vasidmapd.
+    
+1.2.1
+* Updated vas-samba-config to work with Samba 3.4.0 kerberos settings (bug #750)
+* vas-set-samba-password script no longer fails when METHOD=tdb in vas-set-samba-password.conf (bug #733)
+* Added vasidmap-status script to vasidmap package
+* Port to Mac OSX (bug #777)
+* vas-samba-config can now find the netbios name of the joined domain when VAS is not joined with a DC 
+  list that does not contain a forest root DC (bug #685)
+* vas-samba-config will report an error when it cannot find a smb.conf file (bug #768)
+* vas-samba-config now checks that smbd was compiled with Kerberos support (bug #769)
+* vasidmap-status now works with groupname containing spaces (bug #774)
+
+1.2.0
+* Fix invalid lookups for "uidNumber" (bug #714).
+* Avoid lookups of non-QAS users (bug #714).
+* Avoid lookups of non-numeric uids & gids.
+* Fix harmless "cmp: EOF on <file>" error message (bug #646).
+* Add usage help to vas-samba-config (-h option).
+* Add -V flag for vasidmapd to print its version number (bug #616).
+* Correct vas-set-samba-password path in example (bug #615).
+
+1.1.0
+* bug 598: domain sid detection
+* vas-krb5-config warns about symlinks
+* bug 596: vas-samba-config copes with missing winbind 
+* bug 596: vas-samba-config runs quest-samba init scripts correctly
+* bug 171: corrected vas-set-samba-password file ownership
+* documentation corrections
+
+1.0.0
+* better support for non-Quest Samba servers
+* added vas-krb5-config script
+* moved vas-samba-config into /opt/quest/sbin (not bin)
+* moved vas-set-samba-password into /opt/quest/libexec (not sbin)
+* bug 479: 'package' target should choose its own DESTDIR
+* bug 474: correct 'samba-quest' group script name
+* bug 536: improvements in vas-samba-config
+
+0.10.0
+* Improve messages for support
+* Detect VAS connection problems
+* Handle cases where SUDO resets the environment
+* Add -V flag to get version
+* Add flags to support non-quest-samba
+* Improve the way that the service daemons start
+
+0.9.11
+* bug 240: support new idmap parameter names for Samba 3.0.25
+* bug 254: vas-samba-config properly starts/stops services on HP-UX
+
+0.9.10
+* bug 217: disable scripted password changes with some VAS 3.1 versions
+
+0.9.9
+* bug 191: fix the way the host password is updated
+* Fix vas-samba-config script on Solaris
+* Add manual page for vasidmap(1)
+* Change package name to quest-vasidmap (and QSFTidmap for Solaris)
+
+0.9.8
+* Add OR filter support for recent Samba3 changes
+* Handle PAM restrictions parameters in smb.conf
+* Simplify the way vas.conf is updated
+
+0.9.7
+* bug 78: user SIDs being detected as groups with VAS < 3.1
+
+0.9.5
+* Improved performance in SID translation code
+
+0.9.4
+* Fix multidomain support in vasidmap
+
+0.9.3
+* Added -s option to vasidmapd
+* Improved documentation
+* Removed unnecessary dependency on Samba
+
+0.9.2
+* Initial release

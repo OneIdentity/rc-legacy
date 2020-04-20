@@ -1,0 +1,490 @@
+#!/bin/sh
+#
+# usage:
+#   rc.test [-installed] [/build/path]
+# If build path is not provided, assumes "."
+#
+# If -installed is given, then assumes package is installed under /opt/quest
+# AND that the vasidmapd service is running
+#
+
+EXIT=0
+desc () { DESC="$*"; }
+fail () { echo "[37;41mFAILED[m [4m$DESC${*:+ ($*)}[m" >&2; EXIT=1; }
+pass () { echo "[37;42mPASSED[m [4m$DESC${*:+ ($*)}[m" >&2; }
+result () { test $? -eq 0 && pass || fail; }
+negresult () { test $? -eq 1 && pass || fail; }
+fatal () { fail; exit 1; }
+required () { test $? -eq 0 && pass || fatal; }
+veval () { "$verbose" && echo "[4m+ $*[m" >&2; "$@"; }
+verbose () { $verbose && echo ">>> $*"; }
+usage () { echo "$0 [-installed] [-runashost] [builddir]" >&2; exit 1; }
+
+#-- is_lt returns true iff dotted version $1 < $2
+is_lt () {
+    a="$1" b="$2"
+    while test -n "$a" -o -n "$b"; do
+        ah=`echo "$a" | sed -e 's/\..*//'`
+        bh=`echo "$b" | sed -e 's/\..*//'`
+        if test x"$ah" = x"$bh"; then
+            a=`echo "$a" | sed -e 's/^[^.]*//;s/^\.//'`
+            b=`echo "$b" | sed -e 's/^[^.]*//;s/^\.//'`
+            continue
+        fi
+        { echo "$ah"; echo "$bh"; } | sort -n -c 2>/dev/null
+        return
+    done
+    return 1
+}
+
+: ${host:=127.0.0.1}
+: ${port:=389}          # vastool -p option not working
+: ${vastool:=/opt/quest/bin/vastool}
+: ${debug:=}        # eg -d2
+: ${prefix:=/opt/quest}
+: ${builddir:=.}
+
+#-- process command-line options
+
+verbose=false
+installed=false
+runashost=false
+
+[ x"$RCTEST_RUNASHOST" = x"true" ] && runashost=true
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+	-installed) installed=true; shift;;
+	-runashost) runashost=true; shift;;
+	-debug)     debug=yes; verbose=true; shift;;
+	-verbose)   verbose=true; shift;;
+	--)         shift; break;;
+	-*)         echo "Unknown option $1" >&2; usage;;
+	*)          break;;
+    esac
+done
+
+if [ $# -gt 0 ]; then
+    builddir="$1"; shift
+fi
+
+[ $# -eq 0 ] || usage
+
+$installed && verbose "Will use installed package"
+$runashost && verbose "will obtain host/ credentials to run test"
+
+#-- a place for our temporary files
+tmpdir=${TMPDIR:-/tmp}/vasidmap.test.$$
+mkdir -p ${tmpdir}
+chmod 777 ${tmpdir}
+trap "rm -rf ${tmpdir}" 0
+
+expfile=${tmpdir}/expfile
+outfile=${tmpdir}/outfile
+
+if $runashost; then
+#-- obtain host/ TGT so these tests can run automated
+krb5ccfile=${tmpdir}/cc
+${SUDO:-sudo} rm -f ${krb5ccfile}
+KRB5CCNAME=FILE:${krb5ccfile}
+export KRB5CCNAME
+$vastool -v
+VAS_VERSION=`$vastool -v | sed -n 's/.*[Vv]ersion //;p;q'`
+verbose "Obtaining host/ key -> $KRB5CCNAME"
+#set -x
+test -n "$debug" && 
+  ${SUDO:-sudo} /bin/sh -c 'echo inside sudo KRB5CCNAME is $KRB5CCNAME'
+${SUDO:-sudo} env KRB5CCNAME="${KRB5CCNAME}" $vastool kinit host/ || fatal "Can't obtain host tgt"
+${SUDO:-sudo} cat ${krb5ccfile} > ${krb5ccfile}.x || fatal "Can't get host ccache"
+${SUDO:-sudo} rm -f ${krb5ccfile}
+mv ${krb5ccfile}.x ${krb5ccfile}
+chmod 600 ${krb5ccfile}
+env | grep KRB5CCNAME
+ls -la ${krb5ccfile}
+$vastool klist || {
+    #-- ugh.. some builds of vastool ignored KRB5CCNAME
+    mv $krb5ccfile /tmp/krb5cc_501; 
+    krb5ccfile=/tmp/krb5cc_501
+    KRB5CCNAME=FILE:$krb5ccfile; export KRB5CCNAME
+    $vastool klist || fatal "cannot get VAS to see the host/ ccache"
+}
+#set +x
+fi
+
+# work around for VAS bug 5480 on some platforms
+if $vastool nss getpwent | grep :VAS: >/dev/null; then
+    _getpwent () { $vastool nss getpwent; }
+    _getgrent () { $vastool nss getgrent; }
+else
+    _getpwent () { $vastool nss getpwnam testuser expired disabled; }
+    _getgrent () { $vastool nss getgrnam group00 group01 group02; }
+fi
+
+#-- used SID/GID/UIDs for testing
+uid=`_getpwent | awk -F: '$2 == "VAS" {if (length($1)<=8) {print $3; exit;}}'`
+uname=`$vastool nss getpwuid $uid | awk -F: '{print $1; exit;}'` 
+usid=`$vastool attrs -b -u $uname objectSid | awk '{print $2; exit;}'`
+gid=`_getgrent | awk -F: '$2 == "VAS" {if (length($1)<=8) {print $3; exit;}}'`
+gsid=`$vastool list -s groups | awk -F: '$3 == gid {print $5; exit;}' gid=$gid`
+gname=`$vastool list -s groups | awk -F: '$3 == gid {print $1; exit;}' gid=$gid`
+
+uid2=`_getpwent | awk -F: '$2 == "VAS" && $3 != uid {if (length($1)<=8){print $3; exit;}}' uid=$uid`
+uname2=`$vastool nss getpwuid $uid2 | awk -F: '{print $1; exit;}'` 
+usid2=`$vastool attrs -b -u $uname2 objectSid | awk '{print $2; exit;}'`
+gid2=`_getgrent | awk -F: '$2 == "VAS" && $3 != gid {if (length($1)<=8){print $3; exit;}}' gid=$gid`
+gsid2=`$vastool list -s groups | awk -F: '$3 == gid2 {print $5; exit;}' gid2=$gid2`
+gname2=`$vastool list -s groups | awk -F: '$3 == gid2 {print $1; exit;}' gid2=$gid2`
+
+#-- unused SID/UID/GIDs for testing
+findid () {
+    #-- returns an ID that doesn't appear to be used
+    id=0
+    while $vastool nss $1 $id 2>/dev/null >/dev/null; do
+        id=`expr $id '*' 3`
+        id=`expr $id '+' 7`
+    done
+    echo $id
+}
+badsid=S-1-2-3-4-5-6-7
+baduname=_baduname
+baduid=`findid getpwuid`
+badgname=_badgname
+badgid=`findid getgrgid`
+
+#test -z "$debug" ||
+    cat <<. >&2
+    Test parameters:
+
+        uname=    $uname
+        uid=      $uid
+        usid=     $usid
+        gname=    $gname
+        gid=      $gid
+        gsid=     [$gsid]
+
+        uname2=   $uname2
+        uid2=     $uid2
+        usid2=    $usid2
+        gname2=   $gname2
+        gid2=     $gid2
+        gsid2=    $gsid2
+
+        badsid=   $badsid
+        baduname= $baduname
+        baduid=   $baduid
+        badgname= $badgname
+        badgid=   $badgid
+
+.
+case ":$uid:$uname:$usid:$gid:$gsid:$gname:$uid2:$uname2:$usid2:$gid2:$gsid2:$gname2:" in *::*) fatal "one or more of the test parameters is empty";; esac
+
+#-- usage: trycommand "desc" command... <expected-output
+trycommand () {
+    desc "$1"
+    shift
+    cat > $expfile
+    veval "$@" > $outfile &&
+    cmp $outfile $expfile
+    result
+    if cmp $outfile $expfile >/dev/null; then
+        : ok
+    else
+        echo "expected:"
+        sed -ne l $expfile | sed -e 's/^/	|/'  -e 's/$/|/'
+        test -s $expfile || echo '	(empty)'
+        echo "but got:"
+        sed -ne l $outfile | sed -e 's/^/	|/'  -e 's/$/|/'
+        test -s $outfile || echo '	(empty)'
+    fi >&2
+}
+
+#-- usage ignore ...
+#   if EXIT changes from 0 to 1, set it back to 0
+ignore () {
+    old_EXIT="$EXIT"
+    "$@"
+    if test $old_EXIT -eq 0 -a $EXIT -eq 1; then
+	echo "[46;30m*** IGNORING FAILURE ***[m"
+	EXIT=0
+    fi
+}
+
+#-- usage ignoreif 'cmd' ...
+#   if 'cmd' evaluates to true then prefix the rest of the command with ignore
+#   otherwisw run as normal
+ignoreif () {
+    if eval "$1"; then
+	shift
+	ignore "$@"
+    else
+	shift
+	"$@"
+    fi
+}
+
+#------------------------------------------------------------
+# vasidmap tests
+
+if $installed; then
+    vasidmap=$prefix/bin/vasidmap
+else
+    vasidmap=$builddir/vasidmap
+fi
+
+#-- usage: trymap args <expected-output
+trymap () {
+    trycommand "vasidmap $*" ${vasidmap} "$@"
+}
+trymapfail () {
+    desc "vasidmap $*, negative"
+    if veval ${vasidmap} "$@" >$outfile 2>/dev/null; then
+        fail
+    elif test -s $outfile; then
+        echo "expected empty stdout, but got:"
+        cat $outfile
+        fail
+    else
+        pass
+    fi
+}
+
+trymap $uname <<.
+$uname
+.
+
+trymap -u $uid <<.
+$usid
+.
+
+trymap -g $gid <<.
+$gsid
+.
+
+trymap -un $uname <<.
+$usid
+.
+
+trymap -gn "$gname" <<.
+$gsid
+.
+
+trymap -sU $usid <<.
+$uid
+.
+
+ignoreif 'is_lt $VAS_VERSION 3.2.0.88' \
+trymap -sG $gsid <<.
+$gid
+.
+
+#trymapfail -sU $gsid
+#trymapfail -sG $usid
+
+trymapfail -u $baduid
+trymapfail -g $badgid
+trymapfail -un $baduname
+trymapfail -gn $badgname
+trymapfail -sU $badsid
+trymapfail -sG $badsid
+
+#------------------------------------------------------------
+# vasidmapd tests
+
+if $installed; then
+    verbose "(using running vasidmapd service)"
+else
+    desc "start vasidmapd"
+        ${SUDO:-sudo} env - ${builddir}/vasidmapd -F -A $host -p $port $debug &
+        pid=$!
+        trap "rm -rf ${tmpdir}; ${SUDO:-sudo} kill $pid && wait 2>/dev/null" 0 
+        sleep 1
+        ${SUDO:-sudo} kill -0 $pid 2>/dev/null
+    required
+fi
+
+#-- usage: tryfilter "filter" ["description"] <expected-output
+tryfilter () {
+    trycommand "${2:-$1}" $vastool search -a -h $host -p $port "$1" 
+}
+
+#-- usage: tryfilterfail "filter" ["description"]
+tryfilterfail () {
+    desc "${2:-$1, negative}"
+    veval $vastool search -a -h $host -p $port "$1" >/dev/null 2>/dev/null
+    negresult
+}
+
+tryfilterfail '(arbitrary=equality)'
+
+tryfilter '(objectClass=sambaUnixIdPool)' <<.
+dn: CN=VAS-Idmapper
+objectClass: sambaUnixIdPool
+uidNumber: 1000
+gidNumber: 1000
+.
+
+
+tryfilter '(OBjeCTcLASS=SAmBAuNIXiDpoOl)' <<.
+dn: CN=VAS-Idmapper
+objectClass: sambaUnixIdPool
+uidNumber: 1000
+gidNumber: 1000
+.
+
+tryfilterfail '(&(a=b)(c=d)(e=f))'
+
+tryfilter "(&(objectClass=sambaIdmapEntry)(sambaSID=$usid))" <<.
+dn: CN=VAS-Idmapper
+sambaSID: $usid
+objectClass: sambaIdmapEntry
+uidNumber: $uid
+.
+
+ignoreif 'is_lt $VAS_VERSION 3.2.0.88' \
+tryfilter "(&(objectClass=sambaIdmapEntry)(sambaSID=$gsid))" <<.
+dn: CN=VAS-Idmapper
+sambaSID: $gsid
+objectClass: sambaIdmapEntry
+gidNumber: $gid
+.
+
+tryfilter "(&(objectClass=sambaIdmapEntry)(uidNumber=$uid))" <<.
+dn: CN=VAS-Idmapper
+sambaSID: $usid
+objectClass: sambaIdmapEntry
+uidNumber: $uid
+.
+
+tryfilter "(&(objectClass=sambaIdmapEntry)(gidNumber=$gid))" <<.
+dn: CN=VAS-Idmapper
+sambaSID: $gsid
+objectClass: sambaIdmapEntry
+gidNumber: $gid
+.
+
+tryfilterfail "(&(objectClass=sambaIdmapEntry)(sambaSID=$badsid))"
+tryfilterfail "(&(objectClass=sambaIdmapEntry)(uidNumber=$baduid))"
+tryfilterfail "(&(objectClass=sambaIdmapEntry)(gidNumber=$badgid))"
+
+#-- disjunction tests
+tryfilter "(&(objectClass=sambaIdmapEntry)(|(gidNumber=$gid)(gidNumber=$gid2)))" <<.
+dn: CN=VAS-Idmapper
+sambaSID: $gsid
+objectClass: sambaIdmapEntry
+gidNumber: $gid
+
+dn: CN=VAS-Idmapper
+sambaSID: $gsid2
+objectClass: sambaIdmapEntry
+gidNumber: $gid2
+.
+
+tryfilter "(&(objectClass=sambaIdmapEntry)(|(uidNumber=$uid)(uidNumber=$uid2)))" <<.
+dn: CN=VAS-Idmapper
+sambaSID: $usid
+objectClass: sambaIdmapEntry
+uidNumber: $uid
+
+dn: CN=VAS-Idmapper
+sambaSID: $usid2
+objectClass: sambaIdmapEntry
+uidNumber: $uid2
+.
+
+tryfilter "(&(objectClass=sambaIdmapEntry)(|(uidNumber=$uid)(gidNumber=$gid)))" <<.
+dn: CN=VAS-Idmapper
+sambaSID: $usid
+objectClass: sambaIdmapEntry
+uidNumber: $uid
+
+dn: CN=VAS-Idmapper
+sambaSID: $gsid
+objectClass: sambaIdmapEntry
+gidNumber: $gid
+.
+
+ignoreif 'is_lt $VAS_VERSION 3.2.0.88' \
+tryfilter "(&(objectClass=sambaIdmapEntry)(|(sambaSID=$gsid)(sambaSID=$usid)))" <<.
+dn: CN=VAS-Idmapper
+sambaSID: $gsid
+objectClass: sambaIdmapEntry
+gidNumber: $gid
+
+dn: CN=VAS-Idmapper
+sambaSID: $usid
+objectClass: sambaIdmapEntry
+uidNumber: $uid
+.
+
+tryfilter "(&(objectClass=sambaIdmapEntry)(|(uidNumber=$uid)(uidNumber=$baduid)))" <<.
+dn: CN=VAS-Idmapper
+sambaSID: $usid
+objectClass: sambaIdmapEntry
+uidNumber: $uid
+.
+
+tryfilter "(&(objectClass=sambaIdmapEntry)(|(uidNumber=$baduid)(uidNumber=$uid)))" <<.
+dn: CN=VAS-Idmapper
+sambaSID: $usid
+objectClass: sambaIdmapEntry
+uidNumber: $uid
+.
+
+ignoreif 'is_lt $VAS_VERSION 3.2.0.88' \
+tryfilter "(&(objectClass=sambaIdmapEntry)(|(uidNumber=$uid)(uidNumber=$uid2)(gidNumber=$gid)(gidNumber=$gid2)(sambaSID=$usid)(sambaSID=$usid2)(sambaSID=$gsid)(sambaSID=$gsid2)))" <<.
+dn: CN=VAS-Idmapper
+sambaSID: $usid
+objectClass: sambaIdmapEntry
+uidNumber: $uid
+
+dn: CN=VAS-Idmapper
+sambaSID: $usid2
+objectClass: sambaIdmapEntry
+uidNumber: $uid2
+
+dn: CN=VAS-Idmapper
+sambaSID: $gsid
+objectClass: sambaIdmapEntry
+gidNumber: $gid
+
+dn: CN=VAS-Idmapper
+sambaSID: $gsid2
+objectClass: sambaIdmapEntry
+gidNumber: $gid2
+
+dn: CN=VAS-Idmapper
+sambaSID: $usid
+objectClass: sambaIdmapEntry
+uidNumber: $uid
+
+dn: CN=VAS-Idmapper
+sambaSID: $usid2
+objectClass: sambaIdmapEntry
+uidNumber: $uid2
+
+dn: CN=VAS-Idmapper
+sambaSID: $gsid
+objectClass: sambaIdmapEntry
+gidNumber: $gid
+
+dn: CN=VAS-Idmapper
+sambaSID: $gsid2
+objectClass: sambaIdmapEntry
+gidNumber: $gid2
+.
+
+if $installed; then
+    desc "bug 560: vas-set-samba-password is executable"
+    test -x /opt/quest/libexec/vas-set-samba-password
+    result
+
+    desc "bug 560: vas-set-samba-password owned by root"
+    owner=`/bin/ls -l /opt/quest/libexec/vas-set-samba-password | 
+	   awk '{print $3}'`
+    test x"root" = x"$owner"
+    result
+fi
+
+exit $EXIT
+
+# TODO add some extra tests from http://www.occam.com/tools/ad_auth.html

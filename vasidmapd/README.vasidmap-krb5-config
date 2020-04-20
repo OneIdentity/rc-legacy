@@ -1,0 +1,51 @@
+Vasidmap-krb5-config is a script tool to configure Kerberos 5 to work with
+VAS and Active Directory. It modifies existing config options or adds new
+config options into krb5.conf file so that Kerberos 5 works with VAS and 
+Active Directory.
+
+Usage: vasidmap-krb5-config [-s /path/krb5.conf]
+
+Without options, the vasidmap-krb5-config script searches for the krb5.conf
+file under default location and modifies it. The old config file is
+saved as krb5.conf.<date>.<pid> in the same directory. The default locations
+for different Unix and Linux platforms are:
+
+    - Linux (Redhat, Suse, etc): /etc/krb5.conf
+    - HP-UX: /etc/krb5.conf
+    - Solaris: /etc/krb5/krb5.conf
+    - AIX: /opt/pware/etc/krb5.conf
+    - All other platforms: /etc/krb5.conf
+
+With option "-s /path/krb5.conf", it takes the config file path and name
+from shell and modifies this file properly. A saved file will be at the
+same location once it completes the configuration.
+
+When running this script, VAS must already be configured and joined to
+the domain, also vasd must be running. Vasidmap-krb5-config should be run
+as root.
+
+Example of changes made to krb5.conf:
+
+[libdefaults]
+# Change or add the default_realm to the current realm configured by VAS
+ default_realm = EXAMPLE.COM
+# Change or add the default keytab name file being used by application
+# servers to VAS keytab file
+ default_keytab_name = /etc/opt/quest/vas/host.keytab
+
+[realms]
+# Add Kerberos servers of VAS configured realm into this section
+ EXAMPLE.COM = {
+  kdc = kerberos.example.com:88
+  kpasswd_server = kerberos.example.com:464
+ }
+
+[domain_realm]
+# Add VAS domain names to Kerberos realm names mapping at the beginning
+# of this section
+ .example.com = EXAMPLE.COM
+ example.com = EXAMPLE.COM
+
+This script may be used to allow Kerberos-enabled Samba packages from
+OS vendors or third parties to interoperate with VAS and Active
+Directory.

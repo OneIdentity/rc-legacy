@@ -1,0 +1,2185 @@
+#!/bin/sh
+# (c) 2017 Quest Software, Inc. All rights reserved.
+
+. "@pkgdatadir@/vasidmap-common.sh"
+
+VERSION=1.0.0.10
+DEBUG=false
+CLEANUP=true
+VASIDMAPD_CLEANUP=false
+
+# Default tests to run
+RUN_ALL_TESTS=true
+SMBCLIENT_TESTS=false
+VASIDMAP_TOOL_TESTS=false
+VASIDMAP_DAEMON_TESTS=false
+
+SMBCLIENT=
+
+# Process command line arguments
+opterr=false
+samba_prefix=
+samba_configfile=
+
+TEST_SHARE_DIR="/tmp/vasidmap-testshare"
+VASIDMAP="@bindir@/vasidmap"
+VASIDMAPD="@sbindir@/vasidmapd"
+VASIDMAPD_OPSYS=`uname -s || echo unknown`
+
+# Add any special cases for the location of the pid file here.
+case $VASIDMAPD_OPSYS in
+  AIX)
+    vasidmapd_pidfile="/var/opt/quest/vas/vasidmapd.pid"
+    ;;
+  *)
+    vasidmapd_pidfile="/var/run/vasidmapd.pid"
+    ;;
+esac
+
+TRAP_SIGNAL_LIST="TERM INT HUP PIPE ALRM ABRT QUIT"
+TRAP_COMMAND_RUNNING="false"
+
+# Re-execute with a reasonable shell and sensible PATH on Solaris.
+if id -un >/dev/null 2>&1; then
+    echo ok >/dev/null
+else
+    if test -d /usr/xpg4/bin && test "$MAV_SANE_SHELL" != yes; then
+        MAV_SANE_SHELL=yes
+        export MAV_SANE_SHELL
+        if echo $PATH | grep xpg4 >/dev/null 2>&1; then
+            echo ok > /dev/null
+        else
+            PATH=/usr/xpg4/bin:$PATH
+            export PATH
+        fi
+        echo "Re-executing with /usr/xpg4/bin in PATH..."
+        exec /usr/xpg4/bin/sh "$0" "$@"
+    fi
+    echo "WARNING: Could not find a sensible environment, consider re-running this" >&2
+    echo "         script with a POSIX-compatible shell such as bash or ksh." >&2
+    echo "         eg. /bin/bash $0 $@" >&2
+fi
+
+while test "$#" -gt 0; do
+    case "$1" in
+        -d) DEBUG=true; shift;;
+        -c) CLEANUP=false; shift;;
+        -s) samba_configfile="$2"; shift; shift;;
+        -S) samba_prefix="$2"; shift; shift;;
+        -u)  if test $# -lt 2; then
+                echo "Missing argument to $1"; opterr=true; shift
+             else
+                uflag="$2"; shift; shift
+             fi;;
+        -V) echo "$VERSION"; exit 0;;
+        --smbclient) SMBCLIENT_TESTS=true; RUN_ALL_TESTS=false; shift;;
+        --vasidmap) VASIDMAP_TOOL_TESTS=true; RUN_ALL_TESTS=false;
+           case "$2" in
+             -u) if test "$#" -lt 3; then
+                   echo "Missing argument to $2"; opterr=true; shift
+                 else
+                   RUNASUSER_TOOL="$3"; shift; shift
+                 fi;;
+             *);;
+            esac
+            shift
+            ;;
+        --vasidmapd) VASIDMAP_DAEMON_TESTS=true; RUN_ALL_TESTS=false; 
+           case "$2" in 
+             -u) if test "$#" -lt 3; then 
+                   echo "Missing argument to $2"; opterr=true; shift
+                 else
+                   RUNASUSER_DAEMON="$3"; shift; shift
+                 fi;;
+             esac
+             shift
+             ;;
+        all) RUN_ALL_TESTS=true; shift;;
+        --) shift; break;;
+        -*) echo "Unknown option '$1'" >&2; shift; opterr=true;;
+        *)  break;;
+    esac
+done
+if test "$#" -ne 0; then      # Expect no extra arguments
+    opterr=true
+fi
+if $opterr; then            # Show usage on option error
+    echo "Usage: $0 [-dcV] [-s /path/smb.conf] [-S samba-prefix]" >&2
+    exit 1
+fi
+
+if test -n "$samba_prefix"; then
+    smbd=$samba_prefix/sbin/smbd
+else
+    smbd=`search_for_smbd`
+    case $smbd in
+        */sbin/smbd) samba_prefix=`echo $smbd | sed -e 's,/sbin/smbd$,,'`;;
+        *)           samba_prefix=/usr;;
+    esac
+fi
+
+TIME=`date +"%m-%d-%Y %H:%M:%S"`
+
+echo "Runtime: $TIME"
+
+have_vasidmap=false
+test -x "$VASIDMAPD" && have_vasidmap=true
+debug_echo "have_vasidmap = $have_vasidmap"
+
+yesno() { debug_echo "$@"; if "$@"; then echo \[YES\]; else echo \[NO\]; fi; }
+#passfail() { debug_echo "$@"; if "$@"; then echo \[PASSED\]; else echo \[FAILED\]; fi; }
+passfail() { debug_echo "$@"; if "$@"; then echo \[passed\]; else echo \[FAILED\]; fi; }
+
+#
+# ssout
+# prints a label, with a newline
+#
+ssout()
+{
+  DOTS=".............................................................................................................................."
+
+#  if [ "$2" = "[FAILED]" ]; then
+    echo "  `echo $1 $DOTS | cut -c -108` $2"
+#  else
+#    printf "%-110s %s\n" "$1" "$2"
+#  fi
+}
+
+#
+# label
+#  prints a label, and no newline
+#
+label () {
+  printf "%-110s %s" "$1" "$2"
+}
+
+#-- prompt user for information
+#   usage: query prompt varname [default]
+query () {
+    eval $2=
+    while eval "test ! -n \"\$$2\""; do
+        if read xx?yy <$0 2>/dev/null; then
+            eval "read \"$2?$1${3+ [$3]}: \"" || die "(end of file)"
+        else
+            eval "read -p \"$1${3+ [$3]}: \" $2" || die "(end of file)"
+        fi
+        eval : "\${$2:=\$3}"
+    done
+}
+
+#
+# get_groupnames_from_gid_for_domain
+# 
+# Returns a list of groupnames that match on GID for a given domain
+#
+get_groupnames_from_gid_for_domain() {
+  
+    debug_echo "get_groupnames_from_gid_for_domain: Start"
+
+    DN=$2
+    GID=$1
+    SEARCH_ERRNO=1
+    GRNAMES=
+
+    debug_echo "Looking for Groups for GID: $GID, in domain-dn $DN"
+
+    for GRNAME in `$VASTOOL -u host/ search -q -b "$DN" "(&(gidNumber=$GID)(objectclass=group))" samaccountname 2>/dev/null`; do
+      SEARCH_ERRNO=$?
+      if [ -z "$GRNAMES" ]; then
+        GRNAMES="$GRNAME"
+      else
+        GRNAMES="$GRNAMES:$GRNAME"
+      fi
+    done
+
+    test -n "$GRNAMES" && echo "$GRNAMES"
+
+    debug_echo "get_groupnames_from_gid_for_domain: End($SEARCH_ERRNO)"
+
+    return $SEARCH_ERRNO
+}
+
+#
+# get_primary_grnam_for_user
+#
+# Returns a list of groupnames that match on GID for the users primary GID
+#
+get_primary_grnam_for_user() {
+    
+  USERNAME=$1
+  RC=0
+
+  debug_echo "get_primary_grnam_for_user: Start"
+
+  GID=`$VASTOOL -u host/ attrs -u -q $USERNAME gidNumber`
+  RC=$?
+  if [ $RC -ne "0" ]; then
+    return $RC
+  fi
+
+  USERDOMAINDN=`$VASTOOL -u host/ info id -u $USERNAME | grep -i "^LDAP:" | cut -f2 -d: | sed -e 's/,[Dd][Cc]=/~/' -e 's/^[^~]*~/DC=/'`
+  
+  GRNAME=`get_groupnames_from_gid_for_domain $GID $USERDOMAINDN`
+  USERDOMAINDN_RC=$?
+  if [ -n "$GRNAME" ]; then
+    GRNAMES="$GRNAME"
+    debug_echo "Found the following groups for GID $GID: $GRNAMES"
+  fi
+
+  DOMAINDN_RC=1
+  for DN in `$VASTOOL -u host/ info domains-dn`; do
+    if [ "$DN" = "$USERDOMAINDN" ]; then
+      break;
+    fi
+    GRNAME=`get_groupnames_from_gid_for_domain $GID $DN`
+    DOMAINDN_RC=$?
+    if [ -n "$GRNAME" ]; then
+      if [ -z "$GRNAMES" ]; then
+        GRNAMES="$GRNAME"
+      else
+        GRNAMES="$GRNAMES:$GRNAME"
+      fi
+    fi
+  done
+
+  test -n "$GRNAMES" && echo "$GRNAMES"
+
+  if [ $DOMAINDN_RC -ne "0" ]; then
+    if [ $USERDOMAINDN_RC -ne "0" ]; then
+      RC=1
+    fi
+  fi
+  debug_echo "get_primary_grnam_for_user End($RC)"
+  return $RC
+}
+
+
+#
+#  vastool_getpwnam
+#
+#  returns the given users pwnam
+#
+vastool_getpwnam()
+{
+   USERNAME=$1
+   #ATTRIBUTE="username-attr-name"
+   #VALUE=`$VASTOOL inspect vasd $ATTRIBUTE`
+   ATTRIBUTE="username attribute name"
+   VALUE=`$VASTOOL schema list | grep -i "$ATTRIBUTE" | cut -d: -f2 | awk '{print $1}'`
+   INSPECT_ERRNO=$?
+   if [ $INSPECT_ERRNO -ne "0" ]; then
+    debug_echo "Could not determine value for vas.conf option $ATTRIBUTE"
+   fi
+   
+   if [ -z "$VALUE" ]; then 
+     debug_echo "$ATTRIBUTE not set, using default"
+     VALUE="userprincipalname"
+   else
+     debug_echo "$ATTRIBUTE set to $VALUE"
+   fi
+
+   ID=`$VASTOOL -u host/ attrs -u -q $USERNAME $VALUE`
+   RC=$?
+   if [ $RC -ne "0" ]; then
+    debug_echo "Could not determine user: $USERNAME pwname"
+    return $RC
+   fi
+
+   debug_echo "User $USERNAME, pwname is: $ID"
+
+   test -n "$ID" && echo "$ID"
+
+   debug_echo "vastool_getpwnam: END($RC)"
+
+   return $RC
+}
+
+#
+# vastool_id
+# 
+#
+vastool_id() {
+
+  FLAG=$2
+  USERNAME=$1
+
+  RC=1
+  ID=
+
+  debug_echo "vastool_id: Start"
+  debug_echo "Looking up id information for user: $USERNAME"
+
+  if [ "$FLAG" = "-g" ]; then
+    debug_echo "Looking up GID for user: $USERNAME"
+    ID=`$VASTOOL -u host/ attrs -u -q $USERNAME gidNumber`
+    RC=$?
+  elif [ "$FLAG" = "-u" ]; then
+    debug_echo "Looking up UID for user: $USERNAME"
+    ID=`$VASTOOL -u host/ attrs -u -q $USERNAME uidNumber`
+    RC=$?
+  elif [ "$FLAG" = "-un" ]; then
+    debug_echo "Looking up username for user: $USERNAME"
+    ID=`vastool_getpwnam $USERNAME`
+    RC=$?
+  elif [ "$FLAG" = "-gn" ]; then
+    debug_echo "Looking up groupname for user: $USERNAME"
+    GID=`$VASTOOL -u host/ attrs -u -q $USERNAME gidNumber`
+    RC=$?
+    if [ $RC -eq "0" ]; then
+      ID=`id -gn $USERNAME 2> /dev/null`
+      RC=$?
+      if [ $RC -ne "0" ]; then
+        ID=`get_primary_grnam_for_user $USERNAME $GID`
+        RC=$?
+      fi
+    fi
+  else
+    ID=`$VASTOOL -u host/ attrs -u $USERNAME gidNumber uidNumber`
+    RC=$?
+  fi  
+
+  test -n "$ID" && echo "$ID"
+
+  debug_echo "vastool_id: End($RC)"
+  return $RC
+}
+
+#
+#  vastool_klist
+#  Sets the RUNASUSER variable
+#
+#
+vastool_klist() {
+  
+  echo "KRB5CCNAME $KRB5CCNAME"
+  $VASTOOL klist -c $KRB5CCNAME
+  VTKLIST_ERRNO=$?
+  if [ $VTKLIST_ERRNO -ne "0" ]; then
+    echo "$VASTOOL klist -c $KRB5CCNAME failed with errno $VTKLIST_ERRNO"
+    return $VTKLIST_ERRNO
+  fi
+
+  RUNASUSER=`$VASTOOL klist -c $KRB5CCNAME | head -2 | tail -1 | awk '{ print $2 }'`
+
+  return 0
+
+}
+
+#
+#-- get a TGT for some operations
+#
+kinit () {
+    debug_echo "kinit: Start"
+
+#//TODO Check to see if ccache is valid if it exists
+	
+    local _USER="" 
+    # check to see if the uflag was set on the command line if so ignore any ccaches and prompt for password #
+    if [ -n "$uflag" ]; then
+        _USER=$uflag
+   	debug_echo "Using user: $uflag from command line"
+    else
+    	if [ -n "$KRB5CCNAME" ]; then
+            # If KRB5CCNAME is exported, then assume kinit is done
+	    echo "The environment variable \"KRB5CCNAME\" is set, using ccache $KRB5CCNAME"
+	    vastool_klist
+	    debug_echo "kinit: End(1)"
+	    return 0
+        fi
+
+        # Check to see if the running user has a ccache #
+        if test -r /tmp/krb5cc_`id -u`; then
+            KRB5CCNAME=/tmp/krb5cc_`id -u`; export KRB5CCNAME
+	    debug_echo "Found credential cache for user: `id -un`"
+            vastool_klist
+            debug_echo "kinit: End(2)"
+            return 0
+        else
+            debug_echo "ccname: /tmp/krb5cc_`id -u` does not exist for user: `id -un`"
+        fi
+
+        # Check to see if the user who ran sudo has a ccache #
+        if [ "z$SUDO_UID" != "z" ] && [ -r /tmp/krb5cc_${SUDO_UID} ]; then
+            KRB5CCNAME=/tmp/krb5cc_${SUDO_UID}; export KRB5CCNAME
+            debug_echo "Found credential cache for user: $SUDO_USER"
+	    vastool_klist
+            debug_echo "kinit: End(3)"
+            return 0
+        else
+            debug_echo "sudo uid is not set $SUDO_UID or /tmp/krb5cc_${SUDO_UID} does not exist" 
+        fi
+    fi
+
+    # After this point we will be prompting for a password #
+
+    debug_echo "Current User: $USER"
+
+    ccname=/tmp/.samba_status_$$
+
+    if test ! -s "$ccname"; then
+        if [ $# -eq 1 ]; then
+            echo "Credentials required to $1"
+        fi
+
+        if [ z"$_USER" = "z" ]; then
+	  if [ z"$SUDO_USER" = "z" ]; then
+             debug_echo "Sudo_user: $SUDO_USER"
+          fi
+          _USER="${SUDO_USER:-${USER}}"
+
+          if [ z"$_USER" = z"root" ]; then _USER=Administrator; fi
+          echo
+          echo "Please login with a unix enabled domain account."
+          query "Username" _USER ${_USER}
+	  #query "Username" USER
+        fi
+        KRB5CCNAME=FILE:$ccname; export KRB5CCNAME
+        $VASTOOL kinit "$_USER" || die "Unable to acquire credentials"
+    fi
+
+    vastool_klist
+
+    debug_echo "kinit: End(0)"
+   
+    return 0
+}
+
+#
+# vas_user_domain_realm
+#
+vas_user_domain_realm () {
+
+  USERNAME=$1
+  USEREALM=
+  USERREALM=`$VASTOOL -u host/ info id -u $USERNAME 2>/dev/null | grep -i "^Kerberos" | cut -f2 -d@`
+  
+  test -n "$USERREALM" && echo "$USERREALM"
+}
+
+#
+# vas_group_domain_realm
+#
+vas_group_domain_realm () {
+  GROUPNAME=$1
+  GROUPREALM=
+  GROUPREALM=`$VASTOOL -u host/ info id -g $GROUPNAME 2>/dev/null | grep -i "^Kerberos" | cut -f2 -d@`
+
+  test -n "$GROUPREALM" && echo "$GROUPREALM"
+}
+
+# vas_user_domain_netbios_name
+#   $1 - Username
+#   Determines the users domains netbios name
+#   Uses vastool to query the default directory and find its NetBIOS name
+#   This method will return an empty string  if USERNAME is a cross-forest user.
+vas_user_domain_netbios_name () {
+    USERNAME=$1
+
+    NETBIOS=
+
+    #USERREALM=`$VASTOOL -u host/ info id -u $1 2>/dev/null | grep -i "^Kerberos" | cut -f2 -d@`
+    USERREALM=`vas_user_domain_realm $USERNAME`
+
+    if [ -n "$USERREALM" ]; then
+     NETBIOS=`joined_domain_info "$USERREALM" "Server_Netbios_Domain"`
+    fi
+
+   test -n "$NETBIOS" && echo "$NETBIOS"
+
+}
+
+# create_dir
+# Create a new directory if it doesn't exist
+# $1 Directory path and name
+# $2 Directory permissions
+# $3 Directory User owner
+# $4 Directory Group owner
+#
+create_dir()
+{
+  debug_echo "create_dir: Start"
+  debug_echo "Directory path: <$1> Permissions: <$2> Owner: <$3> Group: <$4>"
+
+  MKDIR_OUT=`mkdir -p ${2+ -m $2} $1`
+  MKDIR_ERRNO=$?
+
+  if [ $MKDIR_ERRNO -ne "0" ]; then
+    if $DEBUG; then
+      debug_echo "create_dir: $MKDIR_OUT"
+    else
+      echo "create_dir: $MKDIR_OUT"
+    fi
+    debug_echo "create_dir: End($MKDIR_ERRNO)"
+    return $MKDIR_ERRNO
+  fi
+
+  debug_echo "create_dir: $MKDIR_OUT"
+
+  CHOWN_OUT=`chown $3:$4 $1`
+  CHOWN_ERRNO=$?
+
+  if [ $CHOWN_ERRNO -ne "0" ]; then
+    if $DEBUG; then
+      debug_echo "create_dir: $CHOWN_OUT"
+    else
+      echo "create_dir: $CHOWN_OUT"
+    fi
+    debug_echo "create_dir: End($CHOWN_ERRNO)"
+    return $CHOWN_ERRNO
+  fi
+
+  debug_echo "create_dir: $CHOWN_OUT"
+  debug_echo "create_dir: End"
+
+  return 0
+
+}
+
+# make_backup
+# Create a backup file
+# $1 File to be backed up
+#
+make_backup()
+{
+    debug_echo "make_backup: Start"
+    debug_echo "Making backup of $1"
+
+    _SAMBA_BACKUPFILE="$1_SAMBA_STATUS_orig-$TIME"
+ 
+    debug_echo "Backup file "$_SAMBA_BACKUPFILE""
+    CP_OUT="`cp -pf "$1" "$_SAMBA_BACKUPFILE"`"
+    CP_ERRNO=$?
+
+    if [ $CP_ERRNO -ne "0" ]; then
+      if $DEBUG; then 
+	debug_echo "make_backup: $CP_OUT"
+      else
+	echo "make_backup: $CP_OUT"
+      fi
+      debug_echo "make_backup: End($CP_ERRNO)"
+      return $CP_ERRNO
+    fi
+
+    debug_echo "make_backup: $CP_OUT"
+
+    debug_echo "make_backup: End"
+    
+    return 0
+}
+
+#
+# restore_backup
+#
+# Restore a backup file
+#
+# $1 File to be restored
+# $2 
+#
+restore_backup()
+{
+  debug_echo "restore_backup: Start"
+  
+  RESTOREFILE=$1
+  if [ ! -f "$RESTOREFILE" ]; then
+    debug_echo "Nothing to restore"
+    debug_echo "restore_backup: End"
+    return 1;
+  fi
+
+  debug_echo "Restoring file: $RESTOREFILE to $2"
+  CP_OUT="`cp -pf "$RESTOREFILE" "$2"`"
+  CP_ERRNO=$?
+
+  if [ $CP_ERRNO -ne "0" ]; then
+    if $DEBUG; then 
+      debug_echo "restore_backup: $CP_OUT"
+    else
+      echo "restore_backup: $CP_OUT"
+    fi
+    debug_echo "restore_backup: End($CP_ERRNO)"
+    return $CP_ERRNO
+  fi
+
+  debug_echo "restore_backup: $CP_OUT"
+
+  debug_echo "restore_backup: End"
+
+  return 0
+}
+
+# Backup original smb.conf to be restored later.
+# $1 sharename
+# $2 smb.conf path
+# $...  Any valid smb.conf share parameter and value
+setup_smb_conf_share()
+{
+  debug_echo "setup_smb_conf_share: Start"
+  SHARE=$1
+  SMBCONFPATH=$2
+
+  # Shift the parameters twice so we only see the smb.conf opitons and not the sharename or smb.conf path
+  shift; shift
+  debug_echo "Number of smb.conf options: $#"
+
+  while test $# -gt 0; do
+	debug_echo "smb.conf key/value pair: "$1""
+#	echo $1 | 
+#	awk 'BEGIN { RS="," ; FS="=" }
+#	NF==2 { print $1, $2 }'
+
+	KEY=`echo "$1" | sed 's,=.*,,'`
+	#VALUE=`echo "$1" | sed 's,[^=]*=,,'`
+	VALUE=`printf "%s\n" "$1" | sed 's,[^=]*=,,'`
+
+	debug_echo "KEY: $KEY"
+ 	debug_echo "VALUE: $VALUE"
+	ini_put "$SHARE" "$KEY" "$VALUE" "$SMBCONFPATH" > "$SMBCONFPATH".new
+
+        # write out new smb.conf file
+  	cat "$SMBCONFPATH.new" > $SMBCONFPATH || { if $DEBUG; then debug_echo "Cannot write to $SMBCONFPATH"; else echo "Cannot write to $SMBCONFPATH"; fi; return 1; } 
+                
+	shift;
+  done
+
+  rm $SMBCONFPATH.new
+
+  return 0
+}
+
+#
+# setup_samba_share
+# Creates a test directory as well as the smb.conf share for that directory
+#
+# $1 Name of the share to be created
+# $2 Permissions for the test share directory
+# $3 User owner of the test share directory
+# $4 Group owner of the test share directory
+#
+setup_samba_share()
+{
+  SHARE_NAME=$1
+  SHARE_DIR=$TEST_SHARE_DIR"/$SHARE_NAME"
+  CHMOD=$2
+  OWNER=$3
+  GROUP=$4
+
+  shift; shift; shift; shift
+
+  debug_echo "setup_samba_share: Start"
+  debug_echo "share name: $SHARE_NAME"
+  debug_echo "Share Directory: $SHARE_DIR"
+  debug_echo "Share Directory CHMOD: $CHMOD"
+  debug_echo "Samba Share Options: $@"
+
+  create_dir "$SHARE_DIR" "$CHMOD" "$OWNER" "$GROUP"
+  CD_ERRNO=$?
+  if [ $CD_ERRNO -ne "0" ]; then
+    debug_echo "setup_samba_share: End($CD_ERRNO)"
+    return $CD_ERRNO
+  fi
+
+  setup_smb_conf_share "$SHARE_NAME" "$SAMBA_CONFIGFILE" "$@"
+
+  debug_echo "setup_samba_share: End"
+
+  return 0
+
+}
+
+#
+# create_file
+# Creates a file with random data
+#
+# $1 Filename
+# $2 Permissions
+# $3 File user owner
+# $4 File group owner
+#
+create_file()
+{
+  debug_echo "create_file: Start"
+  RANDOM_INFO=$RANDOM-$TIME
+
+  debug_echo "create_file: Random Info: $RANDOM_INFO"
+
+  debug_echo "create_file: creating file: $1, with permissions: $2, owner: $3, group: $4"
+
+  echo $RANDOM_INFO > $1
+
+  CHMOD_OUT="`chmod $2 $1`"
+  CHMOD_ERRNO=$?
+
+  if [ $CHMOD_ERRNO -ne "0" ]; then
+    if $DEBUG; then 
+      debug_echo "create_file: $CHMOD_OUT"
+    else
+      echo "create_file: $CHMOD_OUT"
+    fi
+    debug_echo "create_file: End($CHMOD_ERRNO)"
+    return $CHMOD_ERRNO
+  fi
+  
+  #CHOWN_OUT="`chown --preserve-root -v  $3:$4 $1`"
+  CHOWN_OUT="`chown $3:$4 $1`"
+  CHOWN_ERRNO=$?
+
+  if [ $CHOWN_ERRNO -ne "0" ]; then
+    if $DEBUG; then 
+      debug_echo "create_file: $CHOWN_OUT"
+    else
+      echo "create_file: $CHOWN_OUT"
+    fi
+    debug_echo "create_file: End($CHOWN_ERRNO)"
+    return $CHOWN_ERRNO
+  fi
+
+  debug_echo "create_file: $CHMOD_OUT"
+  debug_echo "create_file: $CHOWN_OUT"
+
+  debug_echo "create_file: End"
+  
+  return 0
+}
+
+#
+#Compare file that we got against orginal and validate they are the same
+#
+# $1 Source file
+# $2 Compare file
+#
+# Returns "true" if the files are the same
+compare_files()
+{
+  debug_echo "compare_files: Start"
+  org_file=$1
+  cmp_file=$2
+  PASS="false"
+  RC=1
+  
+  #if diff -q "$org_file" "$cmp_file" >/dev/null; then
+  if diff "$org_file" "$cmp_file" >/dev/null; then
+    debug_echo "compare_files: The files:
+                $org_file
+                $cmp_file
+                are the same"
+    PASS="true"
+    RC=0
+  else
+    debug_echo "compare_files: The files:
+                $org_file
+                $cmp_file
+                Are not the same"
+  fi
+
+  debug_echo "compare_files: PASS: $PASS"
+
+  echo $PASS
+
+  debug_echo "compare_files: End($RC)"
+ 
+  return $RC
+}
+
+#
+# cleanup
+#
+cleanup () {
+  trap_command
+}
+
+#
+# cleanup_ccname
+#
+cleanup_ccname () {
+
+  debug_echo "Cleaning up $ccname"
+  rm -f $ccname 2>/dev/null
+
+}
+
+
+#
+# smbclient_tests_cleanup
+# 
+# Restores the original smb.conf file, removes the backups and deletes the tmp share directories
+#
+smbclient_tests_cleanup()
+{
+  debug_echo "cleanup: Start"
+
+  debug_echo "cleanup: BackupFile: $_SAMBA_BACKUPFILE"
+  debug_echo "cleanup: RestoreFile: $SAMBA_CONFIGFILE"
+
+  restore_backup "$_SAMBA_BACKUPFILE" "$SAMBA_CONFIGFILE"
+  RB_ERRNO=$?
+  if [ $RB_ERRNO -ne "0" ]; then
+    debug_echo "cleanup: End($RB_ERRNO)"
+    return $RB_ERRNO
+  fi
+
+  RM_OUT="`rm -rf "$TEST_SHARE_DIR"`"
+  RM_ERRNO=$?
+
+  RM2_OUT="`rm -rf "$_SAMBA_BACKUPFILE"`"
+  RM2_ERRNO=$?
+
+  if [ $RM_ERRNO -ne "0" ]; then
+    if $DEBUG; then 
+      debug_echo "cleanup: $RM_OUT"
+    else
+      echo "cleanup: $RM_OUT"
+    fi
+    debug_echo "cleanup: End($RM_ERRNO)"
+    return $RM_ERRNO
+  fi
+
+  if [ $RM2_ERRNO -ne "0" ]; then
+    if $DEBUG; then 
+      debug_echo "cleanup: $RM2_OUT"
+    else
+      echo "cleanup: $RM2_OUT"
+    fi
+    debug_echo "cleanup: End($RM2_ERRNO)"
+    return $RM2_ERRNO
+  fi
+
+  cleanup_ccname
+
+  debug_echo "cleanup: $RM_OUT"
+  debug_echo "cleanup: $RM2_OUT"
+ 
+  debug_echo "clenaup: End"
+ 
+  return 0
+  
+}
+
+###############################################################################################################
+###############################################################################################################
+###############################################################################################################
+##
+##  smbclient tests
+##
+##  test_world_read
+##  test_world_write
+##  test_valid_user
+##  test_valid_group
+##  test_user_acl
+##  test_group_acl
+##
+###############################################################################################################
+###############################################################################################################
+###############################################################################################################
+
+#
+# test_world_read
+#
+#
+test_world_read()
+{
+  USER="root"
+  SHARE="WR"
+  FILENAME="world_read"
+  USER_UID=`id -u $USER`
+  USER_GID=`id -g $USER`
+  PERMS="0777"
+  RC=1
+
+  setup_samba_share "$SHARE" "$PERMS" "$USER_UID" "$USER_GID" "Comment =World Read" "Path=$TEST_SHARE_DIR/$SHARE" "browseable = yes" "Read Only = yes" "guest ok = yes"
+  SSS_ERRNO=$?
+  if [ $SSS_ERRNO -ne "0" ]; then
+    return $SSS_ERRNO
+  fi
+
+  org_file="$TEST_SHARE_DIR/$SHARE/$FILENAME.org"
+  cmp_file="$TEST_SHARE_DIR/$SHARE/$FILENAME.cmp"
+
+  #Create a file that we can compare output against
+  create_file "$org_file" "$PERMS" "$USER_UID" "$USER_GID"
+  CF_ERRNO=$?
+  if [ $CF_ERRNO -ne "0" ]; then
+    return $CF_ERRNO
+  fi
+
+  if [ -e "$org_file" ]; then 
+
+    #Connect to share and get file/ store to a tmp location
+    debug_echo "test_world_read: Running: $SMBCLIENT -K -N -U nobody //localhost/$SHARE -c 'get $FILENAME.org $cmp_file'"
+    if $DEBUG; then
+      $SMBCLIENT -d2 -K -N -U nobody //localhost/$SHARE -c "get $FILENAME.org $cmp_file"
+    else
+      $SMBCLIENT -K -N -U nobody //localhost/$SHARE -c "get $FILENAME.org $cmp_file" >/dev/null 2>&1
+    fi
+
+    if [ -e "$cmp_file" ]; then
+      if [ "x`compare_files "$org_file" "$cmp_file"`" = "xtrue" ]; then
+        RC=0
+      fi
+    else
+      debug_echo "test_world_read: $SMBCLIENT could not get the file $cmp_file"
+    fi
+  else
+    debug_echo "test_word_read: $org_file was not created"
+  fi
+
+  return $RC
+
+}
+
+#
+# test_world_write
+#
+#
+test_world_write()
+{
+  USER="root"
+  SHARE="WW"
+  FILENAME="world_write"
+  USER_UID=`id -u $USER`
+  USER_GID=`id -g $USER`
+  PERMS="0777"
+  RC=1
+  
+  setup_samba_share "$SHARE" "$PERMS" "$USER_UID" "$USER_GID" "Comment=World Write" "Path=$TEST_SHARE_DIR/$SHARE" "Browseable = yes" "Read Only = yes" "Writeable = yes" "guest ok = yes"
+  SSS_ERRNO=$?
+  if [ $SSS_ERRNO -ne "0" ]; then
+    return $SSS_ERRNO
+  fi
+
+  org_file="$TEST_SHARE_DIR/$SHARE/$FILENAME.org"
+  cmp_file="$TEST_SHARE_DIR/$SHARE/$FILENAME.cmp"
+
+  #Create a file that we can compare output against
+  create_file "$org_file" "$PERMS" "$USER_UID" "$USER_GID"
+  CF_ERRNO=$?
+  if [ $CF_ERRNO -ne "0" ]; then
+    return $CF_ERRNO
+  fi
+
+  if [ -e "$org_file" ]; then
+
+    #Connect to share and write file
+    debug_echo "test_world_write: Running: $SMBCLIENT -N -U nobody  //localhost/$SHARE -c 'put $org_file $FILENAME.cmp'" 
+    if $DEBUG; then
+      $SMBCLIENT -d2 -K -N -U nobody  //localhost/$SHARE -c "put $org_file $FILENAME.cmp"
+    else
+      $SMBCLIENT -K -N -U nobody  //localhost/$SHARE -c "put $org_file $FILENAME.cmp" >/dev/null 2>&1
+    fi
+
+    if [ -e "$cmp_file" ]; then
+      if [ "x`compare_files "$org_file" "$cmp_file"`" = "xtrue" ]; then
+        RC=0
+      fi
+    else
+      debug_echo "test_world_write: $SMBCLIENT could not put the file $cmp_file"
+      #//TODO Test putting the file there by hand using CP if smbclient fails to do so
+      
+    fi
+  else
+    debug_echo "test_world_write: $org_file was not created"
+  fi
+
+  return $RC
+
+}
+
+#
+# test_valid_user
+#
+# //TODO Find a way to get this to work when the users SamAccountName does not match the users UPN
+# //     This is only a problem when vas.conf option username-attr-name != SamAccountName
+#
+test_valid_user()
+{
+  USER=`vastool_id $RUNASUSER -un`
+  SHARE="VU"
+  FILENAME="valid_user"
+  USER_UID="0"
+  USER_GID="0"
+  PERMS="0777"
+  RC=1
+
+  VALID_USER="`vas_user_domain_realm $USER`\\\\`echo $USER | cut -f1 -d@`"
+
+  if [ -z "$VALID_USER" ]; then
+    debug_echo "Couldn't find a valid user named: $USER"
+    return $RC
+  fi
+   
+  setup_samba_share "$SHARE" "$PERMS" "$USER_UID" "$USER_GID" "Comment=Valid User Test" "Path=$TEST_SHARE_DIR/$SHARE" "valid users = \"$VALID_USER\"" "Browseable = no" "Read only = no"
+  SSS_ERRNO=$?
+  if [ $SSS_ERRNO -ne "0" ]; then
+    return $SSS_ERRNO
+  fi
+
+  org_file="$TEST_SHARE_DIR/$SHARE/$FILENAME.org"
+  cmp_file="$TEST_SHARE_DIR/$SHARE/$FILENAME.cmp"
+  cmp_file2="$TEST_SHARE_DIR/$SHARE/$FILENAME.cmp2"
+
+  #Create a file that we can compare output against
+  create_file "$org_file" "$PERMS" "$USER_UID" "$USER_GID"
+  CF_ERRNO=$?
+  if [ $CF_ERRNO -ne "0" ]; then
+    return $CF_ERRNO
+  fi
+
+  if [ -e "$org_file" ]; then
+    
+    debug_echo "Testing if a valid_user can connect to the share"
+    debug_echo "Running: $SMBCLIENT -k //localhost/$SHARE -c 'put $org_file $FILENAME.cmp' for user: $USER"
+    if $DEBUG; then
+      $SMBCLIENT -d2 -k //localhost/$SHARE -c "put $org_file $FILENAME.cmp"
+    else
+      $SMBCLIENT -k //localhost/$SHARE -c "put $org_file $FILENAME.cmp" >/dev/null 2>&1
+    fi
+
+    if [ -e "$cmp_file" ]; then
+      if [ "x`compare_files "$org_file" "$cmp_file"`" = "xtrue" ]; then
+        RC=0
+      fi
+    else
+      debug_echo "$SMBCLIENT could not put the file $cmp_file"
+    fi
+  else
+    debug_echo "$org_file was not created"
+  fi
+
+  # Now validate than a non-valid user cannot connect to the share and write
+
+  if [ $RC -eq "0" ]; then
+    debug_echo "Testing if non-valid user can connect to share"
+    debug_echo "Running: $SMBCLIENT -K -N -U nobody //localhost/$SHARE -c 'put $org_file $FILENAME.cmp'"
+    
+    if $DEBUG; then
+      $SMBCLIENT -d2 -K -N -U nobody //localhost/$SHARE -c "put $org_file $FILENAME.cmp2"
+    else
+      $SMBCLIENT -K -N -U nobody //localhost/$SHARE -c "put $org_file $FILENAME.cmp2" >/dev/null 2>&1
+    fi
+
+    if [ -e "$cmp_file2" ]; then
+      debug_echo "non-valid user was able to access share"
+      RC=1
+    else
+      debug_echo "Permission Denied: non-valid user was not able to access share. Test Passed"
+    fi
+  fi
+
+  return $RC
+
+}
+
+#
+# test_valid_group
+#
+# //TODO Find a way to get this to work when the users SamAccountName does not match the users UPN
+# //     This is only a problem when vas.conf option username-attr-name != SamAccountName
+#
+test_valid_group()
+{
+  RC=1
+  USER="$RUNASUSER"
+  GROUP_GID=`vastool_id $RUNASUSER -g`
+  ATTR_ERRNO=$?
+
+  if [ $ATTR_ERRNO -eq "0" ]; then
+        debug_echo "Using Group GID: $GROUP_GID"
+        GROUPNAME="`vastool_id $RUNASUSER -gn | cut -d: -f1`"
+        GROUP="@`vas_group_domain_realm $GROUPNAME`\\\\$GROUPNAME"
+  else
+	debug_echo "Could not find a Primary Group ID for user: $RUNASUSER"
+	return $ATTR_ERRNO
+  fi
+
+  SHARE="VG"
+  FILENAME="valid_group"
+  USER_UID="0"
+  USER_GID="0"
+  PERMS="0777"
+
+  setup_samba_share "$SHARE" "$PERMS" "$USER_UID" "$USER_GID" "Comment=Valid Group Test" "Path=$TEST_SHARE_DIR/$SHARE" "valid users = \"$GROUP"\" "Browseable = no" "Read only = no"
+  SSS_ERRNO=$?
+  if [ $SSS_ERRNO -ne "0" ]; then
+    return $SSS_ERRNO
+  fi
+
+  org_file="$TEST_SHARE_DIR/$SHARE/$FILENAME.org"
+  cmp_file="$TEST_SHARE_DIR/$SHARE/$FILENAME.cmp"
+  cmp_file2="$TEST_SHARE_DIR/$SHARE/$FILENAME.cmp2"
+
+  #Create a file that we can compare output against
+  create_file "$org_file" "$PERMS" "$USER_UID" "$USER_GID"
+  CF_ERRNO=$?
+  if [ $CF_ERRNO -ne "0" ]; then
+    return $CF_ERRNO
+  fi
+
+  if [ -e "$org_file" ]; then
+
+    debug_echo "Testing if a valid group can connect to the share"
+    debug_echo "Running: $SMBCLIENT -k //localhost/$SHARE -c 'put $org_file $FILENAME.cmp' for user: $USER"
+    if $DEBUG; then 
+      $SMBCLIENT -d2 -k //localhost/$SHARE -c "put $org_file $FILENAME.cmp"
+    else
+      $SMBCLIENT -k //localhost/$SHARE -c "put $org_file $FILENAME.cmp" >/dev/null 2>&1
+    fi
+
+    if [ -e "$cmp_file" ]; then
+      if [ "x`compare_files "$org_file" "$cmp_file"`" = "xtrue" ]; then
+        RC=0
+      fi
+    else
+      debug_echo "$SMBCLIENT could not put the file $cmp_file"
+    fi
+  else
+    debug_echo "$org_file was not created"
+  fi
+
+  # Now validate that a non-valid group cannot connect to the share and write
+  if [ $RC -eq "0" ]; then
+
+    debug_echo "Testing if a non-valid group can connect to share"
+    debug_echo "Running: $SMBCLIENT -K -N -U nobody //localhost/$SHARE -c 'put $org_file $FILENAME.cmp2'"
+    if $DEBUG; then
+      $SMBCLIENT -d2 -K -N -U nobody //localhost/$SHARE -c "put $org_file $FILENAME.cmp2"
+    else
+      $SMBCLIENT -K -N -U nobody //localhost/$SHARE -c "put $org_file $FILENAME.cmp2" >/dev/null 2>&1
+    fi
+
+    if [ -e "$cmp_file2" ]; then
+      debug_echo "non-valid group was able to access share"
+      RC=1
+    else
+      debug_echo "Permission Denied: non-valid group was not able to access share: Test Passed"
+    fi
+  fi
+
+  return $RC
+
+}
+
+#
+# test_user_acl
+#
+# //TODO Find a way to get this to work when the users SamAccountName does not match the users UPN
+# //     This is only a problem when vas.conf option username-attr-name != SamAccountName
+#
+test_user_acl()
+{
+  USER="$RUNASUSER"
+  SHARE="UACL"
+  FILENAME="valid_user"
+  USER_UID=`vastool_id "$USER" -u`
+  USER_UID_ERRNO=$?
+  USER_GID="0"
+  PERMS="0700"
+  RC=1
+
+  if [ $USER_UID_ERRNO -ne "0" ]; then
+     debug_echo "User $USER, No such user"
+     return $USER_UID_ERRNO
+  fi
+
+  setup_samba_share "$SHARE" "$PERMS" "$USER_UID" "$USER_GID" "Comment=User Owned acls Test" "Path=$TEST_SHARE_DIR/$SHARE" "Browseable = no" "Read only = no"
+  SSS_ERRNO=$?
+  if [ $SSS_ERRNO -ne "0" ]; then
+    return $SSS_ERRNO
+  fi
+
+  org_file="$TEST_SHARE_DIR/$SHARE/$FILENAME.org"
+  cmp_file="$TEST_SHARE_DIR/$SHARE/$FILENAME.cmp"
+
+  #Create a file that we can compare output against
+  create_file "$org_file" "$PERMS" "$USER_UID" "$USER_GID"
+  CF_ERRNO=$?
+  if [ $CF_ERRNO -ne "0" ]; then
+    return $CF_ERRNO
+  fi
+
+  if [ -e "$org_file" ]; then
+
+    debug_echo "Running: $SMBCLIENT -k //localhost/$SHARE -c 'put $org_file $FILENAME.cmp' for user: $USER"
+    if $DEBUG; then    
+      $SMBCLIENT -d2 -k //localhost/$SHARE -c "put $org_file $FILENAME.cmp"
+    else
+      $SMBCLIENT -k //localhost/$SHARE -c "put $org_file $FILENAME.cmp" >/dev/null 2>&1
+    fi
+
+    if [ -e "$cmp_file" ]; then
+      if [ "x`compare_files "$org_file" "$cmp_file"`" = "xtrue" ]; then
+        RC=0
+      fi
+    else
+      debug_echo "$SMBCLIENT could not put the file $cmp_file"
+    fi
+  else
+    debug_echo "$org_file was not created"
+  fi
+
+  return $RC
+
+}
+
+#
+# test_group_acl
+#
+# //TODO Find a way to get this to work when the users SamAccountName does not match the users UPN
+# //     This is only a problem when vas.conf option username-attr-name != SamAccountName
+#
+test_group_acl()
+{
+  USER="$RUNASUSER"
+  SHARE="GACL"
+  FILENAME="group_acl"
+  USER_UID="0"
+  USER_GID=`vastool_id $USER -g 2>/dev/null`
+  USER_GID_ERRNO=$?
+  PERMS="0070"
+  RC=1
+
+  if [ "$USER_GID_ERRNO" -ne "0" ]; then
+     debug_echo "User $USER, No such user"
+     return $USER_GID_ERRNO
+  fi
+
+  setup_samba_share "$SHARE" "$PERMS" "$USER_UID" "$USER_GID" "Comment=Group Owned acls Test" "Path=$TEST_SHARE_DIR/$SHARE" "Browseable = no" "Read only = no"
+  SSS_ERRNO=$?
+  if [ $SSS_ERRNO -ne "0" ]; then
+    return $SSS_ERRNO
+  fi
+
+  org_file="$TEST_SHARE_DIR/$SHARE/$FILENAME.org"
+  cmp_file="$TEST_SHARE_DIR/$SHARE/$FILENAME.cmp"
+
+  debug_echo "User: $USER"
+  
+
+  #Create a file that we can compare output against
+  create_file "$org_file" "$PERMS" "$USER_UID" "$USER_GID"
+  CF_ERRNO=$?
+  if [ $CF_ERRNO -ne "0" ]; then
+    return $CF_ERRNO
+  fi
+
+  if [ -e "$org_file" ]; then
+
+    debug_echo "Running: $SMBCLIENT -k //localhost/$SHARE -c 'put $org_file $FILENAME.cmp' for user: $USER"
+    if $DEBUG; then
+      $SMBCLIENT -d2 -k //localhost/$SHARE -c "put $org_file $FILENAME.cmp"
+    else
+      $SMBCLIENT -k //localhost/$SHARE -c "put $org_file $FILENAME.cmp" >/dev/null 2>&1
+    fi
+    
+    if [ -e "$cmp_file" ]; then
+      if [ "x`compare_files "$org_file" "$cmp_file"`" = "xtrue" ]; then
+        RC=0
+      fi
+    else
+      debug_echo "$SMBCLIENT could not put the file $cmp_file"
+    fi
+  else
+    debug_echo "$org_file was not created"
+  fi
+
+  return $RC
+
+}
+###############################################################################################################
+## smbclient tests end
+###############################################################################################################
+
+###############################################################################################################
+###############################################################################################################
+###############################################################################################################
+##
+##  vasidmap tool tests
+##
+##  vasidmap_sid_to_uid
+##  vasidmap_sid_to_gid
+##  vasidmap_username_to_sid
+##  vasidmap_groupname_to_sid
+##  vasidmap_uid_to_sid
+##  vasidmap_gid_to_sid
+##
+##
+###############################################################################################################
+###############################################################################################################
+###############################################################################################################
+
+
+#
+# vasidmap_sid_to_uid
+#
+# vasidmap -sU <sid>
+#
+vasidmap_sid_to_uid()
+{
+
+  debug_echo "vasidmap_sid_to_uid: Start"
+
+  if [ -n "$RUNASUSER_TOOL" ]; then 
+       USER=$RUNASUSER_TOOL
+  else
+       USER=$RUNASUSER
+  fi
+
+  USER_SID=`$VASTOOL -u host/ attrs -bq $USER objectSid`
+  VT_ERRNO=$?
+  if [ $VT_ERRNO -ne "0" ]; then
+   if $DEBUG; then
+     debug_echo "Could not lookup sid for user: $USER"
+   else
+     echo "Could not lookup sid for user: $USER"
+   fi
+   debug_echo "vasidmap_sid_to_uid: End($VT_ERRNO)"
+   return $VT_ERRNO
+  fi
+
+  debug_echo "Testing: $VASIDMAP -sU $USER_SID"
+  USER_UID=`$VASIDMAP -sU $USER_SID`
+  VASID_ERRNO=$? 
+  if [ $VASID_ERRNO -eq "0" ]; then
+    debug_echo "UID for SID: $USER_SID is: $USER_UID"
+  else
+    echo "Could not get UID for SID: $USER_SID"
+  fi
+
+  debug_echo "vasidmap_sid_to_uid: End($VASID_ERRNO)"
+
+  return $VASID_ERRNO
+
+}
+
+#
+# vasidmap_sid_to_gid
+#
+# vasidmap -sG <sid>
+#
+vasidmap_sid_to_gid()
+{
+
+  debug_echo "vasidmap_sid_to_gid: Start"
+
+  if [ -n "$RUNASUSER_TOOL" ]; then
+        USER=$RUNASUSER_TOOL
+  else
+        USER=$RUNASUSER
+  fi
+
+  GROUP=`vastool_id "$USER" -gn | cut -d: -f1`
+  GROUPID_ERRNO=$?
+  if [ $GROUPID_ERRNO -ne "0" ]; then
+    if $DEBUG; then
+      debug_echo "Could not get primary groupname for user: $USER"
+    else
+      echo "Could not get primary groupname for user: $USER"
+    fi
+    debug_echo "vasidmap_sid_to_gid: End($GROUPID_ERRNO)"
+    return $GROUPID_ERRNO
+  fi
+
+  GROUP_SID=`$VASTOOL -u host/ attrs -bqg "$GROUP" objectSid`
+  VT_ERRNO=$?
+  if [ $VT_ERRNO -ne "0" ]; then
+    if $DEBUG; then
+      debug_echo "Could not look up sid for group: $GROUP"
+    else
+      echo "Could not look up sid for group: $GROUP"
+    fi
+    debug_echo "vasidmap_sid_to_gid: End($VT_ERRNO)"
+    return $VT_ERRNO
+  fi
+ 
+  debug_echo "Testing: $VASIDMAP -sG $GROUP_SID"
+  GROUP_GID=`$VASIDMAP -sG "$GROUP_SID"`
+  VASID_ERRNO=$?
+  if [ $VASID_ERRNO -eq "0" ]; then
+    debug_echo "GID for SID: $GROUP_SID is: $GROUP_GID"
+  else
+    echo "Could not not get GID for SID: $GROUP_SID"
+  fi
+
+  debug_echo "vasidmap_sid_to_gid: End($VASID_ERRNO)"
+
+  return $VASID_ERRNO
+}
+
+#
+# vasidmap_username_to_sid
+#
+# vasidmap -un <username>
+#
+vasidmap_username_to_sid()
+{
+
+  debug_echo "vasidmap_username_to_sid: Start"
+
+ 
+  if [ -n "$RUNASUSER_TOOL" ]; then
+        USER=$RUNASUSER_TOOL
+  else
+        USER=$RUNASUSER
+  fi
+
+  USER=`vastool_id $USER -un`
+ 
+  debug_echo "Testing: $VASIDMAP -un $USER"
+  USER_SID=`$VASIDMAP -un "$USER"`
+  VASID_ERRNO=$?
+  if [ $VASID_ERRNO -eq "0" ]; then
+    debug_echo "SID for User: $USER is: $USER_SID"
+  else
+    echo "Could not get SID for user: $USER"
+  fi
+
+  debug_echo "vasidmap_username_to_sid: End($VASID_ERRNO)"
+
+  return $VASID_ERRNO
+ 
+}
+
+#
+# vasidmap_groupname_to_sid
+#
+# vasidmap -gn <groupname>
+#
+vasidmap_groupname_to_sid()
+{
+
+  debug_echo "vasidmap_groupname_to_sid: Start"
+
+  if [ -n "$RUNASUSER_TOOL" ]; then
+        USER=$RUNASUSER_TOOL
+  else
+        USER=$RUNASUSER
+  fi
+
+  USER=`vastool_id $USER -un`
+  GROUP=`vastool_id "$USER" -gn`
+  GROUPID_ERRNO=$?
+  if [ $GROUPID_ERRNO -ne "0" ]; then
+    if $DEBUG; then
+      debug_echo "Could not get primary groupname for user: $USER"
+    else
+      echo "Could not get primary groupname for user: $USER"
+    fi
+    debug_echo "vasidmap_groupname_to_sid: End($GROUPID_ERRNO)"
+    return $GROUPID_ERRNO
+  fi
+  
+  debug_echo "Testing: $VASIDMAP -gn $GROUP"
+  GROUP_SID=`$VASIDMAP -gn "$GROUP"`
+  VASID_ERRNO=$?
+  if [ $VASID_ERRNO -eq "0" ]; then
+    debug_echo "SID for Group: $GROUP is: $GROUP_SID"
+  else
+    echo "Could not get SID for group: $GROUP"
+  fi
+
+   debug_echo "vasidmap_groupname_to_sid: End"
+
+   return $VASID_ERRNO
+}
+
+#
+# vasidmap_uid_to_sid
+#
+# vasidmap -u <uid>
+#
+vasidmap_uid_to_sid()
+{
+  debug_echo "vasidmap_uid_to_sid: Start"
+
+  if [ -n "$RUNASUSER_TOOL" ]; then
+        USER=$RUNASUSER_TOOL
+  else
+        USER=$RUNASUSER
+  fi
+
+  USER_UID=`vastool_id "$USER" -u`
+  USERID_ERRNO=$?
+  if [ $USERID_ERRNO -ne "0" ]; then
+    if $DEBUG; then
+      debug_echo "Could not get UID for user: $USER"
+    else
+      echo "Could not get UID for user: $USER"
+    fi 
+    debug_echo "vasidmap_uid_to_sid: End($USERID_ERRNO)"
+    return $USERID_ERRNO
+  fi
+
+  debug_echo "Testing: $VASIDMAP -u $USER_UID"
+  USER_SID=`$VASIDMAP -u $USER_UID`
+  VASID_ERRNO=$?
+  if [ $VASID_ERRNO -eq "0" ]; then
+    debug_echo "SID for User: $USER_UID is: $USER_SID"
+  else
+    echo "Could not get SID for user: $USER_GID"
+  fi
+
+  debug_echo "vasidmap_uid_to_sid: End($VASID_ERRNO)"
+
+  return $VASID_ERRNO
+}
+
+#
+# vasidmap_gid_to_sid
+#
+# vasidmap -g <gid>
+#
+vasidmap_gid_to_sid()
+{
+  debug_echo "vasidmap_gid_to_sid: Start"
+
+  if [ -n "$RUNASUSER_TOOL" ]; then
+        USER=$RUNASUSER_TOOL
+  else
+        USER=$RUNASUSER
+  fi
+
+  GROUP_GID=`vastool_id "$USER" -g`
+  GROUPID_ERRNO=$?
+  if [ $GROUPID_ERRNO -ne "0" ]; then
+    if $DEBUG; then
+      debug_echo "Could not get primary GID for user: $USER"
+    else
+      echo "Could not get primary GID for user: $USER"
+    fi
+    debug_echo "vasidmap_gid_to_sid: End($GROUPID_ERRNO)"
+    return $GROUPID_ERRNO
+  fi
+ 
+  debug_echo "Testing: $VASIDMAP -g $GROUP_GID"
+  GROUP_SID=`$VASIDMAP -g $GROUP_GID`
+  VASID_ERRNO=$?
+  if [ $VASID_ERRNO -eq "0" ]; then
+    debug_echo "SID for Group: $GROUP_GID is: $GROUP_SID"
+  else
+    echo "Could not get SID for group: $GROUP_GID"
+  fi
+
+  debug_echo "vasidmap_gid_to_sid: End($VASID_ERRNO)"
+
+  return $VASID_ERRNO
+}
+
+###############################################################################################################
+## vasidmap tool tests end
+###############################################################################################################
+
+###############################################################################################################
+###############################################################################################################
+###############################################################################################################
+##
+##  vasidmap daemon tests
+##
+##  vasidmap_daemon_sid_to_uid
+##  vasidmap_daemon_sid_to_gid
+##  vasidmap_daemon_uid_to_sid
+##  vasidmap_daemon_gid_to_sid
+##
+##
+###############################################################################################################
+###############################################################################################################
+###############################################################################################################
+
+#
+# vasidmap_daemon_sid_to_uid
+#
+# Uses the vastool search command to query the vasidmapd daemon
+# for a users uidnumber based on the users sid.
+#
+# vastool search -a -p 389 -h 127.0.0.1 "(&(objectclass="sambaidmapentry")(sambaSID=<usersid>))" uidNumber
+#
+vasidmap_daemon_sid_to_uid()
+{
+
+  debug_echo "vasidmap_daemon_sid_to_uid: Start"
+
+  OBJECTCLASS="sambaidmapentry"
+  HOST="127.0.0.1"
+  ATTRIBUTE="uidNumber"
+
+  if [ -n "$RUNASUSER_DAEMON" ]; then
+        USER=$RUNASUSER_DAEMON
+  else
+        USER=$RUNASUSER
+  fi
+
+  USER_SID=`$VASTOOL -u host/ attrs -bq $USER objectSid`
+  VT_ERRNO=$?
+  if [ $VT_ERRNO -ne "0" ]; then
+   if $DEBUG; then
+     debug_echo "Could not lookup sid for user: $USER"
+   else
+     echo "Could not lookup sid for user: $USER"
+   fi
+   debug_echo "vasidmap_daemon_sid_to_uid: End($VT_ERRNO)"
+   return $VT_ERRNO
+  fi
+
+  FILTER="(&(objectClass="$OBJECTCLASS")(sambaSID="$USER_SID"))"
+
+  debug_echo "Testing: $VASTOOL search -a ${DAEMON_PORT:+-p $DAEMON_PORT }-q -h $HOST $FILTER $ATTRIBUTE"
+ 
+  USER_UID=`$VASTOOL search -a ${DAEMON_PORT:+-p $DAEMON_PORT }-q -h $HOST $FILTER $ATTRIBUTE`
+
+  VASID_ERRNO=$?
+  if [ $VASID_ERRNO -eq "0" ]; then
+    debug_echo "UID for SID: $USER_SID is: $USER_UID"
+  else
+    echo "Could not get UID for SID: $USER_SID"
+  fi
+
+  debug_echo "vasidmap_daemon_sid_to_uid: END($VASID_ERRNO)"
+
+  return $VASID_ERRNO
+} # vasidmap_daemon_sid_to_uid END
+
+#
+# vasidmap_daemon_sid_to_gid
+#
+# Uses the vastool search command to query the vasidmapd daemon
+# for a groups gidnumber based on the group sid.
+#
+# vastool search -a -p 389 -h 127.0.0.1 "(&(objectclass="sambaidmapentry")(sambaSID=<groupsid>))" gidNumber
+#
+vasidmap_daemon_sid_to_gid()
+{
+
+  debug_echo "vasidmap_daemon_sid_to_gid: Start"
+
+  OBJECTCLASS="sambaidmapentry"
+  HOST="127.0.0.1"
+  ATTRIBUTE="gidNumber"
+
+  if [ -n "$RUNASUSER_DAEMON" ]; then
+        USER=$RUNASUSER_DAEMON
+  else
+        USER=$RUNASUSER
+  fi
+
+  GROUP=`vastool_id "$USER" -gn | cut -d: -f1`
+  GROUPID_ERRNO=$?
+  if [ $GROUPID_ERRNO -ne "0" ]; then
+    if $DEBUG; then
+      debug_echo "Could not get primary groupname for user: $USER"
+    else
+      echo "Could not get primary groupname for user: $USER"
+    fi
+    debug_echo "vasidmap_daemon_sid_to_gid: End($GROUPID_ERRNO)"
+    return $GROUPID_ERRNO
+  fi
+
+  GROUP_SID=`$VASTOOL -u host/ attrs -bqg "$GROUP" objectSid`
+  VT_ERRNO=$?
+  if [ $VT_ERRNO -ne "0" ]; then
+    if $DEBUG; then
+      debug_echo "Could not look up sid for group: $GROUP"
+    else
+      echo "Could not look up sid for group: $GROUP"
+    fi
+    debug_echo "vasidmap_daemon_sid_to_gid: End($VT_ERRNO)"
+    return $VT_ERRNO
+  fi
+
+  FILTER="(&(objectClass="$OBJECTCLASS")(sambaSID="$GROUP_SID"))"
+
+  debug_echo "Testing: $VASTOOL search -a ${DAEMON_PORT:+-p $DAEMON_PORT }-q -h $HOST $FILTER $ATTRIBUTE"
+  GROUP_GID=`$VASTOOL search -a ${DAEMON_PORT:+-p $DAEMON_PORT }-q -h $HOST $FILTER $ATTRIBUTE`
+  VASID_ERRNO=$?
+  if [ $VASID_ERRNO -eq "0" ]; then
+    debug_echo "GID for SID: $GROUP_SID is: $GROUP_GID"
+  else
+    echo "Could not not get GID for SID: $GROUP_SID"
+  fi
+
+  debug_echo "vasidmap_daemon_sid_to_gid: End($VASID_ERRNO)"
+
+  return $VASID_ERRNO
+} # vasidmap_daemon_sid_to_gid END
+
+#
+# vasidmap_daemon_uid_to_sid
+#
+# Uses the vastool search command to query the vasidmapd daemon
+# for a users SID based on uidNumber.
+#
+# vastool search -a -p 389 -h 127.0.0.1 "(&(objectclass="sambaidmapentry")(uidNumber=<uidnumber>))" sambaSID
+#
+vasidmap_daemon_uid_to_sid()
+{
+
+  debug_echo "vasidmap_daemon_uid_to_sid: Start"
+
+  OBJECTCLASS="sambaidmapentry"
+  HOST="127.0.0.1"
+  ATTRIBUTE="sambaSID"
+
+  if [ -n "$RUNASUSER_DAEMON" ]; then
+        USER=$RUNASUSER_DAEMON
+  else
+        USER=$RUNASUSER
+  fi
+
+  USER_UID=`vastool_id "$USER" -u`
+  USERID_ERRNO=$?
+  if [ $USERID_ERRNO -ne "0" ]; then
+    if $DEBUG; then
+      debug_echo "Could not get UID for user: $USER"
+    else
+      echo "Could not get UID for user: $USER"
+    fi
+    debug_echo "vasidmap_uid_to_sid: End($USERID_ERRNO)"
+    return $USERID_ERRNO
+  fi
+
+  FILTER="(&(objectClass="$OBJECTCLASS")(uidNumber="$USER_UID"))"
+ 
+  debug_echo "Testing: $VASTOOL search -a ${DAEMON_PORT:+-p $DAEMON_PORT }-q -h $HOST $FILTER $ATTRIBUTE"
+  USER_SID=`$VASTOOL search -a ${DAEMON_PORT:+-p $DAEMON_PORT }-q -h $HOST $FILTER $ATTRIBUTE`
+  VASID_ERRNO=$?
+
+  if [ $VASID_ERRNO -eq "0" ]; then
+     debug_echo "SID for user: $USER_GID is: $USER_SID"
+  else
+     echo "Could not get SID for user: $USER_GID"
+  fi
+
+  # //TODO Do we compare the result of the sid lookup with that of a vastool search attrs -b objectSid?
+  
+  debug_echo "vasidmap_daemon_uid_to_sid: End($VASID_ERRNO)"
+
+  return $VASID_ERRNO
+} # vasidmap_daemon_uid_to_sid END
+
+#
+# vasidmap_daemon_gid_to_sid
+#
+# Uses the vastool search command to query the vasidmapd daemon
+# for a groups SID based on gidNumber.
+#
+# vastool search -a -p 389 -h 127.0.0.1 "(&(objectclass="sambaidmapentry")(gidNumber=<gidnumber>))" sambaSID
+#
+vasidmap_daemon_gid_to_sid()
+{
+
+  debug_echo "vasidmap_dameon_gid_to_sid: Start"
+
+  OBJECTCLASS="sambaidmapentry"
+  HOST="127.0.0.1"
+  ATTRIBUTE="sambaSID"
+
+  if [ -n "$RUNASUSER_DAEMON" ]; then
+        USER=$RUNASUSER_DAEMON
+  else
+        USER=$RUNASUSER
+  fi
+
+  GROUP_GID=`vastool_id "$USER" -g`
+  GROUPID_ERRNO=$?
+  if [ $GROUPID_ERRNO -ne "0" ]; then
+    if $DEBUG; then
+      debug_echo "Could not get primary GID for user: $USER"
+    else
+      echo "Could not get primary GID for user: $USER"
+    fi
+    debug_echo "vasidmap_daemon_gid_to_sid: End($GROUPID_ERRNO)"
+    return $GROUPID_ERRNO
+  fi
+
+  FILTER="(&(objectClass="$OBJECTCLASS")(gidNumber="$GROUP_GID"))"
+ 
+  debug_echo "Testing: $VASTOOL search -a ${DAEMON_PORT:+-p $DAEMON_PORT }-q -h $HOST $FILTER $ATTRIBUTE"
+  GROUP_SID=`$VASTOOL search -a ${DAEMON_PORT:+-p $DAEMON_PORT }-q -h $HOST $FILTER $ATTRIBUTE`
+  VASID_ERRNO=$?
+  
+  if [ $VASID_ERRNO -eq	"0" ]; then
+     debug_echo "SID for group: $GROUP_GID is: $GROUP_SID"
+  else
+     echo "Could not get SID for group: $GROUP_GID"
+  fi
+  
+  debug_echo "vasidmap_daemon_gid_to_sid: End($VASID_ERRNO)"
+
+  return $VASID_ERRNO
+} # vasidmap_daemon_gid_to_sid END
+
+###############################################################################################################
+## vasidmap daemon tests end
+###############################################################################################################
+
+#
+# run_smbclient_tests
+#
+# Run all the smbclient tests
+#
+run_smbclient_tests()
+{
+  FAILED_COUNT=0
+  smbclient_exist=false
+  PASS=false
+
+  test -n "$smbd" || { echo "Cannot find a working smbd. Please use the '-S prefix' option.";  return 1; }
+
+  detect_samba_settings "$smbd" "$samba_configfile"
+  DSS_ERRNO=$?
+  if [ $DSS_ERRNO -ne "0" ]; then
+    echo "Cannot obtain settings from samba server $smbd"
+    echo "or from configuration file $samba_configfile"
+    echo "Please check these files or specify different configuration"
+    echo "with the -s and -S options to this script."
+    return 1
+  fi
+  SMBCLIENT="$SAMBA_BINDIR/smbclient"
+
+  smbd_exist=false
+  test -x "$smbd" && smbd_exist=true
+  ssout "Checking if $smbd exists:" `yesno [ "x$smbd_exist" = "xtrue" ]`
+  if [ x"$smbd_exist" = "xfalse" ]; then
+    return 1
+  fi
+
+  #ssout "Checking if $smbd is running:" `yesno [ "x$smbd_running" = "xtrue" ]`
+  smb_config_exist=false
+  test -f "$SAMBA_CONFIGFILE" && smb_config_exist=true
+  ssout "Checking if $SAMBA_CONFIGFILE exists:" `yesno [ -f $SAMBA_CONFIGFILE ]`
+  if [ x"$smb_config_exist" = "xfalse" ]; then
+    return 1
+  fi
+
+  have_winbind=false
+  test -x "$samba_prefix/sbin/winbindd" && have_winbind=true
+  ssout "Checking if winbind is installed:" `yesno [ x"$have_winbind" = x"true" ]`
+
+  test -x "$SMBCLIENT" && smbclient_exist=true
+  ssout "Checking if $SMBCLIENT exists:" `yesno [ "x$smbclient_exist" = "xtrue" ]`
+  if [ "x$smbclient_exist" = "xfalse" ]; then
+    return 1
+  fi
+
+  # backup orignial smb.conf file
+  if [ -e $SAMBA_CONFIGFILE ]; then
+    if make_backup "$SAMBA_CONFIGFILE"; then
+      PASS="true"
+    fi
+    ssout "Backed up smb.conf: " `passfail test  "x$PASS" = "xtrue"`
+    # Should I even attemp these tests if I cannot backup the smb.conf file?
+#    if [ $PASS = "false" ]; then return 1; fi; 
+  fi
+ 
+  if test_world_read; then WORLDREAD_ERRNO=$?; else WORLDREAD_ERRNO=$?; FAILED_COUNT=`expr $FAILED_COUNT + 1`; fi
+  ssout "Running test_world_read:    " `passfail [ $WORLDREAD_ERRNO -eq "0" ]`
+
+  if test_world_write; then WORLDWRITE_ERRNO=$?; else WORLDWRITE_ERRNO=$?; FAILED_COUNT=`expr $FAILED_COUNT + 1`; fi
+  ssout "Running test_world_write:   " `passfail [ $WORLDWRITE_ERRNO -eq "0" ]`
+
+  if test_valid_user; then VALIDUSER_ERRNO=$?; else VALIDUSER_ERRNO=$?; FAILED_COUNT=`expr $FAILED_COUNT + 1`; fi
+  ssout "Running test_valid_user:    " `passfail [ "$VALIDUSER_ERRNO" -eq "0" ]`
+
+  if test_valid_group; then VALIDGROUP_ERRNO=$?; else VALIDGROUP_ERRNO=$?; FAILED_COUNT=`expr $FAILED_COUNT + 1`; fi
+  ssout "Running test_valid_group:   " `passfail [ "$VALIDGROUP_ERRNO" -eq "0" ]`
+ 
+  if test_user_acl; then USERACL_ERRNO=$?; else USERACL_ERRNO=$?; FAILED_COUNT=`expr $FAILED_COUNT + 1`; fi
+  ssout "Running test_user_acl:     " `passfail [ "$USERACL_ERRNO" -eq "0" ]`
+
+  if test_group_acl; then GROUPACL_ERRNO=$?; else GROUPACL_ERRNO=$?; FAILED_COUNT=`expr $FAILED_COUNT + 1`; fi
+  ssout "Running test_group_acl:     " `passfail [ "$GROUPACL_ERRNO" -eq "0" ]`
+
+  ssout "Number of smbclient tests that failed" "[ $FAILED_COUNT ]"
+  
+  return $FAILED_COUNT
+}
+
+#
+# run_vasidmap_test
+#
+# Run all vasidmap tool tests
+#
+run_vasidmap_tool_tests()
+{
+  FAILED_COUNT=0 
+  # Check to see if vasidmap exists
+
+  vasidmap_exists="false"
+  test -x "$VASIDMAP" && vasidmap_exists=true
+  ssout "Checking if $VASIDMAP exists:" `yesno [ "x$vasidmap_exists" = "xtrue" ]`
+  if [ "x$vasidmap_exists" = "xfalse" ]; then
+    echo "$VASIDMAP could not be found, not running tests for vasidmap tool"
+    return 1
+  fi
+  
+  if vasidmap_sid_to_gid; then SIDGID_ERRNO=$?; else SIDGID_ERRNO=$?; FAILED_COUNT=`expr $FAILED_COUNT + 1`; fi
+  ssout "Running vasidmap_sid_to_gid:    " `passfail [ "$SIDGID_ERRNO" -eq "0" ]`
+
+  if vasidmap_sid_to_uid; then SIDUID_ERRNO=$?; else SIDUID_ERRNO=$?; FAILED_COUNT=`expr $FAILED_COUNT + 1`; fi
+  ssout "Running vasidmap_sid_to_uid:    " `passfail [ "$SIDUID_ERRNO" -eq "0" ]`
+
+  if vasidmap_username_to_sid; then UNSID_ERRNO=$?; else UNSID_ERRNO=$?; FAILED_COUNT=`expr $FAILED_COUNT + 1`; fi
+  ssout "Running vasidmap_username_to_sid:    " ` passfail [ "$UNSID_ERRNO" -eq "0" ]`
+
+  if vasidmap_groupname_to_sid; then GNSID_ERRNO=$?; else GNSID_ERRNO=$?; FAILED_COUNT=`expr $FAILED_COUNT + 1`; fi
+  ssout "Running vasidmap_groupname_to_sid:   " `passfail [ "$GNSID_ERRNO" -eq "0" ]`
+
+  if vasidmap_uid_to_sid; then UIDSID_ERRNO=$?; else UIDSID_ERRNO=$?; FAILED_COUNT=`expr $FAILED_COUNT + 1`; fi
+  ssout "Running vasidmap_uid_to_sid:   " ` passfail [ "$UIDSID_ERRNO" -eq "0" ]` 
+
+  if vasidmap_gid_to_sid; then GIDSID_ERRNO=$?; else GIDSID_ERRNO=$?; FAILED_COUNT=`expr $FAILED_COUNT + 1`; fi
+  ssout "Running vasidmap_gid_to_sid:  " `passfail [ "$GIDSID_ERRNO" -eq "0" ]`
+
+  ssout "Number of vasidmap tool tests that failed" "[ $FAILED_COUNT ]"
+  return $FAILED_COUNT
+}
+
+#
+# find_open_port <possible open port>
+#
+# Uses netstat to find an open port. If no port is passed in then
+# defaults to port 999 to start looking on. 
+#
+find_open_port()
+{
+  STARTPORT=389
+  if [ "x$1" != "x" ]; then
+    STARTPORT=$1
+  fi
+ 
+  while netstat -an | egrep -e :$STARTPORT -e .$STARTPORT | grep -i "LISTEN" > /dev/null
+  do
+   STARTPORT=`expr $STARTPORT + 1`
+  done  
+
+  test -n "$STARTPORT" && echo "$STARTPORT"
+
+}
+
+pp_signal () {
+  pidfile=$1
+  debug_echo "pidfile $pidfile"
+  debug_echo "kill signal $2"
+  if test -r "$pidfile"; then
+    read PID < $pidfile
+    debug_echo "Read pid: $PID from $pidfile"
+    kill "$2" "$PID" 2>/dev/null
+  else
+    return 1
+  fi
+}
+
+trap_command()
+{
+  TRAP_LOCAL_ERROR_CODE=$?
+
+#  if [ x"$TRAP_COMMAND_RUNNING" = x"true" ]; then
+#    return
+#  fi
+
+  TRAP_COMMAND_RUNNING="true"
+
+  debug_echo "trap signal received: $TRAP_LOCAL_ERROR_CODE"
+
+  # Only stop vasidmapd if we started it.  If we started it VASIDMAP_CLEANUP will be true, other wise it will be false #
+  if [ x"$VASIDMAPD_CLEANUP" = x"true" ]; then
+    debug_echo "pid of running process: ${PID:-'NOT SET'}"
+
+    if [ -n "$PID" ]; then
+      debug_echo "$PID pid was supplied, killing process now"
+      pp_signal $vasidmapd_pidfile -15 || true
+    else
+      debug_echo "NO pid was supplied, killing all children processes"
+      pp_signal $vasidmapd_pidfile 0
+    fi
+
+    if [ -f "$vasidmapd_pidfile" ]; then
+      rm -f "$vasidmapd_pidfile"
+    fi
+  else
+    debug_echo "We didn't start $VASIDMAPD, no need to stop it"
+  fi
+
+  # Cleanup the smb client tests as well if they were ran and we are not told to not clean up. #
+  if [ x"$CLEANUP" = "xtrue" ] && [ x"$SMBCLIENT_TESTS" = x"true" ] || [ x"$RUN_ALL_TESTS" = x"true" ]; then
+    smbclient_tests_cleanup
+  fi
+
+  debug_echo "Resetting Trap Signals"
+  trap '-' ${TRAP_SIGNAL_LIST}
+
+  exit $TRAP_LOCAL_ERROR_CODE
+}
+
+vasidmapd_status () {
+  debug_echo "Checking for ${1}"
+  if pp_signal $vasidmapd_pidfile -0; then
+    debug_echo "running"
+    return 0
+  elif test -r "$vasidmapd_pidfile"; then
+    debug_echo "the pid file $vasidmapd_pidfile still exists, ${1} could have crashed"
+    return 1
+  else
+    debug_echo "not running"
+    return 3
+  fi
+}
+
+exec_cmd()
+{
+  DAEMON_PORT=`find_open_port`
+  VASIDMAPDCMD="$VASIDMAPD -D -p $DAEMON_PORT -P $vasidmapd_pidfile"
+ 
+  $VASIDMAPDCMD &
+  VASIDMAPD_CLEANUP="true"
+
+  # check to make sure we really started (even if the process fails it will return 0 for success because of the & )
+  sleep 1
+  debug_echo "Check to see if we really started the $VASIDMAPD process"
+  vasidmapd_status "$1"
+  return $?
+}
+
+start_vasidmapd()
+{
+  debug_echo "Starting $*"
+
+  if vasidmapd_status "$1" >/dev/null; then
+    VASIDMAPD_CLEANUP="false"
+    debug_echo "already running as pid $PID"
+    return 0
+  elif exec_cmd "$1"; then 
+    debug_echo "$VASIDMAPDCMD started with pid: $PID on port: $DAEMONPORT"
+    # We started the vasidmapd so make sure we stop it when we are done #
+    VASIDMAPD_CLEANUP="true"
+    return 0
+  else
+    VASIDMAPD_CLEANUP="false"
+    echo "Failed to start $VASIDMAPDCMD"
+    return 1
+  fi
+}
+
+#
+# run_vasidmap_daemon_tests
+#
+# 
+#
+run_vasidmap_daemon_tests()
+{
+  FAILED_COUNT=0
+
+  vasidmapid_exists="false"
+  test -x "$VASIDMAPD" && vasidmapd_exists=true
+  ssout "Checking if $VASIDMAPD exists:" `yesno [ "x$vasidmapd_exists" = "xtrue" ]`
+  if [ "x$vasidmapd_exists" = "xfalse" ]; then
+    echo "$VASIDMAPD could not be found, not running tests for vasidmap daemon"
+    return 1
+  fi
+
+  start_vasidmapd $VASIDMAPD
+  start_vasidmapd_errno=$?
+  if [ $start_vasidmapd_errno -ne 0 ]; then
+    echo "Could not start $VASIDMAPD on port: $DAEMON_PORT"
+    return 1
+  fi
+
+  if vasidmap_daemon_sid_to_uid; then SIDUID_ERRNO=$?; else SIDUID_ERRNO=$?; FAILED_COUNT=`expr $FAILED_COUNT + 1`; fi
+  ssout "Running vasidmap_dameon_sid_to_uid:	" `passfail [ "$SIDUID_ERRNO" -eq "0" ]`
+
+  if vasidmap_daemon_sid_to_gid; then SIDGID_ERRNO=$?; else SIDGID_ERRNO=$?; FAILED_COUNT=`expr $FAILED_COUNT + 1`; fi
+  ssout "Running vasidmap_dameon_sid_to_gid: 	" `passfail [ "$SIDGID_ERRNO" -eq "0" ]`
+
+  if vasidmap_daemon_uid_to_sid; then UIDSID_ERRNO=$?; else UIDSID_ERRNO=$?; FAILED_COUNT=`expr $FAILED_COUNT + 1`; fi
+  ssout "Running vasidmap_daemon_uid_to_sid:	" `passfail [ "$UIDSID_ERRNO" -eq "0" ]`
+
+  if vasidmap_daemon_gid_to_sid; then GIDSID_ERRNO=$?; else GIDSID_ERRNO=$?; FAILED_COUNT=`expr $FAILED_COUNT + 1`; fi
+  ssout "Running vasidmap_dameon_gid_to_sid:	" `passfail [ "$GIDSID_ERRNO" -eq "0" ]`
+
+  ssout "Number of vasidmap daemon tests that failed" "[ $FAILED_COUNT ]"
+  return $FAILED_COUNT
+}
+
+label "checking system privileges for user:"
+id -un
+if test "`id -u`" -ne 0; then
+    checkroot () {
+        echo ""
+        echo "WARNING: This script may need superuser privileges to proceed"
+        echo ""
+    }
+else
+    checkroot () { : ; }
+fi
+
+#
+#  $1 file/directory
+#  $2 User Owner
+#  $3 Group Owner
+#
+#
+check_ownership()
+{
+
+  filedir=$1
+  USEROWNER=$2
+  GROUPOWNER=$3
+
+#  if [ -d $fieldir ]; then
+#    ls -Llad $filedir | cut 
+#  else
+
+#  fi
+
+  return 0
+}
+
+#
+# run_tests
+#
+#
+#
+run_tests()
+{
+  # Set the signal trap here so that cleanup can occur #
+  trap 'trap_command' ${TRAP_SIGNAL_LIST}
+
+  rc=0
+  checkroot
+  if [ \( "x$RUNASUSER" = "x" -a "x$SMBCLIENT_TESTS" = "xtrue" \) -o  \( "x$RUNASUSER_TOOL" = "x" -a "x$VASIDMAP_TOOL_TESTS" = "xtrue" \) -o \( "x$RUNASUSER_DAEMON" = "x" -a "x$VASIDMAP_DAEMON_TESTS" = "xtrue" \) -o "x$RUN_ALL_TESTS" = "xtrue" ]; then
+    if ! kinit; then
+       echo "errno: $?"
+       echo "Failed getting credentials for user: $USER"
+       echo "Please make sure that you are using a valid UNIX enabled user"
+       return 1
+    fi
+  fi
+
+  if $have_vasidmap; then
+    if [ "x$VASIDMAP_TOOL_TESTS" = "xtrue" ] || [ "x$RUN_ALL_TESTS" = "xtrue" ]; then
+      echo; label "Running vasidmap tool tests as user: "; if [ -n "$RUNASUSER_TOOL" ]; then echo "$RUNASUSER_TOOL"; else echo "$RUNASUSER"; fi
+      run_vasidmap_tool_tests && { echo; echo "All vasidmap tool tests passed"; } || { echo; echo "NOTICE: One or more vasidmap tool tests failed. For more information run again  with the -d (debug) option"; rc=1; }
+    fi
+
+    if [ "x$VASIDMAP_DAEMON_TESTS" = "xtrue" ] || [ "x$RUN_ALL_TESTS" = "xtrue" ]; then
+      echo; label "Running vasidmap daemon tests as user: "; if [ -n "$RUNASUSER_DAEMON" ]; then echo "$RUNASUSER_DAEMON"; else echo "$RUNASUSER"; fi
+      run_vasidmap_daemon_tests && { echo; echo "All vasidmap daemon tests passed"; } || { echo; echo "NOTICE: One or more vasidmap daemon tests failed. For more information run again  with the -d (debug) option"; rc=2; }
+    fi
+  else
+	  echo "vasidmap is not installed. Not running vasidmapd or vasidmap tool tests"
+  fi
+
+  if [ "x$SMBCLIENT_TESTS" = "xtrue" ] || [ "x$RUN_ALL_TESTS" = "xtrue" ]; then
+    echo; label "Running smbclient tests as user: "; echo "$RUNASUSER"
+    run_smbclient_tests && { echo; echo "All smbclient tests passed"; } || { echo; echo "NOTICE: One or more smbclient tests failed. For more information run again with the -d (debug) option"; rc=4; }
+  fi
+  return $rc
+}
+#run_tests 2>&1 | tee /tmp/vasidmap-status.out
+#tar -cf /tmp/smbclient-status.out.tar /tmp/vasidmap_status.out
+run_tests
+rt_rc=$?
+if [ $rt_rc -ne "0" ]; then 
+  cleanup
+  exit 1
+else
+  echo; echo "All vasidmapd-status tests passed";
+  cleanup
+  exit 0
+fi
