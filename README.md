@@ -1,7 +1,7 @@
 # Resource Central Legacy Code
 Location of legacy resource central code that is no longer being actively developed by One Identity
 
-The follow projects are considered Experimental:
+The follow projects are considered Experimental or Abandoned:
 * [Authentication test tools](README.md#authentication-test-tools)
 * [CoolKey](README.md#cool-key)
 * [GDM Smartcard](README.md#gnome-smartcard-login)
