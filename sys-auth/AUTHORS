@@ -1,0 +1,5 @@
+Main author: Seth Ellsworth <seth.ellsworth@quest.com>
+
+Other authors: None yet, but thanks to the VAS dev team forhelp with various parts of this, like the signal handling. 
+
+Basis: IBM Example code available at http://publib.boulder.ibm.com/infocenter/db2help/topic/com.ibm.db2.udb.doc/ad/samples/sec/s-combined-c.htm

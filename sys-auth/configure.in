@@ -1,0 +1,171 @@
+# (c) 2007 Quest Software, Inc. All rights reserved
+AC_INIT(sys-auth, [3.0.0.]esyscmd(tr -d '\012' <build-number.txt))
+VERSION="3.0.0.`cat ./build-number.txt`"
+AC_CONFIG_HEADER(config.h)
+
+dnl Find and test the C compiler
+AC_PROG_CC
+AC_LANG_C
+
+# AC_CHECK_FUNCS(snprintf asprintf asnprintf vasprintf vasnprintf vsnprintf)
+
+DO32=''
+NO32=#
+DO64=''
+NO64=#
+DOLAM=#
+NOLAM=''
+DOSUDO=#
+NOSUDO=''
+CC="gcc"
+CC64="gcc -D__64BIT__"
+DLFLAG='-ldl'
+LDFLAGS='-static-libgcc -shared -Bsymbolic -lc'
+DOPAM32=''
+DOPAM64='#'
+
+case `uname -a | awk '{print $1}'` in
+    Linux)
+        OS="LINUX"
+        CC="$CC"
+        DOSUDO=''
+        NOSUDO=#
+        case `uname -m` in
+            x86_64)
+                if test "x$CROSSC_s390x" = "x" ; then
+                    PLATFORM="LINUX_X86_64"
+                    USERNAME="lxx64"
+                    CC64="$CC64 -m64"
+                    DOPAM32='#'
+                    DOPAM64=''
+                else
+                    PLATFORM="LINUX_S390X"
+                    USERNAME="lx390"
+#                    DO32=#
+#                    NO32=''
+                    CC="/opt/crosstool/gcc-4.1.0-glibc-2.3.6/s390-unknown-linux-gnu/s390-unknown-linux-gnu/bin/gcc"
+                    CC64="/opt/crosstool/gcc-4.1.0-glibc-2.3.6/s390x-unknown-linux-gnu/s390x-unknown-linux-gnu/bin/gcc"
+                    DOPAM32='#'
+                    DOPAM64=''
+                fi
+                ;;
+            ppc64)
+                PLATFORM="LINUX_PPC64"
+                USERNAME="lxppc"
+                CC64="$CC64 -m64"
+#                DOPAM32=''
+#                DOPAM64=''
+                ;;
+            i*86)
+                PLATFORM="LINUX_X86"
+                USERNAME="lxx86"
+                DO64=#
+                NO64=''
+                ;;
+        esac
+        ;;
+    SunOS)
+        OS="SOLARIS"
+        case `uname -p` in 
+            i386)
+                case `uname -r` in 
+                    5.8)
+                        PLATFORM="SOLARIS_X86"
+                        DO64=#
+                        NO64=''
+                        ;;
+                    5.10)    
+                        PLATFORM="SOLARIS_X64"
+                        CC64="$CC64 -m64 -D_POSIX_PTHREAD_SEMANTICS" 
+                        ;;
+                esac
+                ;;
+            *)
+                PLATFORM="SOLARIS_SPARC"
+                CC64="$CC64 -m64 -D_POSIX_PTHREAD_SEMANTICS -Wl,-m -Wl,elf64_sparc"
+                ;;
+        esac
+        USERNAME="sol8s"
+        CC="$CC -m32 -D_POSIX_PTHREAD_SEMANTICS"
+        AC_DEFINE(_TS_ERRNO,1,Thread_safe_errno_define)
+# The -m and elf parts are for the new gcc/ld setup on the 
+# VAS Dev build server. The new setup is so it could do 
+# Smartcard compiling. 
+# Other situations might need to use the other CC64 entry.
+#CC64="$CC64 -m64" 
+        ;;
+    HP-UX)
+        OS=HPUX
+        DLFLAG='-ldld'
+        AC_DEFINE(_POSIX_C_SOURCE,199506,Enables_Thread_Safe_errno)
+        case `uname -m` in
+            ia64)
+                PLATFORM="HPUX_IA64"
+                USERNAME="hpia"
+                CC64="$CC64 -mlp64"
+                ;;
+            *)
+                PLATFORM="HPUX_9000"
+                USERNAME="hppa"
+                CC64="/usr/local/pa20_64/bin/$CC64"
+                CC=/usr/local/pa20_32/bin/gcc
+                ;;
+        esac
+        ;;
+    AIX)
+        OS=AIX
+        CC64="$CC64 -maix64"
+        AC_DEFINE(_THREAD_SAFE_ERRNO,1,Use_the_thread_safe_errno_implementation)
+        DOLAM=''
+        NOLAM=#
+        if test "`uname -r`" -eq "3" ; then
+            PLATFORM=AIX_53
+            USERNAME="aix53"
+        else
+            PLATFORM="AIX_51-52"
+            OS2="AIX51"
+            USERNAME="aix5"
+        fi
+        ;;
+esac        
+
+if test -z "$OS2" ; then
+    CFLAGS="-D${OS} -fpic"
+else
+    CFLAGS="-D${OS} -D${OS2} -fpic"
+fi
+
+AC_SUBST(OS)
+AC_SUBST(PLATFORM)
+AC_SUBST(USERNAME)
+AC_SUBST(DO32)
+AC_SUBST(NO32)
+AC_SUBST(DO64)
+AC_SUBST(NO64)
+AC_SUBST(DOLAM)
+AC_SUBST(NOLAM)
+AC_SUBST(DOSUDO)
+AC_SUBST(NOSUDO)
+AC_SUBST(PACKAGE_NAME)
+AC_SUBST(CC)
+AC_SUBST(CC64)
+AC_SUBST(DLFLAG)
+AC_SUBST(CFLAGS)
+AC_SUBST(LDFLAGS)
+AC_SUBST(CHECKS)
+AC_SUBST(DOPAM32)
+AC_SUBST(DOPAM64)
+
+AC_PROG_MAKE_SET
+AC_SUBST(MAKE)
+
+AC_HEADER_STDC
+                  
+AC_SUBST(VERSION)
+
+dnl read Makefile.in and write Makefile
+#AC_OUTPUT(Makefile Troubleshooting install.sh install_das.sh make_all.exp test2.conf)
+AC_OUTPUT(Makefile Troubleshooting install.sh install_das.sh test2.conf)
+    chmod +x install.sh
+    chmod +x install_das.sh
+#    chmod +x make_all.exp
