@@ -13,6 +13,7 @@ The follow projects are considered Experimental:
 * [Subversion with GSSAPI](README.md#subversion-with-gssapi)
 * [xkrenew](README.md#xkrenew)
 * [Quest PuTTY](README.md#quest-putty)
+* [DB2 Security Plugin](README.md#db2-security-plugin) 
 
 # [Authentication test tools](#authentication-test-tools)
 > [Source](./authtest)
@@ -326,3 +327,18 @@ Quest PuTTY configuration defaults can be changed using group policy, and some c
 A source code patch file is provided with each release that contains all the modifications made to the corresponding PuTTY source revision. These modifications are licensed under a Berkeley-style open source license.
 
 > **NOTE:** The functionality that was provided by Quest Software's PuTTY packages have now been included in the latest releases of [PuTTY](http://www.chiark.greenend.org.uk/~sgtatham/putty/download.html), making Quest PuTTY obsolete.
+
+# [DB2 Security Plugin](#db2-security-plugin)
+> [Source](./DB2_sys-auth)
+
+For DB2 9.5 and up Quest/OneIdentity now recommends using the DB2 built-in functionality to connect to Active Directory instead of Quest DB2 plugin. The DB2 built-in functionality supports Transparent LDAP authentication which makes the db2_sys-auth security plugin for DB2 UDB obsolete.
+
+The *db2_sys-auth* project is not being actively developed and is no longer supported.
+
+Transparent LDAP authentication allows users to authenticate through the OS (LAM on AIX, otherwise PAM, like the Quest DB2 Security Plugin), which can then use QAS. This does not require setting up LDAP, QAS fulfills that role.
+
+For more information, please read [SOLUTION 64305](https://support.quest.com/Search/SolutionDetail.aspx?id=SOL64305).
+
+*db2_sys-auth* is a security plugin for DB2 UDB that authenticates users using PAM or AIX's LAM. With Quest Authentication Services, this plugin allows Unix-enabled Active Directory users to use your databases.
+
+The plugin uses getgrent calls to determine group membership (*getgrset* on AIX), getpwnam to validate user names, and LAM/PAM to authenticate. This means DB2 can now make use of any authentication system that provides an NSS interface for information (administrative domains on AIX), and LAM/PAM for authentication. This includes Quest Authentication Services, LDAP, NIS and other third-party external systems.
