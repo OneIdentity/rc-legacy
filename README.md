@@ -1,7 +1,9 @@
 # Resource Central Legacy Code
-Location of legacy resource central code that is no longer being actively developed by One Identity
+Location of legacy resource central code that is no longer being actively developed by One Identity.
 
-The follow projects are considered Experimental or Abandoned:
+All code in these projects are considered "Discontinued" and are provided as-is. 
+> See: [Support](https://support.oneidentity.com/essentials/support-guide#tab3) "Software Product Support Lifecycle Policy"
+
 * [Authentication test tools](README.md#authentication-test-tools)
 * [CoolKey](README.md#cool-key)
 * [GDM Smartcard](README.md#gnome-smartcard-login)
