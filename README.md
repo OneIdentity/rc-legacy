@@ -349,6 +349,8 @@ The plugin uses getgrent calls to determine group membership (*getgrset* on AIX)
 # [vasidmap](#vasidmap)
 > [Source](./vasidmapd)
 
+For help on how to integrate Samba and Authentication Services see: [KB316264](http://support.oneidentity.com/authentication-services/kb/316264)
+
 One Identity Samba Identity Mapper (**vasidmap**) provides Samba servers with accurate identity information for Unix-enabled Active Directory users to ensure proper file system access controls for Samba servers that are joined to an Active Directory domain. Vasidmap plugs into Samba's idmap interface, resolving queries for user security information by using One Identity Authentication Services' (QAS) Active Directory connections and caches. vasidmap should be used with all installations of Samba where QAS is installed — especially for servers using Authentication Services' Unix personality management feature.
 ## Quick Installation Instructions
 1. Ensure that you have Samba installed; **we recommend using at least version 3.3.16 of your operating system's Samba package**. The One Identity ID Mapper should work with samba 3.0.28+ but versions below 3.3.16 are not supported.
