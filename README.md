@@ -1,8 +1,9 @@
 # Resource Central Legacy Code
-Location of legacy resource central code that is no longer being actively developed by One Identity.
 
-All code in these projects are considered "Discontinued" and are provided as-is. 
-> See: [Support](https://support.oneidentity.com/essentials/support-guide#tab3) "Software Product Support Lifecycle Policy"
+Location of legacy resource central code that is no longer being actively developed by One Identity.
+All code in this project is considered **Discontinued** and is provided as-is. 
+
+>See: [Software Product Support Lifecycle Policy](https://support.oneidentity.com/essentials/support-guide#tab3)
 
 * [Authentication test tools](README.md#authentication-test-tools)
 * [CoolKey](README.md#cool-key)
